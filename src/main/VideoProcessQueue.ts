@@ -590,9 +590,20 @@ export default class VideoProcessQueue {
       suffix,
     );
 
-    const fn = ffmpeg(srcFile)
-      .setStartTime(start)
-      .setDuration(duration)
+    // On Linux, we save the full replay buffer and trim from the end.
+    const isLinux = process.platform === 'linux';
+    const PRE_ROLL_SECONDS = 15;
+    let fn = ffmpeg(srcFile);
+
+    if (!isLinux) {
+      fn = fn.setStartTime(start).setDuration(duration);
+    } else {
+      const keepDuration = PRE_ROLL_SECONDS + duration;
+      console.info(`[VideoProcessQueue] Linux: keeping last ${keepDuration}s of video (${PRE_ROLL_SECONDS}s pre-roll + ${duration}s duration)`);
+      fn = fn.inputOptions([`-sseof -${keepDuration}`]);
+    }
+
+    fn = fn
       // Crucially we copy the video and audio, so we don't do any
       // re-encoding which would take time and CPU.
       .withVideoCodec('copy')

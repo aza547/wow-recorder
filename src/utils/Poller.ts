@@ -4,6 +4,8 @@ import path from 'path';
 import { app } from 'electron';
 import ConfigService from 'config/ConfigService';
 import { WowProcessEvent } from 'main/types';
+import { isLinux } from 'platform';
+import LinuxProcessDetector from 'platform/linux/processDetector';
 
 /**
  * The Poller singleton periodically checks the list of WoW active
@@ -27,12 +29,17 @@ export default class Poller extends EventEmitter {
   private wowRunning = false;
 
   /**
-   * Spawned child process.
+   * Spawned child process (Windows only).
    */
   private child: ChildProcessWithoutNullStreams | undefined;
 
   /**
-   * Singleton instance.
+   * Linux process detector instance.
+   */
+  private linuxDetector: LinuxProcessDetector | undefined;
+
+  /**
+   * Path to Windows binary for process detection.
    */
   private binary = app.isPackaged
     ? path.join(process.resourcesPath, 'binaries', 'rust-ps.exe')
@@ -68,9 +75,17 @@ export default class Poller extends EventEmitter {
     console.info('[Poller] Stop process poller');
     this.wowRunning = false;
 
-    if (this.child) {
-      this.child.kill();
-      this.child = undefined;
+    if (isLinux) {
+      if (this.linuxDetector) {
+        this.linuxDetector.stop();
+        this.linuxDetector.removeAllListeners();
+        this.linuxDetector = undefined;
+      }
+    } else {
+      if (this.child) {
+        this.child.kill();
+        this.child = undefined;
+      }
     }
   }
 
@@ -81,23 +96,31 @@ export default class Poller extends EventEmitter {
     this.stop();
     console.info('[Poller] Start process poller');
 
-    this.child = spawn(this.binary);
-    this.child.stdout.on('data', this.handleStdout);
-    this.child.stderr.on('data', this.handleStderr);
+    if (isLinux) {
+      this.linuxDetector = new LinuxProcessDetector();
+      this.linuxDetector.on('data', this.handleStdout);
+      this.linuxDetector.on('error', this.handleStderr);
+      this.linuxDetector.start();
+    } else {
+      this.child = spawn(this.binary);
+      this.child.stdout.on('data', this.handleStdout);
+      this.child.stderr.on('data', this.handleStderr);
+    }
   }
 
   /**
-   * Handle stdout data from the child process, this is a tiny blob of JSON
-   * in the format {"Retail":true, "Classic":false}.
+   * Handle stdout data from the child process or Linux detector.
+   * This is a tiny blob of JSON in the format {"Retail":true, "Classic":false}.
    *
    * We don't care to do anything better in the scenario of multiple processes
    * running. We don't support users multi-boxing.
    */
-  private handleStdout = (data: string) => {
+  private handleStdout = (data: string | Buffer) => {
+    const dataStr = typeof data === 'string' ? data : data.toString();
     let parsed;
 
     try {
-      parsed = JSON.parse(data);
+      parsed = JSON.parse(dataStr);
     } catch {
       // We can hit this on sleeping/resuming from sleep. Or anything
       // else that blocks the event loop long enough to cause us to end up
@@ -135,8 +158,13 @@ export default class Poller extends EventEmitter {
    * Handle stderr, we don't expect to ever see this but log it incase
    * anything weird happens.
    */
-  private handleStderr = (data: string) => {
-    console.warn('[Poller] stderr returned from child process');
-    console.error(data);
+  private handleStderr = (data: string | Buffer | Error) => {
+    console.warn('[Poller] Error from process detector');
+    if (data instanceof Error) {
+      console.error(data.message);
+    } else {
+      const dataStr = typeof data === 'string' ? data : data.toString();
+      console.error(dataStr);
+    }
   };
 }

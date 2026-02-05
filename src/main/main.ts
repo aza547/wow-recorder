@@ -21,6 +21,7 @@ import {
   getAvailableDisplays,
   getAssetPath,
   handleSafeVodRequest,
+  setupLinuxObsMuxer,
 } from './util';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
@@ -178,29 +179,6 @@ const createWindow = async () => {
     },
   });
 
-  // We need to do this AFTER creating the window as it's used by the preview.
-  Recorder.getInstance().initializeObs();
-  await manager.startup();
-
-  // If this is first time setup, auto-pick an encoder for the user. Only do it
-  // if the current value is the software encoder, as this is new in 7.0.0, all
-  // users would be subject to it. This way, only the few people who really do
-  // prefer the software encoder will be inconvenienced.
-  const firstTimeSetup =
-    cfg.get<boolean>('firstTimeSetup') &&
-    cfg.get<string>('obsRecEncoder') === ESupportedEncoders.OBS_X264;
-
-  if (firstTimeSetup) {
-    // Don't bother to signal to the frontend here, they would have to be
-    // very fast to have opened the settings already.
-    console.info('[Main] First time setup, picking default encoder');
-    const encoder = Recorder.getInstance().getSensibleEncoderDefault();
-    cfg.set('obsRecEncoder', encoder);
-  }
-
-  // Ensure we don't hit the above branch again.
-  cfg.set('firstTimeSetup', false);
-
   // This gets hit on a user triggering refresh with CTRL-R.
   window.on('ready-to-show', async () => {
     console.log('[Main] Ready to show');
@@ -249,7 +227,42 @@ const createWindow = async () => {
     window = null;
   });
 
-  await window.loadURL(resolveHtmlPath('index.html'));
+  console.info('[Main] Loading renderer URL');
+  try {
+    await window.loadURL(resolveHtmlPath('index.html'));
+    console.info('[Main] Renderer URL loaded');
+  } catch (err) {
+    console.error('[Main] Failed to load renderer URL:', err);
+  }
+
+  await setupLinuxObsMuxer();
+
+  console.info('[Main] Initializing OBS');
+  Recorder.getInstance().initializeObs();
+
+  // If this is first time setup, auto-pick an encoder for the user. Only do it
+  // if the current value is the software encoder, as this is new in 7.0.0, all
+  // users would be subject to it. This way, only the few people who really do
+  // prefer the software encoder will be inconvenienced.
+  const firstTimeSetup =
+    cfg.get<boolean>('firstTimeSetup') &&
+    cfg.get<string>('obsRecEncoder') === ESupportedEncoders.OBS_X264;
+
+  if (firstTimeSetup) {
+    // Don't bother to signal to the frontend here, they would have to be
+    // very fast to have opened the settings already.
+    console.info('[Main] First time setup, picking default encoder');
+    const encoder = Recorder.getInstance().getSensibleEncoderDefault();
+    cfg.set('obsRecEncoder', encoder);
+  }
+
+  // Ensure we don't hit the above branch again.
+  cfg.set('firstTimeSetup', false);
+
+  console.info('[Main] Starting manager');
+  await manager.startup();
+  console.info('[Main] Manager startup complete');
+
   setupTray();
 
   // Open urls in the user's browser

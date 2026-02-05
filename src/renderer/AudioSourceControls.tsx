@@ -1,4 +1,5 @@
 import { AppState, AudioSource, AudioSourceType } from 'main/types';
+import { isProcessAudioCaptureAvailable } from 'platform';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
 import {
@@ -734,14 +735,16 @@ const AudioSourceControls = (props: IProps) => {
             <PlusIcon className="px-0" />
             {getLocalePhrase(language, Phrase.AddMicrophoneButtonText)}
           </Button>
-          <Button
-            onClick={() => addSource(AudioSourceType.PROCESS)}
-            disabled={!sourcesAreFullyDefined}
-            variant="outline"
-          >
-            <PlusIcon className="px-0" />
-            {getLocalePhrase(language, Phrase.AddApplicationButtonText)}
-          </Button>
+          {isProcessAudioCaptureAvailable() && (
+            <Button
+              onClick={() => addSource(AudioSourceType.PROCESS)}
+              disabled={!sourcesAreFullyDefined}
+              variant="outline"
+            >
+              <PlusIcon className="px-0" />
+              {getLocalePhrase(language, Phrase.AddApplicationButtonText)}
+            </Button>
+          )}
         </div>
       </div>
     );

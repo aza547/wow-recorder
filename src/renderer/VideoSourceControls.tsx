@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState, OurDisplayType } from 'main/types';
 import { configSchema } from 'config/configSchema';
-import { Info } from 'lucide-react';
+import { Info, MonitorPlay } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import Label from './components/Label/Label';
@@ -12,6 +12,8 @@ import {
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Phrase } from 'localisation/phrases';
+import { isLinux } from '../platform';
+import { Button } from './components/Button/Button';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -92,7 +94,40 @@ const VideoSourceControls = (props: IProps) => {
     });
   };
 
+  const handleSelectSource = async () => {
+    await ipc.invoke('selectCaptureSource', []);
+  };
+
+  const getLinuxSourceSelector = () => {
+    return (
+      <div>
+        <Label className="flex items-center">
+          Capture Source
+          <Tooltip
+            content="Click to open the source picker and select what to capture (window, screen, etc.)"
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Button
+          onClick={handleSelectSource}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <MonitorPlay size={16} />
+          Select Source
+        </Button>
+      </div>
+    );
+  };
+
   const getCaptureModeToggle = () => {
+    if (isLinux) {
+      return getLinuxSourceSelector();
+    }
+
     return (
       <div>
         <Label className="flex items-center">
@@ -129,7 +164,7 @@ const VideoSourceControls = (props: IProps) => {
   };
 
   const getMonitorToggle = () => {
-    if (config.obsCaptureMode !== 'monitor_capture') {
+    if (isLinux || config.obsCaptureMode !== 'monitor_capture') {
       return <></>;
     }
 

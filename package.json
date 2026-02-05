@@ -86,6 +86,16 @@
         "nsis"
       ]
     },
+    "linux": {
+      "artifactName": "WarcraftRecorder-${version}-${arch}.${ext}",
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
+      "category": "Game;Utility",
+      "maintainer": "Warcraft Recorder"
+    },
     "directories": {
       "app": "release/app",
       "buildResources": "assets",
@@ -170,6 +180,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tsc": "^2.0.4",
     "tss-react": "^4.1.1",
+    "uiohook-napi": "^1.5.4",
     "uuid": "^11.0.3",
     "wait-queue": "^1.1.4",
     "ws": "^8.18.2",

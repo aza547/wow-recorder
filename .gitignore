@@ -40,3 +40,6 @@ buffer
 
 # Some stuff OBS window capture creates at runtime?
 win-capture/
+
+# Native addon binary
+noobs.node

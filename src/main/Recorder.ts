@@ -47,6 +47,7 @@ import {
   getObsVideoConfig,
   getOverlayConfig,
 } from '../utils/configUtils';
+import { getObsAudioSourceType, getObsCaptureSourceType, isLinux } from 'platform';
 import noobs, {
   ObsData,
   SceneItemPosition,
@@ -215,8 +216,12 @@ export default class Recorder extends EventEmitter {
   private setupListeners() {
     ipcMain.on('reconfigureVideo', () => {
       console.info('[Recorder] Video source reconfigure');
-      const cfg = getObsVideoConfig(this.cfg);
-      this.configureVideoSources(cfg);
+      try {
+        const cfg = getObsVideoConfig(this.cfg);
+        this.configureVideoSources(cfg);
+      } catch (error) {
+        console.error('[Recorder] Failed to reconfigure video source:', error);
+      }
     });
 
     ipcMain.on('reconfigureAudio', () => {
@@ -398,6 +403,17 @@ export default class Recorder extends EventEmitter {
     ipcMain.handle('getSensibleEncoderDefault', (): string => {
       return this.getSensibleEncoderDefault();
     });
+
+    // Linux-specific: Re-open the PipeWire source picker dialog
+    ipcMain.handle('selectCaptureSource', async () => {
+      if (!isLinux) {
+        console.info('[Recorder] selectCaptureSource is only available on Linux');
+        return;
+      }
+
+      console.info('[Recorder] Re-selecting capture source via PipeWire portal');
+      await this.reselectLinuxCaptureSource();
+    });
   }
 
   /**
@@ -422,6 +438,23 @@ export default class Recorder extends EventEmitter {
 
     this.queue.add(task);
     await promise;
+  }
+
+  /**
+   * Get the dimensions of the capture source.
+   */
+  public getCaptureSourceDimensions(): { width: number; height: number } {
+    if (!this.captureSource) {
+      return { width: 0, height: 0 };
+    }
+
+    try {
+      const dims = noobs.GetSourceDimensions(this.captureSource);
+      return { width: dims.width, height: dims.height };
+    } catch (error) {
+      console.warn('[Recorder] Failed to get capture source dimensions:', error);
+      return { width: 0, height: 0 };
+    }
   }
 
   /**
@@ -513,19 +546,30 @@ export default class Recorder extends EventEmitter {
     const { height, width } = obsResolutions[this.resolution];
     console.info('[Recorder] Configure OBS video context');
 
+    // On Linux, destroy the capture source before resetting the video
+    // context to avoid a PipeWire deadlock.
+    const hadCaptureSource = !!this.captureSource;
+    if (isLinux && this.captureSource) {
+      console.info('[Recorder] Destroying capture source before video reset (Linux)');
+      noobs.RemoveSourceFromScene(this.captureSource);
+      noobs.DeleteSource(this.captureSource);
+      this.captureSource = undefined;
+      this.captureMode = CaptureMode.NONE;
+    }
+
     const canvas = noobs.GetPreviewInfo();
     noobs.ResetVideoContext(obsFPS, width, height);
 
     const { canvasHeight, canvasWidth } = canvas;
     const changedResolution = canvasHeight !== height || canvasWidth !== width;
 
-    if (changedResolution && !startup) {
+    if ((changedResolution || (isLinux && hadCaptureSource)) && !startup) {
       // Noobs defaults to 1920x1080, so if at a different resolution, this
       // will be hit on startup. Changing canvas size causes libobs to auto-scale
       // the existing sources. So reconfigure the video sources if the resolution
       // has changed to undo that. We avoid this branch on startup as we will
       // reconfigure the video sources anyway.
-      console.info('[Recorder] Resolution changed, reconfig video sources');
+      console.info('[Recorder] Reconfiguring video sources');
       const cfg = getObsVideoConfig(this.cfg);
       this.configureVideoSources(cfg);
     }
@@ -581,6 +625,8 @@ export default class Recorder extends EventEmitter {
       case ESupportedEncoders.NVENC_AV1:
       case ESupportedEncoders.QSV_H264:
       case ESupportedEncoders.QSV_AV1:
+      case ESupportedEncoders.VAAPI_H264:
+      case ESupportedEncoders.LINUX_NVENC_H264:
         settings.rate_control = 'CQP';
         settings.cqp = Recorder.getCqpFromQuality(encoder, quality);
         break;
@@ -600,27 +646,31 @@ export default class Recorder extends EventEmitter {
     const { obsCaptureMode } = config;
     this.clearFindWindowInterval();
 
-    if (this.captureSource) {
-      console.info(
-        '[Recorder] Removing existing capture source',
-        this.captureSource,
-      );
-
-      noobs.RemoveSourceFromScene(this.captureSource);
-      noobs.DeleteSource(this.captureSource);
-      this.captureSource = undefined;
-      this.captureMode = CaptureMode.NONE;
-    }
-
-    if (obsCaptureMode === 'monitor_capture') {
-      this.configureMonitorCaptureSource(config);
-    } else if (obsCaptureMode === 'game_capture') {
-      this.configureGameCaptureSource(config);
-    } else if (obsCaptureMode === 'window_capture') {
-      this.configureWindowCaptureSource(config);
+    if (isLinux) {
+      this.configureLinuxCaptureSource(config);
     } else {
-      console.error('[Recorder] Unrecognised capture mode', obsCaptureMode);
-      throw new Error('Unrecognised capture mode');
+      if (this.captureSource) {
+        console.info(
+          '[Recorder] Removing existing capture source',
+          this.captureSource,
+        );
+
+        noobs.RemoveSourceFromScene(this.captureSource);
+        noobs.DeleteSource(this.captureSource);
+        this.captureSource = undefined;
+        this.captureMode = CaptureMode.NONE;
+      }
+
+      if (obsCaptureMode === 'monitor_capture') {
+        this.configureMonitorCaptureSource(config);
+      } else if (obsCaptureMode === 'game_capture') {
+        this.configureGameCaptureSource(config);
+      } else if (obsCaptureMode === 'window_capture') {
+        this.configureWindowCaptureSource(config);
+      } else {
+        console.error('[Recorder] Unrecognised capture mode', obsCaptureMode);
+        throw new Error('Unrecognised capture mode');
+      }
     }
 
     const wowRunning = Poller.getInstance().isWowRunning();
@@ -727,7 +777,8 @@ export default class Recorder extends EventEmitter {
 
     config.audioSources.forEach((src) => {
       console.info('[Recorder] Create audio source', src.id);
-      const name = noobs.CreateSource(src.id, src.type);
+      const obsSourceType = getObsAudioSourceType(src.type);
+      const name = noobs.CreateSource(src.id, obsSourceType);
       const settings = noobs.GetSourceSettings(name);
 
       if (src.type === AudioSourceType.PROCESS && src.device) {
@@ -944,7 +995,29 @@ export default class Recorder extends EventEmitter {
     }
 
     this.startQueue.empty();
-    noobs.StartBuffer();
+
+    // On Linux, use async StartBuffer to prevent blocking
+    if (isLinux) {
+      console.info('[Recorder] Using async StartBuffer on Linux');
+      await new Promise<void>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error('StartBuffer timed out after 30 seconds'));
+        }, 30000);
+
+        noobs.StartBuffer((err: string | null) => {
+          clearTimeout(timeoutId);
+          if (err) {
+            console.error('[Recorder] Async StartBuffer failed:', err);
+            reject(new Error(err));
+          } else {
+            console.info('[Recorder] Async StartBuffer completed');
+            resolve();
+          }
+        });
+      });
+    } else {
+      noobs.StartBuffer();
+    }
 
     await Promise.race([
       this.startQueue.shift(),
@@ -1157,9 +1230,88 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Creates a window capture source. In TWW, the retail and classic Window names
-   * diverged slightly, so while this was previously a hardcoded string, now we
-   * search for it in the OSN sources API.
+   * Configures the unified PipeWire capture source for Linux.
+   * On Linux, all capture modes (window, game, monitor) use the same
+   * pipewire-screen-capture-source. The user selects what to capture
+   * via the XDG portal dialog.
+   */
+  private configureLinuxCaptureSource(config: ObsVideoConfig) {
+    console.info('[Recorder] Configuring Linux PipeWire capture source');
+
+    const {
+      obsCaptureMode,
+      captureCursor,
+      videoSourceXPosition,
+      videoSourceYPosition,
+      videoSourceScale,
+    } = config;
+
+    if (obsCaptureMode === 'monitor_capture') {
+      this.captureMode = CaptureMode.MONITOR;
+    } else if (obsCaptureMode === 'game_capture') {
+      this.captureMode = CaptureMode.GAME;
+    } else if (obsCaptureMode === 'window_capture') {
+      this.captureMode = CaptureMode.WINDOW;
+    }
+
+    const captureSourceType = 'pipewire-screen-capture-source';
+
+    if (!this.captureSource) {
+      console.info('[Recorder] Creating new PipeWire capture source');
+      this.captureSource = noobs.CreateSource(
+        VideoSourceName.LINUX_CAPTURE,
+        captureSourceType,
+      );
+    } else {
+      console.info('[Recorder] Reusing existing PipeWire capture source');
+    }
+
+    const defaults = noobs.GetSourceSettings(this.captureSource);
+
+    const settings = {
+      ...defaults,
+      show_cursor: captureCursor,
+    };
+
+    const position = {
+      x: videoSourceXPosition,
+      y: videoSourceYPosition,
+      scaleX: videoSourceScale,
+      scaleY: videoSourceScale,
+      cropLeft: 0,
+      cropRight: 0,
+      cropTop: 0,
+      cropBottom: 0,
+    };
+
+    noobs.SetSourceSettings(this.captureSource, settings);
+    noobs.AddSourceToScene(this.captureSource);
+    noobs.SetSourcePos(this.captureSource, position);
+  }
+
+  /**
+   * Re-opens the PipeWire portal dialog to select a new capture source.
+   * This destroys the existing source and creates a new one, which
+   * triggers the XDG portal dialog.
+   */
+  private async reselectLinuxCaptureSource() {
+    console.info('[Recorder] Re-selecting Linux capture source');
+
+    if (this.captureSource) {
+      console.info('[Recorder] Destroying existing capture source');
+      noobs.RemoveSourceFromScene(this.captureSource);
+      noobs.DeleteSource(VideoSourceName.LINUX_CAPTURE);
+      this.captureSource = undefined;
+    }
+
+    const config = getObsVideoConfig(this.cfg);
+    this.configureLinuxCaptureSource(config);
+
+    setTimeout(() => send('redrawPreview'), 500);
+  }
+
+  /**
+   * Creates a window capture source (Windows only).
    */
   private configureWindowCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Window Capture');
@@ -1172,9 +1324,12 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     this.captureMode = CaptureMode.WINDOW;
+    const captureSourceType = getObsCaptureSourceType('window_capture');
+    console.info('[Recorder] Using capture source type:', captureSourceType);
+
     this.captureSource = noobs.CreateSource(
       VideoSourceName.WINDOW,
-      'window_capture',
+      captureSourceType,
     );
 
     const settings = noobs.GetSourceSettings(this.captureSource);
@@ -1183,7 +1338,7 @@ export default class Recorder extends EventEmitter {
       ...settings,
       capture_mode: 'window',
       force_sdr: forceSdr,
-      cursor: captureCursor, // For some reason is named differently here.
+      cursor: captureCursor,
       method: 2,
       compatibility: true,
     });
@@ -1203,7 +1358,7 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Configures the game capture source.
+   * Configures the game capture source (Windows only).
    */
   private configureGameCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Game Capture');
@@ -1217,9 +1372,12 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     this.captureMode = CaptureMode.GAME;
+    const captureSourceType = getObsCaptureSourceType('game_capture');
+    console.info('[Recorder] Using capture source type:', captureSourceType);
+
     this.captureSource = noobs.CreateSource(
       VideoSourceName.GAME,
-      'game_capture',
+      captureSourceType,
     );
 
     const defaults = noobs.GetSourceSettings(this.captureSource);
@@ -1249,7 +1407,7 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Creates a monitor capture source.
+   * Creates a monitor capture source (Windows only).
    */
   private configureMonitorCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
@@ -1264,14 +1422,28 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     this.captureMode = CaptureMode.MONITOR;
+    const captureSourceType = getObsCaptureSourceType('monitor_capture');
+    console.info('[Recorder] Using capture source type:', captureSourceType);
+
     this.captureSource = noobs.CreateSource(
       VideoSourceName.MONITOR,
-      'monitor_capture',
+      captureSourceType,
     );
 
     const defaults = noobs.GetSourceSettings(this.captureSource);
-    const properties = noobs.GetSourceProperties(this.captureSource);
 
+    const position: SceneItemPosition = {
+      x: videoSourceXPosition,
+      y: videoSourceYPosition,
+      scaleX: videoSourceScale,
+      scaleY: videoSourceScale,
+      cropLeft: 0,
+      cropRight: 0,
+      cropTop: 0,
+      cropBottom: 0,
+    };
+
+    const properties = noobs.GetSourceProperties(this.captureSource);
     const monitors = properties.find((p) => p.name === 'monitor_id');
 
     if (!monitors) {
@@ -1312,17 +1484,6 @@ export default class Recorder extends EventEmitter {
       monitor_id: monitorId.value,
       force_sdr: forceSdr,
       capture_cursor: captureCursor,
-    };
-
-    const position: SceneItemPosition = {
-      x: videoSourceXPosition,
-      y: videoSourceYPosition,
-      scaleX: videoSourceScale,
-      scaleY: videoSourceScale,
-      cropLeft: 0,
-      cropRight: 0,
-      cropTop: 0,
-      cropBottom: 0,
     };
 
     noobs.SetSourceSettings(this.captureSource, settings);
@@ -1491,6 +1652,11 @@ export default class Recorder extends EventEmitter {
     if (!this.captureSource) {
       // This should never happen.
       console.error('[Recorder] No capture source available');
+      return;
+    }
+
+    if (isLinux) {
+      console.info('[Recorder] Linux: capture target selected via PipeWire portal');
       return;
     }
 
@@ -1769,8 +1935,16 @@ export default class Recorder extends EventEmitter {
       return ESupportedEncoders.NVENC_H264;
     }
 
+    if (encoders.includes(ESupportedEncoders.LINUX_NVENC_H264)) {
+      return ESupportedEncoders.LINUX_NVENC_H264;
+    }
+
     if (encoders.includes(ESupportedEncoders.QSV_H264)) {
       return ESupportedEncoders.QSV_H264;
+    }
+
+    if (encoders.includes(ESupportedEncoders.VAAPI_H264)) {
+      return ESupportedEncoders.VAAPI_H264;
     }
 
     if (encoders.includes(ESupportedEncoders.AMD_H264)) {

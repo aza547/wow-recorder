@@ -603,6 +603,8 @@ enum VideoSourceName {
   GAME = 'WCR Game Capture',
   MONITOR = 'WCR Monitor Capture',
   OVERLAY = 'WCR Chat Overlay',
+  // Linux uses a unified capture source since all modes use PipeWire
+  LINUX_CAPTURE = 'WCR Capture',
 }
 
 enum AudioSourcePrefix {

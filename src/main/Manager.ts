@@ -1,6 +1,7 @@
 import { app, ipcMain, powerMonitor } from 'electron';
 import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import EraLogHandler from '../parsing/EraLogHandler';
+import { isLinux } from '../platform';
 import {
   buildClipMetadata,
   getMetadataForVideo,
@@ -311,8 +312,39 @@ export default class Manager {
     const audioConfig = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(audioConfig);
 
+    // Wait for the PipeWire capture source to report valid dimensions
+    // before starting the buffer.
+    if (isLinux) {
+      console.info(
+        '[Manager] Linux: waiting for PipeWire capture source to be ready',
+      );
+      const maxWaitMs = 60000; // Wait up to 60 seconds
+      const pollIntervalMs = 500;
+      let waited = 0;
+
+      while (waited < maxWaitMs) {
+        const dims = this.recorder.getCaptureSourceDimensions();
+        if (dims.width > 0 && dims.height > 0) {
+          console.info(
+            `[Manager] PipeWire capture source ready: ${dims.width}x${dims.height}`,
+          );
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+        waited += pollIntervalMs;
+      }
+
+      if (waited >= maxWaitMs) {
+        console.warn(
+          '[Manager] Timeout waiting for PipeWire capture source, starting buffer anyway',
+        );
+      }
+    }
+
     try {
+      console.info('[Manager] Starting buffer...');
       await this.recorder.startBuffer();
+      console.info('[Manager] Buffer started successfully');
     } catch (error) {
       console.error('[Manager] OBS failed to record when WoW started', error);
     }

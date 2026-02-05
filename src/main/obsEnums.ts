@@ -20,6 +20,8 @@ export enum ESupportedEncoders {
   NVENC_AV1 = 'obs_nvenc_av1_tex',
   QSV_H264 = 'obs_qsv11_soft_v2',
   QSV_AV1 = 'obs_qsv11_av1',
+  VAAPI_H264 = 'ffmpeg_vaapi',
+  LINUX_NVENC_H264 = 'ffmpeg_nvenc',
 }
 
 export enum QualityPresets {

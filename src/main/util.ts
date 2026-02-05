@@ -1,6 +1,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs, { createReadStream, promises as fspromise, Stats } from 'fs';
+import { isLinux, isMac } from 'platform';
 import { app, Display, screen } from 'electron';
 import {
   EventType,
@@ -292,11 +293,21 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
 };
 
 /**
- * Open a folder in system explorer.
+ * Open a folder in system explorer/file manager.
  */
 const openSystemExplorer = (filePath: string) => {
-  const windowsPath = filePath.replace(/\//g, '\\');
-  const cmd = `explorer.exe /select,"${windowsPath}"`;
+  let cmd: string;
+
+  if (isLinux) {
+    const dirPath = path.dirname(filePath);
+    cmd = `xdg-open "${dirPath}"`;
+  } else if (isMac) {
+    cmd = `open -R "${filePath}"`;
+  } else {
+    const windowsPath = filePath.replace(/\//g, '\\');
+    cmd = `explorer.exe /select,"${windowsPath}"`;
+  }
+
   exec(cmd, () => {});
 };
 
@@ -747,6 +758,88 @@ const exists = async (file: string) => {
 };
 
 /**
+ * On Linux, OBS needs obs-ffmpeg-mux to be accessible from the app directory.
+ * This function searches for it in known locations and creates a symlink.
+ *
+ * Known locations:
+ * - Fedora/Arch/openSUSE: /usr/bin/obs-ffmpeg-mux
+ * - Ubuntu/Debian: /usr/lib/x86_64-linux-gnu/obs-plugins/obs-ffmpeg/obs-ffmpeg-mux
+ */
+const setupLinuxObsMuxer = async () => {
+  if (!isLinux) {
+    return;
+  }
+
+  console.info('[Util] Setting up obs-ffmpeg-mux for Linux');
+
+  const knownPaths = [
+    '/usr/bin/obs-ffmpeg-mux',
+    '/usr/lib/x86_64-linux-gnu/obs-plugins/obs-ffmpeg/obs-ffmpeg-mux',
+    '/usr/lib64/obs-plugins/obs-ffmpeg-mux',
+    '/usr/lib/obs-plugins/obs-ffmpeg-mux',
+  ];
+
+  let muxerPath: string | null = null;
+
+  for (const p of knownPaths) {
+    if (await exists(p)) {
+      muxerPath = p;
+      console.info('[Util] Found obs-ffmpeg-mux at:', p);
+      break;
+    }
+  }
+
+  if (!muxerPath) {
+    console.warn(
+      '[Util] obs-ffmpeg-mux not found in known locations. Replay buffer may not work.',
+    );
+    console.warn('[Util] Searched paths:', knownPaths);
+    return;
+  }
+
+  const electronDir = app.isPackaged
+    ? path.dirname(process.execPath)
+    : path.join(__dirname, '../../node_modules/electron/dist');
+
+  const symlinkPath = path.join(electronDir, 'obs-ffmpeg-mux');
+  console.info('[Util] Symlink target:', symlinkPath);
+
+  try {
+    const existingTarget = await fs.promises.readlink(symlinkPath);
+    if (existingTarget === muxerPath) {
+      console.info('[Util] Symlink already exists and is correct');
+      return;
+    }
+    await fs.promises.unlink(symlinkPath);
+  } catch (error) {
+    const e = error as NodeJS.ErrnoException;
+    if (e.code !== 'ENOENT') {
+      try {
+        await fs.promises.unlink(symlinkPath);
+      } catch {
+        // noop
+      }
+    }
+  }
+
+  try {
+    await fs.promises.symlink(muxerPath, symlinkPath);
+    console.info('[Util] Created symlink:', symlinkPath, '->', muxerPath);
+  } catch (error) {
+    const e = error as NodeJS.ErrnoException;
+    if (e.code === 'EEXIST') {
+      console.info('[Util] Symlink already exists');
+    } else {
+      console.error('[Util] Failed to create symlink:', error);
+      console.warn(
+        '[Util] You may need to manually create a symlink:',
+        `ln -sf ${muxerPath} ${symlinkPath}`,
+      );
+    }
+  }
+};
+
+/**
  * Check if the folder contains the managed.txt file indicating it is owned
  * by Warcraft Recorder.
  */
@@ -1016,4 +1109,5 @@ export {
   delayedDeleteVideo,
   logAxiosError,
   handleSafeVodRequest,
+  setupLinuxObsMuxer,
 };
