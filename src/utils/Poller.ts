@@ -31,23 +31,18 @@ export default class Poller extends EventEmitter {
    */
   private child: ChildProcessWithoutNullStreams | undefined;
 
-  // TODO: [linux-port] rust-ps binary path for each platform
   /**
    * Get the appropriate binary name based on platform and architecture.
    */
   private getBinaryName(): string {
     const platform = process.platform;
-    const arch = process.arch;
 
     if (platform === 'win32') {
       return 'rust-ps.exe';
     }
 
     if (platform === 'linux') {
-      if (arch === 'arm64') {
-        return 'rust-ps-linux-arm64';
-      }
-      return 'rust-ps-linux';
+      return 'rust-ps';
     }
 
     // Fallback
@@ -60,8 +55,6 @@ export default class Poller extends EventEmitter {
   private binary = app.isPackaged
     ? path.join(process.resourcesPath, 'binaries', this.getBinaryName())
     : path.join(__dirname, '../../binaries', this.getBinaryName());
-
-  // TODO: [linux-port] END
 
   /**
    * Create or get the singleton.
@@ -106,27 +99,10 @@ export default class Poller extends EventEmitter {
     this.stop();
     console.info('[Poller] Start process poller');
 
-    // TODO: Ignore poller crashes for linux port
-    try {
-      this.child = spawn(this.binary);
-      this.child.stdout.on('data', this.handleStdout);
-      this.child.stderr.on('data', this.handleStderr);
+    this.child = spawn(this.binary);
+    this.child.stdout.on('data', this.handleStdout);
+    this.child.stderr.on('data', this.handleStderr);
 
-      // TODO: BEGIN
-      
-      // Handle process spawn errors (e.g., binary not found on Linux)
-      this.child.on('error', (error) => {
-        console.error(' /////// TODO [Poller] Failed to start process poller:', error.message);
-        console.warn(' /////// TODO [Poller] Process detection disabled - WoW detection will not work');
-        this.child = undefined;
-      });
-    } catch (error) {
-      console.error(' /////// TODO [Poller] Failed to spawn process poller:', error);
-      console.warn(' /////// TODO [Poller] Process detection disabled - WoW detection will not work');
-      this.child = undefined;
-    }
-
-    // TODO: END
   }
 
   /**

@@ -40,7 +40,7 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
-import Activity from 'activitys/Activity';
+import { isLinux, setAutostart } from './platform';
 
 /**
  * Manager class.
@@ -92,7 +92,6 @@ export default class Manager {
    */
   private manualHotKeyDisabled = false;
   
-  // TODO: [linux-port]
   /**
    * Record the time the application started up.
    * Linux only for now. Unfortunately Pipewire has some quirks when you
@@ -100,7 +99,6 @@ export default class Manager {
    * with the same restore token.
    */
   private appStartupTime = Date.now();
-  // TODO: [linux-port] END
   
   /**
    * Constructor.
@@ -327,18 +325,17 @@ export default class Manager {
    */
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
-    // TODO: [linux-port] need to re-trigger the pipewire restore token
-    if (process.platform === 'linux') {
-        // do not configure on a wow trigger shortly after the app has started up
-        const now = Date.now();
-        if (now - (this.appStartupTime ?? now) > 10_000) {
-          const videoConfig = getObsVideoConfig(this.cfg);
-          await this.recorder.configureVideoSources(videoConfig);
-        }
+    if (isLinux) {
+      // do not configure on a wow trigger shortly after the app has started up
+      // this can cause issues in pipewire if it happens too quickly
+      const now = Date.now();
+      if (now - this.appStartupTime > 10_000) {
+        const videoConfig = getObsVideoConfig(this.cfg);
+        await this.recorder.configureVideoSources(videoConfig);
+      }
     } else {
       this.recorder.attachCaptureSource();
     }
-    // TODO: [linux-port] END
 
     const audioConfig = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(audioConfig);
@@ -465,16 +462,14 @@ export default class Manager {
    * Setup event listeneres the app relies on.
    */
   private setupListeners() {
-    // Config change listener we use to tweak the app settings in Windows if
+    // Config change listener we use to tweak the app settings in the OS env if
     // the user enables/disables run on start-up.
     this.cfg.on('change', (key: string, value: unknown) => {
       if (key === 'startUp') {
         const isStartUp = value === true;
         console.info('[Main] OS level set start-up behaviour:', isStartUp);
-
-        app.setLoginItemSettings({
-          openAtLogin: isStartUp,
-        });
+        
+        setAutostart(isStartUp);
       }
     });
 

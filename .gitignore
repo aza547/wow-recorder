@@ -6,10 +6,8 @@ pids
 *.pid
 *.seed
 
-# TODO: [linux-port]
 # debugging symbols for gdb
 debug/
-# TODO: [linux-port] END
 
 # Coverage directory used by tools like istanbul
 coverage

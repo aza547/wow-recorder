@@ -503,8 +503,7 @@ const AudioSourceControls = (props: IProps) => {
       const found = choices.find((tt) => tt.value === src.device);
 
       const items = choices.map((tt) => (
-        // TODO: [linux-port] Figure out why these are undefined?
-        <SelectItem key={tt.name} value={String(tt.value || ' ')}>
+        <SelectItem key={tt.name} value={String(tt.value)}>
           {tt.name}
         </SelectItem>
       ));
@@ -680,9 +679,6 @@ const AudioSourceControls = (props: IProps) => {
     };
     
     const choices = await getAudioSourceChoices(src);
-    // TODO: [linux-port]
-    console.log('Choices for', src.id, ':', choices)
-    // TODO: [linux-port] END
 
     setConfig((prev) => ({
       ...prev,

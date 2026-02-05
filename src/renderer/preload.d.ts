@@ -1,11 +1,7 @@
 import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
 import { AudioSourceType, RendererVideo, SceneItem } from 'main/types';
-// TODO: noobs disabled for Linux port
-// import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
-type ObsProperty = any;
-type SceneItemPosition = any;
-type SourceDimensions = any;
+import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 import { TChatMessageWithId } from 'types/api';
 
 declare global {
@@ -76,13 +72,9 @@ declare global {
         reconfigureCloud(): void;
 
         getSensibleEncoderDefault(): Promise<string>;
-        // TODO: [linux-port] add getPlatform to type defs (synchronous)
         getPlatform(): NodeJS.Platform;
-        // TODO: [linux-port] END
         refreshCloudGuilds(): void;
-        // TODO: [linux-port] add reselectPipewireSource to type defs
         reselectPipewireSource(): void;
-        // TODO: [linux-port] END
         getOrCreateChatCorrelator(video: RendererVideo): Promise<string>;
         getChatMessages(correlator: string): Promise<TChatMessageWithId[]>;
         postChatMessage(correlator: string, message: string): void;

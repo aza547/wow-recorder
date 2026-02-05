@@ -508,7 +508,7 @@ const ENGLISH: Translations = {
   [Phrase.StartManualRecordingTooltip]: 'Start a manual recording.',
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
-  [Phrase.ReselectPipewireSourceButtonText]: 'Reselect Pipewire Source',
+  [Phrase.ReselectPipewireSourceButtonText]: 'Reselect Capture Source',
 };
 
 export default ENGLISH;

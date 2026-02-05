@@ -101,7 +101,7 @@ const VideoSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              (appState.platform === 'linux')
+              (appState.isLinux)
                 ? configSchema.obsCaptureMode.descriptionLinux
                 : configSchema.obsCaptureMode.description,
             )}
@@ -120,9 +120,9 @@ const VideoSourceControls = (props: IProps) => {
           <ToggleGroupItem value="window_capture">
             {getLocalePhrase(appState.language, Phrase.WindowCaptureValue)}
           </ToggleGroupItem>
-          { /* TODO: [linux-port] game capture only works on win32 */}
+          { /* game capture is windows-only */}
           {
-          (appState.platform === 'win32') ? 
+          (appState.isWindows) && 
             <>
               <ToggleGroupItem value="game_capture">
                 {getLocalePhrase(appState.language, Phrase.GameCaptureValue)}
@@ -130,20 +130,18 @@ const VideoSourceControls = (props: IProps) => {
               <ToggleGroupItem value="monitor_capture">
                 {getLocalePhrase(appState.language, Phrase.MonitorCaptureValue)}
               </ToggleGroupItem>
-            </> : <></>
+            </>
           }
-          { /* TODO: [linux-port] END */}
         </ToggleGroup>
       </div>
     );
   };
 
   const getMonitorToggle = () => {
-    // TODO: [linux-port] monitor selection not available on linux, controlled by pipewire
-    if (config.obsCaptureMode !== 'monitor_capture' || appState.platform !== 'win32') {
+    // pipewire uses window-only capture
+    if (config.obsCaptureMode !== 'monitor_capture' || appState.isLinux) {
       return <></>;
     }
-    // TODO: [linux-port] END
 
     return (
       <div>
@@ -241,7 +239,7 @@ const VideoSourceControls = (props: IProps) => {
 
   const getReselectPipewireButton = () => {
     // Only show on Linux when window_capture is selected
-    if (appState.platform !== 'linux' || config.obsCaptureMode !== 'window_capture') {
+    if (!appState.isLinux || config.obsCaptureMode !== 'window_capture') {
       return <></>;
     }
 

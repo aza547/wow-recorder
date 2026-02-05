@@ -1,8 +1,8 @@
 import { SoundAlerts } from 'main/types';
 
-import start from '../../assets/sounds/manual-recording-start.mp3';
-import stop from '../../assets/sounds/manual-recording-stop.mp3';
-import error from '../../assets/sounds/manual-recording-error.mp3';
+import start from '../../assets/sounds/manual-recording-start.ogg';
+import stop from '../../assets/sounds/manual-recording-stop.ogg';
+import error from '../../assets/sounds/manual-recording-error.ogg';
 
 const playAudio = (sound: unknown) => {
   if (sound === SoundAlerts.MANUAL_RECORDING_START) {

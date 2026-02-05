@@ -66,9 +66,7 @@ export const getSettings = (): ConfigurationSchema => {
     chatOverlayCropX: getConfigValue<number>('chatOverlayCropX'),
     chatOverlayCropY: getConfigValue<number>('chatOverlayCropY'),
     captureCursor: getConfigValue<boolean>('captureCursor'),
-    // TODO: [linux-port]
     pipewireRestoreToken: getConfigValue<string | null>('pipewireRestoreToken'),
-    // TODO: [linux-port] END
     selectedCategory: getConfigValue<number>('selectedCategory'),
     deathMarkers: getConfigValue<number>('deathMarkers'),
     encounterMarkers: getConfigValue<boolean>('encounterMarkers'),

@@ -261,11 +261,9 @@ const ChatOverlayControls = (props: IProps) => {
     config.chatOverlayOwnImage &&
     !config.chatOverlayOwnImagePath.endsWith('.png') &&
     !config.chatOverlayOwnImagePath.endsWith('.gif') &&
-    // TODO: [linux-port] jpg natively supported by stb_image
-    !(appState.platform === 'linux' && 
+    !(appState.isLinux && 
       (config.chatOverlayOwnImagePath.endsWith('.jpg') || 
       config.chatOverlayOwnImagePath.endsWith('.jpeg')));
-    // TODO: [linux-port] END
 
 
   return (
@@ -279,7 +277,7 @@ const ChatOverlayControls = (props: IProps) => {
       </div>
       {showPathWarning && (
         <p className="flex w-full text-red-500 text-sm">
-          {getLocalePhrase(appState.language, (appState.platform === 'linux' 
+          {getLocalePhrase(appState.language, (appState.isLinux 
             ? Phrase.ErrorCustomImageFileTypeLinux 
             : Phrase.ErrorCustomImageFileType))}
         </p>

@@ -62,6 +62,9 @@ const WarcraftRecorder = () => {
 
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
+  // Platform detection - fetched synchronously so it's correct from first render.
+  const osPlatform = ipc.getPlatform();
+
   const [appState, setAppState] = useState<AppState>({
     // Navigation.
     page: Pages.None,
@@ -116,10 +119,9 @@ const WarcraftRecorder = () => {
     // selector to remember their preference when changing rows in the table.
     preferredViewpoint: '',
 
-    // TODO: [linux-port] initialize platform synchronously
-    // Platform detection - fetched synchronously so it's correct from first render.
-    platform: ipc.getPlatform(),
-    // TODO: [linux-port] END
+    platform: osPlatform,
+    isLinux: osPlatform === 'linux',
+    isWindows: osPlatform === 'win32',
   });
 
   // The video state contains most of the frontend state.
@@ -409,11 +411,6 @@ const WarcraftRecorder = () => {
       };
     });
   };
-
-  // Expose appState to window for debugging in console
-  useEffect(() => {
-    (window as any).appState = appState;
-  }, [appState]);
 
   useEffect(() => {
     ipc.on('updateRecStatus', updateRecStatus);
