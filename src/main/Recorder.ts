@@ -631,7 +631,7 @@ export default class Recorder extends EventEmitter {
   /**
    * Configures the video source in OBS.
    */
-  public configureVideoSources(config: ObsVideoConfig) {
+  public async configureVideoSources(config: ObsVideoConfig) {
     const { obsCaptureMode } = config;
     this.clearFindWindowInterval();
 
@@ -663,7 +663,7 @@ export default class Recorder extends EventEmitter {
       this.configureGameCaptureSource(config);
     } else if (obsCaptureMode === 'window_capture') {
       if (isLinux) {
-        setTimeout(() => {
+        await setTimeout(() => {
           // pipewire will trigger the portal again if the same restore token is used too
           // soon after a previous session ends
           this.configurePipeWireCaptureSource(config);

@@ -79,6 +79,12 @@ export default class Manager {
   private reconfiguring = false;
 
   /**
+   * Timer for debouncing the redrawn. Because of the redraw delay, interacting with 
+   * controls that trigger redraws multiple times very quickly can trigger undefined behavior.
+   */
+  private redrawPreviewTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
    * If the audio settings are open or not. We want the audio devices to
    * be attached to power the volmeters in the case they are on display,
    * even if WoW is closed. But we want the audio devices disconnected if
@@ -311,11 +317,19 @@ export default class Manager {
    * Trigger the frontend to redraw the preview if it's open.
    */
   private redrawPreview() {
+    // cancel any pending redraws to debounce
+    if (this.redrawPreviewTimer) {
+      clearTimeout(this.redrawPreviewTimer);
+    }
+
     // Really don't understand the need for the timeout here but it sometimes
     // gets stale data otherwise. A caching thing in libobs maybe? Noobs will
     // send a source signal to the recorder if the size of sources change, but
     // for other changes we need to manually trigger a redraw.
-    setTimeout(() => send('redrawPreview'), 100);
+    this.redrawPreviewTimer = setTimeout(() => {
+      send('redrawPreview');
+      this.redrawPreviewTimer = null;
+    }, 100);
   }
 
   /**
@@ -429,9 +443,9 @@ export default class Manager {
   /**
    * Configure video settings in OBS. This can all be changed live.
    */
-  private configureObsVideo() {
+  private async configureObsVideo() {
     const config = getObsVideoConfig(this.cfg);
-    this.recorder.configureVideoSources(config);
+    await this.recorder.configureVideoSources(config);
   }
 
   /**
