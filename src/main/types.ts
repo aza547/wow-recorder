@@ -290,9 +290,9 @@ interface IDevice {
 }
 
 enum AudioSourceType {
-  OUTPUT = 'wasapi_output_capture',
-  INPUT = 'wasapi_input_capture',
-  PROCESS = 'wasapi_process_output_capture',
+  OUTPUT = 'output',
+  INPUT = 'input',
+  PROCESS = 'process',
 }
 
 type AudioSource = {
@@ -341,6 +341,9 @@ type AppState = {
   diskStatus: DiskStatus;
   chatOpen: boolean;
   preferredViewpoint: string;
+  platform: NodeJS.Platform;
+  isWindows: boolean;
+  isLinux: boolean;
 };
 
 type CloudState = {
@@ -399,6 +402,7 @@ type ObsVideoConfig = {
   obsCaptureMode: string;
   monitorIndex: number;
   captureCursor: boolean;
+  pipewireRestoreToken: string | null;
   forceSdr: boolean;
   videoSourceScale: number;
   videoSourceXPosition: number;
@@ -610,6 +614,7 @@ enum VideoSourceName {
   GAME = 'WCR Game Capture',
   MONITOR = 'WCR Monitor Capture',
   OVERLAY = 'WCR Chat Overlay',
+  PIPEWIRE = 'WCR Pipewire Capture',
 }
 
 enum AudioSourcePrefix {
@@ -627,6 +632,13 @@ enum SoundAlerts {
   MANUAL_RECORDING_ERROR = 'manual-recording-error',
   MANUAL_RECORDING_START = 'manual-recording-start',
   MANUAL_RECORDING_STOP = 'manual-recording-stop',
+}
+
+enum ObsOrderMovement {
+  OBS_ORDER_MOVE_UP = 0,
+  OBS_ORDER_MOVE_DOWN = 1,
+  OBS_ORDER_MOVE_TOP = 2,
+  OBS_ORDER_MOVE_BOTTOM = 3,
 }
 
 export {
@@ -691,4 +703,5 @@ export {
   SoundAlerts,
   CloudState,
   ActivityStatus,
+  ObsOrderMovement,
 };

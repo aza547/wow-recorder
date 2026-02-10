@@ -96,7 +96,7 @@ const configuration: webpack.Configuration = {
       },
       // Audio
       {
-        test: /\.(mp3)$/i,
+        test: /\.(mp3|ogg)$/i,
         type: 'asset/resource',
       },
       // SVG

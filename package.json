@@ -86,6 +86,11 @@
         "nsis"
       ]
     },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Game"
+    },
+    "afterPack": "./scripts/afterPack.js",
     "directories": {
       "app": "release/app",
       "buildResources": "assets",

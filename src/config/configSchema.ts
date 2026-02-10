@@ -37,6 +37,7 @@ export type ConfigurationSchema = {
   recordSoloShuffle: boolean;
   recordBattlegrounds: boolean;
   captureCursor: boolean;
+  pipewireRestoreToken: string | null;
   minKeystoneLevel: number;
   recordChallengeModes: boolean;
   minRaidDifficulty: string;
@@ -224,6 +225,7 @@ export const configSchema = {
   },
   obsCaptureMode: {
     description: Phrase.ObsCaptureModeDescription,
+    descriptionLinux: Phrase.ObsCaptureModeDescriptionLinux,
     type: 'string',
     default: 'window_capture',
   },
@@ -301,6 +303,11 @@ export const configSchema = {
     description: Phrase.CaptureCursorDescription,
     type: 'boolean',
     default: false,
+  },
+  pipewireRestoreToken: {
+    description: Phrase.Unknown, // not exposed in the UI
+    type: 'string',
+    default: null,
   },
   minKeystoneLevel: {
     description: Phrase.MinKeystoneLevelDescription,

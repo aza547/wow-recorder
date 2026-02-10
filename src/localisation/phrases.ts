@@ -24,6 +24,7 @@ enum Phrase {
   ObsForceMonoDescription,
   ObsQualityDescription,
   ObsCaptureModeDescription,
+  ObsCaptureModeDescriptionLinux,
   ObsRecEncoderDescription,
   RecordRetailDescription,
   RecordClassicDescription,
@@ -324,6 +325,7 @@ enum Phrase {
   ErrorCustomOverlayNotAllowed,
   ErrorNoCustomImage,
   ErrorCustomImageFileType,
+  ErrorCustomImageFileTypeLinux,
   ErrorCustomImageNotExist,
   InvalidRetailLogPath,
   InvalidClassicLogPath,
@@ -503,6 +505,7 @@ enum Phrase {
   StartManualRecordingTooltip,
   StopManualRecordingTooltip,
   RecordedAt,
+  ReselectPipewireSourceButtonText,
 }
 
 enum Language {
