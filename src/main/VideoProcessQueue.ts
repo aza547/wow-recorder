@@ -27,16 +27,19 @@ import DiskClient from 'storage/DiskClient';
 import Recorder from './Recorder';
 
 const atomicQueue = require('atomic-queue');
+const devMode = process.env.NODE_ENV === 'development';
+const isDebug = devMode || process.env.DEBUG_PROD === 'true';
 
-// Use the dynamically linked ffmpeg.exe we package with OBS in noobs. Thi
-// allows  us to avoid including a static ffmpeg.exe which is an extra 60MB.
-const ffmpegPath = fixPathWhenPackaged(
-  require.resolve('noobs/dist/bin/ffmpeg.exe'),
-);
-ffmpeg.setFfmpegPath(ffmpegPath);
+// Use the dynamically linked ffmpeg.exe we package with OBS in noobs. This
+// allows us to avoid including a static ffmpeg.exe which is an extra 60MB.
+const ffmpegPathRel = 'node_modules/noobs/dist/bin/ffmpeg.exe';
 
-const isDebug =
-  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+let ffmpegPathAbs = devMode
+  ? path.resolve(__dirname, '../../release/app/', ffmpegPathRel)
+  : path.resolve(__dirname, '../../', ffmpegPathRel);
+
+ffmpegPathAbs = fixPathWhenPackaged(ffmpegPathAbs);
+ffmpeg.setFfmpegPath(ffmpegPathAbs);
 
 /**
  * A queue for cutting videos to size.
