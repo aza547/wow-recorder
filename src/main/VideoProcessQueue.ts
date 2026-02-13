@@ -28,9 +28,12 @@ import Recorder from './Recorder';
 
 const atomicQueue = require('atomic-queue');
 
-const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
-const ffmpegInstallerPath = fixPathWhenPackaged(ffmpegInstaller.path);
-ffmpeg.setFfmpegPath(ffmpegInstallerPath);
+// Use the dynamically linked ffmpeg.exe we package with OBS in noobs. Thi
+// allows  us to avoid including a static ffmpeg.exe which is an extra 60MB.
+const ffmpegPath = fixPathWhenPackaged(
+  require.resolve('noobs/dist/bin/ffmpeg.exe'),
+);
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
