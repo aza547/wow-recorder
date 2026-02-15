@@ -310,7 +310,7 @@ export default function SourceTimeline({
               <div
                 className={[
                   'relative flex items-center justify-center select-none',
-                  'transition-opacity border-card border-2 border-r',
+                  'transition-opacity rounded-md',
                   isDragging ? 'opacity-40' : 'opacity-100',
                   isOver ? 'ring-2 ring-white ring-inset' : '',
                 ].join(' ')}
@@ -362,13 +362,9 @@ export default function SourceTimeline({
               {/* Resize handle + drop zone between segments */}
               {idx < segments.length - 1 && (
                 <div
-                  className={[
-                    'flex-shrink-0 w-3 h-full z-10 flex flex-col items-center justify-center gap-[3px]',
-                    'cursor-col-resize transition-colors',
-                    dragIdx !== null && dragIdx !== idx && dragIdx !== idx + 1
-                      ? 'bg-blue-500/30 hover:bg-blue-500/60'
-                      : 'hover:bg-white/20',
-                  ].join(' ')}
+                  className={
+                    'flex-shrink-0 w-3 h-full z-10 flex flex-col items-center justify-center gap-[3px] cursor-col-resize transition-colors rounded-md'
+                  }
                   onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'right')}
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -380,14 +376,7 @@ export default function SourceTimeline({
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div
                       key={i}
-                      className={[
-                        'w-[3px] h-[3px] rounded-full',
-                        dragIdx !== null &&
-                        dragIdx !== idx &&
-                        dragIdx !== idx + 1
-                          ? 'bg-blue-400/80'
-                          : 'bg-white/30',
-                      ].join(' ')}
+                      className={'w-[3px] h-[3px] rounded-full bg-white/30'}
                     />
                   ))}
                 </div>
