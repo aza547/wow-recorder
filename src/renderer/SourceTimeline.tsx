@@ -359,12 +359,38 @@ export default function SourceTimeline({
                 </div>
               </div>
 
-              {/* Resize handle centered on the break between segments */}
+              {/* Resize handle + drop zone between segments */}
               {idx < segments.length - 1 && (
                 <div
-                  className="flex-shrink-0 w-2 h-full cursor-col-resize hover:bg-white/20 z-10"
+                  className={[
+                    'flex-shrink-0 w-3 h-full z-10 flex flex-col items-center justify-center gap-[3px]',
+                    'cursor-col-resize transition-colors',
+                    dragIdx !== null && dragIdx !== idx && dragIdx !== idx + 1
+                      ? 'bg-blue-500/30 hover:bg-blue-500/60'
+                      : 'hover:bg-white/20',
+                  ].join(' ')}
                   onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'right')}
-                />
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setOverIdx(idx);
+                  }}
+                  onDrop={(e) => handleDrop(e, idx + 1)}
+                >
+                  {/* Vertical grip dots */}
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={[
+                        'w-[3px] h-[3px] rounded-full',
+                        dragIdx !== null &&
+                        dragIdx !== idx &&
+                        dragIdx !== idx + 1
+                          ? 'bg-blue-400/80'
+                          : 'bg-white/30',
+                      ].join(' ')}
+                    />
+                  ))}
+                </div>
               )}
             </React.Fragment>
           );
