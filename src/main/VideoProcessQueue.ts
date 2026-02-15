@@ -5,6 +5,7 @@ import ConfigService from '../config/ConfigService';
 import {
   CloudMetadata,
   DiskStatus,
+  KillVideoQueueItem,
   RendererVideo,
   SaveStatus,
   UploadQueueItem,
@@ -76,6 +77,11 @@ export default class VideoProcessQueue {
   private downloadQueue: any;
 
   /**
+   *
+   */
+  private killVideoQueue: any;
+
+  /**
    * Config service handle.
    */
   private cfg = ConfigService.getInstance();
@@ -95,12 +101,18 @@ export default class VideoProcessQueue {
   private inProgressDownloads: string[] = [];
 
   /**
+   *
+   */
+  private inProgressKillVideo = false;
+
+  /**
    * Constructor.
    */
   private constructor() {
     this.videoQueue = this.createVideoQueue();
     this.uploadQueue = this.createUploadQueue();
     this.downloadQueue = this.createDownloadQueue();
+    this.killVideoQueue = this.createKillVideoQueue();
   }
 
   private createVideoQueue() {
@@ -157,6 +169,22 @@ export default class VideoProcessQueue {
     return queue;
   }
 
+  private createKillVideoQueue() {
+    const worker = this.processKillVideoQueueItem.bind(this);
+    const settings = { concurrency: 1 };
+    const queue = atomicQueue(worker, settings);
+
+    // queue
+    //   .on('error', VideoProcessQueue.errorKillVideo)
+    //   .on('idle', () => { this.killVideoQueueEmpty() });
+
+    // queue.pool
+    //   .on('start', (video: RendererVideo) => { this.startedKillVideo(video) })
+    //   .on('finish', async (_: unknown, video: RendererVideo) => { await this.finishKillVideo(video) });
+
+    return queue;
+  }
+
   /**
    * Add a video to the queue for processing, the processing it undergoes is
    * dictated by the input. This is the only public method on this class.
@@ -203,6 +231,20 @@ export default class VideoProcessQueue {
 
     const queued = Math.max(0, this.inProgressDownloads.length);
     send('updateDownloadQueueLength', queued);
+  };
+
+  /**
+   *
+   */
+  public queueCreateKillVideo = async (item: KillVideoQueueItem) => {
+    if (this.inProgressKillVideo) {
+      console.warn('[VideoProcessQueue] Kill video already processing');
+      return;
+    }
+
+    console.log('[VideoProcessQueue] Queue kill video for processing');
+    this.inProgressKillVideo = true;
+    this.killVideoQueue.write(item);
   };
 
   /**
@@ -365,6 +407,66 @@ export default class VideoProcessQueue {
       );
     }
 
+    done();
+  }
+
+  /**
+   *
+   */
+  private async processKillVideoQueueItem(
+    item: KillVideoQueueItem,
+    done: () => void,
+  ): Promise<void> {
+    let filter = '';
+
+    item.povs.forEach((pov, idx) => {
+      const range = `${pov.start}:${pov.stop}`;
+      filter += `[${idx}:v]trim=${range},setpts=PTS-STARTPTS,fps=${item.fps},scale=${item.width}:-1[v${idx}];`;
+      filter += `[${idx}:a]atrim=${range},asetpts=PTS-STARTPTS[a${idx}];`;
+    });
+
+    item.povs.forEach((pov, idx) => {
+      if (idx >= item.povs.length - 1) {
+        return;
+      }
+
+      let prev = '';
+      let next = '';
+
+      for (let i = 0; i <= idx; i++) {
+        prev += i;
+      }
+
+      if (idx < item.povs.length - 2) {
+        next = prev + (idx + 1);
+      }
+
+      filter += `[v${prev}][v${idx + 1}]xfade=transition=fade:duration=1:offset=${pov.stop - 1}[v${next}];`;
+      filter += `[a${prev}][a${idx + 1}]acrossfade=d=1[a${next}];`;
+    });
+
+    console.info('[VideoProcessQueue] Generated filter:', filter);
+
+    const fn = ffmpeg()
+      .complexFilter(filter)
+      .outputOption('-avoid_negative_ts make_zero')
+      .outputOption('-movflags +faststart')
+      .outputOption('-map [v]')
+      .outputOption('-map [a]')
+      .outputOption('-c:v libx264')
+      .outputOption('-c:a aac')
+      .outputOption('-preset fast')
+      .output('C:\\testkillvid\\output.mp4');
+
+    item.povs.forEach((pov) => {
+      fn.input(pov.url);
+    });
+
+    console.time('[VideoProcessQueue] Create kill video');
+    await VideoProcessQueue.ffmpegWrapper(fn, 'Make kill Video');
+    console.timeEnd('[VideoProcessQueue] Create kill video');
+
+    this.inProgressKillVideo = false;
     done();
   }
 

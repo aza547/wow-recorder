@@ -23,6 +23,7 @@ import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';
 import {
+  Clapperboard,
   LockKeyhole,
   LockOpen,
   MessageSquare,
@@ -210,10 +211,29 @@ export const populateDetailsCell = (
     );
   };
 
+  const renderKillVidIcon = () => {
+    const clips = [video, ...video.multiPov].filter((v) => v.cloud);
+
+    return (
+      <Tooltip content="asd">
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={() => {
+            window.electron.ipcRenderer.sendMessage('createKillVideo', clips);
+          }}
+        >
+          <Clapperboard size={18} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
   return (
     <Box className="inline-flex">
       {renderProtectedIcon()}
       {renderTagIcon()}
+      {renderKillVidIcon()}
     </Box>
   );
 };

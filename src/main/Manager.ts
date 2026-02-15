@@ -22,6 +22,8 @@ import {
   WowProcessEvent,
   BaseConfig,
   ActivityStatus,
+  KillVideoQueueItem,
+  RendererVideo,
 } from './types';
 import {
   getObsVideoConfig,
@@ -30,7 +32,7 @@ import {
   getBaseConfig,
   validateBaseConfig,
 } from '../utils/configUtils';
-import { ERecordingState } from './obsEnums';
+import { ERecordingState, QualityPresets } from './obsEnums';
 import {
   runClassicRecordingTest,
   runRetailRecordingTest,
@@ -40,7 +42,6 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
-import Activity from 'activitys/Activity';
 
 /**
  * Manager class.
@@ -486,6 +487,30 @@ export default class Manager {
       };
 
       VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
+    });
+
+    ipcMain.on('createKillVideo', async (_event, args: RendererVideo[]) => {
+      console.info('[Manager] ', args[0].videoSource, args[1].videoSource);
+
+      const item: KillVideoQueueItem = {
+        width: 1920,
+        fps: 60,
+        quality: QualityPresets.HIGH,
+        povs: [
+          {
+            url: args[0].videoSource,
+            start: 0,
+            stop: 30,
+          },
+          {
+            url: args[1].videoSource,
+            start: 30,
+            stop: 60,
+          },
+        ],
+      };
+
+      VideoProcessQueue.getInstance().queueCreateKillVideo(item);
     });
 
     // Listens for a manual recording being started via the button. The
