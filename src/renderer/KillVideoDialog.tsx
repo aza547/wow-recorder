@@ -29,6 +29,12 @@ import { translateQuality } from './rendererutils';
 import { obsResolutions } from 'main/constants';
 import SourceTimeline, { TimelineSegment } from './SourceTimeline';
 import { useRef } from 'react';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from './components/Tabs/Tabs';
 
 interface IProps {
   sources: RendererVideo[];
@@ -178,17 +184,39 @@ export default function KillVideoDialog(props: IProps) {
         <DialogHeader>
           <DialogTitle>Create Kill Video</DialogTitle>
           <DialogDescription>
-            Create a multiple perspective kill video. This requires re-encoding
-            the video stream so will take some time and resources.
+            <p>
+              Lorem Ipsum is simply dummy text of the printing and typesetting
+              industry. Lorem Ipsum has been the industrys standard dummy text
+              ever since the 1500s, when an unknown printer took a galley of
+              type and scrambled it to make a type specimen book.
+            </p>
+            <br></br>
+            <p>
+              It has survived not only five centuries, but also the leap into
+              electronic typesetting, remaining essentially unchanged. It was
+              popularised in the 1960s with the release of Letraset sheets
+              containing Lorem Ipsum passages, and more recently with desktop
+              publishing software like Aldus PageMaker including versions of
+              Lorem Ipsum.
+            </p>
           </DialogDescription>
         </DialogHeader>
-        <SourceTimeline sources={sources} onChange={handleTimelineChange} />
-
-        <div className="flex flex-row gap-x-2">
-          {getQualitySelect()}
-          {getFpsSelect()}
-          {getResolutionSelect()}
-        </div>
+        <Tabs defaultValue="timeline">
+          <TabsList>
+            <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+          <TabsContent value="timeline" className="mt-4">
+            <SourceTimeline sources={sources} onChange={handleTimelineChange} />
+          </TabsContent>
+          <TabsContent value="settings" className="mt-4">
+            <div className="flex flex-row gap-x-4 ">
+              {getQualitySelect()}
+              {getFpsSelect()}
+              {getResolutionSelect()}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <DialogFooter>
           <DialogClose asChild>
