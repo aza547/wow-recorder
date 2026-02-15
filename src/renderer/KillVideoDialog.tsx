@@ -27,6 +27,8 @@ import { Info } from 'lucide-react';
 import { configSchema } from 'config/configSchema';
 import { translateQuality } from './rendererutils';
 import { obsResolutions } from 'main/constants';
+import SourceTimeline, { TimelineSegment } from './SourceTimeline';
+import { useRef } from 'react';
 
 interface IProps {
   sources: RendererVideo[];
@@ -45,9 +47,28 @@ export default function KillVideoDialog(props: IProps) {
   const [resolution, setResolution] =
     useState<keyof typeof obsResolutions>('1920x1080');
 
+  // Keep the latest timeline segment state so we can pass it to createKillVideo.
+  const segmentsRef = useRef<TimelineSegment[] | null>(null);
+
+  const handleTimelineChange = (segs: TimelineSegment[]) => {
+    segmentsRef.current = segs;
+  };
+
   const createKillVideo = () => {
     const { width, height } = obsResolutions[resolution];
-    ipc.createKillVideo(width, height, parseInt(fps, 10), quality, sources);
+    const orderedSources = segmentsRef.current
+      ? segmentsRef.current.map((s) => ({
+          ...s.video,
+          duration: s.duration,
+        }))
+      : sources;
+    ipc.createKillVideo(
+      width,
+      height,
+      parseInt(fps, 10),
+      quality,
+      orderedSources,
+    );
   };
 
   const getQualitySelect = () => {
@@ -166,6 +187,8 @@ export default function KillVideoDialog(props: IProps) {
           {getFpsSelect()}
           {getResolutionSelect()}
         </div>
+
+        <SourceTimeline sources={sources} onChange={handleTimelineChange} />
 
         <DialogFooter>
           <DialogClose asChild>
