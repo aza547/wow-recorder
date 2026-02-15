@@ -32,6 +32,9 @@ import {
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
 import TagDialog from 'renderer/TagDialog';
+import KillVideoDialog from 'renderer/KillVideoDialog';
+
+const ipc = window.electron.ipcRenderer;
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
@@ -128,12 +131,7 @@ export const populateDetailsCell = (
 
     const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);
-
-      window.electron.ipcRenderer.sendMessage('videoButton', [
-        'protect',
-        lock,
-        toProtect,
-      ]);
+      ipc.sendMessage('videoButton', ['protect', lock, toProtect]);
 
       setVideoState((prev) => {
         const state = [...prev];
@@ -212,19 +210,16 @@ export const populateDetailsCell = (
   };
 
   const renderKillVidIcon = () => {
-    const clips = [video, ...video.multiPov].filter((v) => v.cloud);
-
     return (
       <Tooltip content="asd">
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={() => {
-            window.electron.ipcRenderer.sendMessage('createKillVideo', clips);
-          }}
+        <KillVideoDialog
+          sources={[video, ...video.multiPov]}
+          language={language}
         >
-          <Clapperboard size={18} />
-        </Button>
+          <Button variant="ghost" size="xs">
+            <Clapperboard size={18} />
+          </Button>
+        </KillVideoDialog>
       </Tooltip>
     );
   };

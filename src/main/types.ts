@@ -501,6 +501,7 @@ type KillVideoQueuePov = {
 
 type KillVideoQueueItem = {
   width: number;
+  height: number;
   quality: QualityPresets;
   fps: number;
   povs: KillVideoQueuePov[];

@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 import { AudioSourceType, RendererVideo, SceneItem } from './types';
 import { TChatMessageWithId } from 'types/api';
+import { QualityPresets } from './obsEnums';
 
 export type Channels =
   | 'window'
@@ -225,6 +226,16 @@ contextBridge.exposeInMainWorld('electron', {
 
     forceStopRecording() {
       ipcRenderer.send('forceStopRecording');
+    },
+
+    createKillVideo(
+      width: number,
+      height: number,
+      fps: number,
+      quality: QualityPresets,
+      sources: RendererVideo[],
+    ) {
+      ipcRenderer.send('createKillVideo', width, height, fps, quality, sources);
     },
   },
 });
