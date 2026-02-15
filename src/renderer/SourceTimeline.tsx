@@ -3,6 +3,7 @@ import { getPlayerClass, getPlayerName, secToMmSs } from './rendererutils';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { GripVertical } from 'lucide-react';
 import { WoWClassColor } from 'main/constants';
+import { classImages } from './images';
 
 const MIN_DURATION = 10;
 
@@ -267,8 +268,8 @@ export default function SourceTimeline({
   return (
     <div className="flex flex-col gap-2 w-full">
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Source Timeline</span>
-        <span>Fight Duration: {formatDuration(fightDuration)}</span>
+        <span>0:00</span>
+        <span>{formatDuration(fightDuration)}</span>
       </div>
 
       {/* Timeline bar */}
@@ -306,6 +307,17 @@ export default function SourceTimeline({
                   onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'left')}
                 />
               )}
+
+              {/* Class icon – top-left corner */}
+              <img
+                src={classImages[getPlayerClass(seg.video)]}
+                alt={getPlayerClass(seg.video)}
+                className="absolute top-1 left-1 w-4 h-4 rounded-[15%] pointer-events-none"
+                style={{
+                  border: '1px solid black',
+                  objectFit: 'cover',
+                }}
+              />
 
               {/* Content */}
               <div className="rounded-sm flex flex-col items-center gap-0.5 pointer-events-none px-2 overflow-hidden">
