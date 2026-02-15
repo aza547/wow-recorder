@@ -6,11 +6,10 @@ import {
   secToMmSs,
 } from './rendererutils';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { GripVertical } from 'lucide-react';
 import { WoWClassColor } from 'main/constants';
 import { specImages } from './images';
 
-const MIN_DURATION = 10;
+const minDuration = 30;
 
 /**
  * Represents a single segment in the timeline with its own duration.
@@ -51,7 +50,7 @@ function deduplicateSources(sources: RendererVideo[]): {
 
   return {
     videos: [...videos.values()],
-    fightDuration: Math.max(duration, MIN_DURATION),
+    fightDuration: Math.max(duration, minDuration),
   };
 }
 
@@ -101,7 +100,7 @@ export default function SourceTimeline({
     const perSegment = count > 0 ? fightDuration / count : fightDuration;
     return deduplicated.map((v) => ({
       video: v,
-      duration: Math.max(perSegment, MIN_DURATION),
+      duration: Math.max(perSegment, minDuration),
     }));
   });
 
@@ -225,21 +224,21 @@ export default function SourceTimeline({
       }
 
       // Enforce minimums.
-      if (newDuration < MIN_DURATION) {
-        const overflow = MIN_DURATION - newDuration;
-        newDuration = MIN_DURATION;
+      if (newDuration < minDuration) {
+        const overflow = minDuration - newDuration;
+        newDuration = minDuration;
         newNeighbourDuration -= overflow;
       }
 
-      if (newNeighbourDuration < MIN_DURATION) {
-        const overflow = MIN_DURATION - newNeighbourDuration;
-        newNeighbourDuration = MIN_DURATION;
+      if (newNeighbourDuration < minDuration) {
+        const overflow = minDuration - newNeighbourDuration;
+        newNeighbourDuration = minDuration;
         newDuration -= overflow;
       }
 
       // Safety clamp.
-      newDuration = Math.max(MIN_DURATION, newDuration);
-      newNeighbourDuration = Math.max(MIN_DURATION, newNeighbourDuration);
+      newDuration = Math.max(minDuration, newDuration);
+      newNeighbourDuration = Math.max(minDuration, newNeighbourDuration);
 
       const nIdx = sEdge === 'left' ? sIdx - 1 : sIdx + 1;
 
@@ -341,15 +340,22 @@ export default function SourceTimeline({
                   }}
                 />
 
+                {/* Drag indicator – top-right corner */}
+                <div className="absolute top-1 right-1 grid grid-cols-3 gap-[2px] pointer-events-none">
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-[3px] h-[3px] rounded-full bg-black/40"
+                    />
+                  ))}
+                </div>
+
                 {/* Content */}
-                <div className="rounded-sm flex flex-col items-center gap-0.5 pointer-events-none px-2 overflow-hidden">
-                  <GripVertical size={14} className="text-black/40" />
-                  <span className="text-[11px] text-black font-bold truncate max-w-full">
+                <div className="text-[10px] text-black rounded-sm flex flex-col items-center pointer-events-none px-2 pt-2 overflow-hidden">
+                  <span className="font-bold truncate max-w-full">
                     {getPlayerName(seg.video) || seg.video.videoName}
                   </span>
-                  <span className="text-[10px] text-black/70">
-                    {formatDuration(seg.duration)}
-                  </span>
+                  <span>{formatDuration(seg.duration)}</span>
                 </div>
               </div>
 
