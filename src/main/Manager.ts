@@ -489,29 +489,66 @@ export default class Manager {
       VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
     });
 
-    ipcMain.on('createKillVideo', async (_event, args: RendererVideo[]) => {
-      console.info('[Manager] ', args[0].videoSource, args[1].videoSource);
+    ipcMain.on(
+      'createKillVideo',
+      async (
+        _event,
+        width: number,
+        height: number,
+        fps: number,
+        quality: QualityPresets,
+        sources: RendererVideo[],
+      ) => {
+        console.info('[Manager] Creating kill video');
 
-      const item: KillVideoQueueItem = {
-        width: 1920,
-        fps: 60,
-        quality: QualityPresets.HIGH,
-        povs: [
-          {
-            url: args[0].videoSource,
-            start: 0,
-            stop: 30,
-          },
-          {
-            url: args[1].videoSource,
-            start: 30,
-            stop: 60,
-          },
-        ],
-      };
+        const videos = new Map();
+        let duration = Number.MAX_SAFE_INTEGER;
 
-      VideoProcessQueue.getInstance().queueCreateKillVideo(item);
-    });
+        sources.forEach((rv) => {
+          const existing = videos.get(rv.videoName);
+
+          if (!existing) {
+            videos.set(rv.videoName, rv);
+          } else if (existing.cloud && !rv.cloud) {
+            videos.set(rv.videoName, rv);
+          }
+
+          duration = Math.min(duration, rv.duration);
+        });
+
+        if (videos.size < 2) {
+          console.warn('[Manager] Too few videos for kill video');
+          return;
+        }
+
+        console.info(
+          '[Manager] Have povs for kill video',
+          Array.from(videos.values()).map((rv) => ({
+            videoName: rv.videoName,
+            cloud: rv.cloud,
+          })),
+        );
+
+        const slice = duration / videos.size;
+        console.info('[Manager] Calculated slice as', slice, 'secs');
+
+        const povs = Array.from(videos.values()).map((rv, idx) => ({
+          url: rv.videoSource,
+          start: idx * slice,
+          stop: (idx + 1) * slice,
+        }));
+
+        const item: KillVideoQueueItem = {
+          width,
+          height,
+          fps,
+          quality,
+          povs,
+        };
+
+        VideoProcessQueue.getInstance().queueCreateKillVideo(item);
+      },
+    );
 
     // Listens for a manual recording being started via the button. The
     // hotkey listener is handled separately.

@@ -1,4 +1,5 @@
 import ElectronStore from 'electron-store';
+import { QualityPresets } from 'main/obsEnums';
 import { Channels } from 'main/preload';
 import { AudioSourceType, RendererVideo, SceneItem } from 'main/types';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
@@ -79,6 +80,14 @@ declare global {
         deleteChatMessage(id: number): void;
         toggleManualRecording(): void;
         forceStopRecording(): void;
+
+        createKillVideo(
+          width: number,
+          height: number,
+          fps: number,
+          quality: QualityPresets,
+          sources: RendererVideo[],
+        ): void;
       };
     };
   }

@@ -39,7 +39,7 @@ import {
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
-import { ESupportedEncoders } from 'main/obsEnums';
+import { ESupportedEncoders, QualityPresets } from 'main/obsEnums';
 import {
   PTTEventType,
   PTTKeyPressEvent,
@@ -1115,6 +1115,21 @@ const videoMatch = (a: RendererVideo, b: RendererVideo) =>
 
 const videoMatchName = (a: RendererVideo, name: string) => a.videoName === name;
 
+const translateQuality = (p: QualityPresets, language: Language) => {
+  switch (p) {
+    case QualityPresets.ULTRA:
+      return getLocalePhrase(language, Phrase.Ultra);
+    case QualityPresets.HIGH:
+      return getLocalePhrase(language, Phrase.High);
+    case QualityPresets.MODERATE:
+      return getLocalePhrase(language, Phrase.Moderate);
+    case QualityPresets.LOW:
+      return getLocalePhrase(language, Phrase.Low);
+    default:
+      throw new Error('Unknown quality');
+  }
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1178,4 +1193,5 @@ export {
   getKeyPressEventString,
   videoMatch,
   videoMatchName,
+  translateQuality,
 };

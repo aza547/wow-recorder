@@ -77,7 +77,8 @@ export default class VideoProcessQueue {
   private downloadQueue: any;
 
   /**
-   *
+   * The kill video queue re-encoder a video from multiple perspectives into a
+   * single video file. This is naturally computationally expensive.
    */
   private killVideoQueue: any;
 
@@ -421,6 +422,9 @@ export default class VideoProcessQueue {
 
     item.povs.forEach((pov, idx) => {
       const range = `${pov.start}:${pov.stop}`;
+      // TODO also pad here?
+      // scale=${item.width}:${item.height}:force_original_aspect_ratio=decrease,
+      // pad=${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2
       filter += `[${idx}:v]trim=${range},setpts=PTS-STARTPTS,fps=${item.fps},scale=${item.width}:-1[v${idx}];`;
       filter += `[${idx}:a]atrim=${range},asetpts=PTS-STARTPTS[a${idx}];`;
     });
