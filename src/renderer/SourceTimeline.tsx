@@ -398,14 +398,14 @@ export default function SourceTimeline({
       </div>
 
       {/* Timeline ruler */}
-      <div className="relative w-full h-6 mt-1">
+      <div className="relative w-full h-6 mt-2">
         {/* Tick line across the top */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-border" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-card" />
 
         {/* Start tick + label */}
         <div className="absolute top-0 left-0 flex flex-col items-start">
-          <div className="w-px h-2 bg-border" />
-          <span className="text-[9px] text-muted-foreground/70 leading-none mt-0.5">
+          <div className="w-px h-2 bg-card" />
+          <span className="text-[9px] text-card-foreground leading-none mt-0.5">
             0:00
           </span>
         </div>
@@ -416,7 +416,7 @@ export default function SourceTimeline({
           return (
             <div
               key={`minor-${t}`}
-              className="absolute top-0 w-px h-1 bg-border"
+              className="absolute top-0 w-px h-1 bg-card"
               style={{ left: `${pct}%` }}
             />
           );
@@ -431,8 +431,8 @@ export default function SourceTimeline({
               className="absolute top-0 flex flex-col items-center"
               style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
             >
-              <div className="w-px h-2 bg-border" />
-              <span className="text-[9px] text-muted-foreground/70 leading-none mt-0.5">
+              <div className="w-px h-2 bg-card" />
+              <span className="text-[9px] text-card-foreground leading-none mt-0.5">
                 {formatDuration(t)}
               </span>
             </div>
@@ -441,8 +441,8 @@ export default function SourceTimeline({
 
         {/* End tick + label */}
         <div className="absolute top-0 right-0 flex flex-col items-end">
-          <div className="w-px h-2 bg-border" />
-          <span className="text-[9px] text-muted-foreground/70 leading-none mt-0.5">
+          <div className="w-px h-2 bg-card" />
+          <span className="text-[9px] text-card-foreground leading-none mt-0.5">
             {formatDuration(fightDuration)}
           </span>
         </div>
