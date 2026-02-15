@@ -1,38 +1,31 @@
-import { RendererVideo } from 'main/types';
+import { KillVideoTimelineSegment, RendererVideo } from 'main/types';
 import {
   getPlayerClass,
   getPlayerName,
   getPlayerSpecID,
+  getWoWClassColor,
   secToMmSs,
 } from './rendererutils';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { WoWClassColor } from 'main/constants';
 import { specImages } from './images';
 
 const minDuration = 30;
 
-/**
- * Represents a single segment in the timeline with its own duration.
- * The videoName from RendererVideo is used as the unique key.
- */
-export type TimelineSegment = {
-  video: RendererVideo;
-  duration: number;
-};
-
 interface SourceTimelineProps {
   sources: RendererVideo[];
-  onChange: (segments: TimelineSegment[]) => void;
+  onChange: (segments: KillVideoTimelineSegment[]) => void;
 }
 
 /**
  * Deduplicates sources by videoName, preferring disk copies over cloud.
  * Returns the unique videos and the fight duration (shortest source).
  */
-function deduplicateSources(sources: RendererVideo[]): {
+const filterSources = (
+  sources: RendererVideo[],
+): {
   videos: RendererVideo[];
   fightDuration: number;
-} {
+} => {
   const videos = new Map<string, RendererVideo>();
   let duration = Number.MAX_SAFE_INTEGER;
 
@@ -52,25 +45,7 @@ function deduplicateSources(sources: RendererVideo[]): {
     videos: [...videos.values()],
     fightDuration: Math.max(duration, minDuration),
   };
-}
-
-/**
- * Returns the WoW class color hex string for a video's player,
- * falling back to grey for unknown classes.
- */
-function getSegmentColor(video: RendererVideo): string {
-  const playerClass = getPlayerClass(video);
-  const hex = WoWClassColor[playerClass] ?? 'grey';
-  // Append alpha to make the background less intense while keeping text crisp.
-  return hex.startsWith('#') ? `${hex}B3` : hex;
-}
-
-/**
- * Formats seconds into a friendly mm:ss string.
- */
-function formatDuration(s: number): string {
-  return secToMmSs(Math.round(s));
-}
+};
 
 /**
  * A draggable + resizable timeline for arranging video sources.
@@ -90,12 +65,12 @@ export default function SourceTimeline({
   onChange,
 }: SourceTimelineProps) {
   const { videos: deduplicated, fightDuration } = useMemo(
-    () => deduplicateSources(sources),
+    () => filterSources(sources),
     [sources],
   );
 
   // Each viewpoint gets an equal share of the fight duration initially.
-  const [segments, setSegments] = useState<TimelineSegment[]>(() => {
+  const [segments, setSegments] = useState<KillVideoTimelineSegment[]>(() => {
     const count = deduplicated.length;
     const perSegment = count > 0 ? fightDuration / count : fightDuration;
     return deduplicated.map((v) => ({
@@ -124,7 +99,7 @@ export default function SourceTimeline({
 
   // Propagate changes up.
   const commitSegments = useCallback(
-    (next: TimelineSegment[]) => {
+    (next: KillVideoTimelineSegment[]) => {
       setSegments(next);
       onChange(next);
     },
@@ -303,7 +278,10 @@ export default function SourceTimeline({
           const widthPercent = (seg.duration / fightDuration) * 100;
           const isDragging = dragIdx === idx;
           const isOver = overIdx === idx;
-          const bgColor = getSegmentColor(seg.video);
+
+          const playerClass = getPlayerClass(seg.video);
+          const bgColor =
+            playerClass === 'UNKNOWN' ? 'gray' : getWoWClassColor(playerClass);
 
           return (
             <React.Fragment key={seg.video.videoName}>
@@ -355,7 +333,7 @@ export default function SourceTimeline({
                   <span className="font-bold truncate max-w-full">
                     {getPlayerName(seg.video) || seg.video.videoName}
                   </span>
-                  <span>{formatDuration(seg.duration)}</span>
+                  <span>{secToMmSs(seg.duration)}</span>
                 </div>
               </div>
 
@@ -422,7 +400,7 @@ export default function SourceTimeline({
             >
               <div className="w-px h-2 bg-card" />
               <span className="text-[9px] text-card-foreground leading-none mt-0.5">
-                {formatDuration(t)}
+                {secToMmSs(t)}
               </span>
             </div>
           );
@@ -432,7 +410,7 @@ export default function SourceTimeline({
         <div className="absolute top-0 right-0 flex flex-col items-end">
           <div className="w-px h-2 bg-card" />
           <span className="text-[9px] text-card-foreground leading-none mt-0.5">
-            {formatDuration(fightDuration)}
+            {secToMmSs(fightDuration)}
           </span>
         </div>
       </div>
