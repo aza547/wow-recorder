@@ -4,6 +4,7 @@ import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import { Tag } from 'react-tag-autocomplete';
 import { DateValueType } from 'react-tailwindcss-datepicker';
+import { QualityPresets } from './obsEnums';
 
 /**
  * Application recording status.
@@ -492,6 +493,19 @@ type UploadQueueItem = {
   path: string;
 };
 
+type KillVideoQueuePov = {
+  url: string;
+  start: number;
+  stop: number;
+};
+
+type KillVideoQueueItem = {
+  width: number;
+  quality: QualityPresets;
+  fps: number;
+  povs: KillVideoQueuePov[];
+};
+
 type CreateMultiPartUploadResponseBody = {
   urls: string[];
 };
@@ -691,4 +705,5 @@ export {
   SoundAlerts,
   CloudState,
   ActivityStatus,
+  KillVideoQueueItem,
 };
