@@ -507,6 +507,11 @@ type KillVideoQueueItem = {
   povs: KillVideoQueuePov[];
 };
 
+type KillVideoTimelineSegment = {
+  video: RendererVideo;
+  duration: number;
+};
+
 type CreateMultiPartUploadResponseBody = {
   urls: string[];
 };
@@ -707,4 +712,5 @@ export {
   CloudState,
   ActivityStatus,
   KillVideoQueueItem,
+  KillVideoTimelineSegment,
 };
