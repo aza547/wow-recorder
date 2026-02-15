@@ -55,7 +55,9 @@ function deduplicateSources(sources: RendererVideo[]): {
  */
 function getSegmentColor(video: RendererVideo): string {
   const playerClass = getPlayerClass(video);
-  return WoWClassColor[playerClass] ?? 'grey';
+  const hex = WoWClassColor[playerClass] ?? 'grey';
+  // Append alpha to make the background less intense while keeping text crisp.
+  return hex.startsWith('#') ? `${hex}B3` : hex;
 }
 
 /**
@@ -270,10 +272,7 @@ export default function SourceTimeline({
       </div>
 
       {/* Timeline bar */}
-      <div
-        data-timeline-container
-        className="flex w-full h-20 rounded-md overflow-hidden border border-border"
-      >
+      <div data-timeline-container className="flex w-full h-20 overflow-hidden">
         {segments.map((seg, idx) => {
           const widthPercent = (seg.duration / fightDuration) * 100;
           const isDragging = dragIdx === idx;
@@ -285,7 +284,7 @@ export default function SourceTimeline({
               key={seg.video.videoName}
               className={[
                 'relative flex items-center justify-center select-none',
-                'transition-opacity',
+                'transition-opacity border-card border-2 border-r',
                 isDragging ? 'opacity-40' : 'opacity-100',
                 isOver ? 'ring-2 ring-white ring-inset' : '',
               ].join(' ')}
@@ -309,7 +308,7 @@ export default function SourceTimeline({
               )}
 
               {/* Content */}
-              <div className="flex flex-col items-center gap-0.5 pointer-events-none px-2 overflow-hidden">
+              <div className="rounded-sm flex flex-col items-center gap-0.5 pointer-events-none px-2 overflow-hidden">
                 <GripVertical size={14} className="text-white/60" />
                 <span className="text-[11px] text-white font-medium truncate max-w-full">
                   {getPlayerName(seg.video) || seg.video.videoName}
@@ -329,22 +328,6 @@ export default function SourceTimeline({
             </div>
           );
         })}
-      </div>
-
-      {/* Per-segment detail list */}
-      <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-        {segments.map((seg) => (
-          <div key={seg.video.videoName} className="flex items-center gap-2">
-            <span
-              className="inline-block w-3 h-3 rounded-sm"
-              style={{ backgroundColor: getSegmentColor(seg.video) }}
-            />
-            <span className="font-medium text-foreground">
-              {getPlayerName(seg.video) || seg.video.videoName}
-            </span>
-            <span className="ml-auto">{formatDuration(seg.duration)}</span>
-          </div>
-        ))}
       </div>
     </div>
   );
