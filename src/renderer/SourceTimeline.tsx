@@ -1,9 +1,14 @@
 import { RendererVideo } from 'main/types';
-import { getPlayerClass, getPlayerName, secToMmSs } from './rendererutils';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  getPlayerClass,
+  getPlayerName,
+  getPlayerSpecID,
+  secToMmSs,
+} from './rendererutils';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { GripVertical } from 'lucide-react';
 import { WoWClassColor } from 'main/constants';
-import { classImages } from './images';
+import { specImages } from './images';
 
 const MIN_DURATION = 10;
 
@@ -265,13 +270,34 @@ export default function SourceTimeline({
 
   // ─── Render ─────────────────────────────────────────────────
 
-  return (
-    <div className="flex flex-col gap-2 w-full">
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>0:00</span>
-        <span>{formatDuration(fightDuration)}</span>
-      </div>
+  // Build tick marks for the timeline ruler.
+  const { majorTicks, minorTicks } = useMemo(() => {
+    const major: number[] = [];
+    const minor: number[] = [];
 
+    // Pick a sensible major interval based on fight length.
+    let majorInterval = 30;
+    if (fightDuration > 600) majorInterval = 120;
+    else if (fightDuration > 300) majorInterval = 60;
+    else if (fightDuration > 120) majorInterval = 30;
+    else majorInterval = 15;
+
+    const minorInterval = majorInterval / 2;
+
+    for (let t = minorInterval; t < fightDuration; t += minorInterval) {
+      // Check if this is a major tick (within a small epsilon).
+      if (Math.abs(t % majorInterval) < 0.01) {
+        major.push(t);
+      } else {
+        minor.push(t);
+      }
+    }
+
+    return { majorTicks: major, minorTicks: minor };
+  }, [fightDuration]);
+
+  return (
+    <div className="flex flex-col gap-0 w-full">
       {/* Timeline bar */}
       <div data-timeline-container className="flex w-full h-20 overflow-hidden">
         {segments.map((seg, idx) => {
@@ -281,65 +307,113 @@ export default function SourceTimeline({
           const bgColor = getSegmentColor(seg.video);
 
           return (
-            <div
-              key={seg.video.videoName}
-              className={[
-                'relative flex items-center justify-center select-none',
-                'transition-opacity border-card border-2 border-r',
-                isDragging ? 'opacity-40' : 'opacity-100',
-                isOver ? 'ring-2 ring-white ring-inset' : '',
-              ].join(' ')}
-              style={{
-                width: `${widthPercent}%`,
-                minWidth: 40,
-                backgroundColor: bgColor,
-              }}
-              draggable
-              onDragStart={() => handleDragStart(idx)}
-              onDragOver={(e) => handleDragOver(e, idx)}
-              onDrop={(e) => handleDrop(e, idx)}
-              onDragEnd={handleDragEnd}
-            >
-              {/* Left resize handle (not on first segment) */}
-              {idx > 0 && (
-                <div
-                  className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-white/30 z-10"
-                  onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'left')}
-                />
-              )}
-
-              {/* Class icon – top-left corner */}
-              <img
-                src={classImages[getPlayerClass(seg.video)]}
-                alt={getPlayerClass(seg.video)}
-                className="absolute top-1 left-1 w-4 h-4 rounded-[15%] pointer-events-none"
+            <React.Fragment key={seg.video.videoName}>
+              <div
+                className={[
+                  'relative flex items-center justify-center select-none',
+                  'transition-opacity border-card border-2 border-r',
+                  isDragging ? 'opacity-40' : 'opacity-100',
+                  isOver ? 'ring-2 ring-white ring-inset' : '',
+                ].join(' ')}
                 style={{
-                  border: '1px solid black',
-                  objectFit: 'cover',
+                  width: `${widthPercent}%`,
+                  minWidth: 40,
+                  backgroundColor: bgColor,
                 }}
-              />
+                draggable
+                onDragStart={() => handleDragStart(idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDrop={(e) => handleDrop(e, idx)}
+                onDragEnd={handleDragEnd}
+              >
+                {/* Spec icon – top-left corner */}
+                <img
+                  src={
+                    specImages[
+                      getPlayerSpecID(seg.video) as keyof typeof specImages
+                    ]
+                  }
+                  alt="spec"
+                  className="absolute top-1 left-1 w-4 h-4 rounded-[15%] pointer-events-none"
+                  style={{
+                    border: '1px solid black',
+                    objectFit: 'cover',
+                  }}
+                />
 
-              {/* Content */}
-              <div className="rounded-sm flex flex-col items-center gap-0.5 pointer-events-none px-2 overflow-hidden">
-                <GripVertical size={14} className="text-white/60" />
-                <span className="text-[11px] text-white font-medium truncate max-w-full">
-                  {getPlayerName(seg.video) || seg.video.videoName}
-                </span>
-                <span className="text-[10px] text-white/70">
-                  {formatDuration(seg.duration)}
-                </span>
+                {/* Content */}
+                <div className="rounded-sm flex flex-col items-center gap-0.5 pointer-events-none px-2 overflow-hidden">
+                  <GripVertical size={14} className="text-black/40" />
+                  <span className="text-[11px] text-black font-bold truncate max-w-full">
+                    {getPlayerName(seg.video) || seg.video.videoName}
+                  </span>
+                  <span className="text-[10px] text-black/70">
+                    {formatDuration(seg.duration)}
+                  </span>
+                </div>
               </div>
 
-              {/* Right resize handle (not on last segment) */}
+              {/* Resize handle centered on the break between segments */}
               {idx < segments.length - 1 && (
                 <div
-                  className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-white/30 z-10"
+                  className="flex-shrink-0 w-2 h-full cursor-col-resize hover:bg-white/20 z-10"
                   onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'right')}
                 />
               )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* Timeline ruler */}
+      <div className="relative w-full h-6 mt-1">
+        {/* Tick line across the top */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-border" />
+
+        {/* Start tick + label */}
+        <div className="absolute top-0 left-0 flex flex-col items-start">
+          <div className="w-px h-2 bg-border" />
+          <span className="text-[9px] text-muted-foreground/70 leading-none mt-0.5">
+            0:00
+          </span>
+        </div>
+
+        {/* Minor ticks */}
+        {minorTicks.map((t) => {
+          const pct = (t / fightDuration) * 100;
+          return (
+            <div
+              key={`minor-${t}`}
+              className="absolute top-0 w-px h-1 bg-border"
+              style={{ left: `${pct}%` }}
+            />
+          );
+        })}
+
+        {/* Major ticks */}
+        {majorTicks.map((t) => {
+          const pct = (t / fightDuration) * 100;
+          return (
+            <div
+              key={t}
+              className="absolute top-0 flex flex-col items-center"
+              style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
+            >
+              <div className="w-px h-2 bg-border" />
+              <span className="text-[9px] text-muted-foreground/70 leading-none mt-0.5">
+                {formatDuration(t)}
+              </span>
             </div>
           );
         })}
+
+        {/* End tick + label */}
+        <div className="absolute top-0 right-0 flex flex-col items-end">
+          <div className="w-px h-2 bg-border" />
+          <span className="text-[9px] text-muted-foreground/70 leading-none mt-0.5">
+            {formatDuration(fightDuration)}
+          </span>
+        </div>
       </div>
     </div>
   );

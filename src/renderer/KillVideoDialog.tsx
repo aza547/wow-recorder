@@ -174,7 +174,7 @@ export default function KillVideoDialog(props: IProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>Create Kill Video</DialogTitle>
           <DialogDescription>
@@ -182,13 +182,13 @@ export default function KillVideoDialog(props: IProps) {
             the video stream so will take some time and resources.
           </DialogDescription>
         </DialogHeader>
+        <SourceTimeline sources={sources} onChange={handleTimelineChange} />
+
         <div className="flex flex-row gap-x-2">
           {getQualitySelect()}
           {getFpsSelect()}
           {getResolutionSelect()}
         </div>
-
-        <SourceTimeline sources={sources} onChange={handleTimelineChange} />
 
         <DialogFooter>
           <DialogClose asChild>
