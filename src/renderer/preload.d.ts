@@ -88,6 +88,8 @@ declare global {
           quality: QualityPresets,
           sources: RendererVideo[],
         ): void;
+
+        clipVideo(video: RendererVideo, offset: number, duration: number): void;
       };
     };
   }

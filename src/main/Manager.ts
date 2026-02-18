@@ -3,11 +3,11 @@ import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
   buildClipMetadata,
-  getMetadataForVideo,
   getOBSFormattedDate,
   isManualRecordHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
+  rendererVideoToMetadata,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -466,28 +466,38 @@ export default class Manager {
     });
 
     // Clipping listener.
-    ipcMain.on('clip', async (_event, args) => {
-      console.info('[Manager] Clip request received with args', args);
+    ipcMain.on(
+      'clip',
+      async (
+        _event,
+        video: RendererVideo,
+        offset: number,
+        duration: number,
+      ) => {
+        console.info(
+          '[Manager] Clip request received with args',
+          video.videoSource,
+          offset,
+          duration,
+        );
 
-      const source = args[0];
-      const offset = args[1];
-      const duration = args[2];
+        const sourceMetadata = rendererVideoToMetadata({ ...video });
+        const now = new Date();
+        const clipMetadata = buildClipMetadata(sourceMetadata, duration, now);
 
-      const sourceMetadata = await getMetadataForVideo(source);
-      const now = new Date();
-      const clipMetadata = buildClipMetadata(sourceMetadata, duration, now);
+        const clipQueueItem: VideoQueueItem = {
+          name: video.videoName,
+          source: video.videoSource,
+          suffix: `Clipped at ${getOBSFormattedDate(now)}`,
+          offset,
+          duration,
+          clip: true,
+          metadata: clipMetadata,
+        };
 
-      const clipQueueItem: VideoQueueItem = {
-        source,
-        suffix: `Clipped at ${getOBSFormattedDate(now)}`,
-        offset,
-        duration,
-        clip: true,
-        metadata: clipMetadata,
-      };
-
-      VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
-    });
+        VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
+      },
+    );
 
     ipcMain.on(
       'createKillVideo',

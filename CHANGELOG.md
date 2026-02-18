@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Cloud videos can now be directly clipped.
+
 ### Fixed
 - Validate log path shows false by default when it's meant to show true.
 - Avoid shipping a duplicate copy of ffmpeg which reduces app size by about 60MB.

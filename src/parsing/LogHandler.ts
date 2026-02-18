@@ -29,6 +29,7 @@ import { playSoundAlert } from 'main/main';
 import Poller from 'utils/Poller';
 import { emitErrorReport } from 'main/util';
 import AsyncQueue from 'utils/AsyncQueue';
+import path from 'path';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -329,7 +330,12 @@ export default abstract class LogHandler {
         }
       }
 
+      // This looks redundant as we also pass videoFile but this allows us to
+      // share logic with clipping of remote videos where there is no file path.
+      const videoName = path.basename(videoFile, path.extname(videoFile));
+
       const queueItem: VideoQueueItem = {
+        name: videoName,
         source: videoFile,
         suffix,
         offset: 0, // We don't need to offset here, we've already cut the buffer back.

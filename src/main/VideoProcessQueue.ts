@@ -262,14 +262,7 @@ export default class VideoProcessQueue {
       // In a lot of cases this is basically just a copy. But this also
       // covers the cases where we're cutting a section off the end of
       // the video due to a timeout.
-      const videoPath = await this.cutVideo(
-        data.source,
-        outputDir,
-        data.suffix,
-        data.offset,
-        data.duration,
-      );
-
+      const videoPath = await this.cutVideo(data, outputDir);
       await writeMetadataFile(videoPath, data.metadata);
 
       const readyToUpload = await CloudClient.getInstance().ready();
@@ -509,6 +502,7 @@ export default class VideoProcessQueue {
    */
   private async finishProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Finished processing video', item.source);
+
     send('updateSaveStatus', SaveStatus.NotSaving);
     DiskClient.getInstance().refreshStatus();
     DiskClient.getInstance().refreshVideos();
@@ -649,21 +643,16 @@ export default class VideoProcessQueue {
   /**
    * Returns the full path for a video cut operation's output file.
    */
-  private static getOutputVideoPath(
-    sourceFile: string,
-    outputDir: string,
-    suffix: string | undefined,
-  ) {
-    // Can be either ".mp4" if clipping or ".mkv" if regular recording.
-    const extension = sourceFile.slice(-4);
-    let videoName = path.basename(sourceFile, extension);
+  private static getOutputVideoPath(data: VideoQueueItem, outputDir: string) {
+    let videoName = data.name;
 
-    if (suffix) {
+    if (data.suffix) {
       videoName += ' - ';
-      videoName += suffix;
+      videoName += data.suffix;
     }
 
     videoName = VideoProcessQueue.sanitizeFilename(videoName);
+
     // Always output MP4. MKV is just an intermediate format.
     return path.join(outputDir, `${videoName}.mp4`);
   }
@@ -675,36 +664,30 @@ export default class VideoProcessQueue {
    * timeout.
    */
   private async cutVideo(
-    srcFile: string,
+    data: VideoQueueItem,
     outputDir: string,
-    suffix: string | undefined,
-    offset: number,
-    duration: number,
   ): Promise<string> {
     console.info('[VideoProcessQueue] Cutting video:', {
-      srcFile,
+      name: data.name,
+      source: data.source,
       outputDir,
-      suffix,
-      offset,
-      duration,
+      suffix: data.suffix,
+      offset: data.offset,
+      duration: data.duration,
     });
 
-    let start = offset;
+    let start = data.offset;
 
-    if (offset < 0) {
+    if (data.offset < 0) {
       console.warn('[VideoProcessQueue] Negative offset set to zero');
       start = 0; // Sanity check.
     }
 
-    const outputPath = VideoProcessQueue.getOutputVideoPath(
-      srcFile,
-      outputDir,
-      suffix,
-    );
+    const outputPath = VideoProcessQueue.getOutputVideoPath(data, outputDir);
 
-    const fn = ffmpeg(srcFile)
+    const fn = ffmpeg(data.source)
       .setStartTime(start)
-      .setDuration(duration)
+      .setDuration(data.duration)
       // Crucially we copy the video and audio, so we don't do any
       // re-encoding which would take time and CPU.
       .withVideoCodec('copy')
