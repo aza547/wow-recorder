@@ -237,5 +237,9 @@ contextBridge.exposeInMainWorld('electron', {
     ) {
       ipcRenderer.send('createKillVideo', width, height, fps, quality, sources);
     },
+
+    clipVideo(video: RendererVideo, offset: number, duration: number) {
+      ipcRenderer.send('clip', video, offset, duration);
+    },
   },
 });
