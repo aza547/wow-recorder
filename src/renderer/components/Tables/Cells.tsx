@@ -212,14 +212,16 @@ export const populateDetailsCell = (
   const renderKillVidIcon = () => {
     return (
       <Tooltip content="asd">
-        <KillVideoDialog
-          sources={[video, ...video.multiPov]}
-          language={language}
-        >
-          <Button variant="ghost" size="xs">
-            <Clapperboard size={18} />
-          </Button>
-        </KillVideoDialog>
+        <div onClick={(e) => e.stopPropagation()}>
+          <KillVideoDialog
+            sources={[video, ...video.multiPov]}
+            language={language}
+          >
+            <Button variant="ghost" size="xs">
+              <Clapperboard size={18} />
+            </Button>
+          </KillVideoDialog>
+        </div>
       </Tooltip>
     );
   };

@@ -494,23 +494,18 @@ type UploadQueueItem = {
   path: string;
 };
 
-type KillVideoQueuePov = {
-  url: string;
-  start: number;
-  stop: number;
-};
-
 type KillVideoQueueItem = {
   width: number;
   height: number;
   quality: QualityPresets;
   fps: number;
-  povs: KillVideoQueuePov[];
+  segments: KillVideoSegment[];
 };
 
-type KillVideoTimelineSegment = {
+type KillVideoSegment = {
   video: RendererVideo;
-  duration: number;
+  start: number;
+  stop: number;
 };
 
 type CreateMultiPartUploadResponseBody = {
@@ -713,5 +708,5 @@ export {
   CloudState,
   ActivityStatus,
   KillVideoQueueItem,
-  KillVideoTimelineSegment,
+  KillVideoSegment,
 };
