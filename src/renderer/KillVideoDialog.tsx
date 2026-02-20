@@ -1,4 +1,4 @@
-import { RendererVideo } from 'main/types';
+import { KillVideoSegment, RendererVideo } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
 } from './components/Dialog/Dialog';
 import { Button } from './components/Button/Button';
 import { Language, Phrase } from 'localisation/phrases';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { QualityPresets } from 'main/obsEnums';
 import {
   Select,
@@ -25,26 +25,25 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 import Label from './components/Label/Label';
 import { Info } from 'lucide-react';
 import { configSchema } from 'config/configSchema';
-import { translateQuality } from './rendererutils';
+import { filterKillVideoSources, translateQuality } from './rendererutils';
 import { obsResolutions } from 'main/constants';
-import SourceTimeline, { TimelineSegment } from './SourceTimeline';
-import { useRef } from 'react';
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
 } from './components/Tabs/Tabs';
-
-interface IProps {
-  sources: RendererVideo[];
-  children: React.ReactNode;
-  language: Language;
-}
+import KillVideoSourceTimeline from './KillVideoSourceTimeline';
 
 const ipc = window.electron.ipcRenderer;
 
-export default function KillVideoDialog(props: IProps) {
+interface IProps {
+  sources: RendererVideo[];
+  language: Language;
+  children: ReactNode;
+}
+
+const KillVideoDialog = (props: IProps) => {
   const { children, language, sources } = props;
 
   // Our select component only accepts strings annoyingly.
@@ -53,28 +52,29 @@ export default function KillVideoDialog(props: IProps) {
   const [resolution, setResolution] =
     useState<keyof typeof obsResolutions>('1920x1080');
 
-  // Keep the latest timeline segment state so we can pass it to createKillVideo.
-  const segmentsRef = useRef<TimelineSegment[] | null>(null);
+  const [segments, setSegments] = useState<KillVideoSegment[]>(() => {
+    // Calculate the length of the video as the shortest source. That
+    // avoids weird conditions due to misclipped videos. Not perfect
+    // but should be good enough for now.
+    let videoDuration = Number.MAX_SAFE_INTEGER;
+    const filtered = filterKillVideoSources(sources);
 
-  const handleTimelineChange = (segs: TimelineSegment[]) => {
-    segmentsRef.current = segs;
-  };
+    filtered.forEach((rv) => {
+      videoDuration = Math.min(videoDuration, rv.duration);
+    });
+
+    const segmentDuration = videoDuration / filtered.length;
+
+    return filtered.map((rv, idx) => ({
+      video: rv,
+      start: idx * segmentDuration,
+      stop: (idx + 1) * segmentDuration,
+    }));
+  });
 
   const createKillVideo = () => {
     const { width, height } = obsResolutions[resolution];
-    const orderedSources = segmentsRef.current
-      ? segmentsRef.current.map((s) => ({
-          ...s.video,
-          duration: s.duration,
-        }))
-      : sources;
-    ipc.createKillVideo(
-      width,
-      height,
-      parseInt(fps, 10),
-      quality,
-      orderedSources,
-    );
+    ipc.createKillVideo(width, height, parseInt(fps, 10), quality, segments);
   };
 
   const getQualitySelect = () => {
@@ -180,7 +180,7 @@ export default function KillVideoDialog(props: IProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-5xl">
+      <DialogContent className="max-w-[80%]">
         <DialogHeader>
           <DialogTitle>Create Kill Video</DialogTitle>
           <DialogDescription>
@@ -196,7 +196,10 @@ export default function KillVideoDialog(props: IProps) {
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="timeline" className="mt-4">
-            <SourceTimeline sources={sources} onChange={handleTimelineChange} />
+            <KillVideoSourceTimeline
+              segments={segments}
+              setSegments={setSegments}
+            />
           </TabsContent>
           <TabsContent value="settings" className="mt-4">
             <div className="flex flex-row gap-x-4 ">
@@ -222,4 +225,6 @@ export default function KillVideoDialog(props: IProps) {
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default KillVideoDialog;

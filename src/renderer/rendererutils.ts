@@ -1130,6 +1130,26 @@ const translateQuality = (p: QualityPresets, language: Language) => {
   }
 };
 
+/**
+ * Deduplicates sources by videoName, preferring disk copies over cloud.
+ * Returns the unique videos and the fight duration (shortest source).
+ */
+const filterKillVideoSources = (sources: RendererVideo[]): RendererVideo[] => {
+  const videos = new Map<string, RendererVideo>();
+
+  sources.forEach((rv) => {
+    const existing = videos.get(rv.videoName);
+
+    if (!existing) {
+      videos.set(rv.videoName, rv);
+    } else if (existing.cloud && !rv.cloud) {
+      videos.set(rv.videoName, rv);
+    }
+  });
+
+  return Object.values(videos);
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1194,4 +1214,5 @@ export {
   videoMatch,
   videoMatchName,
   translateQuality,
+  filterKillVideoSources,
 };

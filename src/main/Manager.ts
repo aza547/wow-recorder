@@ -24,6 +24,7 @@ import {
   ActivityStatus,
   KillVideoQueueItem,
   RendererVideo,
+  KillVideoSegment,
 } from './types';
 import {
   getObsVideoConfig,
@@ -507,53 +508,29 @@ export default class Manager {
         height: number,
         fps: number,
         quality: QualityPresets,
-        sources: RendererVideo[],
+        segments: KillVideoSegment[],
       ) => {
         console.info('[Manager] Creating kill video');
 
-        const videos = new Map();
-        let duration = Number.MAX_SAFE_INTEGER;
-
-        sources.forEach((rv) => {
-          const existing = videos.get(rv.videoName);
-
-          if (!existing) {
-            videos.set(rv.videoName, rv);
-          } else if (existing.cloud && !rv.cloud) {
-            videos.set(rv.videoName, rv);
-          }
-
-          duration = Math.min(duration, rv.duration);
-        });
-
-        if (videos.size < 2) {
+        if (segments.length < 2) {
           console.warn('[Manager] Too few videos for kill video');
           return;
         }
 
         console.info(
           '[Manager] Have povs for kill video',
-          Array.from(videos.values()).map((rv) => ({
-            videoName: rv.videoName,
-            cloud: rv.cloud,
+          segments.map((seg) => ({
+            videoName: seg.video.videoName,
+            cloud: seg.video.cloud,
           })),
         );
-
-        const slice = duration / videos.size;
-        console.info('[Manager] Calculated slice as', slice, 'secs');
-
-        const povs = Array.from(videos.values()).map((rv, idx) => ({
-          url: rv.videoSource,
-          start: idx * slice,
-          stop: (idx + 1) * slice,
-        }));
 
         const item: KillVideoQueueItem = {
           width,
           height,
           fps,
           quality,
-          povs,
+          segments,
         };
 
         VideoProcessQueue.getInstance().queueCreateKillVideo(item);
