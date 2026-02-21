@@ -15,6 +15,7 @@ import {
   isRaidUtil,
   isMythicPlusUtil,
   getDungeonName,
+  filterKillVideoSources,
 } from 'renderer/rendererutils';
 import { Box, Checkbox } from '@mui/material';
 import { affixImages, specImages } from 'renderer/images';
@@ -209,28 +210,38 @@ export const populateDetailsCell = (
     );
   };
 
-  const renderKillVidIcon = () => {
-    return (
-      <Tooltip content="asd">
+  return (
+    <Box className="inline-flex">
+      {renderProtectedIcon()}
+      {renderTagIcon()}
+    </Box>
+  );
+};
+
+export const populateCreatorCell = (
+  ctx: CellContext<RendererVideo, unknown>,
+  language: Language,
+) => {
+  const video = ctx.getValue() as RendererVideo;
+  const disabled =
+    filterKillVideoSources([video, ...video.multiPov]).length < 2;
+
+  return (
+    <Box className="inline-flex">
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.KillVideoCreatorTooltip)}
+      >
         <div onClick={(e) => e.stopPropagation()}>
           <KillVideoDialog
             sources={[video, ...video.multiPov]}
             language={language}
           >
-            <Button variant="ghost" size="xs">
+            <Button variant="ghost" size="xs" disabled={disabled}>
               <Clapperboard size={18} />
             </Button>
           </KillVideoDialog>
         </div>
       </Tooltip>
-    );
-  };
-
-  return (
-    <Box className="inline-flex">
-      {renderProtectedIcon()}
-      {renderTagIcon()}
-      {renderKillVidIcon()}
     </Box>
   );
 };

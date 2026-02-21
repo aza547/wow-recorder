@@ -25,6 +25,7 @@ import {
   KillVideoQueueItem,
   RendererVideo,
   KillVideoSegment,
+  VideoSourceName,
 } from './types';
 import {
   getObsVideoConfig,
@@ -43,6 +44,7 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
+import { start } from 'node:repl';
 
 /**
  * Manager class.
@@ -518,10 +520,13 @@ export default class Manager {
         }
 
         console.info(
-          '[Manager] Have povs for kill video',
+          '[Manager] Have segments for kill video',
           segments.map((seg) => ({
             videoName: seg.video.videoName,
+            VideoSource: seg.video.videoSource,
             cloud: seg.video.cloud,
+            start: seg.start,
+            stop: seg.stop,
           })),
         );
 

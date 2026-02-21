@@ -506,6 +506,8 @@ const KOREAN: Translations = {
   [Phrase.StartManualRecordingTooltip]: '수동 녹화 시작',
   [Phrase.StopManualRecordingTooltip]: '수동 녹화 중지',
   [Phrase.RecordedAt]: '녹화 시간',
+  [Phrase.KillVideoCreatorTooltip]: '킬 비디오 생성',
+  [Phrase.KillVideoCreatorDescription]: '킬 비디오를 생성한 사람입니다.',
 };
 
 export default KOREAN;

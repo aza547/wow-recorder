@@ -28,6 +28,8 @@ interface SourceTimelineProps {
  * 3 viewpoints starts as 1 min each. Dragging edges redistributes time
  * between neighbours while keeping the total constant.
  *
+ * This was written in part by Copilot. Take it with a grain of salt.
+ *
  * Features:
  * - Rectangles colored by WoW class, sized proportionally to duration
  * - Drag & drop to reorder viewpoints
@@ -107,8 +109,9 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
       segmentIdx,
       edge,
       startX: e.clientX,
-      startDuration: segments[segmentIdx].duration,
-      neighbourDuration: segments[neighbourIdx].duration,
+      startDuration: segments[segmentIdx].stop - segments[segmentIdx].start,
+      neighbourDuration:
+        segments[neighbourIdx].stop - segments[neighbourIdx].start,
       totalWidth: container.getBoundingClientRect().width,
       totalDuration: videoDuration,
     };
@@ -142,12 +145,33 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
         newNeighbourDuration = neighbourDuration + durationDelta;
       }
 
-      const nIdx = sEdge === 'left' ? sIdx - 1 : sIdx + 1;
+      const minSegmentDuration = 1;
+
+      if (newDuration < minSegmentDuration) {
+        newNeighbourDuration -= minSegmentDuration - newDuration;
+        newDuration = minSegmentDuration;
+      }
+
+      if (newNeighbourDuration < minSegmentDuration) {
+        newDuration -= minSegmentDuration - newNeighbourDuration;
+        newNeighbourDuration = minSegmentDuration;
+      }
 
       setSegments((prev) => {
         const next = [...prev];
-        next[sIdx] = { ...next[sIdx], duration: newDuration };
-        next[nIdx] = { ...next[nIdx], duration: newNeighbourDuration };
+
+        if (sEdge === 'right') {
+          const nIdx = sIdx + 1;
+          const boundary = prev[sIdx].start + newDuration;
+          next[sIdx] = { ...next[sIdx], stop: boundary };
+          next[nIdx] = { ...next[nIdx], start: boundary };
+        } else {
+          const nIdx = sIdx - 1;
+          const boundary = prev[nIdx].start + newNeighbourDuration;
+          next[nIdx] = { ...next[nIdx], stop: boundary };
+          next[sIdx] = { ...next[sIdx], start: boundary };
+        }
+
         return next;
       });
     };
@@ -155,12 +179,6 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-
-      // Commit final state.
-      setSegments((prev) => {
-        return prev;
-      });
-
       resizeRef.current = null;
     };
 
@@ -328,7 +346,6 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
       </div>
     </div>
   );
-  return <></>;
 };
 
 export default KillVideoSourceTimeline;

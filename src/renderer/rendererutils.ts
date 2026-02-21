@@ -1134,7 +1134,7 @@ const translateQuality = (p: QualityPresets, language: Language) => {
  * Deduplicates sources by videoName, preferring disk copies over cloud.
  * Returns the unique videos and the fight duration (shortest source).
  */
-const filterKillVideoSources = (sources: RendererVideo[]): RendererVideo[] => {
+const filterKillVideoSources = (sources: RendererVideo[]) => {
   const videos = new Map<string, RendererVideo>();
 
   sources.forEach((rv) => {
@@ -1147,7 +1147,7 @@ const filterKillVideoSources = (sources: RendererVideo[]): RendererVideo[] => {
     }
   });
 
-  return Object.values(videos);
+  return Array.from(videos.values());
 };
 
 export {
