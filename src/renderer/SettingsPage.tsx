@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction } from 'react';
-import { AppState, RecStatus } from 'main/types';
+import { AdvancedLoggingStatus, AppState, RecStatus } from 'main/types';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase } from 'localisation/translations';
 import GeneralSettings from './GeneralSettings';
@@ -26,6 +26,7 @@ interface IProps {
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
+  advancedLoggingStatus: AdvancedLoggingStatus | null;
 }
 
 const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
@@ -33,7 +34,14 @@ const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
 );
 
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, config, setConfig, appState, setAppState } = props;
+  const {
+    recorderStatus,
+    config,
+    setConfig,
+    appState,
+    setAppState,
+    advancedLoggingStatus,
+  } = props;
 
   return (
     <div className="w-full h-full bg-background-higher pt-[32px] px-4">
@@ -115,6 +123,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                   config={config}
                   setConfig={setConfig}
                   appState={appState}
+                  advancedLoggingStatus={advancedLoggingStatus}
                 />
               </div>
               <div>

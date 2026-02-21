@@ -1,8 +1,11 @@
+import fs, { FSWatcher } from 'fs';
 import { app, ipcMain, powerMonitor } from 'electron';
 import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
   buildClipMetadata,
+  checkAdvancedCombatLogging,
+  getConfigWtfPath,
   getMetadataForVideo,
   getOBSFormattedDate,
   isManualRecordHotKey,
@@ -22,6 +25,7 @@ import {
   WowProcessEvent,
   BaseConfig,
   ActivityStatus,
+  AdvancedLoggingStatus,
 } from './types';
 import {
   getObsVideoConfig,
@@ -91,6 +95,12 @@ export default class Manager {
    * it starts a recording mid changing it, so set this to true while doing so.
    */
   private manualHotKeyDisabled = false;
+
+  /**
+   * File watchers for Config.wtf files, used to detect changes to
+   * the advanced combat logging setting.
+   */
+  private configWtfWatchers: FSWatcher[] = [];
 
   /**
    * Constructor.
@@ -176,6 +186,8 @@ export default class Manager {
     // ...and for the disk client too.
     await DiskClient.getInstance().refreshStatus();
     await DiskClient.getInstance().refreshVideos();
+
+    this.checkAdvancedLogging();
   }
 
   /**
@@ -278,6 +290,79 @@ export default class Manager {
 
     this.refreshMicStatus(this.recorder.obsMicState);
     this.redrawPreview();
+  }
+
+  /**
+   * Check Config.wtf for each configured WoW flavour and warn the user
+   * if advanced combat logging is not enabled.
+   */
+  public checkAdvancedLogging() {
+    const status: AdvancedLoggingStatus = {
+      retail:
+        !this.cfg.get<boolean>('recordRetail') ||
+        checkAdvancedCombatLogging(this.cfg.get<string>('retailLogPath')),
+      classic:
+        !this.cfg.get<boolean>('recordClassic') ||
+        checkAdvancedCombatLogging(this.cfg.get<string>('classicLogPath')),
+      era:
+        !this.cfg.get<boolean>('recordEra') ||
+        checkAdvancedCombatLogging(this.cfg.get<string>('eraLogPath')),
+      retailPtr:
+        !this.cfg.get<boolean>('recordRetailPtr') ||
+        checkAdvancedCombatLogging(this.cfg.get<string>('retailPtrLogPath')),
+      classicPtr:
+        !this.cfg.get<boolean>('recordClassicPtr') ||
+        checkAdvancedCombatLogging(this.cfg.get<string>('classicPtrLogPath')),
+    };
+
+    console.info('[Manager] Advanced logging status:', JSON.stringify(status));
+    send('updateAdvancedLoggingStatus', status);
+
+    this.watchConfigWtfFiles();
+  }
+
+  /**
+   * Watch Config.wtf files for changes so the advanced logging status
+   * updates reactively when the user toggles the setting in WoW.
+   */
+  private watchConfigWtfFiles() {
+    this.configWtfWatchers.forEach((w) => w.close());
+    this.configWtfWatchers = [];
+
+    const logPaths: string[] = [];
+
+    if (this.cfg.get<boolean>('recordRetail'))
+      logPaths.push(this.cfg.get<string>('retailLogPath'));
+    if (this.cfg.get<boolean>('recordClassic'))
+      logPaths.push(this.cfg.get<string>('classicLogPath'));
+    if (this.cfg.get<boolean>('recordEra'))
+      logPaths.push(this.cfg.get<string>('eraLogPath'));
+    if (this.cfg.get<boolean>('recordRetailPtr'))
+      logPaths.push(this.cfg.get<string>('retailPtrLogPath'));
+    if (this.cfg.get<boolean>('recordClassicPtr'))
+      logPaths.push(this.cfg.get<string>('classicPtrLogPath'));
+
+    const watched = new Set<string>();
+
+    for (const logPath of logPaths) {
+      if (!logPath) continue;
+
+      const configPath = getConfigWtfPath(logPath);
+      if (watched.has(configPath) || !fs.existsSync(configPath)) continue;
+
+      watched.add(configPath);
+
+      try {
+        const watcher = fs.watch(configPath, () => {
+          console.info('[Manager] Config.wtf changed:', configPath);
+          this.checkAdvancedLogging();
+        });
+
+        this.configWtfWatchers.push(watcher);
+      } catch (err) {
+        console.warn('[Manager] Failed to watch Config.wtf:', configPath, err);
+      }
+    }
   }
 
   /**

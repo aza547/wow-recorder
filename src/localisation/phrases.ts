@@ -503,6 +503,7 @@ enum Phrase {
   StartManualRecordingTooltip,
   StopManualRecordingTooltip,
   RecordedAt,
+  AdvancedCombatLoggingDisabledWarning,
 }
 
 enum Language {
