@@ -506,6 +506,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.StartManualRecordingTooltip]: '开始手动录制',
   [Phrase.StopManualRecordingTooltip]: '停止手动录制',
   [Phrase.RecordedAt]: '录制于',
+  [Phrase.KillVideoCreatorTooltip]: '创建击杀视频',
+  [Phrase.KillVideoCreatorDescription]: '创建击杀视频的人。',
 };
 
 export default CHINESE_SIMPLIFIED;

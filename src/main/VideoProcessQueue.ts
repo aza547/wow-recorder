@@ -19,6 +19,8 @@ import {
   fixPathWhenPackaged,
   logAxiosError,
   tryUnlink,
+  buildKillVideoMetadata,
+  getOBSFormattedDate,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import { send } from './main';
@@ -235,7 +237,7 @@ export default class VideoProcessQueue {
   };
 
   /**
-   *
+   * Queue up a kill video for creation.
    */
   public queueCreateKillVideo = async (item: KillVideoQueueItem) => {
     if (this.inProgressKillVideo) {
@@ -405,7 +407,9 @@ export default class VideoProcessQueue {
   }
 
   /**
-   *
+   * Create a kill video. This is CPU intensive and involves re-encoding. We
+   * build a complex filter graph to stitch together the different perspectives
+   * with crossfades and audiofades.
    */
   private async processKillVideoQueueItem(
     item: KillVideoQueueItem,
@@ -413,7 +417,7 @@ export default class VideoProcessQueue {
   ): Promise<void> {
     let filter = '';
 
-    item.povs.forEach((pov, idx) => {
+    item.segments.forEach((pov, idx) => {
       const range = `${pov.start}:${pov.stop}`;
       // TODO also pad here?
       // scale=${item.width}:${item.height}:force_original_aspect_ratio=decrease,
@@ -422,8 +426,8 @@ export default class VideoProcessQueue {
       filter += `[${idx}:a]atrim=${range},asetpts=PTS-STARTPTS[a${idx}];`;
     });
 
-    item.povs.forEach((pov, idx) => {
-      if (idx >= item.povs.length - 1) {
+    item.segments.forEach((pov, idx) => {
+      if (idx >= item.segments.length - 1) {
         return;
       }
 
@@ -434,7 +438,7 @@ export default class VideoProcessQueue {
         prev += i;
       }
 
-      if (idx < item.povs.length - 2) {
+      if (idx < item.segments.length - 2) {
         next = prev + (idx + 1);
       }
 
@@ -443,6 +447,27 @@ export default class VideoProcessQueue {
     });
 
     console.info('[VideoProcessQueue] Generated filter:', filter);
+
+    const videoDate =
+      item.segments[0].video.start ?? item.segments[0].video.mtime;
+
+    const baseMetadata = rendererVideoToMetadata(item.segments[0].video);
+
+    const metadata = buildKillVideoMetadata(
+      baseMetadata,
+      item.segments[item.segments.length - 1].stop,
+      new Date(),
+    );
+
+    let videoName = getOBSFormattedDate(new Date(videoDate));
+
+    if (baseMetadata.encounterName && baseMetadata.difficulty) {
+      videoName = ` - ${baseMetadata.encounterName} [${baseMetadata.difficulty}]`;
+    }
+
+    const storageDir = this.cfg.get<string>('storagePath');
+    const videoPath = path.join(storageDir, `${videoName}.mp4`);
+    console.info('[VideoProcessQueue] Creating kill video:', videoPath);
 
     const fn = ffmpeg()
       .complexFilter(filter)
@@ -453,10 +478,10 @@ export default class VideoProcessQueue {
       .outputOption('-c:v libx264')
       .outputOption('-c:a aac')
       .outputOption('-preset fast')
-      .output('C:\\testkillvid\\output.mp4');
+      .output(videoPath);
 
-    item.povs.forEach((pov) => {
-      fn.input(pov.url);
+    item.segments.forEach((segment) => {
+      fn.input(segment.video.videoSource);
     });
 
     console.time('[VideoProcessQueue] Create kill video');
@@ -464,6 +489,8 @@ export default class VideoProcessQueue {
     console.timeEnd('[VideoProcessQueue] Create kill video');
 
     this.inProgressKillVideo = false;
+
+    await writeMetadataFile(videoPath, metadata);
     done();
   }
 

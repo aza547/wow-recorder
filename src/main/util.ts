@@ -289,7 +289,7 @@ const loadVideoDetailsDisk = async (
  * Writes video metadata asynchronously and returns a Promise
  */
 const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
-  console.info('[Util] Write Metadata file', videoPath);
+  console.info('[Util] Write Metadata file for video:', videoPath);
 
   const metadataFileName = getMetadataFileNameForVideo(videoPath);
   const jsonString = JSON.stringify(metadata, null, 2);
@@ -600,6 +600,25 @@ const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
   final.category = VideoCategory.Clips;
   final.protected = true;
   final.clippedAt = date.getTime();
+  return final;
+};
+
+const buildKillVideoMetadata = (
+  initial: Metadata,
+  duration: number,
+  date: Date,
+) => {
+  const final = initial;
+  final.duration = duration;
+  final.parentCategory = initial.category;
+  final.category = VideoCategory.Clips;
+  final.protected = true;
+  final.clippedAt = date.getTime();
+
+  if (initial.encounterName && initial.difficulty) {
+    final.tag = `${initial.encounterName} [${initial.difficulty}] - WCR Multipov Kill Video`;
+  }
+
   return final;
 };
 
@@ -1073,6 +1092,7 @@ export {
   getPromiseBomb,
   emitErrorReport,
   buildClipMetadata,
+  buildKillVideoMetadata,
   getOBSFormattedDate,
   checkDisk,
   getMetadataFileNameForVideo,

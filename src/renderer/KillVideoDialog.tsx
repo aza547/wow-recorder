@@ -177,17 +177,57 @@ const KillVideoDialog = (props: IProps) => {
     );
   };
 
+  const resetSettings = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+
+    // Calculate the length of the video as the shortest source. That
+    // avoids weird conditions due to misclipped videos. Not perfect
+    // but should be good enough for now.
+    let videoDuration = Number.MAX_SAFE_INTEGER;
+    const filtered = filterKillVideoSources(sources);
+
+    filtered.forEach((rv) => {
+      videoDuration = Math.min(videoDuration, rv.duration);
+    });
+
+    const segmentDuration = videoDuration / filtered.length;
+
+    const resetSegments = filtered.map((rv, idx) => ({
+      video: rv,
+      start: idx * segmentDuration,
+      stop: (idx + 1) * segmentDuration,
+    }));
+
+    setSegments(resetSegments);
+    setFps('60');
+    setQuality(QualityPresets.HIGH);
+    setResolution('1920x1080');
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-[80%]">
+      <DialogContent className="max-w-[75%]">
         <DialogHeader>
-          <DialogTitle>Create Kill Video</DialogTitle>
+          <DialogTitle>
+            {getLocalePhrase(language, Phrase.KillVideoCreatorTooltip)}
+          </DialogTitle>
           <DialogDescription>
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industrys standard dummy text
-            ever since the 1500s, when an unknown printer took a galley of type
-            and scrambled it to make a type specimen book.
+            <div className="mb-2">
+              {getLocalePhrase(language, Phrase.KillVideoCreatorDescription1)}
+            </div>
+            <ol className="list-decimal pl-6 mb-2">
+              {[
+                Phrase.KillVideoCreatorDescription2,
+                Phrase.KillVideoCreatorDescription3,
+                Phrase.KillVideoCreatorDescription4,
+              ].map((p) => (
+                <li key={p}>{getLocalePhrase(language, p)}</li>
+              ))}
+            </ol>
+            <div className="mb-2">
+              {getLocalePhrase(language, Phrase.KillVideoCreatorDescription5)}
+            </div>
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="timeline">
@@ -216,6 +256,11 @@ const KillVideoDialog = (props: IProps) => {
               {getLocalePhrase(language, Phrase.CancelTooltip)}
             </Button>
           </DialogClose>
+
+          <Button onClick={resetSettings} variant="ghost">
+            {getLocalePhrase(language, Phrase.Reset)}
+          </Button>
+       
           <DialogClose asChild>
             <Button onClick={() => createKillVideo()} type="submit">
               Create
