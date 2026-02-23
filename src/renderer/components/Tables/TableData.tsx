@@ -118,6 +118,7 @@ const useTable = (
       },
       {
         id: 'Pull',
+        size: 100,
         accessorFn: (v) => getPullNumber(v, videoState),
         header: () => PullHeader(language),
       },
@@ -141,6 +142,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 150,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),

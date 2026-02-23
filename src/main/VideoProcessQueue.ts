@@ -418,40 +418,30 @@ export default class VideoProcessQueue {
     let filter = '';
 
     item.segments.forEach((pov, idx) => {
-      const range = `${pov.start}:${pov.stop}`;
-      // TODO also pad here?
-      // scale=${item.width}:${item.height}:force_original_aspect_ratio=decrease,
-      // pad=${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2
-      filter += `[${idx}:v]trim=${range},setpts=PTS-STARTPTS,fps=${item.fps},scale=${item.width}:-1[v${idx}];`;
-      filter += `[${idx}:a]atrim=${range},asetpts=PTS-STARTPTS[a${idx}];`;
+      // const scale = `${item.width}:${item.height}:force_original_aspect_ratio=decrease`;
+      // const pad = `${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2`;
+      const segmentDuration = pov.stop - pov.start;
+
+      // video fade out / fade in
+      const fadeDuration = 1;
+      const fadeOutStart = Math.max(0, segmentDuration - fadeDuration);
+      const fadeInStart = 0;
+
+      filter += `[${idx}:v]setpts=PTS-STARTPTS,fps=${item.fps},scale=${item.width}:-1,fade=t=in:st=${fadeInStart}:d=${fadeDuration},fade=t=out:st=${fadeOutStart}:d=${fadeDuration}[v${idx}];`;
+      filter += `[${idx}:a]asetpts=PTS-STARTPTS,afade=t=in:st=${fadeInStart}:d=${fadeDuration},afade=t=out:st=${fadeOutStart}:d=${fadeDuration}[a${idx}];`;
     });
 
-    item.segments.forEach((pov, idx) => {
-      if (idx >= item.segments.length - 1) {
-        return;
-      }
-
-      let prev = '';
-      let next = '';
-
-      for (let i = 0; i <= idx; i++) {
-        prev += i;
-      }
-
-      if (idx < item.segments.length - 2) {
-        next = prev + (idx + 1);
-      }
-
-      filter += `[v${prev}][v${idx + 1}]xfade=transition=fade:duration=1:offset=${pov.stop - 1}[v${next}];`;
-      filter += `[a${prev}][a${idx + 1}]acrossfade=d=1[a${next}];`;
-    });
+    // concat all segments (video+audio interleaved)
+    const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
+    filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a];`;
 
     console.info('[VideoProcessQueue] Generated filter:', filter);
 
     const videoDate =
       item.segments[0].video.start ?? item.segments[0].video.mtime;
 
-    const baseMetadata = rendererVideoToMetadata(item.segments[0].video);
+    // Clone the object so we don't modify it and lose props.
+    const baseMetadata = rendererVideoToMetadata({ ...item.segments[0].video });
 
     const metadata = buildKillVideoMetadata(
       baseMetadata,
@@ -462,7 +452,7 @@ export default class VideoProcessQueue {
     let videoName = getOBSFormattedDate(new Date(videoDate));
 
     if (baseMetadata.encounterName && baseMetadata.difficulty) {
-      videoName = ` - ${baseMetadata.encounterName} [${baseMetadata.difficulty}]`;
+      videoName += ` - ${baseMetadata.encounterName} [${baseMetadata.difficulty}]`;
     }
 
     const storageDir = this.cfg.get<string>('storagePath');
@@ -478,10 +468,19 @@ export default class VideoProcessQueue {
       .outputOption('-c:v libx264')
       .outputOption('-c:a aac')
       .outputOption('-preset fast')
+      .outputOption('-pix_fmt yuv420p')
       .output(videoPath);
 
-    item.segments.forEach((segment) => {
-      fn.input(segment.video.videoSource);
+    item.segments.forEach((seg) => {
+      console.info('Adding video source to ffmpeg command:', {
+        src: seg.video.videoSource,
+        start: seg.start,
+        duration: seg.stop - seg.start,
+      });
+
+      fn.inputOption(`-ss ${seg.start}`)
+        .inputOption(`-t ${seg.stop - seg.start}`)
+        .input(seg.video.videoSource);
     });
 
     console.time('[VideoProcessQueue] Create kill video');

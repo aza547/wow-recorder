@@ -14,6 +14,7 @@ import React, {
   useState,
 } from 'react';
 import { specImages } from './images';
+import { Trash2 } from 'lucide-react';
 
 interface SourceTimelineProps {
   segments: KillVideoSegment[];
@@ -45,6 +46,9 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
 
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
+  const [overBin, setOverBin] = useState(false);
+
+  const canRemove = segments.length > 2;
 
   const resizeRef = useRef<{
     segmentIdx: number;
@@ -85,6 +89,35 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
   const handleDragEnd = () => {
     setDragIdx(null);
     setOverIdx(null);
+    setOverBin(false);
+  };
+
+  const handleBinDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragIdx !== null && canRemove) {
+      removeSegment(dragIdx);
+    }
+    setDragIdx(null);
+    setOverIdx(null);
+    setOverBin(false);
+  };
+
+  const removeSegment = (idx: number) => {
+    if (segments.length <= 2) return;
+
+    const removedDuration = segments[idx].stop - segments[idx].start;
+    const remaining = segments.filter((_, i) => i !== idx);
+    const extraEach = removedDuration / remaining.length;
+
+    let cursor = 0;
+    const updated = remaining.map((seg) => {
+      const newDuration = seg.stop - seg.start + extraEach;
+      const newSeg = { ...seg, start: cursor, stop: cursor + newDuration };
+      cursor += newDuration;
+      return newSeg;
+    });
+
+    setSegments(updated);
   };
 
   const handleEdgeMouseDown = (
@@ -344,6 +377,28 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           </span>
         </div>
       </div>
+
+      {canRemove && (
+        <div
+          className={[
+            'flex items-center justify-center gap-2 w-full h-10 mt-1 rounded-md border-2 border-dashed transition-colors',
+            overBin
+              ? 'border-red-500 bg-red-500/20 text-red-400'
+              : dragIdx !== null
+                ? 'border-muted-foreground/30 bg-muted/10 text-muted-foreground'
+                : 'border-transparent bg-transparent text-transparent',
+          ].join(' ')}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setOverBin(true);
+          }}
+          onDragLeave={() => setOverBin(false)}
+          onDrop={handleBinDrop}
+        >
+          <Trash2 size={14} />
+          <span className="text-xs">Drop here to remove</span>
+        </div>
+      )}
     </div>
   );
 };

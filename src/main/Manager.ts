@@ -25,7 +25,6 @@ import {
   KillVideoQueueItem,
   RendererVideo,
   KillVideoSegment,
-  VideoSourceName,
 } from './types';
 import {
   getObsVideoConfig,
@@ -44,7 +43,6 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
-import { start } from 'node:repl';
 
 /**
  * Manager class.
@@ -512,7 +510,10 @@ export default class Manager {
         quality: QualityPresets,
         segments: KillVideoSegment[],
       ) => {
-        console.info('[Manager] Creating kill video');
+        console.info(
+          '[Manager] Creating kill video with settings:',
+          `${width}x${height} at ${fps} fps with quality ${quality}`,
+        );
 
         if (segments.length < 2) {
           console.warn('[Manager] Too few videos for kill video');
@@ -523,7 +524,7 @@ export default class Manager {
           '[Manager] Have segments for kill video',
           segments.map((seg) => ({
             videoName: seg.video.videoName,
-            VideoSource: seg.video.videoSource,
+            videoSource: seg.video.videoSource,
             cloud: seg.video.cloud,
             start: seg.start,
             stop: seg.stop,
