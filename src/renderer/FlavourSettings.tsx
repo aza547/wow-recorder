@@ -1,6 +1,6 @@
 import { ConfigurationSchema, configSchema } from 'config/configSchema';
 import React, { Dispatch, SetStateAction } from 'react';
-import { AppState, RecStatus } from 'main/types';
+import { AdvancedLoggingStatus, AppState, RecStatus } from 'main/types';
 import { Info } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
@@ -17,12 +17,14 @@ interface IProps {
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   appState: AppState;
+  advancedLoggingStatus: AdvancedLoggingStatus | null;
 }
 
 const ipc = window.electron.ipcRenderer;
 
 const FlavourSettings: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, config, setConfig, appState } = props;
+  const { recorderStatus, config, setConfig, appState, advancedLoggingStatus } =
+    props;
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
@@ -179,6 +181,14 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
+            {advancedLoggingStatus && !advancedLoggingStatus.retail && (
+              <span className="text-error text-sm">
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.AdvancedCombatLoggingDisabledWarning,
+                )}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -253,6 +263,14 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 {getLocalePhrase(
                   appState.language,
                   Phrase.InvalidClassicLogPathText,
+                )}
+              </span>
+            )}
+            {advancedLoggingStatus && !advancedLoggingStatus.classic && (
+              <span className="text-error text-sm">
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.AdvancedCombatLoggingDisabledWarning,
                 )}
               </span>
             )}
@@ -345,6 +363,14 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
+            {advancedLoggingStatus && !advancedLoggingStatus.era && (
+              <span className="text-error text-sm">
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.AdvancedCombatLoggingDisabledWarning,
+                )}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -428,6 +454,14 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 {getLocalePhrase(
                   appState.language,
                   Phrase.InvalidRetailPtrLogPathText,
+                )}
+              </span>
+            )}
+            {advancedLoggingStatus && !advancedLoggingStatus.retailPtr && (
+              <span className="text-error text-sm">
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.AdvancedCombatLoggingDisabledWarning,
                 )}
               </span>
             )}
@@ -519,6 +553,14 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 {getLocalePhrase(
                   appState.language,
                   Phrase.InvalidClassicPtrLogPathText,
+                )}
+              </span>
+            )}
+            {advancedLoggingStatus && !advancedLoggingStatus.classicPtr && (
+              <span className="text-error text-sm">
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.AdvancedCombatLoggingDisabledWarning,
                 )}
               </span>
             )}

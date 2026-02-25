@@ -506,6 +506,7 @@ const KOREAN: Translations = {
   [Phrase.StartManualRecordingTooltip]: '수동 녹화 시작',
   [Phrase.StopManualRecordingTooltip]: '수동 녹화 중지',
   [Phrase.RecordedAt]: '녹화 시간',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: '고급 전투 기록이 활성화되어 있지 않습니다. WoW에서 활성화하세요: 시스템 > 네트워크 > 고급 전투 기록.',
 };
 
 export default KOREAN;

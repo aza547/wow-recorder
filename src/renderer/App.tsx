@@ -12,6 +12,7 @@ import {
   DiskStatus,
   StorageFilter,
   ActivityStatus,
+  AdvancedLoggingStatus,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language } from 'localisation/translations';
@@ -47,6 +48,8 @@ const WarcraftRecorder = () => {
   const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
   const updateNotified = useRef(false);
   const { toast } = useToast();
+  const [advancedLoggingStatus, setAdvancedLoggingStatus] =
+    useState<AdvancedLoggingStatus | null>(null);
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW,
@@ -251,6 +254,10 @@ const WarcraftRecorder = () => {
     updateNotified.current = true;
   };
 
+  const updateAdvancedLogging = (status: unknown) => {
+    setAdvancedLoggingStatus(status as AdvancedLoggingStatus);
+  };
+
   const setCloudVideos = (videos: unknown) => {
     setVideoState((prev) => {
       const disk = prev.filter((video) => !video.cloud);
@@ -422,6 +429,7 @@ const WarcraftRecorder = () => {
     ipc.on('displayProtectCloudVideos', displayProtectCloudVideos);
     ipc.on('displayUnprotectCloudVideos', displayUnprotectCloudVideos);
     ipc.on('displayTagCloudVideo', displayTagCloudVideo);
+    ipc.on('updateAdvancedLoggingStatus', updateAdvancedLogging);
 
     return () => {
       ipc.removeAllListeners('updateRecStatus');
@@ -440,6 +448,7 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('displayProtectCloudVideos');
       ipc.removeAllListeners('displayUnprotectCloudVideos');
       ipc.removeAllListeners('displayTagCloudVideo');
+      ipc.removeAllListeners('updateAdvancedLoggingStatus');
     };
   }, []);
 
@@ -473,6 +482,7 @@ const WarcraftRecorder = () => {
                 updateAvailable={updateAvailable}
                 recorderCategory={activityStatus?.category}
                 activityStatus={activityStatus}
+                advancedLoggingStatus={advancedLoggingStatus}
               />
               <Layout
                 recorderStatus={recorderStatus}
@@ -484,6 +494,7 @@ const WarcraftRecorder = () => {
                 playerHeight={playerHeight}
                 config={config}
                 setConfig={setConfig}
+                advancedLoggingStatus={advancedLoggingStatus}
               />
             </div>
           </TooltipProvider>

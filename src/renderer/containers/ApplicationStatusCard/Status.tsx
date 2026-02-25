@@ -2,7 +2,13 @@ import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
 import { HardDriveDownload } from 'lucide-react';
 import { ConfigurationSchema } from 'config/configSchema';
-import { ActivityStatus, AppState, RecStatus, SaveStatus } from 'main/types';
+import {
+  ActivityStatus,
+  AdvancedLoggingStatus,
+  AppState,
+  RecStatus,
+  SaveStatus,
+} from 'main/types';
 import React, { useEffect, useState } from 'react';
 import { Button } from 'renderer/components/Button/Button';
 import {
@@ -30,6 +36,7 @@ type StatusProps = {
   config: ConfigurationSchema;
   appState: AppState;
   activityStatus: ActivityStatus | null;
+  advancedLoggingStatus: AdvancedLoggingStatus | null;
 };
 
 const Status = ({
@@ -39,6 +46,7 @@ const Status = ({
   config,
   appState,
   activityStatus,
+  advancedLoggingStatus,
 }: StatusProps) => {
   const { language } = appState;
   const [recTimerSec, setRecTimerSec] = useState(0);
@@ -206,6 +214,17 @@ const Status = ({
                 {': '}
               </span>
               <code>{config.retailLogPath}</code>
+              {advancedLoggingStatus && !advancedLoggingStatus.retail && (
+                <span
+                  className="text-destructive ml-1"
+                  title={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  {'\u26A0'}
+                </span>
+              )}
             </li>
           )}
           {config.recordClassic && (
@@ -215,6 +234,17 @@ const Status = ({
                 {': '}
               </span>
               <code>{config.classicLogPath}</code>
+              {advancedLoggingStatus && !advancedLoggingStatus.classic && (
+                <span
+                  className="text-destructive ml-1"
+                  title={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  {'\u26A0'}
+                </span>
+              )}
             </li>
           )}
           {config.recordEra && (
@@ -224,6 +254,17 @@ const Status = ({
                 {': '}
               </span>
               <code>{config.eraLogPath}</code>
+              {advancedLoggingStatus && !advancedLoggingStatus.era && (
+                <span
+                  className="text-destructive ml-1"
+                  title={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  {'\u26A0'}
+                </span>
+              )}
             </li>
           )}
           {config.recordRetailPtr && (
@@ -233,6 +274,17 @@ const Status = ({
                 {': '}
               </span>
               <code>{config.retailPtrLogPath}</code>
+              {advancedLoggingStatus && !advancedLoggingStatus.retailPtr && (
+                <span
+                  className="text-destructive ml-1"
+                  title={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  {'\u26A0'}
+                </span>
+              )}
             </li>
           )}
           {config.recordClassicPtr && (
@@ -242,6 +294,17 @@ const Status = ({
                 {': '}
               </span>
               <code>{config.classicPtrLogPath}</code>
+              {advancedLoggingStatus && !advancedLoggingStatus.classicPtr && (
+                <span
+                  className="text-destructive ml-1"
+                  title={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  {'\u26A0'}
+                </span>
+              )}
             </li>
           )}
         </ul>

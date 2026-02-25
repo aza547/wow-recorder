@@ -506,6 +506,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.StartManualRecordingTooltip]: '开始手动录制',
   [Phrase.StopManualRecordingTooltip]: '停止手动录制',
   [Phrase.RecordedAt]: '录制于',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: '高级战斗日志未启用。请在魔兽世界中启用：系统 > 网络 > 高级战斗日志。',
 };
 
 export default CHINESE_SIMPLIFIED;

@@ -506,6 +506,7 @@ const GERMAN: Translations = {
   [Phrase.StartManualRecordingTooltip]: 'Starte eine manuelle Aufnahme',
   [Phrase.StopManualRecordingTooltip]: 'Beende die manuelle Aufnahme',
   [Phrase.RecordedAt]: 'Aufgenommen am',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: 'Erweitertes Kampflog ist nicht aktiviert. Aktiviere es in WoW: System > Netzwerk > Erweitertes Kampflog.',
 };
 
 export default GERMAN;
