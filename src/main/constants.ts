@@ -1464,6 +1464,13 @@ const specializationById: { [id: number]: SpecializationObjectType } = {
     label: 'Demon Hunter',
     name: 'Vengeance',
   },
+  1480: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'DEMONHUNTER',
+    label: 'Demon Hunter',
+    name: 'Devourer',
+  },
   102: {
     type: 'ranged',
     role: 'damage',
