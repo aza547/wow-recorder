@@ -27,12 +27,14 @@ export PATH="$NOOBS_BIN:$PATH"
 
 # Force avcodec for aac_encode
 AVCODEC_PATH="$NOOBS_BIN/libavcodec.so.62"
-# Force our libobs to load after that
+# Force avformat for graphics-ffmpeg in OBS to enable file protocol when opening overlay images
+AVFORMAT_PATH="$NOOBS_BIN/libavformat.so.62"
+# Force our libobs to load after that, to resolve its deps
 LIBOBS_PATH="$NOOBS_BIN/libobs.so.30"
 # Force x264 without memalign/huge pages
 LIBX264_PATH="$NOOBS_BIN/libx264.so.165"
 
-export LD_PRELOAD="$AVCODEC_PATH $LIBOBS_PATH $LIBX264_PATH"
+export LD_PRELOAD="$AVCODEC_PATH $AVFORMAT_PATH $LIBOBS_PATH $LIBX264_PATH"
 
 exec "$SCRIPT_DIR/${executableName}-bin" "$@"
 `;
