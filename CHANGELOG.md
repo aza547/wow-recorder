@@ -8,7 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [7.5.2] - 2026-02-26
+### Added
+- [Issue 797](https://github.com/aza547/wow-recorder/issues/797) - Add the new devourer spec.
+
+### Fixed
 - Validate log path shows false by default when it's meant to show true.
+- Avoid shipping a duplicate copy of ffmpeg which reduces app size by about 60MB.
 
 ## [7.5.1] - 2026-01-21
 ### Fixed

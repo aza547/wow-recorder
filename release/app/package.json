@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "version": "7.5.1",
+  "version": "7.5.2",
   "description": "Warcraft Recorder",
   "main": "./dist/main/main.js",
   "author": {
@@ -12,8 +12,6 @@
     "postinstall": "npm run electron-rebuild && npm run link-modules"
   },
   "dependencies": {
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@ffprobe-installer/ffprobe": "^2.1.2",
     "atomic-queue": "^5.0.4",
     "noobs": "file:../../../noobs",
     "uiohook-napi": "^1.5.2"
