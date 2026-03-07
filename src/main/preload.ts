@@ -234,8 +234,17 @@ contextBridge.exposeInMainWorld('electron', {
       fps: number,
       quality: QualityPresets,
       sources: RendererVideo[],
+      audioTrackIndex: number,
     ) {
-      ipcRenderer.send('createKillVideo', width, height, fps, quality, sources);
+      ipcRenderer.send(
+        'createKillVideo',
+        width,
+        height,
+        fps,
+        quality,
+        sources,
+        audioTrackIndex,
+      );
     },
 
     clipVideo(video: RendererVideo, offset: number, duration: number) {

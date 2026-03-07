@@ -6,6 +6,7 @@ import {
   CloudMetadata,
   DiskStatus,
   KillVideoQueueItem,
+  KillVideoStatus,
   RendererVideo,
   SaveStatus,
   UploadQueueItem,
@@ -104,11 +105,6 @@ export default class VideoProcessQueue {
   private inProgressDownloads: string[] = [];
 
   /**
-   *
-   */
-  private inProgressKillVideo = false;
-
-  /**
    * Constructor.
    */
   private constructor() {
@@ -177,13 +173,15 @@ export default class VideoProcessQueue {
     const settings = { concurrency: 1 };
     const queue = atomicQueue(worker, settings);
 
-    // queue
-    //   .on('error', VideoProcessQueue.errorKillVideo)
-    //   .on('idle', () => { this.killVideoQueueEmpty() });
+    /* eslint-disable prettier/prettier */
+    queue
+      .on('error', VideoProcessQueue.errorKillVideo)
+      .on('idle', () => { this.videoQueueEmpty() });
 
-    // queue.pool
-    //   .on('start', (video: RendererVideo) => { this.startedKillVideo(video) })
-    //   .on('finish', async (_: unknown, video: RendererVideo) => { await this.finishKillVideo(video) });
+    queue.pool
+      .on('start', (item: KillVideoQueueItem) => { this.startedProcessingKillVideo(item) })
+      .on('finish', (_: unknown, item: KillVideoQueueItem) => { this.finishProcessingKillVideo(item) });
+    /* eslint-enable prettier/prettier */
 
     return queue;
   }
@@ -240,13 +238,7 @@ export default class VideoProcessQueue {
    * Queue up a kill video for creation.
    */
   public queueCreateKillVideo = async (item: KillVideoQueueItem) => {
-    if (this.inProgressKillVideo) {
-      console.warn('[VideoProcessQueue] Kill video already processing');
-      return;
-    }
-
     console.log('[VideoProcessQueue] Queue kill video for processing');
-    this.inProgressKillVideo = true;
     this.killVideoQueue.write(item);
   };
 
@@ -428,12 +420,21 @@ export default class VideoProcessQueue {
       const fadeInStart = 0;
 
       filter += `[${idx}:v]setpts=PTS-STARTPTS,fps=${item.fps},scale=${item.width}:-1,fade=t=in:st=${fadeInStart}:d=${fadeDuration},fade=t=out:st=${fadeOutStart}:d=${fadeDuration}[v${idx}];`;
-      filter += `[${idx}:a]asetpts=PTS-STARTPTS,afade=t=in:st=${fadeInStart}:d=${fadeDuration},afade=t=out:st=${fadeOutStart}:d=${fadeDuration}[a${idx}];`;
+
+      if (item.audioTrackIndex === -1) {
+        filter += `[${idx}:a]asetpts=PTS-STARTPTS,afade=t=in:st=${fadeInStart}:d=${fadeDuration},afade=t=out:st=${fadeOutStart}:d=${fadeDuration}[a${idx}];`;
+      }
     });
 
-    // concat all segments (video+audio interleaved)
-    const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
-    filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a];`;
+    if (item.audioTrackIndex === -1) {
+      // Interleaved audio tracks.
+      const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
+      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a];`;
+    } else {
+      // Single audio track.
+      const inputs = item.segments.map((_, i) => `[v${i}]`).join('');
+      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=0[v];`;
+    }
 
     console.info('[VideoProcessQueue] Generated filter:', filter);
 
@@ -455,16 +456,23 @@ export default class VideoProcessQueue {
       videoName += ` - ${baseMetadata.encounterName} [${baseMetadata.difficulty}]`;
     }
 
+    videoName += ` - Created at ${Date.now()}`;
+
     const storageDir = this.cfg.get<string>('storagePath');
     const videoPath = path.join(storageDir, `${videoName}.mp4`);
     console.info('[VideoProcessQueue] Creating kill video:', videoPath);
+
+    const audioMap =
+      item.audioTrackIndex === -1
+        ? '-map [a]'
+        : `-map ${item.audioTrackIndex}:a`;
 
     const fn = ffmpeg()
       .complexFilter(filter)
       .outputOption('-avoid_negative_ts make_zero')
       .outputOption('-movflags +faststart')
       .outputOption('-map [v]')
-      .outputOption('-map [a]')
+      .outputOption(audioMap)
       .outputOption('-c:v libx264')
       .outputOption('-c:a aac')
       .outputOption('-preset fast')
@@ -478,16 +486,22 @@ export default class VideoProcessQueue {
         duration: seg.stop - seg.start,
       });
 
-      fn.inputOption(`-ss ${seg.start}`)
-        .inputOption(`-t ${seg.stop - seg.start}`)
-        .input(seg.video.videoSource);
+      fn.input(seg.video.videoSource)
+        .inputOption(`-ss ${seg.start}`)
+        .inputOption(`-t ${seg.stop - seg.start}`);
     });
 
-    console.time('[VideoProcessQueue] Create kill video');
-    await VideoProcessQueue.ffmpegWrapper(fn, 'Make kill Video');
-    console.timeEnd('[VideoProcessQueue] Create kill video');
+    const cb = (p: number) => {
+      const status: KillVideoStatus = {
+        inProgress: true,
+        perc: Math.round(p),
+      };
+      send('updateKillVideoStatus', status);
+    };
 
-    this.inProgressKillVideo = false;
+    console.time('[VideoProcessQueue] Create kill video took');
+    await VideoProcessQueue.ffmpegWrapper(fn, 'Make kill Video', cb);
+    console.timeEnd('[VideoProcessQueue] Create kill video took');
 
     await writeMetadataFile(videoPath, metadata);
     done();
@@ -512,6 +526,13 @@ export default class VideoProcessQueue {
    */
   private static errorDownloadingVideo(err: unknown) {
     console.error('[VideoProcessQueue] Error downloading video', String(err));
+  }
+
+  /**
+   * Log an error processing a kill video.
+   */
+  private static errorKillVideo(err: unknown) {
+    console.error('[VideoProcessQueue] Error creating kill video', String(err));
   }
 
   /**
@@ -549,6 +570,36 @@ export default class VideoProcessQueue {
         console.warn('[VideoProcessQueue] Failed to delete src', item.source);
       }
     }
+  }
+
+  /**
+   * Actions on starting the processing of a kill video.
+   */
+  private startedProcessingKillVideo(item: KillVideoQueueItem) {
+    console.info('[VideoProcessQueue] Now processing kill video');
+
+    const status: KillVideoStatus = {
+      inProgress: true,
+      perc: 0,
+    };
+
+    send('updateKillVideoStatus', status);
+  }
+
+  /**
+   * Actions on finishing processing a kill video.
+   */
+  private finishProcessingKillVideo(item: KillVideoQueueItem) {
+    console.info('[VideoProcessQueue] Finished processing kill video');
+
+    const status: KillVideoStatus = {
+      inProgress: false,
+      perc: 0,
+    };
+
+    send('updateKillVideoStatus', status);
+    DiskClient.getInstance().refreshStatus();
+    DiskClient.getInstance().refreshVideos();
   }
 
   /**
@@ -740,7 +791,11 @@ export default class VideoProcessQueue {
    * @param fn the ffmpeg function to wrap
    * @param descr a description of the command for logging
    */
-  private static async ffmpegWrapper(fn: ffmpeg.FfmpegCommand, descr: string) {
+  private static async ffmpegWrapper(
+    fn: ffmpeg.FfmpegCommand,
+    descr: string,
+    progressCallback?: (progress: number) => void,
+  ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const handleErr = (err: unknown) => {
         const msg = `[VideoProcessQueue] ${descr} failed! ${String(err)}`;
@@ -776,6 +831,10 @@ export default class VideoProcessQueue {
           progress.percent?.toFixed(0),
           '%',
         );
+
+        if (progressCallback && progress.percent !== undefined) {
+          progressCallback(progress.percent);
+        }
       };
 
       fn.on('start', handleStart)

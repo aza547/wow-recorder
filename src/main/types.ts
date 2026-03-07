@@ -47,6 +47,14 @@ enum SaveStatus {
 }
 
 /**
+ * Kill video creation status.
+ */
+type KillVideoStatus = {
+  inProgress: boolean;
+  perc: number;
+};
+
+/**
  * We display any OBS crashes on the frontend so we don't silently recover
  * and have the user think all is well.
  */
@@ -500,6 +508,7 @@ type KillVideoQueueItem = {
   quality: QualityPresets;
   fps: number;
   segments: KillVideoSegment[];
+  audioTrackIndex: number; // -1 for splicing all tracks
 };
 
 type KillVideoSegment = {
@@ -709,4 +718,5 @@ export {
   ActivityStatus,
   KillVideoQueueItem,
   KillVideoSegment,
+  KillVideoStatus,
 };

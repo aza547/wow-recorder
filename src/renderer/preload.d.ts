@@ -87,6 +87,7 @@ declare global {
           fps: number,
           quality: QualityPresets,
           sources: KillVideoSegment[],
+          audioTrackIndex: number,
         ): void;
 
         clipVideo(video: RendererVideo, offset: number, duration: number): void;

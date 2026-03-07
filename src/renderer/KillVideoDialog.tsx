@@ -34,6 +34,7 @@ import {
   TabsContent,
 } from './components/Tabs/Tabs';
 import KillVideoSourceTimeline from './KillVideoSourceTimeline';
+import Switch from './components/Switch/Switch';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -48,6 +49,10 @@ const KillVideoDialog = (props: IProps) => {
 
   // Our select component only accepts strings annoyingly.
   const [fps, setFps] = useState('60');
+  const [singleAudio, setSingleAudio] = useState(false);
+  const [audioTrackPlayer, setAudioTrackPlayer] = useState(
+    sources[0].player?._name || '',
+  );
   const [quality, setQuality] = useState(QualityPresets.HIGH);
   const [resolution, setResolution] =
     useState<keyof typeof obsResolutions>('1920x1080');
@@ -74,7 +79,24 @@ const KillVideoDialog = (props: IProps) => {
 
   const createKillVideo = () => {
     const { width, height } = obsResolutions[resolution];
-    ipc.createKillVideo(width, height, parseInt(fps, 10), quality, segments);
+    let audioTrackIndex = -1;
+
+    if (singleAudio) {
+      // If not found, findIndex returns -1 so if something goes wrong will
+      // just fallback to splicing all the audio tracks.
+      audioTrackIndex = segments.findIndex(
+        (s) => s.video.player?._name === audioTrackPlayer,
+      );
+    }
+
+    ipc.createKillVideo(
+      width,
+      height,
+      parseInt(fps, 10),
+      quality,
+      segments,
+      audioTrackIndex,
+    );
   };
 
   const getQualitySelect = () => {
@@ -128,6 +150,54 @@ const KillVideoDialog = (props: IProps) => {
           </Tooltip>
         </Label>
         <Select value={fps} onValueChange={setFps}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
+
+  const getAudioSwitch = () => {
+    return (
+      <div className="flex flex-col w-[140px]">
+        <Label className="flex items-center">
+          Single Audio Track
+          <Tooltip
+            content="Enable this to use a single audio track in the kill video. Leave disabled to switch audio tracks with video"
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          <Switch checked={singleAudio} onCheckedChange={setSingleAudio} />
+        </div>
+      </div>
+    );
+  };
+
+  const getAudioTrackSelect = () => {
+    const options = segments.map(
+      (s) => s.video.player?._name || s.video.videoName,
+    );
+
+    return (
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label className="flex items-center">
+          Audio Track
+          <Tooltip content="Select the audio track to use" side="right">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Select value={audioTrackPlayer} onValueChange={setAudioTrackPlayer}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -233,7 +303,8 @@ const KillVideoDialog = (props: IProps) => {
         <Tabs defaultValue="timeline">
           <TabsList>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="video">Video</TabsTrigger>
+            <TabsTrigger value="audio">Audio</TabsTrigger>
           </TabsList>
           <TabsContent value="timeline" className="mt-4">
             <KillVideoSourceTimeline
@@ -241,11 +312,17 @@ const KillVideoDialog = (props: IProps) => {
               setSegments={setSegments}
             />
           </TabsContent>
-          <TabsContent value="settings" className="mt-4">
-            <div className="flex flex-row gap-x-4 ">
+          <TabsContent value="video" className="m-4">
+            <div className="flex flex-row gap-x-8 ">
               {getQualitySelect()}
               {getFpsSelect()}
               {getResolutionSelect()}
+            </div>
+          </TabsContent>
+          <TabsContent value="audio" className="m-4">
+            <div className="flex flex-row gap-x-8 ">
+              {getAudioSwitch()}
+              {singleAudio && getAudioTrackSelect()}
             </div>
           </TabsContent>
         </Tabs>
