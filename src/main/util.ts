@@ -6,7 +6,7 @@ import fs, {
   promises as fspromise,
   Stats,
 } from 'fs';
-import { app, Display, screen } from 'electron';
+import { app, Display, screen, shell } from 'electron';
 import {
   EventType,
   uIOhook,
@@ -51,9 +51,18 @@ const fixPathWhenPackaged = (p: string) => {
  */
 const setupApplicationLogging = () => {
   const log = require('electron-log');
-  const date = new Date().toISOString().slice(0, 10);
-  const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
-  const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath));
+
+  // always use local time for the file names
+  const now = new Date();
+  const date = `${now.getFullYear()}-${String(now.getMonth() + 1)
+    .padStart(2, '0')}-${String(now.getDate())
+    .padStart(2, '0')}`;
+
+  const logFileName = `WarcraftRecorder-${date}.log`;
+
+  const logPath = app.isPackaged
+    ? path.join(app.getPath('logs'), logFileName)
+    : fixPathWhenPackaged(path.join(__dirname, 'logs', logFileName));
   log.transports.file.resolvePath = () => logPath;
   Object.assign(console, log.functions);
   return path.dirname(logPath);
@@ -303,9 +312,7 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
  * Open a folder in system explorer.
  */
 const openSystemExplorer = (filePath: string) => {
-  const windowsPath = filePath.replace(/\//g, '\\');
-  const cmd = `explorer.exe /select,"${windowsPath}"`;
-  exec(cmd, () => {});
+  shell.showItemInFolder(filePath);
 };
 
 /**

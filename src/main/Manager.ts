@@ -40,7 +40,7 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
-import Activity from 'activitys/Activity';
+import { isLinux, setAutostart } from './platform';
 
 /**
  * Manager class.
@@ -79,6 +79,12 @@ export default class Manager {
   private reconfiguring = false;
 
   /**
+   * Timer for debouncing the redrawn. Because of the redraw delay, interacting with 
+   * controls that trigger redraws multiple times very quickly can trigger undefined behavior.
+   */
+  private redrawPreviewTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
    * If the audio settings are open or not. We want the audio devices to
    * be attached to power the volmeters in the case they are on display,
    * even if WoW is closed. But we want the audio devices disconnected if
@@ -91,7 +97,15 @@ export default class Manager {
    * it starts a recording mid changing it, so set this to true while doing so.
    */
   private manualHotKeyDisabled = false;
-
+  
+  /**
+   * Record the time the application started up.
+   * Linux only for now. Unfortunately Pipewire has some quirks when you
+   * too quickly try to grab a capture and can result in duplicate pipewire sessions
+   * with the same restore token.
+   */
+  private appStartupTime = Date.now();
+  
   /**
    * Constructor.
    */
@@ -303,11 +317,19 @@ export default class Manager {
    * Trigger the frontend to redraw the preview if it's open.
    */
   private redrawPreview() {
+    // cancel any pending redraws to debounce
+    if (this.redrawPreviewTimer) {
+      clearTimeout(this.redrawPreviewTimer);
+    }
+
     // Really don't understand the need for the timeout here but it sometimes
     // gets stale data otherwise. A caching thing in libobs maybe? Noobs will
     // send a source signal to the recorder if the size of sources change, but
     // for other changes we need to manually trigger a redraw.
-    setTimeout(() => send('redrawPreview'), 100);
+    this.redrawPreviewTimer = setTimeout(() => {
+      send('redrawPreview');
+      this.redrawPreviewTimer = null;
+    }, 100);
   }
 
   /**
@@ -317,7 +339,17 @@ export default class Manager {
    */
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
-    this.recorder.attachCaptureSource();
+    if (isLinux) {
+      // do not configure on a wow trigger shortly after the app has started up
+      // this can cause issues in pipewire if it happens too quickly
+      const now = Date.now();
+      if (now - this.appStartupTime > 10_000) {
+        const videoConfig = getObsVideoConfig(this.cfg);
+        await this.recorder.configureVideoSources(videoConfig);
+      }
+    } else {
+      this.recorder.attachCaptureSource();
+    }
 
     const audioConfig = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(audioConfig);
@@ -411,9 +443,9 @@ export default class Manager {
   /**
    * Configure video settings in OBS. This can all be changed live.
    */
-  private configureObsVideo() {
+  private async configureObsVideo() {
     const config = getObsVideoConfig(this.cfg);
-    this.recorder.configureVideoSources(config);
+    await this.recorder.configureVideoSources(config);
   }
 
   /**
@@ -444,16 +476,14 @@ export default class Manager {
    * Setup event listeneres the app relies on.
    */
   private setupListeners() {
-    // Config change listener we use to tweak the app settings in Windows if
+    // Config change listener we use to tweak the app settings in the OS env if
     // the user enables/disables run on start-up.
     this.cfg.on('change', (key: string, value: unknown) => {
       if (key === 'startUp') {
         const isStartUp = value === true;
         console.info('[Main] OS level set start-up behaviour:', isStartUp);
-
-        app.setLoginItemSettings({
-          openAtLogin: isStartUp,
-        });
+        
+        setAutostart(isStartUp);
       }
     });
 

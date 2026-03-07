@@ -72,7 +72,9 @@ declare global {
         reconfigureCloud(): void;
 
         getSensibleEncoderDefault(): Promise<string>;
+        getPlatform(): NodeJS.Platform;
         refreshCloudGuilds(): void;
+        reselectPipewireSource(): void;
         getOrCreateChatCorrelator(video: RendererVideo): Promise<string>;
         getChatMessages(correlator: string): Promise<TChatMessageWithId[]>;
         postChatMessage(correlator: string, message: string): void;

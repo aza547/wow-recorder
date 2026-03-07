@@ -202,7 +202,7 @@ const RecorderPreview = (props: {
     }
 
     const pos = await ipc.getSourcePosition(SceneItem.GAME);
-    setGameBoxDimensions(pos);
+    setGameBoxDimensions(pos);  
   };
 
   const configurePreview = async () => {

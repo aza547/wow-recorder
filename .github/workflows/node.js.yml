@@ -8,23 +8,98 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:  # Allows manual triggering from github UI
 
 jobs:
-  build:
-
+  build-windows:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout noobs
+      uses: actions/checkout@v4
+      with:
+        repository: sepdotgg/noobs
+        ref: linux-pr-wip
+        path: noobs
+
+    - name: Checkout wow-recorder
+      uses: actions/checkout@v4
+      with:
+        path: wow-recorder
+
     - name: Setup Node JS
       uses: actions/setup-node@v4
       with:
         node-version: '22.12.0'
         cache: 'npm'
+        cache-dependency-path: wow-recorder/package-lock.json
+
+    - name: Build noobs
+      working-directory: noobs
+      run: |
+        npm install
+        npm run build
 
     - name: Install deps
+      working-directory: wow-recorder
       run: npm install
-      
+
+    - name: Build
+      working-directory: wow-recorder
+      run: npm run build
+
     # https://github.com/aza547/wow-recorder/issues/737
-    # - name: Run unit tests 
+    # - name: Run unit tests
+    #   working-directory: wow-recorder
     #   run: npm test
+
+  build-linux:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout noobs
+      uses: actions/checkout@v4
+      with:
+        repository: sepdotgg/noobs
+        ref: linux-pr-wip
+        path: noobs
+
+    - name: Checkout wow-recorder
+      uses: actions/checkout@v4
+      with:
+        path: wow-recorder
+
+    - name: Setup Node JS
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.12.0'
+        cache: 'npm'
+        cache-dependency-path: wow-recorder/package-lock.json
+
+    - name: Build noobs
+      working-directory: noobs
+      run: |
+        npm install
+        npm run build
+
+    - name: Install deps
+      working-directory: wow-recorder
+      run: npm install
+
+    - name: Build Linux package
+      working-directory: wow-recorder
+      run: npm run package
+
+    - name: Upload Linux artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-appimage
+        path: |
+          wow-recorder/release/build/*.AppImage
+          wow-recorder/release/build/latest-linux.yml
+        retention-days: 30
+
+    - name: Get public download link
+      run: |
+        echo "Public download link:"
+        echo "https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/linux-appimage.zip"

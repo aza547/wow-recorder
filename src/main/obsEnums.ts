@@ -33,5 +33,6 @@ export const enum CaptureMode {
   WINDOW,
   GAME,
   MONITOR,
+  PIPEWIRE,
   NONE,
 }

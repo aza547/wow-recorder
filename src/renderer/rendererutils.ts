@@ -36,6 +36,7 @@ import {
   Flavour,
   AudioSource,
   AppState,
+  AudioSourceType,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
@@ -1072,15 +1073,20 @@ const getAudioSourceChoices = async (src: AudioSource) => {
   const ipc = window.electron.ipcRenderer;
   const properties = await ipc.getAudioSourceProperties(src.id);
 
-  const devices = properties.find(
-    (prop) => prop.name === 'device_id' || prop.name === 'window',
-  );
+  let devices;
+  if (src.type === AudioSourceType.PROCESS) {
+    devices = properties.find((prop) => prop.name === 'window' || prop.name === 'TargetName');
+  } else {
+    devices = properties.find((prop) => prop.name === 'device_id');
+  };
 
   if (!devices || devices.type !== 'list') {
     return [];
   }
 
-  return devices.items;
+  // [linux] pipewire audio sources can sometimes return empty names.
+  // filter out anything falsy -- we wouldn't want to capture any of those anyway
+  return devices.items.filter(item => item.value);
 };
 
 const getKeyPressEventString = (
