@@ -37,6 +37,7 @@ import { Phrase } from 'localisation/phrases';
 import _ from 'lodash';
 import { playAudio } from './sounds';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import KillVideoProgress from './KillVideoProgress';
 
 const ipc = window.electron.ipcRenderer;
 const queryClient = new QueryClient();
@@ -176,10 +177,6 @@ const WarcraftRecorder = () => {
 
   const updateSaveStatus = (status: unknown) => {
     setSavingStatus(status as SaveStatus);
-  };
-
-  const updateKillVideoStatus = (status: unknown) => {
-    setKillVideoStatus(status as KillVideoStatus);
   };
 
   const updateMicStatus = (status: unknown) => {
@@ -419,7 +416,6 @@ const WarcraftRecorder = () => {
     ipc.on('updateRecStatus', updateRecStatus);
     ipc.on('updateActivityStatus', updateActivityStatus);
     ipc.on('updateSaveStatus', updateSaveStatus);
-    ipc.on('updateKillVideoStatus', updateKillVideoStatus);
     ipc.on('updateMicStatus', updateMicStatus);
     ipc.on('updateErrorReport', updateErrorReports);
     ipc.on('updateDiskStatus', updateDiskStatus);
@@ -438,7 +434,6 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('updateRecStatus');
       ipc.removeAllListeners('updateActivityStatus');
       ipc.removeAllListeners('updateSaveStatus');
-      ipc.removeAllListeners('updateKillVideoStatus');
       ipc.removeAllListeners('updateMicStatus');
       ipc.removeAllListeners('updateErrorReport');
       ipc.removeAllListeners('updateDiskStatus');
@@ -467,6 +462,7 @@ const WarcraftRecorder = () => {
         }}
       >
         <Toaster />
+        <KillVideoProgress />
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <RendererTitleBar />

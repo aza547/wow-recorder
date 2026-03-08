@@ -29,6 +29,8 @@ import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
 import DiskClient from 'storage/DiskClient';
 import Recorder from './Recorder';
+import { SegmentSharp } from '@mui/icons-material';
+import { ESupportedEncoders } from './obsEnums';
 
 const atomicQueue = require('atomic-queue');
 const devMode = process.env.NODE_ENV === 'development';
@@ -103,6 +105,12 @@ export default class VideoProcessQueue {
    * operation.
    */
   private inProgressDownloads: string[] = [];
+
+  /**
+   * List of kill video job uuids currently in in the queue for
+   * processing, or in progress currently.
+   */
+  private inProgressKillVideos: string[] = [];
 
   /**
    * Constructor.
@@ -239,6 +247,7 @@ export default class VideoProcessQueue {
    */
   public queueCreateKillVideo = async (item: KillVideoQueueItem) => {
     console.log('[VideoProcessQueue] Queue kill video for processing');
+    this.inProgressKillVideos.push(item.uuid);
     this.killVideoQueue.write(item);
   };
 
@@ -401,28 +410,42 @@ export default class VideoProcessQueue {
   /**
    * Create a kill video. This is CPU intensive and involves re-encoding. We
    * build a complex filter graph to stitch together the different perspectives
-   * with crossfades and audiofades.
+   * with video and audio transitions.
    */
   private async processKillVideoQueueItem(
     item: KillVideoQueueItem,
     done: () => void,
   ): Promise<void> {
+    if (item.segments.length < 2) {
+      // Programmer error. Can't make kill videos of less than 2 segments.
+      console.error('[VideoProcessQueue] Less than 2 segments');
+      done();
+      return;
+    }
+
     let filter = '';
 
     item.segments.forEach((pov, idx) => {
-      // const scale = `${item.width}:${item.height}:force_original_aspect_ratio=decrease`;
-      // const pad = `${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2`;
       const segmentDuration = pov.stop - pov.start;
-
-      // video fade out / fade in
       const fadeDuration = 1;
       const fadeOutStart = Math.max(0, segmentDuration - fadeDuration);
       const fadeInStart = 0;
 
-      filter += `[${idx}:v]setpts=PTS-STARTPTS,fps=${item.fps},scale=${item.width}:-1,fade=t=in:st=${fadeInStart}:d=${fadeDuration},fade=t=out:st=${fadeOutStart}:d=${fadeDuration}[v${idx}];`;
+      const pts = 'PTS-STARTPTS';
+      const scale = `${item.width}:${item.height}:force_original_aspect_ratio=decrease`;
+      const pad = `${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2`;
+      const fadeIn = `t=in:st=${fadeInStart}:d=${fadeDuration}`;
+      const fadeOut = `t=out:st=${fadeOutStart}:d=${fadeDuration}`;
+
+      // Splice video from all perspectives together with a simple fade
+      // transition, and rescaling and padding to fit the output dimensions.
+      filter += `[${idx}:v]setpts=${pts},fps=${item.fps},scale=${scale},pad=${pad},fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
 
       if (item.audioTrackIndex === -1) {
-        filter += `[${idx}:a]asetpts=PTS-STARTPTS,afade=t=in:st=${fadeInStart}:d=${fadeDuration},afade=t=out:st=${fadeOutStart}:d=${fadeDuration}[a${idx}];`;
+        // Splice audio from all perspectives together, with a simple fade
+        // transition, so each segment has its own audio track which we will
+        // then interleave.
+        filter += `[${idx}:a]asetpts=${pts},afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
       }
     });
 
@@ -460,27 +483,29 @@ export default class VideoProcessQueue {
 
     const storageDir = this.cfg.get<string>('storagePath');
     const videoPath = path.join(storageDir, `${videoName}.mp4`);
-    console.info('[VideoProcessQueue] Creating kill video:', videoPath);
+    console.info('[VideoProcessQueue] Kill video path:', videoPath);
 
     const audioMap =
       item.audioTrackIndex === -1
         ? '-map [a]'
-        : `-map ${item.audioTrackIndex}:a`;
+        : `-map ${item.segments.length}:a`; // Always the last input in single audio mode.
 
     const fn = ffmpeg()
       .complexFilter(filter)
-      .outputOption('-avoid_negative_ts make_zero')
       .outputOption('-movflags +faststart')
       .outputOption('-map [v]')
       .outputOption(audioMap)
+      .outputOption('-shortest')
       .outputOption('-c:v libx264')
+      .outputOption('-crf 22') // Matches "Ultra" in the Recorder.
       .outputOption('-c:a aac')
       .outputOption('-preset fast')
       .outputOption('-pix_fmt yuv420p')
       .output(videoPath);
 
     item.segments.forEach((seg) => {
-      console.info('Adding video source to ffmpeg command:', {
+      // Add each segment in turm to the inputs. Trimmed as requested.
+      console.info('Adding video source to ffmpeg:', {
         src: seg.video.videoSource,
         start: seg.start,
         duration: seg.stop - seg.start,
@@ -491,20 +516,43 @@ export default class VideoProcessQueue {
         .inputOption(`-t ${seg.stop - seg.start}`);
     });
 
-    const cb = (p: number) => {
-      const status: KillVideoStatus = {
-        inProgress: true,
-        perc: Math.round(p),
-      };
-      send('updateKillVideoStatus', status);
-    };
+    if (item.audioTrackIndex !== -1) {
+      // The inputs have been trimmed as per the segment boundaries, so
+      // ifwe're in single audio track mode we need to add another input
+      // without trimming so we can use the full untrimmed audio.
+      console.info('Adding single audio source to ffmpeg:', {
+        src: item.segments[item.audioTrackIndex].video.videoSource,
+        trackIndex: item.audioTrackIndex,
+      });
 
+      fn.input(item.segments[item.audioTrackIndex].video.videoSource);
+    }
+
+    // The ffmpeg command is constructed so now do the actual work. A
+    // reminder: this is a full re-encode and is computationally expensive.
     console.time('[VideoProcessQueue] Create kill video took');
-    await VideoProcessQueue.ffmpegWrapper(fn, 'Make kill Video', cb);
+
+    await VideoProcessQueue.ffmpegWrapper(
+      fn,
+      'Make kill Video',
+      (progress: number) => this.onKillVideoProgress(progress),
+    );
+
     console.timeEnd('[VideoProcessQueue] Create kill video took');
 
+    // Ffmpeg is done. Write out the metadata for the newly generated clip.
     await writeMetadataFile(videoPath, metadata);
     done();
+  }
+
+  /**
+   * Push kill video encoding progress to the frontend.
+   */
+  private onKillVideoProgress(progress: number) {
+    const queued = Math.max(0, this.inProgressKillVideos.length);
+    const perc = Math.round(progress);
+    const status: KillVideoStatus = { queued, perc };
+    send('updateKillVideoStatus', status);
   }
 
   /**
@@ -579,7 +627,7 @@ export default class VideoProcessQueue {
     console.info('[VideoProcessQueue] Now processing kill video');
 
     const status: KillVideoStatus = {
-      inProgress: true,
+      queued: Math.max(0, this.inProgressKillVideos.length),
       perc: 0,
     };
 
@@ -592,9 +640,13 @@ export default class VideoProcessQueue {
   private finishProcessingKillVideo(item: KillVideoQueueItem) {
     console.info('[VideoProcessQueue] Finished processing kill video');
 
+    this.inProgressKillVideos = this.inProgressKillVideos.filter(
+      (id) => id !== item.uuid,
+    );
+
     const status: KillVideoStatus = {
-      inProgress: false,
       perc: 0,
+      queued: Math.max(0, this.inProgressKillVideos.length),
     };
 
     send('updateKillVideoStatus', status);
@@ -832,7 +884,11 @@ export default class VideoProcessQueue {
           '%',
         );
 
-        if (progressCallback && progress.percent !== undefined) {
+        if (
+          progressCallback &&
+          progress.percent !== undefined && // Technically covered by isFinite but typescript is dumb.
+          Number.isFinite(progress.percent) // Sometimes ffmpeg-fluent gives NaN.
+        ) {
           progressCallback(progress.percent);
         }
       };

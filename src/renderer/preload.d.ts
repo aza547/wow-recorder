@@ -85,7 +85,6 @@ declare global {
           width: number,
           height: number,
           fps: number,
-          quality: QualityPresets,
           sources: KillVideoSegment[],
           audioTrackIndex: number,
         ): void;

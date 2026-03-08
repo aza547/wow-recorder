@@ -507,13 +507,12 @@ export default class Manager {
         width: number,
         height: number,
         fps: number,
-        quality: QualityPresets,
         segments: KillVideoSegment[],
         audioTrackIndex: number,
       ) => {
         console.info(
           '[Manager] Creating kill video with settings:',
-          `${width}x${height} at ${fps} fps with quality ${quality}`,
+          `${width}x${height} at ${fps} fps`,
         );
 
         if (segments.length < 2) {
@@ -533,10 +532,10 @@ export default class Manager {
         );
 
         const item: KillVideoQueueItem = {
+          uuid: crypto.randomUUID(),
           width,
           height,
           fps,
-          quality,
           segments,
           audioTrackIndex,
         };

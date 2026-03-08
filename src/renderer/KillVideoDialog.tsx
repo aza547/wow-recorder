@@ -53,7 +53,6 @@ const KillVideoDialog = (props: IProps) => {
   const [audioTrackPlayer, setAudioTrackPlayer] = useState(
     sources[0].player?._name || '',
   );
-  const [quality, setQuality] = useState(QualityPresets.HIGH);
   const [resolution, setResolution] =
     useState<keyof typeof obsResolutions>('1920x1080');
 
@@ -93,47 +92,8 @@ const KillVideoDialog = (props: IProps) => {
       width,
       height,
       parseInt(fps, 10),
-      quality,
       segments,
       audioTrackIndex,
-    );
-  };
-
-  const getQualitySelect = () => {
-    const options = Object.values(QualityPresets);
-
-    return (
-      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
-        <Label className="flex items-center">
-          {getLocalePhrase(language, Phrase.QualityLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              language,
-              configSchema.obsQuality.description,
-            )}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <Select
-          value={quality}
-          onValueChange={(value) => setQuality(value as QualityPresets)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue
-              placeholder={getLocalePhrase(language, Phrase.SelectQuality)}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((option) => (
-              <SelectItem key={option} value={option}>
-                {translateQuality(option, language)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
     );
   };
 
@@ -270,7 +230,6 @@ const KillVideoDialog = (props: IProps) => {
 
     setSegments(resetSegments);
     setFps('60');
-    setQuality(QualityPresets.HIGH);
     setResolution('1920x1080');
   };
 
@@ -314,7 +273,6 @@ const KillVideoDialog = (props: IProps) => {
           </TabsContent>
           <TabsContent value="video" className="m-4">
             <div className="flex flex-row gap-x-8 ">
-              {getQualitySelect()}
               {getFpsSelect()}
               {getResolutionSelect()}
             </div>

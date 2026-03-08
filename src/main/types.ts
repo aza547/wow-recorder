@@ -50,7 +50,7 @@ enum SaveStatus {
  * Kill video creation status.
  */
 type KillVideoStatus = {
-  inProgress: boolean;
+  queued: number;
   perc: number;
 };
 
@@ -503,9 +503,9 @@ type UploadQueueItem = {
 };
 
 type KillVideoQueueItem = {
+  uuid: string; // unique job uuid
   width: number;
   height: number;
-  quality: QualityPresets;
   fps: number;
   segments: KillVideoSegment[];
   audioTrackIndex: number; // -1 for splicing all tracks

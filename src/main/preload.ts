@@ -232,7 +232,6 @@ contextBridge.exposeInMainWorld('electron', {
       width: number,
       height: number,
       fps: number,
-      quality: QualityPresets,
       sources: RendererVideo[],
       audioTrackIndex: number,
     ) {
@@ -241,7 +240,6 @@ contextBridge.exposeInMainWorld('electron', {
         width,
         height,
         fps,
-        quality,
         sources,
         audioTrackIndex,
       );
