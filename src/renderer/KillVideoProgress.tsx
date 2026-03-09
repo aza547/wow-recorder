@@ -32,10 +32,13 @@ const KillVideoProgress = () => {
       ? `Creating kill video (+${killVideoStatus.queued - 1})`
       : 'Creating kill video';
 
+  const progress =
+    killVideoStatus.perc < 1 ? 'Preparing...' : `${killVideoStatus.perc}%`;
+
   return (
     <div
       className={cn(
-        'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[28rem]',
+        'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[30rem]',
         'rounded-md bg-background px-4 py-2.5 shadow-lg',
         'animate-in slide-in-from-bottom-full fade-in duration-300',
         'border border-card',
@@ -45,9 +48,9 @@ const KillVideoProgress = () => {
         <span className="text-foreground-lighter text-sm font-bold whitespace-nowrap">
           {descr}
         </span>
-        <Progress value={killVideoStatus.perc} className="h-1.5 flex-1" />
-        <span className="text-foreground-lighter text-sm font-bold tabular-nums w-8 text-right">
-          {killVideoStatus.perc}%
+        <Progress value={killVideoStatus.perc} className="h-1.5" />
+        <span className="text-foreground-lighter text-sm font-bold tabular-nums  text-right">
+          {progress}
         </span>
       </div>
     </div>

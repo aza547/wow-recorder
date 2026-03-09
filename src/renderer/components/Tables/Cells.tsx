@@ -34,6 +34,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
 import TagDialog from 'renderer/TagDialog';
 import KillVideoDialog from 'renderer/KillVideoDialog';
+import wcrIcon from '../../../../assets/icon/small-icon.png';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -309,11 +310,17 @@ export const populateViewpointCell = (
     return <div>{count}</div>;
   }
 
-  const playerName = getPlayerName(first);
   const playerClass = getPlayerClass(first);
-  const playerClassColor = getWoWClassColor(playerClass);
   const playerSpecID = getPlayerSpecID(first);
-  const specIcon = specImages[playerSpecID as keyof typeof specImages];
+  let playerName = getPlayerName(first);
+  let playerClassColor = getWoWClassColor(playerClass);
+  let specIcon = specImages[playerSpecID as keyof typeof specImages];
+
+  if (playerName === 'WCR Multipov Name') {
+    playerName = 'Multipov Kill';
+    playerClassColor = '#bb4420';
+    specIcon = wcrIcon;
+  }
 
   const renderSpecAndName = () => {
     return (
@@ -322,6 +329,7 @@ export const populateViewpointCell = (
           key={player._GUID}
           component="img"
           src={specIcon}
+          className="bg-background-higher"
           sx={{
             display: 'flex',
             height: '25px',

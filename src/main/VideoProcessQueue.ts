@@ -432,7 +432,7 @@ export default class VideoProcessQueue {
       const fadeInStart = 0;
 
       const pts = 'PTS-STARTPTS';
-      const scale = `${item.width}:${item.height}:force_original_aspect_ratio=decrease`;
+      const scale = `${item.width}:-2`;
       const pad = `${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2`;
       const fadeIn = `t=in:st=${fadeInStart}:d=${fadeDuration}`;
       const fadeOut = `t=out:st=${fadeOutStart}:d=${fadeDuration}`;
@@ -469,7 +469,7 @@ export default class VideoProcessQueue {
 
     const metadata = buildKillVideoMetadata(
       baseMetadata,
-      item.segments[item.segments.length - 1].stop,
+      item.segments,
       new Date(),
     );
 
@@ -501,6 +501,7 @@ export default class VideoProcessQueue {
       .outputOption('-c:a aac')
       .outputOption('-preset fast')
       .outputOption('-pix_fmt yuv420p')
+      .outputOption('-xerror') // Die on error.
       .output(videoPath);
 
     item.segments.forEach((seg) => {
@@ -528,21 +529,24 @@ export default class VideoProcessQueue {
       fn.input(item.segments[item.audioTrackIndex].video.videoSource);
     }
 
-    // The ffmpeg command is constructed so now do the actual work. A
-    // reminder: this is a full re-encode and is computationally expensive.
-    console.time('[VideoProcessQueue] Create kill video took');
+    try {
+      console.time(`[VideoProcessQueue] Create ${item.uuid} kill video`);
 
-    await VideoProcessQueue.ffmpegWrapper(
-      fn,
-      'Make kill Video',
-      (progress: number) => this.onKillVideoProgress(progress),
-    );
+      // The ffmpeg command is constructed so now do the actual work. A
+      // reminder: this is a full re-encode and is computationally expensive.
+      await VideoProcessQueue.ffmpegWrapper(
+        fn,
+        'Make kill Video',
+        (progress: number) => this.onKillVideoProgress(progress),
+      );
 
-    console.timeEnd('[VideoProcessQueue] Create kill video took');
+      console.timeEnd(`[VideoProcessQueue] Create ${item.uuid} kill video`);
 
-    // Ffmpeg is done. Write out the metadata for the newly generated clip.
-    await writeMetadataFile(videoPath, metadata);
-    done();
+      // Ffmpeg is done. Write out the metadata for the newly generated clip.
+      await writeMetadataFile(videoPath, metadata);
+    } finally {
+      done();
+    }
   }
 
   /**

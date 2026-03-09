@@ -24,6 +24,7 @@ import {
   ObsAudioConfig,
   ErrorReport,
   CloudSignedMetadata,
+  KillVideoSegment,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
@@ -605,19 +606,25 @@ const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
 
 const buildKillVideoMetadata = (
   initial: Metadata,
-  duration: number,
+  segments: KillVideoSegment[],
   date: Date,
 ) => {
   const final = initial;
-  final.duration = duration;
+  final.duration = segments[segments.length - 1].stop;
   final.parentCategory = initial.category;
   final.category = VideoCategory.Clips;
   final.protected = true;
   final.clippedAt = date.getTime();
+  final.tag = `WCR Multipov Kill Video`;
 
-  if (initial.encounterName && initial.difficulty) {
-    final.tag = `${initial.encounterName} [${initial.difficulty}] - WCR Multipov Kill Video`;
-  }
+  final.player = {
+    _GUID: 'WCR MultiPov GUID',
+    _teamID: -1,
+    _specID: -1,
+    _name: 'WCR Multipov Name',
+    _realm: 'WCR Multipov Realm',
+    _region: 'WCR Multipov Region',
+  };
 
   return final;
 };
