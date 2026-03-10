@@ -1,8 +1,14 @@
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
-import { HardDriveDownload } from 'lucide-react';
+import { HardDriveDownload, TriangleAlert } from 'lucide-react';
 import { ConfigurationSchema } from 'config/configSchema';
-import { ActivityStatus, AppState, RecStatus, SaveStatus } from 'main/types';
+import {
+  ActivityStatus,
+  AdvancedLoggingStatus,
+  AppState,
+  RecStatus,
+  SaveStatus,
+} from 'main/types';
 import React, { useEffect, useState } from 'react';
 import { Button } from 'renderer/components/Button/Button';
 import {
@@ -11,6 +17,7 @@ import {
   HoverCardTrigger,
 } from 'renderer/components/HoverCard/HoverCard';
 import Separator from 'renderer/components/Separator/Separator';
+import { Tooltip } from 'renderer/components/Tooltip/Tooltip';
 import StatusLight, {
   StatusLightProps,
 } from 'renderer/components/StatusLight/StatusLight';
@@ -30,6 +37,7 @@ type StatusProps = {
   config: ConfigurationSchema;
   appState: AppState;
   activityStatus: ActivityStatus | null;
+  advancedLoggingStatus: AdvancedLoggingStatus;
 };
 
 const Status = ({
@@ -39,6 +47,7 @@ const Status = ({
   config,
   appState,
   activityStatus,
+  advancedLoggingStatus,
 }: StatusProps) => {
   const { language } = appState;
   const [recTimerSec, setRecTimerSec] = useState(0);
@@ -198,13 +207,27 @@ const Status = ({
           {getLocalePhrase(language, Phrase.StatusDescriptionWatchingLogs)}
           {': '}
         </p>
-        <ul className="text-xs text-popover-foreground/60 list-disc pl-4">
+        <ul className="text-xs text-popover-foreground/60 list-disc pl-4 whitespace-nowrap">
           {config.recordRetail && (
             <li>
               <span className="font-bold">
                 {getLocalePhrase(language, Phrase.Retail)}
                 {': '}
               </span>
+              {!advancedLoggingStatus.retail && (
+                <Tooltip
+                  content={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
+              )}
               <code>{config.retailLogPath}</code>
             </li>
           )}
@@ -214,6 +237,20 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.Classic)}
                 {': '}
               </span>
+              {!advancedLoggingStatus.classic && (
+                <Tooltip
+                  content={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
+              )}
               <code>{config.classicLogPath}</code>
             </li>
           )}
@@ -223,6 +260,20 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.Era)}
                 {': '}
               </span>
+              {!advancedLoggingStatus.era && (
+                <Tooltip
+                  content={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
+              )}
               <code>{config.eraLogPath}</code>
             </li>
           )}
@@ -232,6 +283,20 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.RetailPtr)}
                 {': '}
               </span>
+              {!advancedLoggingStatus.retailPtr && (
+                <Tooltip
+                  content={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
+              )}
               <code>{config.retailPtrLogPath}</code>
             </li>
           )}
@@ -241,6 +306,20 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.ClassicPtr)}
                 {': '}
               </span>
+              {!advancedLoggingStatus.classicPtr && (
+                <Tooltip
+                  content={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
+              )}
               <code>{config.classicPtrLogPath}</code>
             </li>
           )}
@@ -326,7 +405,7 @@ const Status = ({
           </div>
         </div>
         {!!statusDescription && (
-          <HoverCardContent className="w-[260px] mx-4">
+          <HoverCardContent className="w-fit mx-4">
             {statusDescription}
           </HoverCardContent>
         )}

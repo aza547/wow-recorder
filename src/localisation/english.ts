@@ -506,6 +506,7 @@ const ENGLISH: Translations = {
   [Phrase.StartManualRecordingTooltip]: 'Start a manual recording.',
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: 'Advanced Combat Logging is not enabled. Enable it in WoW: System > Network > Advanced Combat Logging.',
 
 };
 
