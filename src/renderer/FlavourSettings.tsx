@@ -17,7 +17,7 @@ interface IProps {
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   appState: AppState;
-  advancedLoggingStatus: AdvancedLoggingStatus | null;
+  advancedLoggingStatus: AdvancedLoggingStatus;
 }
 
 const ipc = window.electron.ipcRenderer;
@@ -181,7 +181,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {advancedLoggingStatus && !advancedLoggingStatus.retail && (
+            {!advancedLoggingStatus.retail && (
               <span className="text-error text-sm">
                 {getLocalePhrase(
                   appState.language,
@@ -266,7 +266,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {advancedLoggingStatus && !advancedLoggingStatus.classic && (
+            {!advancedLoggingStatus.classic && (
               <span className="text-error text-sm">
                 {getLocalePhrase(
                   appState.language,
@@ -363,7 +363,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {advancedLoggingStatus && !advancedLoggingStatus.era && (
+            {!advancedLoggingStatus.era && (
               <span className="text-error text-sm">
                 {getLocalePhrase(
                   appState.language,
@@ -457,7 +457,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {advancedLoggingStatus && !advancedLoggingStatus.retailPtr && (
+            {!advancedLoggingStatus.retailPtr && (
               <span className="text-error text-sm">
                 {getLocalePhrase(
                   appState.language,
@@ -556,7 +556,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {advancedLoggingStatus && !advancedLoggingStatus.classicPtr && (
+            {!advancedLoggingStatus.classicPtr && (
               <span className="text-error text-sm">
                 {getLocalePhrase(
                   appState.language,

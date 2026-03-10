@@ -1,6 +1,6 @@
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
-import { HardDriveDownload } from 'lucide-react';
+import { HardDriveDownload, TriangleAlert } from 'lucide-react';
 import { ConfigurationSchema } from 'config/configSchema';
 import {
   ActivityStatus,
@@ -17,6 +17,7 @@ import {
   HoverCardTrigger,
 } from 'renderer/components/HoverCard/HoverCard';
 import Separator from 'renderer/components/Separator/Separator';
+import { Tooltip } from 'renderer/components/Tooltip/Tooltip';
 import StatusLight, {
   StatusLightProps,
 } from 'renderer/components/StatusLight/StatusLight';
@@ -36,7 +37,7 @@ type StatusProps = {
   config: ConfigurationSchema;
   appState: AppState;
   activityStatus: ActivityStatus | null;
-  advancedLoggingStatus: AdvancedLoggingStatus | null;
+  advancedLoggingStatus: AdvancedLoggingStatus;
 };
 
 const Status = ({
@@ -206,25 +207,28 @@ const Status = ({
           {getLocalePhrase(language, Phrase.StatusDescriptionWatchingLogs)}
           {': '}
         </p>
-        <ul className="text-xs text-popover-foreground/60 list-disc pl-4">
+        <ul className="text-xs text-popover-foreground/60 list-disc pl-4 whitespace-nowrap">
           {config.recordRetail && (
             <li>
               <span className="font-bold">
                 {getLocalePhrase(language, Phrase.Retail)}
                 {': '}
               </span>
-              <code>{config.retailLogPath}</code>
-              {advancedLoggingStatus && !advancedLoggingStatus.retail && (
-                <span
-                  className="text-destructive ml-1"
-                  title={getLocalePhrase(
+              {!advancedLoggingStatus.retail && (
+                <Tooltip
+                  content={getLocalePhrase(
                     language,
                     Phrase.AdvancedCombatLoggingDisabledWarning,
                   )}
                 >
-                  {'\u26A0'}
-                </span>
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
               )}
+              <code>{config.retailLogPath}</code>
             </li>
           )}
           {config.recordClassic && (
@@ -233,18 +237,21 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.Classic)}
                 {': '}
               </span>
-              <code>{config.classicLogPath}</code>
-              {advancedLoggingStatus && !advancedLoggingStatus.classic && (
-                <span
-                  className="text-destructive ml-1"
-                  title={getLocalePhrase(
+              {!advancedLoggingStatus.classic && (
+                <Tooltip
+                  content={getLocalePhrase(
                     language,
                     Phrase.AdvancedCombatLoggingDisabledWarning,
                   )}
                 >
-                  {'\u26A0'}
-                </span>
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
               )}
+              <code>{config.classicLogPath}</code>
             </li>
           )}
           {config.recordEra && (
@@ -253,18 +260,21 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.Era)}
                 {': '}
               </span>
-              <code>{config.eraLogPath}</code>
-              {advancedLoggingStatus && !advancedLoggingStatus.era && (
-                <span
-                  className="text-destructive ml-1"
-                  title={getLocalePhrase(
+              {!advancedLoggingStatus.era && (
+                <Tooltip
+                  content={getLocalePhrase(
                     language,
                     Phrase.AdvancedCombatLoggingDisabledWarning,
                   )}
                 >
-                  {'\u26A0'}
-                </span>
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
               )}
+              <code>{config.eraLogPath}</code>
             </li>
           )}
           {config.recordRetailPtr && (
@@ -273,18 +283,21 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.RetailPtr)}
                 {': '}
               </span>
-              <code>{config.retailPtrLogPath}</code>
-              {advancedLoggingStatus && !advancedLoggingStatus.retailPtr && (
-                <span
-                  className="text-destructive ml-1"
-                  title={getLocalePhrase(
+              {!advancedLoggingStatus.retailPtr && (
+                <Tooltip
+                  content={getLocalePhrase(
                     language,
                     Phrase.AdvancedCombatLoggingDisabledWarning,
                   )}
                 >
-                  {'\u26A0'}
-                </span>
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
               )}
+              <code>{config.retailPtrLogPath}</code>
             </li>
           )}
           {config.recordClassicPtr && (
@@ -293,18 +306,21 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.ClassicPtr)}
                 {': '}
               </span>
-              <code>{config.classicPtrLogPath}</code>
-              {advancedLoggingStatus && !advancedLoggingStatus.classicPtr && (
-                <span
-                  className="text-destructive ml-1"
-                  title={getLocalePhrase(
+              {!advancedLoggingStatus.classicPtr && (
+                <Tooltip
+                  content={getLocalePhrase(
                     language,
                     Phrase.AdvancedCombatLoggingDisabledWarning,
                   )}
                 >
-                  {'\u26A0'}
-                </span>
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
               )}
+              <code>{config.classicPtrLogPath}</code>
             </li>
           )}
         </ul>
@@ -389,7 +405,7 @@ const Status = ({
           </div>
         </div>
         {!!statusDescription && (
-          <HoverCardContent className="w-[260px] mx-4">
+          <HoverCardContent className="w-fit mx-4">
             {statusDescription}
           </HoverCardContent>
         )}

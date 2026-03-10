@@ -22,7 +22,7 @@ type ApplicationStatusCardProps = {
   config: ConfigurationSchema;
   appState: AppState;
   activityStatus: ActivityStatus | null;
-  advancedLoggingStatus: AdvancedLoggingStatus | null;
+  advancedLoggingStatus: AdvancedLoggingStatus;
 };
 
 const ApplicationStatusCard = ({

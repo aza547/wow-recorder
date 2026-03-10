@@ -419,7 +419,9 @@ const getConfigWtfPath = (logPath: string): string => {
   return path.normalize(path.join(logPath, '../WTF/Config.wtf'));
 };
 
-const checkAdvancedCombatLogging = (logPath: string): boolean => {
+const checkAdvancedCombatLogging = async (
+  logPath: string,
+): Promise<boolean> => {
   const configWtfFile = getConfigWtfPath(logPath);
 
   console.info(
@@ -429,13 +431,12 @@ const checkAdvancedCombatLogging = (logPath: string): boolean => {
     configWtfFile,
   );
 
-  if (!fs.existsSync(configWtfFile)) {
+  if (!(await exists(configWtfFile))) {
     console.warn('[Util] Config.wtf not found at', configWtfFile);
     return false;
   }
 
-  const content = fs.readFileSync(configWtfFile).toString();
-
+  const content = (await fs.promises.readFile(configWtfFile)).toString();
   const match = content.match(/^SET advancedCombatLogging\s+"(\d+)"/m);
 
   if (!match) {

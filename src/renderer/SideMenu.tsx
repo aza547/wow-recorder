@@ -63,7 +63,7 @@ interface IProps {
   updateAvailable: boolean;
   recorderCategory: VideoCategory | undefined;
   activityStatus: ActivityStatus | null;
-  advancedLoggingStatus: AdvancedLoggingStatus | null;
+  advancedLoggingStatus: AdvancedLoggingStatus;
 }
 
 const SideMenu = (props: IProps) => {

@@ -49,7 +49,13 @@ const WarcraftRecorder = () => {
   const updateNotified = useRef(false);
   const { toast } = useToast();
   const [advancedLoggingStatus, setAdvancedLoggingStatus] =
-    useState<AdvancedLoggingStatus | null>(null);
+    useState<AdvancedLoggingStatus>({
+      retail: true,
+      classic: true,
+      era: true,
+      retailPtr: true,
+      classicPtr: true,
+    });
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW,

@@ -26,7 +26,7 @@ interface IProps {
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
-  advancedLoggingStatus: AdvancedLoggingStatus | null;
+  advancedLoggingStatus: AdvancedLoggingStatus;
 }
 
 const CategoryHeading = ({ children }: { children: React.ReactNode }) => (

@@ -22,7 +22,7 @@ interface IProps {
   playerHeight: MutableRefObject<number>;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
-  advancedLoggingStatus: AdvancedLoggingStatus | null;
+  advancedLoggingStatus: AdvancedLoggingStatus;
 }
 
 /**
