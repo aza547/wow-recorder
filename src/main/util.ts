@@ -445,12 +445,7 @@ const checkAdvancedCombatLogging = async (
   }
 
   const enabled = match[1] === '1';
-  console.info(
-    '[Util] advancedCombatLogging =',
-    match[1],
-    'enabled =',
-    enabled,
-  );
+  console.info('[Util] advancedCombatLogging enabled =', enabled);
   return enabled;
 };
 
