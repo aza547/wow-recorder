@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - [Issue 695](https://github.com/aza547/wow-recorder/issues/695) - Warn users when Advanced Combat Logging is disabled in WoW settings.
+### Fixed
+
+## [7.5.2] - 2026-02-26
+### Added
 - [Issue 797](https://github.com/aza547/wow-recorder/issues/797) - Add the new devourer spec.
 
 ### Fixed
