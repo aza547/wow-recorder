@@ -509,6 +509,7 @@ const KOREAN: Translations = {
   [Phrase.KillVideoCreatorTooltip]: '다중 시점 킬 영상을 생성합니다.',
   [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '이 기능은 로컬 녹화에서만 사용할 수 있습니다. 다운로드 버튼을 사용하세요.',
   [Phrase.KillVideoCreatorTooltipNotEnoughPov]: '이 기능을 사용하려면 최소 2개의 시점이 필요합니다.',
+  [Phrase.KillVideoCreatorTitle]: '비디오 편집기',
 };
 
 export default KOREAN;

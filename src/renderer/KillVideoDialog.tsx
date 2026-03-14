@@ -231,10 +231,10 @@ const KillVideoDialog = (props: IProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-[70%]">
+      <DialogContent className="max-w-[75%]">
         <DialogHeader>
           <DialogTitle>
-            {getLocalePhrase(language, Phrase.KillVideoCreatorTooltip)}
+            {getLocalePhrase(language, Phrase.KillVideoCreatorTitle)}
           </DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="timeline">

@@ -507,6 +507,7 @@ enum Phrase {
   KillVideoCreatorTooltip,
   KillVideoCreatorTooltipNotEnoughLocal,
   KillVideoCreatorTooltipNotEnoughPov,
+  KillVideoCreatorTitle,
 }
 
 enum Language {

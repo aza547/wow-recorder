@@ -510,6 +510,7 @@ const ENGLISH: Translations = {
   [Phrase.KillVideoCreatorTooltip]: 'Create a multi-viewpoint kill video.',
   [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'This feature can only operate on local recordings. Use the download button first.',
   [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Must have atleast 2 viewpoints available to use this feature.',
+  [Phrase.KillVideoCreatorTitle]: 'Video Editor',
 };
 
 export default ENGLISH;

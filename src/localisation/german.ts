@@ -509,6 +509,7 @@ const GERMAN: Translations = {
   [Phrase.KillVideoCreatorTooltip]: 'Ein Kill-Video aus mehreren Perspektiven erstellen.',
   [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'Diese Funktion kann nur mit lokalen Aufnahmen verwendet werden. Verwende den Download-Button.',
   [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Mindestens 2 Perspektiven müssen verfügbar sein, um diese Funktion zu nutzen.',
+  [Phrase.KillVideoCreatorTitle]: 'Video-Editor',
 };
 
 export default GERMAN;
