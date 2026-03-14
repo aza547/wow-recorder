@@ -507,9 +507,15 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.StopManualRecordingTooltip]: '停止手动录制',
   [Phrase.RecordedAt]: '录制于',
   [Phrase.KillVideoCreatorTooltip]: '创建多视角击杀视频。',
-  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '此功能只能用于本地录像。请使用下载按钮。',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '此功能只能用于本地录像。请先使用下载按钮。',
   [Phrase.KillVideoCreatorTooltipNotEnoughPov]: '必须至少有 2 个视角才能使用此功能。',
   [Phrase.KillVideoCreatorTitle]: '视频编辑器',
+  [Phrase.KillVideoSingleAudioTrackLabel]: '单声道音轨',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: '使用单一音轨。留空以便随视频切换音轨。',
+  [Phrase.KillVideoAudioTrackLabel]: '音轨',
+  [Phrase.KillVideoAudioTrackTooltip]: '选择要使用的音轨。',
+  [Phrase.Reset]: '重置',
+  [Phrase.Create]: '创建',
 };
 
 export default CHINESE_SIMPLIFIED;

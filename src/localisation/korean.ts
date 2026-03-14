@@ -506,10 +506,16 @@ const KOREAN: Translations = {
   [Phrase.StartManualRecordingTooltip]: '수동 녹화 시작',
   [Phrase.StopManualRecordingTooltip]: '수동 녹화 중지',
   [Phrase.RecordedAt]: '녹화 시간',
-  [Phrase.KillVideoCreatorTooltip]: '다중 시점 킬 영상을 생성합니다.',
-  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '이 기능은 로컬 녹화에서만 사용할 수 있습니다. 다운로드 버튼을 사용하세요.',
+  [Phrase.KillVideoCreatorTooltip]: '다중 시점 킬 영상 생성',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '이 기능은 로컬 녹화에서만 사용할 수 있습니다. 먼저 다운로드 버튼을 사용하세요.',
   [Phrase.KillVideoCreatorTooltipNotEnoughPov]: '이 기능을 사용하려면 최소 2개의 시점이 필요합니다.',
   [Phrase.KillVideoCreatorTitle]: '비디오 편집기',
+  [Phrase.KillVideoSingleAudioTrackLabel]: '단일 오디오 트랙',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: '단일 오디오 트랙을 사용합니다. 비디오와 함께 오디오 트랙을 전환하려면 비활성화 상태로 두세요.',
+  [Phrase.KillVideoAudioTrackLabel]: '오디오 트랙',
+  [Phrase.KillVideoAudioTrackTooltip]: '사용할 오디오 트랙을 선택하세요.',
+  [Phrase.Reset]: '초기화',
+  [Phrase.Create]: '생성',
 };
 
 export default KOREAN;

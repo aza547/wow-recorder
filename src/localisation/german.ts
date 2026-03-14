@@ -506,10 +506,16 @@ const GERMAN: Translations = {
   [Phrase.StartManualRecordingTooltip]: 'Starte eine manuelle Aufnahme',
   [Phrase.StopManualRecordingTooltip]: 'Beende die manuelle Aufnahme',
   [Phrase.RecordedAt]: 'Aufgenommen am',
-  [Phrase.KillVideoCreatorTooltip]: 'Ein Kill-Video aus mehreren Perspektiven erstellen.',
-  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'Diese Funktion kann nur mit lokalen Aufnahmen verwendet werden. Verwende den Download-Button.',
+  [Phrase.KillVideoCreatorTooltip]: 'Ein Mehr-Perspektiven-Kill-Video erstellen.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'Diese Funktion kann nur mit lokalen Aufnahmen verwendet werden. Bitte zuerst den Download-Button benutzen.',
   [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Mindestens 2 Perspektiven müssen verfügbar sein, um diese Funktion zu nutzen.',
   [Phrase.KillVideoCreatorTitle]: 'Video-Editor',
+  [Phrase.KillVideoSingleAudioTrackLabel]: 'Einzelne Audiospur',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: 'Verwende eine einzelne Audiospur. Deaktiviert lassen, um zwischen Audiospuren und Video zu wechseln.',
+  [Phrase.KillVideoAudioTrackLabel]: 'Audiospur',
+  [Phrase.KillVideoAudioTrackTooltip]: 'Wähle die zu verwendende Audiospur aus.',
+  [Phrase.Reset]: 'Zurücksetzen',
+  [Phrase.Create]: 'Erstellen',
 };
 
 export default GERMAN;

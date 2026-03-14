@@ -4,7 +4,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -24,12 +23,6 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 import Label from './components/Label/Label';
 import { Info } from 'lucide-react';
 import { obsResolutions } from 'main/constants';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from './components/Tabs/Tabs';
 import KillVideoSourceTimeline from './KillVideoSourceTimeline';
 import Switch from './components/Switch/Switch';
 
@@ -101,9 +94,6 @@ const KillVideoDialog = (props: IProps) => {
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
           {getLocalePhrase(language, Phrase.FPSLabel)}
-          <Tooltip content="FPS To use" side="right">
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
         </Label>
         <Select value={fps} onValueChange={setFps}>
           <SelectTrigger className="w-full">
@@ -125,9 +115,12 @@ const KillVideoDialog = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label className="flex items-center">
-          Single Audio Track
+          {getLocalePhrase(language, Phrase.KillVideoSingleAudioTrackLabel)}
           <Tooltip
-            content="Enable this to use a single audio track in the kill video. Leave disabled to switch audio tracks with video"
+            content={getLocalePhrase(
+              language,
+              Phrase.KillVideoSingleAudioTrackTooltip,
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -148,8 +141,14 @@ const KillVideoDialog = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
-          Audio Track
-          <Tooltip content="Select the audio track to use" side="right">
+          {getLocalePhrase(language, Phrase.KillVideoAudioTrackLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              language,
+              Phrase.KillVideoAudioTrackTooltip,
+            )}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -176,9 +175,6 @@ const KillVideoDialog = (props: IProps) => {
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
           {getLocalePhrase(language, Phrase.CanvasResolutionLabel)}
-          <Tooltip content="Resolution To use" side="right">
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
         </Label>
         <Select
           value={resolution}
@@ -237,31 +233,15 @@ const KillVideoDialog = (props: IProps) => {
             {getLocalePhrase(language, Phrase.KillVideoCreatorTitle)}
           </DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="timeline">
-          <TabsList>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="video">Video</TabsTrigger>
-            <TabsTrigger value="audio">Audio</TabsTrigger>
-          </TabsList>
-          <TabsContent value="timeline" className="mt-4">
-            <KillVideoSourceTimeline
-              segments={segments}
-              setSegments={setSegments}
-            />
-          </TabsContent>
-          <TabsContent value="video" className="mt-4">
-            <div className="flex flex-row gap-x-8 ">
-              {getFpsSelect()}
-              {getResolutionSelect()}
-            </div>
-          </TabsContent>
-          <TabsContent value="audio" className="mt-4">
-            <div className="flex flex-row gap-x-8 ">
-              {getAudioSwitch()}
-              {singleAudio && getAudioTrackSelect()}
-            </div>
-          </TabsContent>
-        </Tabs>
+
+        <KillVideoSourceTimeline segments={segments} setSegments={setSegments}>
+          <div className="flex flex-col gap-4">
+            {getFpsSelect()}
+            {getResolutionSelect()}
+            {getAudioSwitch()}
+            {singleAudio && getAudioTrackSelect()}
+          </div>
+        </KillVideoSourceTimeline>
 
         <DialogFooter>
           <DialogClose asChild>
@@ -274,7 +254,7 @@ const KillVideoDialog = (props: IProps) => {
           </Button>
           <DialogClose asChild>
             <Button onClick={() => createKillVideo()} type="submit">
-              Create
+              {getLocalePhrase(language, Phrase.Create)}
             </Button>
           </DialogClose>
         </DialogFooter>

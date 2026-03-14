@@ -8,6 +8,7 @@ import {
 } from './rendererutils';
 import React, {
   Dispatch,
+  ReactNode,
   SetStateAction,
   useCallback,
   useEffect,
@@ -21,6 +22,7 @@ import { Trash2 } from 'lucide-react';
 interface SourceTimelineProps {
   segments: KillVideoSegment[];
   setSegments: Dispatch<SetStateAction<KillVideoSegment[]>>;
+  children?: ReactNode;
 }
 
 /**
@@ -344,16 +346,21 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
 
   return (
     <div className="flex flex-col gap-0 w-full">
-      {/* Video preview */}
-      <div className="aspect-video h-[300px] bg-black rounded-md overflow-hidden mb-4">
-        <video
-          ref={videoPreviewRef}
-          key={activeSegment.video.videoName}
-          src={videoSrc}
-          className="w-full h-full object-contain"
-          onLoadedData={handleVideoLoaded}
-          muted
-        />
+      {/* Video preview + settings side by side */}
+      <div className="flex flex-row gap-4 mb-4 items-start">
+        <div className="flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm">
+          <video
+            ref={videoPreviewRef}
+            key={activeSegment.video.videoName}
+            src={videoSrc}
+            className="w-full h-full object-contain"
+            onLoadedData={handleVideoLoaded}
+            muted
+          />
+        </div>
+        {props.children && (
+          <div className="flex-shrink-0 w-44 pt-1">{props.children}</div>
+        )}
       </div>
 
       {/* Timeline + playhead wrapper */}
