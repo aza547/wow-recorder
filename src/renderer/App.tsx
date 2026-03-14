@@ -462,7 +462,7 @@ const WarcraftRecorder = () => {
         }}
       >
         <Toaster />
-        <KillVideoProgress />
+        <KillVideoProgress language={appState.language} />
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <RendererTitleBar />

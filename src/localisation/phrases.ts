@@ -513,6 +513,8 @@ enum Phrase {
   KillVideoSingleAudioTrackTooltip,
   KillVideoAudioTrackLabel,
   KillVideoAudioTrackTooltip,
+  Creating,
+  Preparing,
 }
 
 enum Language {

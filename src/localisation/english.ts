@@ -516,6 +516,8 @@ const ENGLISH: Translations = {
   [Phrase.KillVideoAudioTrackTooltip]: 'Select the audio track to use.',
   [Phrase.Reset]: 'Reset',
   [Phrase.Create]: 'Create',
+  [Phrase.Creating]: 'Creating',
+  [Phrase.Preparing]: 'Preparing',
 };
 
 export default ENGLISH;

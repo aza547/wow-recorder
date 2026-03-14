@@ -516,6 +516,8 @@ const KOREAN: Translations = {
   [Phrase.KillVideoAudioTrackTooltip]: '사용할 오디오 트랙을 선택하세요.',
   [Phrase.Reset]: '초기화',
   [Phrase.Create]: '생성',
+  [Phrase.Creating]: '생성 중',
+  [Phrase.Preparing]: '준비 중',
 };
 
 export default KOREAN;

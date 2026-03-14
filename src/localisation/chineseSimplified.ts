@@ -516,6 +516,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.KillVideoAudioTrackTooltip]: '选择要使用的音轨。',
   [Phrase.Reset]: '重置',
   [Phrase.Create]: '创建',
+  [Phrase.Creating]: '创建中',
+  [Phrase.Preparing]: '准备中',
 };
 
 export default CHINESE_SIMPLIFIED;

@@ -2,10 +2,17 @@ import { KillVideoStatus } from 'main/types';
 import Progress from './components/Progress/Progress';
 import { cn } from './components/utils';
 import { useEffect, useState } from 'react';
+import { getLocalePhrase, Language } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 
-const KillVideoProgress = () => {
+interface IProps {
+  language: Language;
+}
+
+const KillVideoProgress = (props: IProps) => {
+  const { language } = props;
   const [killVideoStatus, setKillVideoStatus] = useState<KillVideoStatus>({
     perc: 0,
     queued: 0,
@@ -29,11 +36,14 @@ const KillVideoProgress = () => {
 
   const descr =
     killVideoStatus.queued > 1
-      ? `Creating kill video (+${killVideoStatus.queued - 1})`
-      : 'Creating kill video';
+      ? getLocalePhrase(language, Phrase.Creating) +
+        `(+${killVideoStatus.queued - 1})`
+      : getLocalePhrase(language, Phrase.Creating);
 
   const progress =
-    killVideoStatus.perc < 1 ? 'Preparing...' : `${killVideoStatus.perc}%`;
+    killVideoStatus.perc < 1
+      ? getLocalePhrase(language, Phrase.Preparing) + '...'
+      : `${killVideoStatus.perc}%`;
 
   return (
     <div

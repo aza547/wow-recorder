@@ -516,6 +516,8 @@ const GERMAN: Translations = {
   [Phrase.KillVideoAudioTrackTooltip]: 'Wähle die zu verwendende Audiospur aus.',
   [Phrase.Reset]: 'Zurücksetzen',
   [Phrase.Create]: 'Erstellen',
+  [Phrase.Creating]: 'Erstellen',
+  [Phrase.Preparing]: 'Vorbereiten',
 };
 
 export default GERMAN;
