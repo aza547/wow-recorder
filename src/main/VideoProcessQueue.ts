@@ -833,6 +833,7 @@ export default class VideoProcessQueue {
     const videoDate = video.start ?? video.mtime;
 
     let videoName = getOBSFormattedDate(new Date(videoDate));
+    videoName += ` - Multiview`;
 
     // We checked earlier that segments isn't empty so not
     // worrying about checking for undefined here.
@@ -843,7 +844,7 @@ export default class VideoProcessQueue {
       videoName += ` [${video.difficulty}]`;
     }
 
-    videoName += ` - Kill Video - Rendered at ${getOBSFormattedDate(new Date())}`;
+    videoName += ` - Rendered at ${getOBSFormattedDate(new Date())}`;
     const storageDir = ConfigService.getInstance().get<string>('storagePath');
     const videoPath = path.join(storageDir, `${videoName}.mp4`);
 

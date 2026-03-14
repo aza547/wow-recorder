@@ -34,7 +34,6 @@ import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
 import { wowInstallSearchPaths } from './constants';
-import { get } from 'lodash';
 
 /**
  * When packaged, we need to fix some paths

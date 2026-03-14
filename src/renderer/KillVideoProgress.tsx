@@ -50,7 +50,7 @@ const KillVideoProgress = (props: IProps) => {
         'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[30rem]',
         'rounded-md bg-background px-4 py-2.5 shadow-lg',
         'animate-in slide-in-from-bottom-full fade-in duration-300',
-        'border border-card',
+        'border border-white/10 bg-background shadow-[0_20px_60px_rgba(0,0,0,0.45)] sm:rounded-xl',
       )}
     >
       <div className="flex items-center gap-3">
