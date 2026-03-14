@@ -13,7 +13,6 @@ import {
 import { Button } from './components/Button/Button';
 import { Language, Phrase } from 'localisation/phrases';
 import { ReactNode, useState } from 'react';
-import { QualityPresets } from 'main/obsEnums';
 import {
   Select,
   SelectContent,
@@ -24,8 +23,6 @@ import {
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Label from './components/Label/Label';
 import { Info } from 'lucide-react';
-import { configSchema } from 'config/configSchema';
-import { filterKillVideoSources, translateQuality } from './rendererutils';
 import { obsResolutions } from 'main/constants';
 import {
   Tabs,
@@ -61,15 +58,14 @@ const KillVideoDialog = (props: IProps) => {
     // avoids weird conditions due to misclipped videos. Not perfect
     // but should be good enough for now.
     let videoDuration = Number.MAX_SAFE_INTEGER;
-    const filtered = filterKillVideoSources(sources);
 
-    filtered.forEach((rv) => {
+    sources.forEach((rv) => {
       videoDuration = Math.min(videoDuration, rv.duration);
     });
 
-    const segmentDuration = videoDuration / filtered.length;
+    const segmentDuration = videoDuration / sources.length;
 
-    return filtered.map((rv, idx) => ({
+    return sources.map((rv, idx) => ({
       video: rv,
       start: idx * segmentDuration,
       stop: (idx + 1) * segmentDuration,
@@ -214,15 +210,14 @@ const KillVideoDialog = (props: IProps) => {
     // avoids weird conditions due to misclipped videos. Not perfect
     // but should be good enough for now.
     let videoDuration = Number.MAX_SAFE_INTEGER;
-    const filtered = filterKillVideoSources(sources);
 
-    filtered.forEach((rv) => {
+    sources.forEach((rv) => {
       videoDuration = Math.min(videoDuration, rv.duration);
     });
 
-    const segmentDuration = videoDuration / filtered.length;
+    const segmentDuration = videoDuration / sources.length;
 
-    const resetSegments = filtered.map((rv, idx) => ({
+    const resetSegments = sources.map((rv, idx) => ({
       video: rv,
       start: idx * segmentDuration,
       stop: (idx + 1) * segmentDuration,

@@ -15,7 +15,6 @@ import {
   isRaidUtil,
   isMythicPlusUtil,
   getDungeonName,
-  filterKillVideoSources,
 } from 'renderer/rendererutils';
 import { Box, Checkbox } from '@mui/material';
 import { affixImages, specImages } from 'renderer/images';
@@ -224,8 +223,8 @@ export const populateCreatorCell = (
   language: Language,
 ) => {
   const video = ctx.getValue() as RendererVideo;
-  const disabled =
-    filterKillVideoSources([video, ...video.multiPov]).length < 2;
+  const sources = [video, ...video.multiPov].filter((rv) => !rv.cloud);
+  const disabled = sources.length < 2;
 
   return (
     <Box className="inline-flex">
@@ -233,10 +232,7 @@ export const populateCreatorCell = (
         content={getLocalePhrase(language, Phrase.KillVideoCreatorTooltip)}
       >
         <div onClick={(e) => e.stopPropagation()}>
-          <KillVideoDialog
-            sources={[video, ...video.multiPov]}
-            language={language}
-          >
+          <KillVideoDialog sources={sources} language={language}>
             <Button variant="ghost" size="xs" disabled={disabled}>
               <Clapperboard size={18} />
             </Button>

@@ -29,8 +29,6 @@ import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
 import DiskClient from 'storage/DiskClient';
 import Recorder from './Recorder';
-import { SegmentSharp } from '@mui/icons-material';
-import { ESupportedEncoders } from './obsEnums';
 
 const atomicQueue = require('atomic-queue');
 const devMode = process.env.NODE_ENV === 'development';
@@ -429,34 +427,35 @@ export default class VideoProcessQueue {
       const segmentDuration = pov.stop - pov.start;
       const fadeDuration = 1;
       const fadeOutStart = Math.max(0, segmentDuration - fadeDuration);
-      const fadeInStart = 0;
 
-      const pts = 'PTS-STARTPTS';
       const scale = `${item.width}:-2`;
       const pad = `${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2`;
-      const fadeIn = `t=in:st=${fadeInStart}:d=${fadeDuration}`;
+
+      const fadeIn = `t=in:st=0:d=${fadeDuration}`;
       const fadeOut = `t=out:st=${fadeOutStart}:d=${fadeDuration}`;
 
-      // Splice video from all perspectives together with a simple fade
-      // transition, and rescaling and padding to fit the output dimensions.
-      filter += `[${idx}:v]setpts=${pts},fps=${item.fps},scale=${scale},pad=${pad},fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
+      const trim = `start=${pov.start}:end=${pov.stop}`;
+
+      // Video
+      filter +=
+        `[${idx}:v]trim=${trim},setpts=PTS-STARTPTS,` +
+        `fps=${item.fps},scale=${scale},pad=${pad},` +
+        `fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
 
       if (item.audioTrackIndex === -1) {
-        // Splice audio from all perspectives together, with a simple fade
-        // transition, so each segment has its own audio track which we will
-        // then interleave.
-        filter += `[${idx}:a]asetpts=${pts},afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
+        // Audio
+        filter +=
+          `[${idx}:a]atrim=${trim},asetpts=PTS-STARTPTS,` +
+          `afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
       }
     });
 
     if (item.audioTrackIndex === -1) {
-      // Interleaved audio tracks.
       const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
-      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a];`;
+      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a]`;
     } else {
-      // Single audio track.
       const inputs = item.segments.map((_, i) => `[v${i}]`).join('');
-      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=0[v];`;
+      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=0[v]`;
     }
 
     console.info('[VideoProcessQueue] Generated filter:', filter);
@@ -512,9 +511,10 @@ export default class VideoProcessQueue {
         duration: seg.stop - seg.start,
       });
 
-      fn.input(seg.video.videoSource)
-        .inputOption(`-ss ${seg.start}`)
-        .inputOption(`-t ${seg.stop - seg.start}`);
+      // Give a bit of extra time.
+      const seek = Math.max(0, seg.start - 2);
+
+      fn.input(seg.video.videoSource).inputOption(`-ss ${seek}`);
     });
 
     if (item.audioTrackIndex !== -1) {
