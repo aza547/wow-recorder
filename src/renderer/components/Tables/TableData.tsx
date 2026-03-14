@@ -26,6 +26,7 @@ import {
   populateLevelCell,
   populateActivityCell,
   populateAffixesCell,
+  populateCreatorCell,
 } from './Cells';
 import {
   EncounterHeader,
@@ -117,6 +118,7 @@ const useTable = (
       },
       {
         id: 'Pull',
+        size: 100,
         accessorFn: (v) => getPullNumber(v, videoState),
         header: () => PullHeader(language),
       },
@@ -140,10 +142,19 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 150,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
         sortingFn: viewPointCountSort,
+      },
+      {
+        id: 'Creator',
+        size: 50,
+        accessorFn: (v) => v,
+        sortingFn: (a, b) => detailSort(a, b),
+        header: DetailsHeader,
+        cell: (ctx) => populateCreatorCell(ctx, language),
       },
     ],
     [language, cloudStatus, videoState, setVideoState],

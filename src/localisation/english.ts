@@ -506,7 +506,19 @@ const ENGLISH: Translations = {
   [Phrase.StartManualRecordingTooltip]: 'Start a manual recording.',
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
-
+  [Phrase.KillVideoCreatorTooltip]: 'Create a multiview video.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'This feature can only operate on local recordings. Use the download button first.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Must have atleast 2 viewpoints available to use this feature.',
+  [Phrase.KillVideoCreatorTitle]: 'Video Editor',
+  [Phrase.KillVideoSingleAudioTrackLabel]: 'Single Audio Track',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: 'Use a single audio track. Leave disabled to switch audio tracks with video.',
+  [Phrase.KillVideoAudioTrackLabel]: 'Audio Track',
+  [Phrase.KillVideoAudioTrackTooltip]: 'Select the audio track to use.',
+  [Phrase.KillVideoCreating]: 'Encoding multiview video...',
+  [Phrase.KillVideoDescription]: 'Requires re-encoding which is CPU intensive and typically takes a few minutes. Result will appear in clips category.',
+  [Phrase.Reset]: 'Reset',
+  [Phrase.Render]: 'Render',
+  [Phrase.Preparing]: 'Preparing',
 };
 
 export default ENGLISH;

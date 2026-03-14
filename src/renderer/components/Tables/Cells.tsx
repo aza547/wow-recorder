@@ -23,14 +23,19 @@ import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';
 import {
+  Clapperboard,
   LockKeyhole,
   LockOpen,
   MessageSquare,
   MessageSquareMore,
 } from 'lucide-react';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import { dungeonAffixesById } from 'main/constants';
 import TagDialog from 'renderer/TagDialog';
+import KillVideoDialog from 'renderer/KillVideoDialog';
+import wcrIcon from '../../../../assets/icon/small-icon.png';
+
+const ipc = window.electron.ipcRenderer;
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
@@ -127,12 +132,7 @@ export const populateDetailsCell = (
 
     const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);
-
-      window.electron.ipcRenderer.sendMessage('videoButton', [
-        'protect',
-        lock,
-        toProtect,
-      ]);
+      ipc.sendMessage('videoButton', ['protect', lock, toProtect]);
 
       setVideoState((prev) => {
         const state = [...prev];
@@ -218,6 +218,44 @@ export const populateDetailsCell = (
   );
 };
 
+export const populateCreatorCell = (
+  ctx: CellContext<RendererVideo, unknown>,
+  language: Language,
+) => {
+  const video = ctx.getValue() as RendererVideo;
+  const cloud = [video, ...video.multiPov].filter((rv) => rv.cloud);
+  const disk = [video, ...video.multiPov].filter((rv) => !rv.cloud);
+  const disabled = disk.length < 2;
+
+  let tooltip = getLocalePhrase(language, Phrase.KillVideoCreatorTooltip);
+
+  if (disabled && cloud.length + disk.length > 1) {
+    tooltip = getLocalePhrase(
+      language,
+      Phrase.KillVideoCreatorTooltipNotEnoughLocal,
+    );
+  } else if (disabled) {
+    tooltip = getLocalePhrase(
+      language,
+      Phrase.KillVideoCreatorTooltipNotEnoughPov,
+    );
+  }
+
+  return (
+    <Box className="inline-flex">
+      <Tooltip content={tooltip}>
+        <div onClick={(e) => e.stopPropagation()}>
+          <KillVideoDialog sources={disk} language={language}>
+            <Button variant="ghost" size="xs" disabled={disabled}>
+              <Clapperboard size={18} />
+            </Button>
+          </KillVideoDialog>
+        </div>
+      </Tooltip>
+    </Box>
+  );
+};
+
 export const populateLevelCell = (
   info: CellContext<RendererVideo, unknown>,
 ) => {
@@ -281,11 +319,17 @@ export const populateViewpointCell = (
     return <div>{count}</div>;
   }
 
-  const playerName = getPlayerName(first);
   const playerClass = getPlayerClass(first);
-  const playerClassColor = getWoWClassColor(playerClass);
   const playerSpecID = getPlayerSpecID(first);
-  const specIcon = specImages[playerSpecID as keyof typeof specImages];
+  let playerName = getPlayerName(first);
+  let playerClassColor = getWoWClassColor(playerClass);
+  let specIcon = specImages[playerSpecID as keyof typeof specImages];
+
+  if (playerName === 'WCR Multipov Name') {
+    playerName = 'Multiview';
+    playerClassColor = '#bb4420';
+    specIcon = wcrIcon;
+  }
 
   const renderSpecAndName = () => {
     return (
@@ -294,6 +338,7 @@ export const populateViewpointCell = (
           key={player._GUID}
           component="img"
           src={specIcon}
+          className="bg-background-higher"
           sx={{
             display: 'flex',
             height: '25px',

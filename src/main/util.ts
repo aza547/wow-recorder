@@ -24,6 +24,7 @@ import {
   ObsAudioConfig,
   ErrorReport,
   CloudSignedMetadata,
+  KillVideoSegment,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
@@ -289,7 +290,7 @@ const loadVideoDetailsDisk = async (
  * Writes video metadata asynchronously and returns a Promise
  */
 const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
-  console.info('[Util] Write Metadata file', videoPath);
+  console.info('[Util] Write Metadata file for video:', videoPath);
 
   const metadataFileName = getMetadataFileNameForVideo(videoPath);
   const jsonString = JSON.stringify(metadata, null, 2);
@@ -600,6 +601,35 @@ const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
   final.category = VideoCategory.Clips;
   final.protected = true;
   final.clippedAt = date.getTime();
+  return final;
+};
+
+const buildKillVideoMetadata = (
+  initial: Metadata,
+  segments: KillVideoSegment[],
+) => {
+  const final = initial;
+  final.duration = segments[segments.length - 1].stop;
+  final.parentCategory = initial.category;
+  final.category = VideoCategory.Clips;
+  final.protected = true;
+  final.clippedAt = Date.now();
+  final.tag = `WCR Multipov Kill Video`;
+
+  if (initial.start) {
+    // All modern videos have this. It is possible legacy videos might not.
+    final.tag += `. Created by WCR at ${getOBSFormattedDate(new Date(initial.start))}`;
+  }
+
+  final.player = {
+    _GUID: 'WCR MultiPov GUID',
+    _teamID: -1,
+    _specID: -1,
+    _name: 'WCR Multipov Name',
+    _realm: 'WCR Multipov Realm',
+    _region: 'WCR Multipov Region',
+  };
+
   return final;
 };
 
@@ -1073,6 +1103,7 @@ export {
   getPromiseBomb,
   emitErrorReport,
   buildClipMetadata,
+  buildKillVideoMetadata,
   getOBSFormattedDate,
   checkDisk,
   getMetadataFileNameForVideo,

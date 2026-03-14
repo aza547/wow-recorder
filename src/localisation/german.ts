@@ -505,7 +505,20 @@ const GERMAN: Translations = {
   [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder überprüft, ob die von Ihnen festgelegten Logpfade auf eine unterstützte WoW-Installation verweisen. Sie können diese Überprüfung deaktivieren, um nicht unterstützte Spielmodi festzulegen. Deaktivieren Sie dies auf eigenes Risiko.',
   [Phrase.StartManualRecordingTooltip]: 'Starte eine manuelle Aufnahme',
   [Phrase.StopManualRecordingTooltip]: 'Beende die manuelle Aufnahme',
-  [Phrase.RecordedAt]: 'Aufgenommen am',
+  [Phrase.RecordedAt]: 'Aufgenommen um',
+  [Phrase.KillVideoCreatorTooltip]: 'Ein Multiview-Video erstellen.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'Diese Funktion kann nur mit lokalen Aufnahmen verwendet werden. Verwenden Sie zuerst die Download-Schaltfläche.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Mindestens 2 Perspektiven müssen verfügbar sein, um diese Funktion zu nutzen.',
+  [Phrase.KillVideoCreatorTitle]: 'Video-Editor',
+  [Phrase.KillVideoSingleAudioTrackLabel]: 'Einzelne Audiospur',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: 'Eine einzelne Audiospur verwenden. Deaktiviert lassen, um die Audiospur mit dem Video zu wechseln.',
+  [Phrase.KillVideoAudioTrackLabel]: 'Audiospur',
+  [Phrase.KillVideoAudioTrackTooltip]: 'Die zu verwendende Audiospur auswählen.',
+  [Phrase.KillVideoCreating]: 'Multiview-Video wird kodiert...',
+  [Phrase.KillVideoDescription]: 'Erfordert eine Neukodierung, die CPU-intensiv ist und normalerweise einige Minuten dauert. Das Ergebnis erscheint in der Kategorie Clips.',
+  [Phrase.Reset]: 'Zurücksetzen',
+  [Phrase.Render]: 'Rendern',
+  [Phrase.Preparing]: 'Vorbereitung',
 };
 
 export default GERMAN;

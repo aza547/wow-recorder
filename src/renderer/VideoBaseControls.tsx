@@ -18,6 +18,7 @@ import {
   isHighRes,
   mapEncoderToString,
   mapStringToEncoder,
+  translateQuality,
 } from './rendererutils';
 import Label from './components/Label/Label';
 import {
@@ -251,21 +252,6 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       return <></>;
     }
 
-    const translateQuality = (p: QualityPresets) => {
-      switch (p) {
-        case QualityPresets.ULTRA:
-          return getLocalePhrase(appState.language, Phrase.Ultra);
-        case QualityPresets.HIGH:
-          return getLocalePhrase(appState.language, Phrase.High);
-        case QualityPresets.MODERATE:
-          return getLocalePhrase(appState.language, Phrase.Moderate);
-        case QualityPresets.LOW:
-          return getLocalePhrase(appState.language, Phrase.Low);
-        default:
-          throw new Error('Unknown quality');
-      }
-    };
-
     const options = Object.values(QualityPresets);
 
     return (
@@ -299,7 +285,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           <SelectContent>
             {options.map((option) => (
               <SelectItem key={option} value={option}>
-                {translateQuality(option)}
+                {translateQuality(option, appState.language)}
               </SelectItem>
             ))}
           </SelectContent>

@@ -290,6 +290,8 @@ enum Phrase {
   AddADescription,
   TagDialogText,
   Clear,
+  Reset,
+  Render,
   Save,
   ShareableLinkTitle,
   ShareableLinkText,
@@ -503,6 +505,17 @@ enum Phrase {
   StartManualRecordingTooltip,
   StopManualRecordingTooltip,
   RecordedAt,
+  KillVideoCreatorTooltip,
+  KillVideoCreatorTooltipNotEnoughLocal,
+  KillVideoCreatorTooltipNotEnoughPov,
+  KillVideoCreatorTitle,
+  KillVideoSingleAudioTrackLabel,
+  KillVideoSingleAudioTrackTooltip,
+  KillVideoAudioTrackLabel,
+  KillVideoAudioTrackTooltip,
+  KillVideoCreating,
+  KillVideoDescription,
+  Preparing,
 }
 
 enum Language {

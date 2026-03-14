@@ -505,7 +505,20 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder 会检查你设置的日志路径是否指向受支持的 WoW 安装。你可以禁用此检查以允许设置不受支持的游戏模式。禁用此功能需自行承担风险。',
   [Phrase.StartManualRecordingTooltip]: '开始手动录制',
   [Phrase.StopManualRecordingTooltip]: '停止手动录制',
-  [Phrase.RecordedAt]: '录制于',
+  [Phrase.RecordedAt]: '录制时间',
+  [Phrase.KillVideoCreatorTooltip]: '创建多视角视频。',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '此功能只能用于本地录制。请先使用下载按钮。',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: '使用此功能至少需要 2 个视角。',
+  [Phrase.KillVideoCreatorTitle]: '视频编辑器',
+  [Phrase.KillVideoSingleAudioTrackLabel]: '单一音轨',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: '使用单一音轨。禁用时将随视频切换音轨。',
+  [Phrase.KillVideoAudioTrackLabel]: '音轨',
+  [Phrase.KillVideoAudioTrackTooltip]: '选择要使用的音轨。',
+  [Phrase.KillVideoCreating]: '正在编码多视角视频...',
+  [Phrase.KillVideoDescription]: '需要重新编码，CPU 占用较高，通常需要几分钟。结果将出现在 Clips 分类中。',
+  [Phrase.Reset]: '重置',
+  [Phrase.Render]: '渲染',
+  [Phrase.Preparing]: '准备中',
 };
 
 export default CHINESE_SIMPLIFIED;

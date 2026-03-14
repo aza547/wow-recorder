@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - [Issue 777](https://github.com/aza547/wow-recorder/issues/777) - Update M+ timers for Midnight S1.
+- Cloud videos can now be directly clipped.
+- Adds the kill video creator feature.
 
 ### Fixed
 
