@@ -223,16 +223,29 @@ export const populateCreatorCell = (
   language: Language,
 ) => {
   const video = ctx.getValue() as RendererVideo;
-  const sources = [video, ...video.multiPov].filter((rv) => !rv.cloud);
-  const disabled = sources.length < 2;
+  const cloud = [video, ...video.multiPov].filter((rv) => rv.cloud);
+  const disk = [video, ...video.multiPov].filter((rv) => !rv.cloud);
+  const disabled = disk.length < 2;
+
+  let tooltip = getLocalePhrase(language, Phrase.KillVideoCreatorTooltip);
+
+  if (disabled && cloud.length + disk.length > 1) {
+    tooltip = getLocalePhrase(
+      language,
+      Phrase.KillVideoCreatorTooltipNotEnoughLocal,
+    );
+  } else if (disabled) {
+    tooltip = getLocalePhrase(
+      language,
+      Phrase.KillVideoCreatorTooltipNotEnoughPov,
+    );
+  }
 
   return (
     <Box className="inline-flex">
-      <Tooltip
-        content={getLocalePhrase(language, Phrase.KillVideoCreatorTooltip)}
-      >
+      <Tooltip content={tooltip}>
         <div onClick={(e) => e.stopPropagation()}>
-          <KillVideoDialog sources={sources} language={language}>
+          <KillVideoDialog sources={disk} language={language}>
             <Button variant="ghost" size="xs" disabled={disabled}>
               <Clapperboard size={18} />
             </Button>

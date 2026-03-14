@@ -506,8 +506,9 @@ const GERMAN: Translations = {
   [Phrase.StartManualRecordingTooltip]: 'Starte eine manuelle Aufnahme',
   [Phrase.StopManualRecordingTooltip]: 'Beende die manuelle Aufnahme',
   [Phrase.RecordedAt]: 'Aufgenommen am',
-  [Phrase.KillVideoCreatorTooltip]: 'Ersteller des Kill-Videos',
-  [Phrase.KillVideoCreatorDescription]: 'Der Name des Spielers, der das Video aufgenommen hat. Dieser',
+  [Phrase.KillVideoCreatorTooltip]: 'Ein Kill-Video aus mehreren Perspektiven erstellen.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'Diese Funktion kann nur mit lokalen Aufnahmen verwendet werden. Verwende den Download-Button.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Mindestens 2 Perspektiven müssen verfügbar sein, um diese Funktion zu nutzen.',
 };
 
 export default GERMAN;

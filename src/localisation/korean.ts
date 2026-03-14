@@ -506,8 +506,9 @@ const KOREAN: Translations = {
   [Phrase.StartManualRecordingTooltip]: '수동 녹화 시작',
   [Phrase.StopManualRecordingTooltip]: '수동 녹화 중지',
   [Phrase.RecordedAt]: '녹화 시간',
-  [Phrase.KillVideoCreatorTooltip]: '킬 비디오 생성',
-  [Phrase.KillVideoCreatorDescription]: '킬 비디오를 생성한 사람입니다.',
+  [Phrase.KillVideoCreatorTooltip]: '다중 시점 킬 영상을 생성합니다.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '이 기능은 로컬 녹화에서만 사용할 수 있습니다. 다운로드 버튼을 사용하세요.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: '이 기능을 사용하려면 최소 2개의 시점이 필요합니다.',
 };
 
 export default KOREAN;

@@ -48,7 +48,7 @@ const KillVideoDialog = (props: IProps) => {
   const [fps, setFps] = useState('60');
   const [singleAudio, setSingleAudio] = useState(false);
   const [audioTrackPlayer, setAudioTrackPlayer] = useState(
-    sources[0].player?._name || '',
+    sources[0]?.player?._name || '',
   );
   const [resolution, setResolution] =
     useState<keyof typeof obsResolutions>('1920x1080');
@@ -231,28 +231,11 @@ const KillVideoDialog = (props: IProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-[75%]">
+      <DialogContent className="max-w-[70%]">
         <DialogHeader>
           <DialogTitle>
             {getLocalePhrase(language, Phrase.KillVideoCreatorTooltip)}
           </DialogTitle>
-          <DialogDescription>
-            <div className="mb-2">
-              {getLocalePhrase(language, Phrase.KillVideoCreatorDescription1)}
-            </div>
-            <ol className="list-decimal pl-6 mb-2">
-              {[
-                Phrase.KillVideoCreatorDescription2,
-                Phrase.KillVideoCreatorDescription3,
-                Phrase.KillVideoCreatorDescription4,
-              ].map((p) => (
-                <li key={p}>{getLocalePhrase(language, p)}</li>
-              ))}
-            </ol>
-            <div className="mb-2">
-              {getLocalePhrase(language, Phrase.KillVideoCreatorDescription5)}
-            </div>
-          </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="timeline">
           <TabsList>
@@ -266,13 +249,13 @@ const KillVideoDialog = (props: IProps) => {
               setSegments={setSegments}
             />
           </TabsContent>
-          <TabsContent value="video" className="m-4">
+          <TabsContent value="video" className="mt-4">
             <div className="flex flex-row gap-x-8 ">
               {getFpsSelect()}
               {getResolutionSelect()}
             </div>
           </TabsContent>
-          <TabsContent value="audio" className="m-4">
+          <TabsContent value="audio" className="mt-4">
             <div className="flex flex-row gap-x-8 ">
               {getAudioSwitch()}
               {singleAudio && getAudioTrackSelect()}

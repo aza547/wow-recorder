@@ -505,11 +505,8 @@ enum Phrase {
   StopManualRecordingTooltip,
   RecordedAt,
   KillVideoCreatorTooltip,
-  KillVideoCreatorDescription1,
-  KillVideoCreatorDescription2,
-  KillVideoCreatorDescription3,
-  KillVideoCreatorDescription4,
-  KillVideoCreatorDescription5,
+  KillVideoCreatorTooltipNotEnoughLocal,
+  KillVideoCreatorTooltipNotEnoughPov,
 }
 
 enum Language {

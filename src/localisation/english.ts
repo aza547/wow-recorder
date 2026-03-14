@@ -507,12 +507,9 @@ const ENGLISH: Translations = {
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
   [Phrase.Reset]: 'Reset',
-  [Phrase.KillVideoCreatorTooltip]: 'Create Kill Video',
-  [Phrase.KillVideoCreatorDescription1]: 'Automatically create a multi-perspective kill video without using a video editor.',
-  [Phrase.KillVideoCreatorDescription2]: 'Configure the timeline and settings below.',
-  [Phrase.KillVideoCreatorDescription3]: 'Hit the Create button.',
-  [Phrase.KillVideoCreatorDescription4]: 'Warcraft Recorder will stich the sources together with audio and video transitions.',
-  [Phrase.KillVideoCreatorDescription5]: 'This requires re-encoding and may take several minutes to complete. The kill video will appear in the clips category once it is ready.',
+  [Phrase.KillVideoCreatorTooltip]: 'Create a multi-viewpoint kill video.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'This feature can only operate on local recordings. Use the download button first.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Must have atleast 2 viewpoints available to use this feature.',
 };
 
 export default ENGLISH;
