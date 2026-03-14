@@ -35,6 +35,7 @@ interface IProps {
 }
 
 const KillVideoDialog = (props: IProps) => {
+  const [ open, setOpen ] = useState(false);
   const { children, language, sources } = props;
 
   // Our select component only accepts strings annoyingly.
@@ -224,8 +225,17 @@ const KillVideoDialog = (props: IProps) => {
     setResolution('1920x1080');
   };
 
+  if (!open) {
+    // Lazy render the dialog for performance.
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{children}</DialogTrigger>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-[75%]">
         <DialogHeader>

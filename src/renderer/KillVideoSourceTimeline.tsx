@@ -17,7 +17,7 @@ import React, {
   useState,
 } from 'react';
 import { specImages } from './images';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Volume2, VolumeX } from 'lucide-react';
 
 interface SourceTimelineProps {
   segments: KillVideoSegment[];
@@ -52,6 +52,9 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
   const [overIdx, setOverIdx] = useState<number | null>(null);
   const [overBin, setOverBin] = useState(false);
   const [playheadTime, setPlayheadTime] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const seekingRef = useRef(false);
 
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
   const timelineWrapperRef = useRef<HTMLDivElement>(null);
@@ -70,11 +73,12 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     return src.startsWith('https://') ? src : `vod://wcr/${src}`;
   }, [activeSegment]);
 
-  // Seek the preview video when the playhead moves within the same source.
+  // Seek the preview video when the playhead is moved manually.
   useEffect(() => {
     const el = videoPreviewRef.current;
-    if (el && el.readyState >= 2) {
+    if (el && el.readyState >= 2 && seekingRef.current) {
       el.currentTime = playheadTime;
+      seekingRef.current = false;
     }
   }, [playheadTime]);
 
@@ -83,8 +87,29 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     const el = videoPreviewRef.current;
     if (el) {
       el.currentTime = playheadTime;
+      if (playing) el.play();
     }
-  }, [playheadTime]);
+  }, [playheadTime, playing]);
+
+  // Sync playhead from video playback.
+  const handleTimeUpdate = useCallback(() => {
+    const el = videoPreviewRef.current;
+    if (el && !seekingRef.current) {
+      setPlayheadTime(el.currentTime);
+    }
+  }, []);
+
+  const togglePlayPause = useCallback(() => {
+    const el = videoPreviewRef.current;
+    if (!el) return;
+    if (el.paused) {
+      el.play();
+      setPlaying(true);
+    } else {
+      el.pause();
+      setPlaying(false);
+    }
+  }, []);
 
   // True when cursor is over a valid insertion gap (not a no-op position).
   const showDropIndicator =
@@ -298,9 +323,11 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      seekingRef.current = true;
       updatePlayheadFromMouse(e.clientX);
 
       const handleMove = (me: MouseEvent) => {
+        seekingRef.current = true;
         updatePlayheadFromMouse(me.clientX);
       };
 
@@ -348,15 +375,25 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     <div className="flex flex-col gap-0 w-full">
       {/* Video preview + settings side by side */}
       <div className="flex flex-row gap-4 mb-4 items-start">
-        <div className="flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm">
+        <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm group">
           <video
             ref={videoPreviewRef}
             key={activeSegment.video.videoName}
             src={videoSrc}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain cursor-pointer"
             onLoadedData={handleVideoLoaded}
-            muted
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={() => setPlaying(false)}
+            onClick={togglePlayPause}
+            muted={muted}
           />
+          <button
+            type="button"
+            onClick={() => setMuted((m) => !m)}
+            className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/60 text-white/80 hover:text-white hover:bg-black/80 transition-opacity "
+          >
+            {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
         </div>
         {props.children && (
           <div className="flex-shrink-0 w-44 pt-1">{props.children}</div>
