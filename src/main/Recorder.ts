@@ -1424,7 +1424,7 @@ export default class Recorder extends EventEmitter {
   /**
    * Convert the quality setting to an appropriate CQP/CRF value based on encoder type.
    */
-  public static getCqpFromQuality(encoder: string, quality: string) {
+  private static getCqpFromQuality(encoder: string, quality: string) {
     if (
       encoder === ESupportedEncoders.NVENC_AV1 ||
       encoder === ESupportedEncoders.AMD_AV1

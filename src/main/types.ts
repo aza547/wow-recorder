@@ -174,7 +174,7 @@ type FileInfo = {
 };
 
 type VideoQueueItem = {
-  name: string; // Can an OBS timestamp if recording or more complicated if clipping.
+  name: string; // Can be an OBS timestamp if recording or more complicated if clipping.
   source: string; // Can be either a path or a URL.
   suffix: string; // Typically details of the recording, but can also be a "clipped at ..." description.
   offset: number;

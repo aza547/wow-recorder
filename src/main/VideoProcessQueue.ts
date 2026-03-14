@@ -541,7 +541,6 @@ export default class VideoProcessQueue {
    */
   private async finishProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Finished processing video', item.source);
-
     send('updateSaveStatus', SaveStatus.NotSaving);
     DiskClient.getInstance().refreshStatus();
     DiskClient.getInstance().refreshVideos();

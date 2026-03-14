@@ -79,7 +79,7 @@
     },
     "win": {
       "signtoolOptions": {
-        "certificateSubjectName": "Warcraft Recorder Limited"
+        "certificateSubjectName": "Warcraft Recorder LTD"
       },
       "artifactName": "WarcraftRecorder-Setup-${version}.exe",
       "target": [
