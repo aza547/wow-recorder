@@ -267,17 +267,14 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
         newNeighbourDuration = neighbourDuration + durationDelta;
       }
 
-      const minSegmentDuration = 1;
+      const minSegmentDuration = 15;
+      const combined = startDuration + neighbourDuration;
 
-      if (newDuration < minSegmentDuration) {
-        newNeighbourDuration -= minSegmentDuration - newDuration;
-        newDuration = minSegmentDuration;
-      }
-
-      if (newNeighbourDuration < minSegmentDuration) {
-        newDuration -= minSegmentDuration - newNeighbourDuration;
-        newNeighbourDuration = minSegmentDuration;
-      }
+      newDuration = Math.max(
+        minSegmentDuration,
+        Math.min(newDuration, combined - minSegmentDuration),
+      );
+      newNeighbourDuration = combined - newDuration;
 
       setSegments((prev) => {
         const next = [...prev];
@@ -429,7 +426,6 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
                   ].join(' ')}
                   style={{
                     width: `${widthPercent}%`,
-                    minWidth: 40,
                     backgroundColor: bgColor,
                   }}
                   draggable
@@ -519,6 +515,9 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           onMouseDown={handlePlayheadMouseDown}
         >
           <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white" />
+          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full text-[9px] text-white/90 px-1 whitespace-nowrap pointer-events-none">
+            {secToMmSs(playheadTime)}
+          </span>
         </div>
 
         {/* Clickable ruler area to jump playhead */}

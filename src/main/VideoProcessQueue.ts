@@ -421,45 +421,6 @@ export default class VideoProcessQueue {
       return;
     }
 
-    let filter = '';
-
-    item.segments.forEach((pov, idx) => {
-      const segmentDuration = pov.stop - pov.start;
-      const fadeDuration = 1;
-      const fadeOutStart = Math.max(0, segmentDuration - fadeDuration);
-
-      const scale = `${item.width}:-2`;
-      const pad = `${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2`;
-
-      const fadeIn = `t=in:st=0:d=${fadeDuration}`;
-      const fadeOut = `t=out:st=${fadeOutStart}:d=${fadeDuration}`;
-
-      const trim = `start=${pov.start}:end=${pov.stop}`;
-
-      // Video
-      filter +=
-        `[${idx}:v]trim=${trim},setpts=PTS-STARTPTS,` +
-        `fps=${item.fps},scale=${scale},pad=${pad},` +
-        `fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
-
-      if (item.audioTrackIndex === -1) {
-        // Audio
-        filter +=
-          `[${idx}:a]atrim=${trim},asetpts=PTS-STARTPTS,` +
-          `afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
-      }
-    });
-
-    if (item.audioTrackIndex === -1) {
-      const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
-      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a]`;
-    } else {
-      const inputs = item.segments.map((_, i) => `[v${i}]`).join('');
-      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=0[v]`;
-    }
-
-    console.info('[VideoProcessQueue] Generated filter:', filter);
-
     const videoDate =
       item.segments[0].video.start ?? item.segments[0].video.mtime;
 
@@ -484,10 +445,8 @@ export default class VideoProcessQueue {
     const videoPath = path.join(storageDir, `${videoName}.mp4`);
     console.info('[VideoProcessQueue] Kill video path:', videoPath);
 
-    const audioMap =
-      item.audioTrackIndex === -1
-        ? '-map [a]'
-        : `-map ${item.segments.length}:a`; // Always the last input in single audio mode.
+    const audioMap = VideoProcessQueue.prepareKillVideoAudioMap(item);
+    const filter = VideoProcessQueue.prepareKillVideoComplexFilter(item);
 
     const fn = ffmpeg()
       .complexFilter(filter)
@@ -503,31 +462,12 @@ export default class VideoProcessQueue {
       .outputOption('-xerror') // Die on error.
       .output(videoPath);
 
-    item.segments.forEach((seg) => {
-      // Add each segment in turm to the inputs. Trimmed as requested.
-      console.info('Adding video source to ffmpeg:', {
-        src: seg.video.videoSource,
-        start: seg.start,
-        duration: seg.stop - seg.start,
+    item.segments
+      .map((seg) => seg.video.videoSource)
+      .forEach((src) => {
+        console.info('[VideoProcessQueue] Adding source to ffmpeg:', src);
+        fn.input(src);
       });
-
-      // Give a bit of extra time.
-      const seek = Math.max(0, seg.start - 2);
-
-      fn.input(seg.video.videoSource).inputOption(`-ss ${seek}`);
-    });
-
-    if (item.audioTrackIndex !== -1) {
-      // The inputs have been trimmed as per the segment boundaries, so
-      // ifwe're in single audio track mode we need to add another input
-      // without trimming so we can use the full untrimmed audio.
-      console.info('Adding single audio source to ffmpeg:', {
-        src: item.segments[item.audioTrackIndex].video.videoSource,
-        trackIndex: item.audioTrackIndex,
-      });
-
-      fn.input(item.segments[item.audioTrackIndex].video.videoSource);
-    }
 
     try {
       console.time(`[VideoProcessQueue] Create ${item.uuid} kill video`);
@@ -904,5 +844,65 @@ export default class VideoProcessQueue {
         .on('progress', onProgress)
         .run();
     });
+  }
+
+  /**
+   * Prepare and return the audio map for a kill video.
+   */
+  private static prepareKillVideoAudioMap(item: KillVideoQueueItem) {
+    const map =
+      item.audioTrackIndex === -1
+        ? '-map [a]'
+        : `-map ${item.audioTrackIndex}:a`;
+
+    console.info('[VideoProcessQueue] Audio map filter:', map);
+    return map;
+  }
+
+  /**
+   * Prepare and return an ffmpeg complex filter graph that does the
+   * appropriate trimming, scaling, padding and fading to render a kill
+   * video.
+   */
+  private static prepareKillVideoComplexFilter(item: KillVideoQueueItem) {
+    let filter = '';
+
+    item.segments.forEach((pov, idx) => {
+      const segmentDuration = pov.stop - pov.start;
+      const fadeDuration = 1;
+      const fadeOutStart = Math.max(0, segmentDuration - fadeDuration);
+
+      const scale = `${item.width}:-2`;
+      const pad = `${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2`;
+
+      const fadeIn = `t=in:st=0:d=${fadeDuration}`;
+      const fadeOut = `t=out:st=${fadeOutStart}:d=${fadeDuration}`;
+
+      const trim = `start=${pov.start}:end=${pov.stop}`;
+
+      // Video
+      filter +=
+        `[${idx}:v]trim=${trim},setpts=PTS-STARTPTS,` +
+        `fps=${item.fps},scale=${scale},pad=${pad},` +
+        `fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
+
+      if (item.audioTrackIndex === -1) {
+        // Audio
+        filter +=
+          `[${idx}:a]atrim=${trim},asetpts=PTS-STARTPTS,` +
+          `afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
+      }
+    });
+
+    if (item.audioTrackIndex === -1) {
+      const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
+      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a]`;
+    } else {
+      const inputs = item.segments.map((_, i) => `[v${i}]`).join('');
+      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=0[v]`;
+    }
+
+    console.info('[VideoProcessQueue] Generated filter:', filter);
+    return filter;
   }
 }

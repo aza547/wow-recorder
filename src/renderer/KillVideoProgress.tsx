@@ -36,8 +36,7 @@ const KillVideoProgress = (props: IProps) => {
 
   const descr =
     killVideoStatus.queued > 1
-      ? getLocalePhrase(language, Phrase.KillVideoCreating) +
-        `(+${killVideoStatus.queued - 1})`
+      ? `${getLocalePhrase(language, Phrase.KillVideoCreating)} (+${killVideoStatus.queued - 1})`
       : getLocalePhrase(language, Phrase.KillVideoCreating);
 
   const progress =
