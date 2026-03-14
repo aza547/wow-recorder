@@ -514,9 +514,9 @@ const GERMAN: Translations = {
   [Phrase.KillVideoSingleAudioTrackTooltip]: 'Verwende eine einzelne Audiospur. Deaktiviert lassen, um zwischen Audiospuren und Video zu wechseln.',
   [Phrase.KillVideoAudioTrackLabel]: 'Audiospur',
   [Phrase.KillVideoAudioTrackTooltip]: 'Wähle die zu verwendende Audiospur aus.',
+  [Phrase.KillVideoCreating]: 'Erstellen',
   [Phrase.Reset]: 'Zurücksetzen',
-  [Phrase.Create]: 'Erstellen',
-  [Phrase.Creating]: 'Erstellen',
+  [Phrase.Render]: 'Erstellen',
   [Phrase.Preparing]: 'Vorbereiten',
 };
 

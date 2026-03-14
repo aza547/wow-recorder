@@ -291,7 +291,7 @@ enum Phrase {
   TagDialogText,
   Clear,
   Reset,
-  Create,
+  Render,
   Save,
   ShareableLinkTitle,
   ShareableLinkText,
@@ -513,7 +513,8 @@ enum Phrase {
   KillVideoSingleAudioTrackTooltip,
   KillVideoAudioTrackLabel,
   KillVideoAudioTrackTooltip,
-  Creating,
+  KillVideoCreating,
+  KillVideoDescription,
   Preparing,
 }
 

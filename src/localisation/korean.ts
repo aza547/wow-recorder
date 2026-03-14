@@ -514,9 +514,9 @@ const KOREAN: Translations = {
   [Phrase.KillVideoSingleAudioTrackTooltip]: '단일 오디오 트랙을 사용합니다. 비디오와 함께 오디오 트랙을 전환하려면 비활성화 상태로 두세요.',
   [Phrase.KillVideoAudioTrackLabel]: '오디오 트랙',
   [Phrase.KillVideoAudioTrackTooltip]: '사용할 오디오 트랙을 선택하세요.',
+  [Phrase.KillVideoCreating]: '생성 중',
   [Phrase.Reset]: '초기화',
-  [Phrase.Create]: '생성',
-  [Phrase.Creating]: '생성 중',
+  [Phrase.Render]: '생성',
   [Phrase.Preparing]: '준비 중',
 };
 

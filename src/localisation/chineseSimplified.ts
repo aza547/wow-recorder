@@ -514,9 +514,9 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.KillVideoSingleAudioTrackTooltip]: '使用单一音轨。留空以便随视频切换音轨。',
   [Phrase.KillVideoAudioTrackLabel]: '音轨',
   [Phrase.KillVideoAudioTrackTooltip]: '选择要使用的音轨。',
+  [Phrase.KillVideoCreating]: '创建中',
   [Phrase.Reset]: '重置',
-  [Phrase.Create]: '创建',
-  [Phrase.Creating]: '创建中',
+  [Phrase.Render]: '创建',
   [Phrase.Preparing]: '准备中',
 };
 

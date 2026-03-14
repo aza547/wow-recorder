@@ -35,7 +35,7 @@ interface IProps {
 }
 
 const KillVideoDialog = (props: IProps) => {
-  const [ open, setOpen ] = useState(false);
+  const [open, setOpen] = useState(false);
   const { children, language, sources } = props;
 
   // Our select component only accepts strings annoyingly.
@@ -242,6 +242,9 @@ const KillVideoDialog = (props: IProps) => {
           <DialogTitle>
             {getLocalePhrase(language, Phrase.KillVideoCreatorTitle)}
           </DialogTitle>
+          <div className="text-sm text-foreground text-left">
+            {getLocalePhrase(language, Phrase.KillVideoDescription)}
+          </div>
         </DialogHeader>
 
         <KillVideoSourceTimeline segments={segments} setSegments={setSegments}>
@@ -264,7 +267,7 @@ const KillVideoDialog = (props: IProps) => {
           </Button>
           <DialogClose asChild>
             <Button onClick={() => createKillVideo()} type="submit">
-              {getLocalePhrase(language, Phrase.Create)}
+              {getLocalePhrase(language, Phrase.Render)}
             </Button>
           </DialogClose>
         </DialogFooter>

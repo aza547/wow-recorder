@@ -514,9 +514,10 @@ const ENGLISH: Translations = {
   [Phrase.KillVideoSingleAudioTrackTooltip]: 'Use a single audio track. Leave disabled to switch audio tracks with video.',
   [Phrase.KillVideoAudioTrackLabel]: 'Audio Track',
   [Phrase.KillVideoAudioTrackTooltip]: 'Select the audio track to use.',
+  [Phrase.KillVideoCreating]: 'Encoding kill video...',
+  [Phrase.KillVideoDescription]: 'Requires re-encoding which is CPU intensive and typically takes a few minutes. Result will appear in clips category.',
   [Phrase.Reset]: 'Reset',
-  [Phrase.Create]: 'Create',
-  [Phrase.Creating]: 'Creating',
+  [Phrase.Render]: 'Render',
   [Phrase.Preparing]: 'Preparing',
 };
 
