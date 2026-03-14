@@ -326,7 +326,7 @@ export const populateViewpointCell = (
   let specIcon = specImages[playerSpecID as keyof typeof specImages];
 
   if (playerName === 'WCR Multipov Name') {
-    playerName = 'Multipov Kill';
+    playerName = 'Multiview';
     playerClassColor = '#bb4420';
     specIcon = wcrIcon;
   }

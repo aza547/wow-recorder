@@ -421,30 +421,8 @@ export default class VideoProcessQueue {
       return;
     }
 
-    const videoDate =
-      item.segments[0].video.start ?? item.segments[0].video.mtime;
-
-    // Clone the object so we don't modify it and lose props.
-    const baseMetadata = rendererVideoToMetadata({ ...item.segments[0].video });
-
-    const metadata = buildKillVideoMetadata(
-      baseMetadata,
-      item.segments,
-      new Date(),
-    );
-
-    let videoName = getOBSFormattedDate(new Date(videoDate));
-
-    if (baseMetadata.encounterName && baseMetadata.difficulty) {
-      videoName += ` - ${baseMetadata.encounterName} [${baseMetadata.difficulty}]`;
-    }
-
-    videoName += ` - Created at ${Date.now()}`;
-
-    const storageDir = this.cfg.get<string>('storagePath');
-    const videoPath = path.join(storageDir, `${videoName}.mp4`);
-    console.info('[VideoProcessQueue] Kill video path:', videoPath);
-
+    const first = item.segments[0].video;
+    const videoPath = VideoProcessQueue.prepareKillVideoPath(first);
     const audioMap = VideoProcessQueue.prepareKillVideoAudioMap(item);
     const filter = VideoProcessQueue.prepareKillVideoComplexFilter(item);
 
@@ -483,6 +461,9 @@ export default class VideoProcessQueue {
       console.timeEnd(`[VideoProcessQueue] Create ${item.uuid} kill video`);
 
       // Ffmpeg is done. Write out the metadata for the newly generated clip.
+
+      const baseMetadata = rendererVideoToMetadata({ ...first }); // Close as will mutate.
+      const metadata = buildKillVideoMetadata(baseMetadata, item.segments);
       await writeMetadataFile(videoPath, metadata);
     } finally {
       done();
@@ -843,6 +824,31 @@ export default class VideoProcessQueue {
         .on('progress', onProgress)
         .run();
     });
+  }
+
+  /**
+   * Prepare and return the audio map for a kill video.
+   */
+  private static prepareKillVideoPath(video: RendererVideo) {
+    const videoDate = video.start ?? video.mtime;
+
+    let videoName = getOBSFormattedDate(new Date(videoDate));
+
+    // We checked earlier that segments isn't empty so not
+    // worrying about checking for undefined here.
+    if (video.encounterName && video.difficulty) {
+      // We should always have these fields for raids, and raids are
+      // the only supported kill video category.
+      videoName += ` - ${video.encounterName}`;
+      videoName += ` [${video.difficulty}]`;
+    }
+
+    videoName += ` - Kill Video - Rendered at ${getOBSFormattedDate(new Date())}`;
+    const storageDir = ConfigService.getInstance().get<string>('storagePath');
+    const videoPath = path.join(storageDir, `${videoName}.mp4`);
+
+    console.info('[VideoProcessQueue] Kill video path:', videoPath);
+    return videoPath;
   }
 
   /**

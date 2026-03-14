@@ -371,7 +371,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
   return (
     <div className="flex flex-col gap-0 w-full">
       {/* Video preview + settings side by side */}
-      <div className="flex flex-row gap-4 mb-4 items-start">
+      <div className="flex flex-row gap-4 mb-6 items-start">
         <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm group">
           <video
             ref={videoPreviewRef}
@@ -393,12 +393,12 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           </button>
         </div>
         {props.children && (
-          <div className="flex-shrink-0 w-50 p-2">{props.children}</div>
+          <div className="flex-shrink-0 p-2 border-l border-card h-full ml-1 pl-4">{props.children}</div>
         )}
       </div>
 
       {/* Timeline + playhead wrapper */}
-      <div className="relative" ref={timelineWrapperRef}>
+      <div className="relative mx-2" ref={timelineWrapperRef}>
         <div
           data-timeline-container
           className="flex w-full h-20 overflow-hidden"

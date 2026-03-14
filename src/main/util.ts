@@ -34,6 +34,7 @@ import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
 import { wowInstallSearchPaths } from './constants';
+import { get } from 'lodash';
 
 /**
  * When packaged, we need to fix some paths
@@ -607,15 +608,19 @@ const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
 const buildKillVideoMetadata = (
   initial: Metadata,
   segments: KillVideoSegment[],
-  date: Date,
 ) => {
   const final = initial;
   final.duration = segments[segments.length - 1].stop;
   final.parentCategory = initial.category;
   final.category = VideoCategory.Clips;
   final.protected = true;
-  final.clippedAt = date.getTime();
+  final.clippedAt = Date.now();
   final.tag = `WCR Multipov Kill Video`;
+
+  if (initial.start) {
+    // All modern videos have this. It is possible legacy videos might not.
+    final.tag += `. Created by WCR at ${getOBSFormattedDate(new Date(initial.start))}`;
+  }
 
   final.player = {
     _GUID: 'WCR MultiPov GUID',

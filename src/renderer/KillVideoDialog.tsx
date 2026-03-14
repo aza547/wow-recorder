@@ -237,7 +237,7 @@ const KillVideoDialog = (props: IProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-[75%]">
+      <DialogContent className="max-w-[70%]">
         <DialogHeader>
           <DialogTitle>
             {getLocalePhrase(language, Phrase.KillVideoCreatorTitle)}
