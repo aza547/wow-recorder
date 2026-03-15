@@ -50,6 +50,7 @@ import {
   levelSort,
   detailSort,
   clipActivitySort,
+  creatorSort,
 } from './Sorting';
 import { getLocaleCategoryLabel } from 'localisation/translations';
 
@@ -152,7 +153,7 @@ const useTable = (
         id: 'Creator',
         size: 50,
         accessorFn: (v) => v,
-        sortingFn: (a, b) => detailSort(a, b),
+        sortingFn: (a, b) => creatorSort(a, b),
         header: DetailsHeader,
         cell: (ctx) => populateCreatorCell(ctx, language),
       },

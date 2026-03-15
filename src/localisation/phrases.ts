@@ -515,6 +515,7 @@ enum Phrase {
   KillVideoAudioTrackTooltip,
   KillVideoCreating,
   KillVideoDescription,
+  KillVideoRemove,
   Preparing,
 }
 

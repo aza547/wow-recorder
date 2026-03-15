@@ -18,11 +18,14 @@ import React, {
 } from 'react';
 import { specImages } from './images';
 import { Trash2, Volume2, VolumeX } from 'lucide-react';
+import { getLocalePhrase } from 'localisation/translations';
+import { Language, Phrase } from 'localisation/phrases';
 
 interface SourceTimelineProps {
   segments: KillVideoSegment[];
   setSegments: Dispatch<SetStateAction<KillVideoSegment[]>>;
   children?: ReactNode;
+  language: Language;
 }
 
 /**
@@ -41,7 +44,7 @@ interface SourceTimelineProps {
  * - Drag left/right edges to resize (min 10s per segment)
  */
 const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
-  const { segments, setSegments } = props;
+  const { segments, setSegments, language } = props;
 
   const videoDuration = segments.reduce(
     (sum, seg) => sum + (seg.stop - seg.start),
@@ -369,9 +372,9 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     videoDuration > 0 ? (playheadTime / videoDuration) * 100 : 0;
 
   return (
-    <div className="flex flex-col gap-0 w-full">
+    <div className="flex flex-col gap-0 w-full border-card">
       {/* Video preview + settings side by side */}
-      <div className="flex flex-row gap-4 mb-6 items-start">
+      <div className="flex flex-row gap-2 mb-2 items-start">
         <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm group">
           <video
             ref={videoPreviewRef}
@@ -393,12 +396,17 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           </button>
         </div>
         {props.children && (
-          <div className="flex-shrink-0 p-2 border-l border-card h-full ml-1 pl-4">{props.children}</div>
+          <div className="flex-shrink-0 p-2 border-l border-card h-full pl-2">
+            {props.children}
+          </div>
         )}
       </div>
 
       {/* Timeline + playhead wrapper */}
-      <div className="relative mx-2" ref={timelineWrapperRef}>
+      <div
+        className="relative mx-2 border-b border-t border-card py-2"
+        ref={timelineWrapperRef}
+      >
         <div
           data-timeline-container
           className="flex w-full h-20 overflow-hidden"
@@ -572,11 +580,11 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
       {canRemove && (
         <div
           className={[
-            'flex items-center justify-center gap-2 w-full h-10 mt-1 rounded-md border-2 border-dashed transition-colors',
+            'flex items-center justify-center gap-2 w-full h-8 mt-1 rounded-md border-2 border-dashed transition-colors',
             overBin
               ? 'border-red-500 bg-red-500/20 text-red-400'
               : dragIdx !== null
-                ? 'border-muted-foreground/30 bg-muted/10 text-muted-foreground'
+                ? 'border-card bg-muted/10 text-card-foreground'
                 : 'border-transparent bg-transparent text-transparent',
           ].join(' ')}
           onDragOver={(e) => {
@@ -587,7 +595,9 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           onDrop={handleBinDrop}
         >
           <Trash2 size={14} />
-          <span className="text-xs">Drop here to remove</span>
+          <span className="text-xs">
+            {getLocalePhrase(language, Phrase.KillVideoRemove)}
+          </span>
         </div>
       )}
     </div>

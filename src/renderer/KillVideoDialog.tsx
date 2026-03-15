@@ -247,7 +247,11 @@ const KillVideoDialog = (props: IProps) => {
           </div>
         </DialogHeader>
 
-        <KillVideoSourceTimeline segments={segments} setSegments={setSegments}>
+        <KillVideoSourceTimeline
+          segments={segments}
+          setSegments={setSegments}
+          language={language}
+        >
           <div className="flex flex-col gap-4">
             {getFpsSelect()}
             {getResolutionSelect()}

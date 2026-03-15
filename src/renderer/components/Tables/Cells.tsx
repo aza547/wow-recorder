@@ -29,7 +29,7 @@ import {
   MessageSquare,
   MessageSquareMore,
 } from 'lucide-react';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
 import TagDialog from 'renderer/TagDialog';
 import KillVideoDialog from 'renderer/KillVideoDialog';
