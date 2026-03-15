@@ -727,7 +727,12 @@ export default class Recorder extends EventEmitter {
 
     config.audioSources.forEach((src) => {
       console.info('[Recorder] Create audio source', src.id);
+
+      // OBS may have renamed the source if there was a naming conflict,
+      // log that for posterity. Use that name going forward even if it
+      // doesn't match what we asked for.
       const name = noobs.CreateSource(src.id, src.type);
+      console.info('[Recorder] Created audio source', name);
       const settings = noobs.GetSourceSettings(name);
 
       if (src.type === AudioSourceType.PROCESS && src.device) {
