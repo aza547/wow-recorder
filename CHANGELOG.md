@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix the viewpoints counter being cut off if the player name is too long.
 
 ## [7.6.0] - 2026-03-14
 ### Added

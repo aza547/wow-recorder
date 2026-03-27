@@ -143,7 +143,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
-        size: 150,
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
@@ -205,6 +205,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
@@ -272,6 +273,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
@@ -325,6 +327,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
@@ -380,6 +383,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
