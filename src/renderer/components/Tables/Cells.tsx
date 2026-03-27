@@ -200,7 +200,7 @@ export const populateDetailsCell = (
       <Tooltip content={tooltip}>
         <div onClick={(e) => e.stopPropagation()}>
           <TagDialog
-            initialTag={tag}
+            tag={tag}
             videos={toTag}
             setVideoState={setVideoState}
             language={language}

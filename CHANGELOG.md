@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Restyled the tag dialog box to handle multiline descriptions and be scrollable.
+
 ### Added
+- [Issue 805](https://github.com/aza547/wow-recorder/issues/805) - Automatically generate YouTube compatible timeline for multiview kill videos.
+
 ### Fixed
 - Fix the viewpoints counter being cut off if the player name is too long.
 

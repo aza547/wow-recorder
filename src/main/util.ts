@@ -33,7 +33,12 @@ import { send } from './main';
 import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
-import { wowInstallSearchPaths } from './constants';
+import { specializationById, wowInstallSearchPaths } from './constants';
+import {
+  getPlayerName,
+  getPlayerSpecID,
+  secToMmSs,
+} from 'renderer/rendererutils';
 
 /**
  * When packaged, we need to fix some paths
@@ -614,12 +619,45 @@ const buildKillVideoMetadata = (
   final.category = VideoCategory.Clips;
   final.protected = true;
   final.clippedAt = Date.now();
-  final.tag = `WCR Multipov Kill Video`;
+  final.tag = `Multipov Kill Video\n`;
+
+  // Build a tag for the video like this:
+  //
+  //   Multipov Kill Video
+  //   Created by WCR at: 2025-10-29 20-38-50
+  //   A YouTube compatible description timeline is below.
+  //
+  //   00:00 - Imprvedziniq (Destruction)
+  //   01:06 - Visk (Arcane)
+  //   02:12 - Phrixosdk (Frost)
+  //   03:18 - Titzy (Elemental)
+  //   04:24 - Alextides (Restoration)
+  //   05:29 - Catza (Restoration)
+  //   06:35 - Meraned (Beast Mastery)
+  //   07:41 - Rubiscodrage (Devastation)
 
   if (initial.start) {
     // All modern videos have this. It is possible legacy videos might not.
-    final.tag += `. Created by WCR at ${getOBSFormattedDate(new Date(initial.start))}`;
+    final.tag += `Created by WCR at: ${getOBSFormattedDate(new Date(initial.start))}\n`;
   }
+
+  final.tag += `A YouTube compatible description timeline is below.\n`;
+
+  segments.forEach((segment) => {
+    let playerName = getPlayerName(segment.video);
+    const playerSpecID = getPlayerSpecID(segment.video);
+
+    if (!playerName) {
+      // Should basically never happen but guard for it anyway.
+      playerName = 'Unknown';
+    }
+
+    const spec =
+      playerSpecID < 1 ? 'Unknown' : specializationById[playerSpecID].name;
+
+    final.tag += '\n';
+    final.tag += `${secToMmSs(segment.start)} - ${playerName} (${spec})`;
+  });
 
   final.player = {
     _GUID: 'WCR MultiPov GUID',

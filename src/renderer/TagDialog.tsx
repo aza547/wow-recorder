@@ -5,18 +5,17 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from './components/Dialog/Dialog';
-import { Input } from './components/Input/Input';
 import { Button } from './components/Button/Button';
 import { Language, Phrase } from 'localisation/phrases';
+import { Textarea } from './components/TextArea/textarea';
 
 interface IProps {
-  initialTag: string;
+  tag: string;
   videos: RendererVideo[];
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   children: React.ReactNode;
@@ -24,9 +23,14 @@ interface IProps {
 }
 
 export default function TagDialog(props: IProps) {
-  const { videos, setVideoState, children, language, initialTag } = props;
+  const { videos, setVideoState, children, language, tag } = props;
+  const [open, setOpen] = useState(false);
+  const [innerTag, setInnerTag] = useState(tag);
 
-  const [tag, setTag] = useState(initialTag);
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    setInnerTag(tag);
+  };
 
   const saveTag = (newTag: string) => {
     const toProtectDisk = videos.filter((v) => !v.cloud);
@@ -69,34 +73,33 @@ export default function TagDialog(props: IProps) {
 
   const onSave = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
-    saveTag(tag ?? '');
+    saveTag(innerTag ?? '');
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
             {getLocalePhrase(language, Phrase.AddADescription)}
           </DialogTitle>
-          <DialogDescription>
-            {getLocalePhrase(language, Phrase.TagDialogText)}
-          </DialogDescription>
         </DialogHeader>
-        <Input
-          autoFocus
-          type="text"
-          id="newTag"
-          name="newTag"
-          defaultValue={initialTag}
+        <Textarea
+          maxLength={1024}
+          className="bg-background-dark-gradient-to rounded-sm h-40
+                    border-background-dark-gradient-to flex-1 resize-none
+                    placeholder:text-foreground  focus-visible:ring-0
+                    focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
+          placeholder={getLocalePhrase(language, Phrase.TagButtonTooltip)}
           spellCheck={false}
+          value={innerTag}
+          onChange={(e) => setInnerTag(e.target.value)}
           onKeyDown={(e) => {
             // Need this to prevent "k" triggering video play/pause while
             // dialog is open and other similar things.
             e.stopPropagation();
           }}
-          onChange={(e) => setTag(e.target.value)}
         />
         <DialogFooter>
           <DialogClose asChild>
