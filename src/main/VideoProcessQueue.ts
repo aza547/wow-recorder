@@ -461,10 +461,17 @@ export default class VideoProcessQueue {
       console.timeEnd(`[VideoProcessQueue] Create ${item.uuid} kill video`);
 
       // Ffmpeg is done. Write out the metadata for the newly generated clip.
-
       const baseMetadata = rendererVideoToMetadata({ ...first }); // Close as will mutate.
       const metadata = buildKillVideoMetadata(baseMetadata, item.segments);
       await writeMetadataFile(videoPath, metadata);
+
+      const readyToUpload = await CloudClient.getInstance().ready();
+      const upload = readyToUpload && shouldUpload(this.cfg, metadata);
+
+      if (upload) {
+        const item: UploadQueueItem = { path: videoPath };
+        this.queueUpload(item);
+      }
     } finally {
       done();
     }
