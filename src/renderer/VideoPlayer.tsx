@@ -832,7 +832,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    */
   const downloadVideo = async () => {
     if (!cloudVideo) return;
-    ipc.sendMessage('videoButton', ['download', cloudVideo]);
+    ipc.sendMessage('videoButtonCloud', ['download', cloudVideo]);
   };
 
   /**
@@ -840,7 +840,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    */
   const uploadVideo = async () => {
     if (!diskVideo) return;
-    ipc.sendMessage('videoButton', ['upload', diskVideo.videoSource]);
+    ipc.sendMessage('videoButtonDisk', ['upload', diskVideo.videoSource]);
   };
 
   /**
@@ -1003,7 +1003,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     event.stopPropagation();
     if (!diskVideo) return;
 
-    window.electron.ipcRenderer.sendMessage('videoButton', [
+    window.electron.ipcRenderer.sendMessage('videoButtonDisk', [
       'open',
       diskVideo.videoSource,
       false,

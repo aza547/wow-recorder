@@ -29,10 +29,19 @@ export default function TagDialog(props: IProps) {
   const [tag, setTag] = useState(initialTag);
 
   const saveTag = (newTag: string) => {
-    window.electron.ipcRenderer.sendMessage('videoButton', [
+    const toProtectDisk = videos.filter((v) => !v.cloud);
+    const toProtectCloud = videos.filter((v) => v.cloud);
+
+    window.electron.ipcRenderer.sendMessage('videoButtonDisk', [
       'tag',
       newTag,
-      videos,
+      toProtectDisk,
+    ]);
+
+    window.electron.ipcRenderer.sendMessage('videoButtonCloud', [
+      'tag',
+      newTag,
+      toProtectCloud,
     ]);
 
     setVideoState((prev) => {

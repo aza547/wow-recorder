@@ -132,7 +132,11 @@ export const populateDetailsCell = (
 
     const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);
-      ipc.sendMessage('videoButton', ['protect', lock, toProtect]);
+      const toProtectDisk = toProtect.filter((v) => !v.cloud);
+      const toProtectCloud = toProtect.filter((v) => v.cloud);
+
+      ipc.sendMessage('videoButtonDisk', ['protect', lock, toProtectDisk]);
+      ipc.sendMessage('videoButtonCloud', ['protect', lock, toProtectCloud]);
 
       setVideoState((prev) => {
         const state = [...prev];

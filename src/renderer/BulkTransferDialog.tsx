@@ -47,9 +47,9 @@ const BulkTransferDialog = ({
   const doTransfer = () => {
     inScope.forEach((rv) => {
       if (upload) {
-        ipc.sendMessage('videoButton', ['upload', rv.videoSource]);
+        ipc.sendMessage('videoButtonCloud', ['upload', rv.videoSource]);
       } else {
-        ipc.sendMessage('videoButton', ['download', rv]);
+        ipc.sendMessage('videoButtonDisk', ['download', rv]);
       }
     });
   };
