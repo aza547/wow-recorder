@@ -5,7 +5,6 @@ import EraLogHandler from '../parsing/EraLogHandler';
 import {
   buildClipMetadata,
   checkAdvancedCombatLogging,
-  exists,
   getConfigWtfPath,
   getMetadataForVideo,
   getOBSFormattedDate,
@@ -107,6 +106,17 @@ export default class Manager {
   private configWtfWatchers: FSWatcher[] = [];
 
   /**
+   * Cached advanced logging status per flavour, pushed to the frontend.
+   */
+  private advancedLoggingStatus: AdvancedLoggingStatus = {
+    retail: true,
+    classic: true,
+    era: true,
+    retailPtr: true,
+    classicPtr: true,
+  };
+
+  /**
    * Constructor.
    */
   constructor() {
@@ -148,9 +158,14 @@ export default class Manager {
     if (success) {
       this.setConfigValid();
       this.poller.start();
-      this.checkAdvancedLogging().catch((err) =>
-        console.error('[Manager] checkAdvancedLogging failed on startup', err),
-      );
+      this.checkAdvancedLogging()
+        .then(() => this.watchConfigWtfFiles())
+        .catch((err) =>
+          console.error(
+            '[Manager] checkAdvancedLogging failed on startup',
+            err,
+          ),
+        );
     }
 
     this.reconfiguring = false;
@@ -194,12 +209,14 @@ export default class Manager {
     await DiskClient.getInstance().refreshStatus();
     await DiskClient.getInstance().refreshVideos();
 
-    this.checkAdvancedLogging().catch((err) =>
-      console.error(
-        '[Manager] checkAdvancedLogging failed on reconfigure',
-        err,
-      ),
-    );
+    this.checkAdvancedLogging()
+      .then(() => this.watchConfigWtfFiles())
+      .catch((err) =>
+        console.error(
+          '[Manager] checkAdvancedLogging failed on reconfigure',
+          err,
+        ),
+      );
   }
 
   /**
@@ -309,7 +326,7 @@ export default class Manager {
    * if advanced combat logging is not enabled.
    */
   public async checkAdvancedLogging() {
-    const status: AdvancedLoggingStatus = {
+    this.advancedLoggingStatus = {
       retail:
         !this.cfg.get<boolean>('recordRetail') ||
         (await checkAdvancedCombatLogging(
@@ -335,16 +352,21 @@ export default class Manager {
         )),
     };
 
-    console.info('[Manager] Advanced logging status:', JSON.stringify(status));
-    send('updateAdvancedLoggingStatus', status);
-    await this.watchConfigWtfFiles();
+    this.pushAdvancedLoggingStatus();
+  }
+
+  /**
+   * Push the cached advanced logging status to the frontend.
+   */
+  public pushAdvancedLoggingStatus() {
+    send('updateAdvancedLoggingStatus', this.advancedLoggingStatus);
   }
 
   /**
    * Watch Config.wtf files for changes so the advanced logging status
    * updates reactively when the user toggles the setting in WoW.
    */
-  private async watchConfigWtfFiles() {
+  private watchConfigWtfFiles() {
     this.configWtfWatchers.forEach((w) => w.close());
     this.configWtfWatchers = [];
 
@@ -363,7 +385,6 @@ export default class Manager {
 
     for (const logPath of logPaths) {
       const configPath = getConfigWtfPath(logPath);
-      if (!(await exists(configPath))) continue;
 
       try {
         const watcher = fs.watch(configPath, () => {
