@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix the viewpoints counter being cut off if the player name is too long.
 - Upload rendered kill videos if config specifies clip upload.
+- Fix an issue where the default storage path could interacted poorly with OneDrive.
 
 ## [7.6.0] - 2026-03-14
 ### Added
