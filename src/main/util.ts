@@ -1114,7 +1114,12 @@ const runFirstTimeSetupActionsNoObs = () => {
   if (!cfg.get<string>('storagePath')) {
     console.info('[Util] Setting up default storage path');
     const baseVideoPath = app.getPath('userData');
-    const initialStorageDir = path.join(baseVideoPath, 'Warcraft Recorder');
+
+    const initialStorageDir = path.join(
+      baseVideoPath,
+      'Warcraft Recorder Videos',
+    );
+
     fs.mkdirSync(initialStorageDir, { recursive: true });
     cfg.set('storagePath', initialStorageDir);
   }
