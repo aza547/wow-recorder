@@ -507,6 +507,21 @@ const GERMAN: Translations = {
   [Phrase.StopManualRecordingTooltip]: 'Beende die manuelle Aufnahme',
   [Phrase.RecordedAt]: 'Aufgenommen am',
   [Phrase.AdvancedCombatLoggingDisabledWarning]: 'Erweitertes Kampflog ist nicht aktiviert. Aktiviere es in WoW: System > Netzwerk > Erweitertes Kampflog.',
+  [Phrase.RecordedAt]: 'Aufgenommen um',
+  [Phrase.KillVideoCreatorTooltip]: 'Ein Multiview-Video erstellen.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'Diese Funktion kann nur mit lokalen Aufnahmen verwendet werden. Verwenden Sie zuerst die Download-Schaltfläche.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Mindestens 2 Perspektiven müssen verfügbar sein, um diese Funktion zu nutzen.',
+  [Phrase.KillVideoCreatorTitle]: 'Video-Editor',
+  [Phrase.KillVideoSingleAudioTrackLabel]: 'Einzelne Audiospur',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: 'Eine einzelne Audiospur verwenden. Deaktiviert lassen, um die Audiospur mit dem Video zu wechseln.',
+  [Phrase.KillVideoAudioTrackLabel]: 'Audiospur',
+  [Phrase.KillVideoAudioTrackTooltip]: 'Die zu verwendende Audiospur auswählen.',
+  [Phrase.KillVideoCreating]: 'Multiview-Video wird kodiert...',
+  [Phrase.KillVideoDescription]: 'Kombiniert mehrere Perspektiven derselben Begegnung zu einem einzigen Video und fügt die Clips automatisch mit fließenden Übergängen zusammen. Erfordert eine Neu-Codierung, die CPU-intensiv ist und einige Minuten dauern kann. Das fertige Video erscheint in der Kategorie „Clips“.',
+  [Phrase.KillVideoRemove]: 'Hier ablegen, um zu entfernen',
+  [Phrase.Reset]: 'Zurücksetzen',
+  [Phrase.Render]: 'Rendern',
+  [Phrase.Preparing]: 'Vorbereitung',
 };
 
 export default GERMAN;

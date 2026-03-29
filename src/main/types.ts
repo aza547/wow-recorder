@@ -4,6 +4,7 @@ import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import { Tag } from 'react-tag-autocomplete';
 import { DateValueType } from 'react-tailwindcss-datepicker';
+import { QualityPresets } from './obsEnums';
 
 /**
  * Application recording status.
@@ -44,6 +45,14 @@ enum SaveStatus {
   Saving,
   NotSaving,
 }
+
+/**
+ * Kill video creation status.
+ */
+type KillVideoStatus = {
+  queued: number;
+  perc: number;
+};
 
 /**
  * We display any OBS crashes on the frontend so we don't silently recover
@@ -165,8 +174,9 @@ type FileInfo = {
 };
 
 type VideoQueueItem = {
-  source: string;
-  suffix: string;
+  name: string; // Can be an OBS timestamp if recording or more complicated if clipping.
+  source: string; // Can be either a path or a URL.
+  suffix: string; // Typically details of the recording, but can also be a "clipped at ..." description.
   offset: number;
   duration: number;
   clip: boolean;
@@ -500,6 +510,21 @@ type UploadQueueItem = {
   path: string;
 };
 
+type KillVideoQueueItem = {
+  uuid: string; // unique job uuid
+  width: number;
+  height: number;
+  fps: number;
+  segments: KillVideoSegment[];
+  audioTrackIndex: number; // -1 for splicing all tracks
+};
+
+type KillVideoSegment = {
+  video: RendererVideo;
+  start: number;
+  stop: number;
+};
+
 type CreateMultiPartUploadResponseBody = {
   urls: string[];
 };
@@ -700,4 +725,7 @@ export {
   CloudState,
   ActivityStatus,
   AdvancedLoggingStatus,
+  KillVideoQueueItem,
+  KillVideoSegment,
+  KillVideoStatus,
 };

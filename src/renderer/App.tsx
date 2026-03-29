@@ -13,6 +13,7 @@ import {
   StorageFilter,
   ActivityStatus,
   AdvancedLoggingStatus,
+  KillVideoStatus,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language } from 'localisation/translations';
@@ -37,6 +38,7 @@ import { Phrase } from 'localisation/phrases';
 import _ from 'lodash';
 import { playAudio } from './sounds';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import KillVideoProgress from './KillVideoProgress';
 
 const ipc = window.electron.ipcRenderer;
 const queryClient = new QueryClient();
@@ -68,6 +70,11 @@ const WarcraftRecorder = () => {
   const [savingStatus, setSavingStatus] = useState<SaveStatus>(
     SaveStatus.NotSaving,
   );
+
+  const [killVideoStatus, setKillVideoStatus] = useState<KillVideoStatus>({
+    inProgress: false,
+    perc: 0,
+  });
 
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
@@ -470,6 +477,7 @@ const WarcraftRecorder = () => {
         }}
       >
         <Toaster />
+        <KillVideoProgress language={appState.language} />
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <RendererTitleBar />

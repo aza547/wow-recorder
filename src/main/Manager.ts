@@ -12,6 +12,7 @@ import {
   isManualRecordHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
+  rendererVideoToMetadata,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -27,6 +28,9 @@ import {
   BaseConfig,
   ActivityStatus,
   AdvancedLoggingStatus,
+  KillVideoQueueItem,
+  RendererVideo,
+  KillVideoSegment,
 } from './types';
 import {
   getObsVideoConfig,
@@ -35,7 +39,7 @@ import {
   getBaseConfig,
   validateBaseConfig,
 } from '../utils/configUtils';
-import { ERecordingState } from './obsEnums';
+import { ERecordingState, QualityPresets } from './obsEnums';
 import {
   runClassicRecordingTest,
   runRetailRecordingTest,
@@ -45,7 +49,6 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
-import Activity from 'activitys/Activity';
 
 /**
  * Manager class.
@@ -565,28 +568,82 @@ export default class Manager {
     });
 
     // Clipping listener.
-    ipcMain.on('clip', async (_event, args) => {
-      console.info('[Manager] Clip request received with args', args);
+    ipcMain.on(
+      'clip',
+      async (
+        _event,
+        video: RendererVideo,
+        offset: number,
+        duration: number,
+      ) => {
+        console.info(
+          '[Manager] Clip request received with args',
+          video.videoSource,
+          offset,
+          duration,
+        );
 
-      const source = args[0];
-      const offset = args[1];
-      const duration = args[2];
+        const sourceMetadata = rendererVideoToMetadata({ ...video });
+        const now = new Date();
+        const clipMetadata = buildClipMetadata(sourceMetadata, duration, now);
 
-      const sourceMetadata = await getMetadataForVideo(source);
-      const now = new Date();
-      const clipMetadata = buildClipMetadata(sourceMetadata, duration, now);
+        const clipQueueItem: VideoQueueItem = {
+          name: video.videoName,
+          source: video.videoSource,
+          suffix: `Clipped at ${getOBSFormattedDate(now)}`,
+          offset,
+          duration,
+          clip: true,
+          metadata: clipMetadata,
+        };
 
-      const clipQueueItem: VideoQueueItem = {
-        source,
-        suffix: `Clipped at ${getOBSFormattedDate(now)}`,
-        offset,
-        duration,
-        clip: true,
-        metadata: clipMetadata,
-      };
+        VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
+      },
+    );
 
-      VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
-    });
+    ipcMain.on(
+      'createKillVideo',
+      async (
+        _event,
+        width: number,
+        height: number,
+        fps: number,
+        segments: KillVideoSegment[],
+        audioTrackIndex: number,
+      ) => {
+        console.info(
+          '[Manager] Creating kill video with settings:',
+          `${width}x${height} at ${fps} fps`,
+        );
+
+        if (segments.length < 2) {
+          console.warn('[Manager] Too few videos for kill video');
+          return;
+        }
+
+        console.info(
+          '[Manager] Have segments for kill video',
+          segments.map((seg) => ({
+            videoName: seg.video.videoName,
+            videoSource: seg.video.videoSource,
+            cloud: seg.video.cloud,
+            start: seg.start,
+            stop: seg.stop,
+          })),
+        );
+
+        const item: KillVideoQueueItem = {
+          uuid: crypto.randomUUID(),
+          width,
+          height,
+          fps,
+          segments,
+          audioTrackIndex,
+        };
+
+        VideoProcessQueue.getInstance().queueCreateKillVideo(item);
+      },
+    );
 
     // Listens for a manual recording being started via the button. The
     // hotkey listener is handled separately.

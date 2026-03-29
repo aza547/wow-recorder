@@ -188,7 +188,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   const cloudVideo = nameMatches.find((v) => v.cloud);
   const diskVideo = nameMatches.find((v) => !v.cloud);
-  const clippable = !multiPlayerMode && diskVideo !== undefined;
+  const clippable = !multiPlayerMode;
 
   // Deliberatly don't update the source when the timestamp changes. That's
   // just the initial playhead position. We only care to change sources when
@@ -832,7 +832,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    */
   const downloadVideo = async () => {
     if (!cloudVideo) return;
-    ipc.sendMessage('videoButton', ['download', cloudVideo]);
+    ipc.sendMessage('videoButtonCloud', ['download', cloudVideo]);
   };
 
   /**
@@ -840,7 +840,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    */
   const uploadVideo = async () => {
     if (!diskVideo) return;
-    ipc.sendMessage('videoButton', ['upload', diskVideo.videoSource]);
+    ipc.sendMessage('videoButtonDisk', ['upload', diskVideo.videoSource]);
   };
 
   /**
@@ -1003,7 +1003,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     event.stopPropagation();
     if (!diskVideo) return;
 
-    window.electron.ipcRenderer.sendMessage('videoButton', [
+    window.electron.ipcRenderer.sendMessage('videoButtonDisk', [
       'open',
       diskVideo.videoSource,
       false,
@@ -1108,7 +1108,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
               setClipStopValue(Math.min(duration, progress + 15));
               setClipMode(true);
             }}
-            disabled={!clippable}
           >
             <MovieIcon sx={{ color, fontSize: '22px' }} />
           </Button>
@@ -1121,13 +1120,9 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Make a request to the main process to clip a video.
    */
   const doClip = () => {
-    if (!diskVideo) return;
-
     const clipDuration = clipStopValue - clipStartValue;
     const clipOffset = clipStartValue;
-    const clipSource = diskVideo.videoSource;
-
-    ipc.sendMessage('clip', [clipSource, clipOffset, clipDuration]);
+    ipc.clipVideo(videos[0], clipOffset, clipDuration);
     setClipMode(false);
   };
 

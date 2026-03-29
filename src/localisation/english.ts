@@ -508,6 +508,20 @@ const ENGLISH: Translations = {
   [Phrase.RecordedAt]: 'Recorded at',
   [Phrase.AdvancedCombatLoggingDisabledWarning]: 'Advanced Combat Logging is not enabled. Enable it in WoW: System > Network > Advanced Combat Logging.',
 
+  [Phrase.KillVideoCreatorTooltip]: 'Create a multiview video.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'This feature can only operate on local recordings. Use the download button first.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Must have atleast 2 viewpoints available to use this feature.',
+  [Phrase.KillVideoCreatorTitle]: 'Video Editor',
+  [Phrase.KillVideoSingleAudioTrackLabel]: 'Single Audio Track',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: 'Use a single audio track. Leave disabled to switch audio tracks with video.',
+  [Phrase.KillVideoAudioTrackLabel]: 'Audio Track',
+  [Phrase.KillVideoAudioTrackTooltip]: 'Select the audio track to use.',
+  [Phrase.KillVideoCreating]: 'Encoding multiview video...',
+  [Phrase.KillVideoDescription]: 'Combine multiple viewpoints of the same encounter into a single video, automatically splicing clips together with smooth transitions. Requires re-encoding, which is CPU-intensive and may take a few minutes. The finished video will appear in the Clips category.',
+  [Phrase.KillVideoRemove]: 'Drop here to remove',
+  [Phrase.Reset]: 'Reset',
+  [Phrase.Render]: 'Render',
+  [Phrase.Preparing]: 'Preparing',
 };
 
 export default ENGLISH;

@@ -5,7 +5,8 @@ import { TChatMessageWithId } from 'types/api';
 
 export type Channels =
   | 'window'
-  | 'videoButton'
+  | 'videoButtonDisk'
+  | 'videoButtonCloud'
   | 'logPath'
   | 'openURL'
   | 'test'
@@ -225,6 +226,27 @@ contextBridge.exposeInMainWorld('electron', {
 
     forceStopRecording() {
       ipcRenderer.send('forceStopRecording');
+    },
+
+    createKillVideo(
+      width: number,
+      height: number,
+      fps: number,
+      sources: RendererVideo[],
+      audioTrackIndex: number,
+    ) {
+      ipcRenderer.send(
+        'createKillVideo',
+        width,
+        height,
+        fps,
+        sources,
+        audioTrackIndex,
+      );
+    },
+
+    clipVideo(video: RendererVideo, offset: number, duration: number) {
+      ipcRenderer.send('clip', video, offset, duration);
     },
   },
 });

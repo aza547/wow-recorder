@@ -24,6 +24,7 @@ import {
   ObsAudioConfig,
   ErrorReport,
   CloudSignedMetadata,
+  KillVideoSegment,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
@@ -32,7 +33,12 @@ import { send } from './main';
 import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
-import { wowInstallSearchPaths } from './constants';
+import { specializationById, wowInstallSearchPaths } from './constants';
+import {
+  getPlayerName,
+  getPlayerSpecID,
+  secToMmSs,
+} from 'renderer/rendererutils';
 
 /**
  * When packaged, we need to fix some paths
@@ -289,7 +295,7 @@ const loadVideoDetailsDisk = async (
  * Writes video metadata asynchronously and returns a Promise
  */
 const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
-  console.info('[Util] Write Metadata file', videoPath);
+  console.info('[Util] Write Metadata file for video:', videoPath);
 
   const metadataFileName = getMetadataFileNameForVideo(videoPath);
   const jsonString = JSON.stringify(metadata, null, 2);
@@ -637,6 +643,68 @@ const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
   final.category = VideoCategory.Clips;
   final.protected = true;
   final.clippedAt = date.getTime();
+  return final;
+};
+
+const buildKillVideoMetadata = (
+  initial: Metadata,
+  segments: KillVideoSegment[],
+) => {
+  const final = initial;
+  final.duration = segments[segments.length - 1].stop;
+  final.parentCategory = initial.category;
+  final.category = VideoCategory.Clips;
+  final.protected = true;
+  final.clippedAt = Date.now();
+  final.tag = `Multipov Kill Video\n`;
+
+  // Build a tag for the video like this:
+  //
+  //   Multipov Kill Video
+  //   Created by WCR at: 2025-10-29 20-38-50
+  //   A YouTube compatible description timeline is below.
+  //
+  //   00:00 - Imprvedziniq (Destruction)
+  //   01:06 - Visk (Arcane)
+  //   02:12 - Phrixosdk (Frost)
+  //   03:18 - Titzy (Elemental)
+  //   04:24 - Alextides (Restoration)
+  //   05:29 - Catza (Restoration)
+  //   06:35 - Meraned (Beast Mastery)
+  //   07:41 - Rubiscodrage (Devastation)
+
+  if (initial.start) {
+    // All modern videos have this. It is possible legacy videos might not.
+    final.tag += `Created by WCR at: ${getOBSFormattedDate(new Date(initial.start))}\n`;
+  }
+
+  final.tag += `A YouTube compatible description timeline is below.\n`;
+
+  segments.forEach((segment) => {
+    let playerName = getPlayerName(segment.video);
+    const playerSpecID = getPlayerSpecID(segment.video);
+
+    if (!playerName) {
+      // Should basically never happen but guard for it anyway.
+      playerName = 'Unknown';
+    }
+
+    const spec =
+      playerSpecID < 1 ? 'Unknown' : specializationById[playerSpecID].name;
+
+    final.tag += '\n';
+    final.tag += `${secToMmSs(segment.start)} - ${playerName} (${spec})`;
+  });
+
+  final.player = {
+    _GUID: 'WCR MultiPov GUID',
+    _teamID: -1,
+    _specID: -1,
+    _name: 'WCR Multipov Name',
+    _realm: 'WCR Multipov Realm',
+    _region: 'WCR Multipov Region',
+  };
+
   return final;
 };
 
@@ -1110,6 +1178,7 @@ export {
   getPromiseBomb,
   emitErrorReport,
   buildClipMetadata,
+  buildKillVideoMetadata,
   getOBSFormattedDate,
   checkDisk,
   getMetadataFileNameForVideo,

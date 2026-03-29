@@ -507,6 +507,21 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.StopManualRecordingTooltip]: '停止手动录制',
   [Phrase.RecordedAt]: '录制于',
   [Phrase.AdvancedCombatLoggingDisabledWarning]: '高级战斗日志未启用。请在魔兽世界中启用：系统 > 网络 > 高级战斗日志。',
+  [Phrase.RecordedAt]: '录制时间',
+  [Phrase.KillVideoCreatorTooltip]: '创建多视角视频。',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '此功能只能用于本地录制。请先使用下载按钮。',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: '使用此功能至少需要 2 个视角。',
+  [Phrase.KillVideoCreatorTitle]: '视频编辑器',
+  [Phrase.KillVideoSingleAudioTrackLabel]: '单一音轨',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: '使用单一音轨。禁用时将随视频切换音轨。',
+  [Phrase.KillVideoAudioTrackLabel]: '音轨',
+  [Phrase.KillVideoAudioTrackTooltip]: '选择要使用的音轨。',
+  [Phrase.KillVideoCreating]: '正在编码多视角视频...',
+  [Phrase.KillVideoDescription]: '将同一场战斗的多个视角合成为一个视频，并自动通过平滑过渡拼接各个片段。需要重新编码，这对 CPU 负载较高，通常需要几分钟。完成后的视频将出现在 Clips 分类中。',
+  [Phrase.KillVideoRemove]: '拖到此处以移除',
+  [Phrase.Reset]: '重置',
+  [Phrase.Render]: '渲染',
+  [Phrase.Preparing]: '准备中',
 };
 
 export default CHINESE_SIMPLIFIED;

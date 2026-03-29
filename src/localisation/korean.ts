@@ -507,6 +507,20 @@ const KOREAN: Translations = {
   [Phrase.StopManualRecordingTooltip]: '수동 녹화 중지',
   [Phrase.RecordedAt]: '녹화 시간',
   [Phrase.AdvancedCombatLoggingDisabledWarning]: '고급 전투 기록이 활성화되어 있지 않습니다. WoW에서 활성화하세요: 시스템 > 네트워크 > 고급 전투 기록.',
+  [Phrase.KillVideoCreatorTooltip]: '멀티뷰 비디오를 생성합니다.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '이 기능은 로컬 녹화에서만 사용할 수 있습니다. 먼저 다운로드 버튼을 사용하세요.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: '이 기능을 사용하려면 최소 2개의 시점이 필요합니다.',
+  [Phrase.KillVideoCreatorTitle]: '비디오 편집기',
+  [Phrase.KillVideoSingleAudioTrackLabel]: '단일 오디오 트랙',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: '하나의 오디오 트랙만 사용합니다. 비활성화하면 비디오에 맞게 오디오 트랙이 전환됩니다.',
+  [Phrase.KillVideoAudioTrackLabel]: '오디오 트랙',
+  [Phrase.KillVideoAudioTrackTooltip]: '사용할 오디오 트랙을 선택합니다.',
+  [Phrase.KillVideoCreating]: '멀티뷰 비디오 인코딩 중...',
+  [Phrase.KillVideoDescription]: '같은 전투의 여러 시점을 하나의 영상으로 결합하고, 클립을 부드러운 전환과 함께 자동으로 이어 붙입니다. 재인코딩이 필요하며 CPU 사용량이 높아 보통 몇 분 정도 소요됩니다. 완료된 영상은 Clips 카테고리에 표시됩니다.',
+  [Phrase.KillVideoRemove]: '拖到此处以移除',
+  [Phrase.Reset]: '초기화',
+  [Phrase.Render]: '렌더링',
+  [Phrase.Preparing]: '준비 중',
 };
 
 export default KOREAN;
