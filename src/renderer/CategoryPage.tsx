@@ -610,7 +610,7 @@ const CategoryPage = (props: IProps) => {
 
   const openSetupInstructions = () => {
     window.electron.ipcRenderer.sendMessage('openURL', [
-      'https://www.warcraftrecorder.com/about',
+      'https://www.warcraftrecorder.com/setup',
     ]);
   };
 
