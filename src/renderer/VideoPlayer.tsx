@@ -840,7 +840,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    */
   const uploadVideo = async () => {
     if (!diskVideo) return;
-    ipc.sendMessage('videoButtonDisk', ['upload', diskVideo.videoSource]);
+    ipc.sendMessage('videoButtonCloud', ['upload', diskVideo.videoSource]);
   };
 
   /**
