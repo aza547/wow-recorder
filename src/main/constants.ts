@@ -360,16 +360,6 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * and retail at the same time. Eventually the older tiers should be removed.
  */
 const currentRetailEncounters = [
-  // TWW Season 3
-  3129, // Plexus Sentinel
-  3131, // Loom'ithar
-  3130, // Soulbinder Naazindhri
-  3132, // Forgeweaver Araz
-  3122, // The Soul Hunters
-  3133, // Fractillus
-  3134, // Nexus-King Salhadaar
-  3135, // Dimensius, the All-Devouring
-
   // Midnight - The Voidspire
   3176, // Imperator Averzian
   3177, // Vorsaius
