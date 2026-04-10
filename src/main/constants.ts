@@ -534,6 +534,9 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   2859: 'The Blinding Vale',
   2874: 'Maisara Caverns',
   2915: 'Nexus-Point Xenas',
+  658: 'Pit of Saron',
+  1209: 'Skyreach',
+  1753: 'Seat of the Triumvirate',
 };
 
 /**
