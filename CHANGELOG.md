@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [7.6.1] - 2026-04-10
+### Changed
 - Restyled the tag dialog box to handle multiline descriptions and be scrollable.
 
 ### Added
