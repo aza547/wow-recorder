@@ -518,6 +518,10 @@ enum Phrase {
   KillVideoCreating,
   KillVideoDescription,
   KillVideoRemove,
+  KillVideoDuplicate,
+  KillVideoMusicLabel,
+  KillVideoMusicDropHint,
+  KillVideoMusicRemove,
   Preparing,
 }
 

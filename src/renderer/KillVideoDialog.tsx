@@ -1,4 +1,8 @@
-import { KillVideoSegment, RendererVideo } from 'main/types';
+import {
+  KillVideoMusicTrack,
+  KillVideoSegment,
+  RendererVideo,
+} from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
 import {
   Dialog,
@@ -47,6 +51,10 @@ const KillVideoDialog = (props: IProps) => {
   const [resolution, setResolution] =
     useState<keyof typeof obsResolutions>('1920x1080');
 
+  const [musicTracks, setMusicTracks] = useState<KillVideoMusicTrack[]>([]);
+
+  const hasMusicTracks = musicTracks.length > 0;
+
   const [segments, setSegments] = useState<KillVideoSegment[]>(() => {
     // Calculate the length of the video as the shortest source. That
     // avoids weird conditions due to misclipped videos. Not perfect
@@ -60,6 +68,7 @@ const KillVideoDialog = (props: IProps) => {
     const segmentDuration = videoDuration / sources.length;
 
     return sources.map((rv, idx) => ({
+      id: crypto.randomUUID(),
       video: rv,
       start: idx * segmentDuration,
       stop: (idx + 1) * segmentDuration,
@@ -84,6 +93,7 @@ const KillVideoDialog = (props: IProps) => {
       parseInt(fps, 10),
       segments,
       audioTrackIndex,
+      musicTracks,
     );
   };
 
@@ -215,12 +225,14 @@ const KillVideoDialog = (props: IProps) => {
     const segmentDuration = videoDuration / sources.length;
 
     const resetSegments = sources.map((rv, idx) => ({
+      id: crypto.randomUUID(),
       video: rv,
       start: idx * segmentDuration,
       stop: (idx + 1) * segmentDuration,
     }));
 
     setSegments(resetSegments);
+    setMusicTracks([]);
     setFps('60');
     setResolution('1920x1080');
   };
@@ -250,13 +262,15 @@ const KillVideoDialog = (props: IProps) => {
         <KillVideoSourceTimeline
           segments={segments}
           setSegments={setSegments}
+          musicTracks={musicTracks}
+          setMusicTracks={setMusicTracks}
           language={language}
         >
           <div className="flex flex-col gap-4">
             {getFpsSelect()}
             {getResolutionSelect()}
-            {getAudioSwitch()}
-            {singleAudio && getAudioTrackSelect()}
+            {!hasMusicTracks && getAudioSwitch()}
+            {!hasMusicTracks && singleAudio && getAudioTrackSelect()}
           </div>
         </KillVideoSourceTimeline>
 
