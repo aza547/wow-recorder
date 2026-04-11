@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restyled the tag dialog box to handle multiline descriptions and be scrollable.
 
 ### Added
+- [Issue 695](https://github.com/aza547/wow-recorder/issues/695) - Warn users when Advanced Combat Logging is disabled in WoW settings.
 - [Issue 805](https://github.com/aza547/wow-recorder/issues/805) - Automatically generate YouTube compatible timeline for multiview kill videos.
 
 ### Fixed

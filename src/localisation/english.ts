@@ -506,6 +506,8 @@ const ENGLISH: Translations = {
   [Phrase.StartManualRecordingTooltip]: 'Start a manual recording.',
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: 'Advanced Combat Logging is not enabled. Enable it in WoW: System > Network > Advanced Combat Logging. Note: fully close WoW after enabling - the setting is only written to Config.wtf on exit.',
+
   [Phrase.KillVideoCreatorTooltip]: 'Create a multiview video.',
   [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'This feature can only operate on local recordings. Use the download button first.',
   [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Must have atleast 2 viewpoints available to use this feature.',

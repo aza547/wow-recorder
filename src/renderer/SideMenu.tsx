@@ -16,6 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDungeon, faDragon } from '@fortawesome/free-solid-svg-icons';
 import {
   ActivityStatus,
+  AdvancedLoggingStatus,
   AppState,
   ErrorReport,
   MicStatus,
@@ -23,7 +24,14 @@ import {
   RecStatus,
   SaveStatus,
 } from 'main/types';
-import { MutableRefObject, useEffect, useRef, useState } from 'react';
+import {
+  Dispatch,
+  MutableRefObject,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
 import {
   getLocaleCategoryLabel,
@@ -62,6 +70,8 @@ interface IProps {
   updateAvailable: boolean;
   recorderCategory: VideoCategory | undefined;
   activityStatus: ActivityStatus | null;
+  advancedLoggingStatus: AdvancedLoggingStatus;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
 const SideMenu = (props: IProps) => {
@@ -79,6 +89,8 @@ const SideMenu = (props: IProps) => {
     config,
     updateAvailable,
     activityStatus,
+    advancedLoggingStatus,
+    setPreviewEnabled,
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
@@ -248,6 +260,8 @@ const SideMenu = (props: IProps) => {
         savingStatus={savingStatus}
         config={config}
         appState={appState}
+        advancedLoggingStatus={advancedLoggingStatus}
+        setPreviewEnabled={setPreviewEnabled}
       />
       <CloudStatusCard appState={appState} />
       <Separator className="mb-4" />

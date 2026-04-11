@@ -506,6 +506,7 @@ const KOREAN: Translations = {
   [Phrase.StartManualRecordingTooltip]: '수동 녹화 시작',
   [Phrase.StopManualRecordingTooltip]: '수동 녹화 중지',
   [Phrase.RecordedAt]: '녹화 시간',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: '고급 전투 기록이 활성화되어 있지 않습니다. WoW에서 활성화하세요: 시스템 > 네트워크 > 고급 전투 기록. 참고: 활성화 후 WoW를 완전히 종료해야 합니다 - 설정은 종료 시에만 Config.wtf에 기록됩니다.',
   [Phrase.KillVideoCreatorTooltip]: '멀티뷰 비디오를 생성합니다.',
   [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '이 기능은 로컬 녹화에서만 사용할 수 있습니다. 먼저 다운로드 버튼을 사용하세요.',
   [Phrase.KillVideoCreatorTooltipNotEnoughPov]: '이 기능을 사용하려면 최소 2개의 시점이 필요합니다.',

@@ -505,6 +505,8 @@ const GERMAN: Translations = {
   [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder überprüft, ob die von Ihnen festgelegten Logpfade auf eine unterstützte WoW-Installation verweisen. Sie können diese Überprüfung deaktivieren, um nicht unterstützte Spielmodi festzulegen. Deaktivieren Sie dies auf eigenes Risiko.',
   [Phrase.StartManualRecordingTooltip]: 'Starte eine manuelle Aufnahme',
   [Phrase.StopManualRecordingTooltip]: 'Beende die manuelle Aufnahme',
+  [Phrase.RecordedAt]: 'Aufgenommen am',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: 'Erweitertes Kampflog ist nicht aktiviert. Aktiviere es in WoW: System > Netzwerk > Erweitertes Kampflog. Hinweis: Schließe WoW nach dem Aktivieren vollständig - die Einstellung wird erst beim Beenden in die Config.wtf geschrieben.',
   [Phrase.RecordedAt]: 'Aufgenommen um',
   [Phrase.KillVideoCreatorTooltip]: 'Ein Multiview-Video erstellen.',
   [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'Diese Funktion kann nur mit lokalen Aufnahmen verwendet werden. Verwenden Sie zuerst die Download-Schaltfläche.',

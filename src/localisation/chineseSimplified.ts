@@ -505,6 +505,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder 会检查你设置的日志路径是否指向受支持的 WoW 安装。你可以禁用此检查以允许设置不受支持的游戏模式。禁用此功能需自行承担风险。',
   [Phrase.StartManualRecordingTooltip]: '开始手动录制',
   [Phrase.StopManualRecordingTooltip]: '停止手动录制',
+  [Phrase.RecordedAt]: '录制于',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: '高级战斗日志未启用。请在魔兽世界中启用：系统 > 网络 > 高级战斗日志。注意：启用后需完全关闭魔兽世界 - 该设置仅在退出时写入 Config.wtf。',
   [Phrase.RecordedAt]: '录制时间',
   [Phrase.KillVideoCreatorTooltip]: '创建多视角视频。',
   [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '此功能只能用于本地录制。请先使用下载按钮。',

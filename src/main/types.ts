@@ -353,6 +353,14 @@ type AppState = {
   preferredViewpoint: string;
 };
 
+type AdvancedLoggingStatus = {
+  retail: boolean;
+  classic: boolean;
+  era: boolean;
+  retailPtr: boolean;
+  classicPtr: boolean;
+};
+
 type CloudState = {
   uploadProgress: number;
   downloadProgress: number;
@@ -716,6 +724,7 @@ export {
   SoundAlerts,
   CloudState,
   ActivityStatus,
+  AdvancedLoggingStatus,
   KillVideoQueueItem,
   KillVideoSegment,
   KillVideoStatus,

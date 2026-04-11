@@ -419,6 +419,36 @@ const getWowFlavour = (pathSpec: string): string => {
 };
 
 /**
+ * Check if advanced combat logging is enabled in the Config.wtf file for the given log path.
+ */
+const getConfigWtfPath = (logPath: string): string => {
+  return path.normalize(path.join(logPath, '../WTF/Config.wtf'));
+};
+
+const checkAdvancedCombatLogging = async (
+  logPath: string,
+): Promise<boolean> => {
+  const configWtfFile = getConfigWtfPath(logPath);
+  console.info('[Util] Checking advanced combat logging:', configWtfFile);
+
+  if (!(await exists(configWtfFile))) {
+    console.warn('[Util] Config.wtf not found at', configWtfFile);
+    return false;
+  }
+
+  const content = (await fs.promises.readFile(configWtfFile)).toString();
+  const match = content.match(/^SET advancedCombatLogging\s+"(\d+)"/m);
+
+  if (match && match[1] === '1') {
+    console.info('[Util] Advanced combat logging is enabled', configWtfFile);
+    return true;
+  }
+
+  console.info('[Util] Advanced combat logging is disabled', configWtfFile);
+  return false;
+};
+
+/**
  * Adds an error to the error report component.
  */
 const emitErrorReport = (data: unknown) => {
@@ -1167,4 +1197,6 @@ export {
   handleSafeVodRequest,
   runFirstTimeSetupActionsObs,
   runFirstTimeSetupActionsNoObs,
+  checkAdvancedCombatLogging,
+  getConfigWtfPath,
 };
