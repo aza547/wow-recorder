@@ -158,14 +158,8 @@ export default class Manager {
     if (success) {
       this.setConfigValid();
       this.poller.start();
-      this.checkAdvancedLogging()
-        .then(() => this.watchConfigWtfFiles())
-        .catch((err) =>
-          console.error(
-            '[Manager] checkAdvancedLogging failed on startup',
-            err,
-          ),
-        );
+      this.watchConfigWtfFiles();
+      this.checkAdvancedLogging();
     }
 
     this.reconfiguring = false;
@@ -209,14 +203,8 @@ export default class Manager {
     await DiskClient.getInstance().refreshStatus();
     await DiskClient.getInstance().refreshVideos();
 
-    this.checkAdvancedLogging()
-      .then(() => this.watchConfigWtfFiles())
-      .catch((err) =>
-        console.error(
-          '[Manager] checkAdvancedLogging failed on reconfigure',
-          err,
-        ),
-      );
+    this.watchConfigWtfFiles();
+    this.checkAdvancedLogging();
   }
 
   /**
@@ -367,6 +355,7 @@ export default class Manager {
    * updates reactively when the user toggles the setting in WoW.
    */
   private watchConfigWtfFiles() {
+    console.info('Close any existing Config.wtf file watchers');
     this.configWtfWatchers.forEach((w) => w.close());
     this.configWtfWatchers = [];
 
@@ -383,18 +372,15 @@ export default class Manager {
     if (this.cfg.get<boolean>('recordClassicPtr'))
       logPaths.add(this.cfg.get<string>('classicPtrLogPath'));
 
+    console.info('Start watching Config.wtf files for', logPaths);
+
     for (const logPath of logPaths) {
       const configPath = getConfigWtfPath(logPath);
 
       try {
         const watcher = fs.watch(configPath, () => {
           console.info('[Manager] Config.wtf changed:', configPath);
-          this.checkAdvancedLogging().catch((err) =>
-            console.error(
-              '[Manager] checkAdvancedLogging failed on watch',
-              err,
-            ),
-          );
+          this.checkAdvancedLogging();
         });
 
         this.configWtfWatchers.push(watcher);
