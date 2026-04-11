@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix a bug introduced in the last release where deleting videos manually didn't actually delete the file.
 
 ## [7.6.1] - 2026-04-10
 ### Changed
