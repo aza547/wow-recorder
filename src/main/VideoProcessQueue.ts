@@ -447,6 +447,14 @@ export default class VideoProcessQueue {
         fn.input(src);
       });
 
+    item.musicTracks.forEach((track) => {
+      console.info(
+        '[VideoProcessQueue] Adding music track to ffmpeg:',
+        track.path,
+      );
+      fn.input(track.path);
+    });
+
     try {
       console.time(`[VideoProcessQueue] Create ${item.uuid} kill video`);
 
@@ -863,10 +871,18 @@ export default class VideoProcessQueue {
    * Prepare and return the audio map for a kill video.
    */
   private static prepareKillVideoAudioMap(item: KillVideoQueueItem) {
-    const map =
-      item.audioTrackIndex === -1
-        ? '-map [a]'
-        : `-map ${item.audioTrackIndex}:a`;
+    const hasMusic = item.musicTracks.length > 0;
+
+    let map: string;
+
+    if (hasMusic) {
+      // Music tracks are concatenated by the complex filter into [music].
+      map = '-map [music]';
+    } else if (item.audioTrackIndex === -1) {
+      map = '-map [a]';
+    } else {
+      map = `-map ${item.audioTrackIndex}:a`;
+    }
 
     console.info('[VideoProcessQueue] Audio map filter:', map);
     return map;
@@ -879,6 +895,7 @@ export default class VideoProcessQueue {
    */
   private static prepareKillVideoComplexFilter(item: KillVideoQueueItem) {
     let filter = '';
+    const hasMusic = item.musicTracks.length > 0;
 
     item.segments.forEach((pov, idx) => {
       const segmentDuration = pov.stop - pov.start;
@@ -899,15 +916,37 @@ export default class VideoProcessQueue {
         `fps=${item.fps},scale=${scale},pad=${pad},` +
         `fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
 
-      if (item.audioTrackIndex === -1) {
-        // Audio
+      if (!hasMusic && item.audioTrackIndex === -1) {
+        // Audio from segments (only when no music and splice all mode).
         filter +=
           `[${idx}:a]atrim=${trim},asetpts=PTS-STARTPTS,` +
           `afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
       }
     });
 
-    if (item.audioTrackIndex === -1) {
+    if (hasMusic) {
+      // Music tracks: inputs start after the video segment inputs.
+      // Each track is trimmed to its allocated duration on the output timeline.
+      const musicStartIdx = item.segments.length;
+
+      item.musicTracks.forEach((track, i) => {
+        const trackDuration = track.stop - track.start;
+        filter +=
+          `[${musicStartIdx + i}:a]atrim=start=0:end=${trackDuration},` +
+          `asetpts=PTS-STARTPTS[m${i}];`;
+      });
+
+      if (item.musicTracks.length === 1) {
+        filter += `[m0]anull[music];`;
+      } else {
+        const musicInputs = item.musicTracks.map((_, i) => `[m${i}]`).join('');
+        filter += `${musicInputs}concat=n=${item.musicTracks.length}:v=0:a=1[music];`;
+      }
+
+      // Video-only concat.
+      const videoInputs = item.segments.map((_, i) => `[v${i}]`).join('');
+      filter += `${videoInputs}concat=n=${item.segments.length}:v=1:a=0[v]`;
+    } else if (item.audioTrackIndex === -1) {
       const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
       filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a]`;
     } else {

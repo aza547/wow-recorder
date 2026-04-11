@@ -23,6 +23,7 @@ import {
   handleSafeVodRequest,
   runFirstTimeSetupActionsObs,
   runFirstTimeSetupActionsNoObs,
+  fixPathWhenPackaged,
 } from './util';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
@@ -438,6 +439,85 @@ ipcMain.on('deleteChatMessage', (event, id) => {
   const client = CloudClient.getInstance();
   client.deleteChatMessage(id);
 });
+
+/**
+ * Generate waveform data for an audio file using ffmpeg.
+ * Returns an array of normalized 0-1 amplitude peaks.
+ */
+ipcMain.handle(
+  'getWaveform',
+  async (_event, filePath: string, numPeaks: number): Promise<number[]> => {
+    const { execFile } = require('child_process');
+
+    const devMode = process.env.NODE_ENV === 'development';
+    const ffmpegPathRel = 'node_modules/noobs/dist/bin/ffmpeg.exe';
+
+    let ffmpegPath = devMode
+      ? path.resolve(__dirname, '../../release/app/', ffmpegPathRel)
+      : path.resolve(__dirname, '../../', ffmpegPathRel);
+
+    ffmpegPath = fixPathWhenPackaged(ffmpegPath);
+
+    return new Promise((resolve) => {
+      // Use ffmpeg to extract raw PCM data at a low sample rate for fast
+      // processing. We resample to mono 8kHz which gives plenty of
+      // resolution for a visual waveform.
+      const args = [
+        '-i',
+        filePath,
+        '-ac',
+        '1',
+        '-ar',
+        '8000',
+        '-f',
+        's16le',
+        '-v',
+        'quiet',
+        'pipe:1',
+      ];
+
+      const proc = execFile(
+        ffmpegPath,
+        args,
+        { maxBuffer: 50 * 1024 * 1024, encoding: 'buffer' },
+        (error: Error | null, stdout: Buffer) => {
+          if (error || !stdout || stdout.length === 0) {
+            console.warn('[Main] Waveform generation failed:', error);
+            resolve([]);
+            return;
+          }
+
+          // Read 16-bit signed LE samples.
+          const samples = new Int16Array(
+            stdout.buffer,
+            stdout.byteOffset,
+            Math.floor(stdout.length / 2),
+          );
+
+          const samplesPerPeak = Math.max(1, Math.floor(samples.length / numPeaks));
+          const peaks: number[] = [];
+
+          for (let i = 0; i < numPeaks; i++) {
+            const start = i * samplesPerPeak;
+            const end = Math.min(start + samplesPerPeak, samples.length);
+            let max = 0;
+
+            for (let j = start; j < end; j++) {
+              const abs = Math.abs(samples[j]);
+              if (abs > max) max = abs;
+            }
+
+            peaks.push(max / 32768);
+          }
+
+          resolve(peaks);
+        },
+      );
+
+      proc.on('error', () => resolve([]));
+    });
+  },
+);
 
 /**
  * Set/get global video player settings.

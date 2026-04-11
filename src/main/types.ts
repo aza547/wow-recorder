@@ -509,12 +509,23 @@ type KillVideoQueueItem = {
   fps: number;
   segments: KillVideoSegment[];
   audioTrackIndex: number; // -1 for splicing all tracks
+  musicTracks: KillVideoMusicTrack[];
 };
 
 type KillVideoSegment = {
+  id: string; // unique id for frontend tracking
   video: RendererVideo;
   start: number;
   stop: number;
+};
+
+type KillVideoMusicTrack = {
+  id: string;
+  name: string;
+  path: string;
+  start: number; // position on the output timeline
+  stop: number; // position on the output timeline
+  waveform?: number[]; // normalized 0-1 amplitude peaks for visualization
 };
 
 type CreateMultiPartUploadResponseBody = {
@@ -718,5 +729,6 @@ export {
   ActivityStatus,
   KillVideoQueueItem,
   KillVideoSegment,
+  KillVideoMusicTrack,
   KillVideoStatus,
 };

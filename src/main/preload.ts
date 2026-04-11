@@ -1,6 +1,16 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import {
+  contextBridge,
+  ipcRenderer,
+  IpcRendererEvent,
+  webUtils,
+} from 'electron';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
-import { AudioSourceType, RendererVideo, SceneItem } from './types';
+import {
+  AudioSourceType,
+  KillVideoMusicTrack,
+  RendererVideo,
+  SceneItem,
+} from './types';
 import { TChatMessageWithId } from 'types/api';
 
 export type Channels =
@@ -50,7 +60,8 @@ export type Channels =
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
   | 'getSensibleEncoderDefault'
-  | 'refreshCloudGuilds';
+  | 'refreshCloudGuilds'
+  | 'getWaveform';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -228,12 +239,21 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('forceStopRecording');
     },
 
+    getWaveform(filePath: string, numPeaks: number): Promise<number[]> {
+      return ipcRenderer.invoke('getWaveform', filePath, numPeaks);
+    },
+
+    getPathForFile(file: File): string {
+      return webUtils.getPathForFile(file);
+    },
+
     createKillVideo(
       width: number,
       height: number,
       fps: number,
       sources: RendererVideo[],
       audioTrackIndex: number,
+      musicTracks: KillVideoMusicTrack[],
     ) {
       ipcRenderer.send(
         'createKillVideo',
@@ -242,6 +262,7 @@ contextBridge.exposeInMainWorld('electron', {
         fps,
         sources,
         audioTrackIndex,
+        musicTracks,
       );
     },
 

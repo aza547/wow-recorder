@@ -1,7 +1,13 @@
 import ElectronStore from 'electron-store';
 import { QualityPresets } from 'main/obsEnums';
 import { Channels } from 'main/preload';
-import { AudioSourceType, KillVideoSegment, RendererVideo, SceneItem } from 'main/types';
+import {
+  AudioSourceType,
+  KillVideoMusicTrack,
+  KillVideoSegment,
+  RendererVideo,
+  SceneItem,
+} from 'main/types';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 import { TChatMessageWithId } from 'types/api';
 
@@ -81,12 +87,16 @@ declare global {
         toggleManualRecording(): void;
         forceStopRecording(): void;
 
+        getWaveform(filePath: string, numPeaks: number): Promise<number[]>;
+        getPathForFile(file: File): string;
+
         createKillVideo(
           width: number,
           height: number,
           fps: number,
           sources: KillVideoSegment[],
           audioTrackIndex: number,
+          musicTracks: KillVideoMusicTrack[],
         ): void;
 
         clipVideo(video: RendererVideo, offset: number, duration: number): void;

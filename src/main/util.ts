@@ -983,12 +983,24 @@ const handleSafeVodRequest = async (request: Request) => {
 
     const filePath = Buffer.from(requestUrl).toString('utf-8').split('#')[0]; // Remove any timestamps, the frontend handles those.
 
-    if (!filePath.endsWith('.mp4')) {
-      console.error('[Util] Not an MP4 file:', filePath);
+    const allowedExtensions: Record<string, string> = {
+      '.mp4': 'video/mp4',
+      '.mp3': 'audio/mpeg',
+      '.wav': 'audio/wav',
+      '.ogg': 'audio/ogg',
+      '.flac': 'audio/flac',
+      '.m4a': 'audio/mp4',
+    };
+
+    const ext = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
+    const contentType = allowedExtensions[ext];
+
+    if (!contentType) {
+      console.error('[Util] Unsupported file type:', filePath);
 
       return new Response('', {
         status: 400,
-        statusText: 'Must be MP4',
+        statusText: 'Unsupported file type',
       });
     }
 
@@ -1025,7 +1037,7 @@ const handleSafeVodRequest = async (request: Request) => {
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': chunkSize.toString(),
-          'Content-Type': 'video/mp4',
+          'Content-Type': contentType,
           'Cache-Control': 'no-cache',
         },
       });
@@ -1038,7 +1050,7 @@ const handleSafeVodRequest = async (request: Request) => {
         headers: {
           'Content-Length': fileSize.toString(),
           'Accept-Ranges': 'bytes',
-          'Content-Type': 'video/mp4',
+          'Content-Type': contentType,
           'Cache-Control': 'no-cache',
         },
       });
