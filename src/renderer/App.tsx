@@ -58,6 +58,7 @@ const WarcraftRecorder = () => {
       retailPtr: true,
       classicPtr: true,
     });
+  const [previewEnabled, setPreviewEnabled] = useState(true);
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW,
@@ -497,6 +498,7 @@ const WarcraftRecorder = () => {
                 recorderCategory={activityStatus?.category}
                 activityStatus={activityStatus}
                 advancedLoggingStatus={advancedLoggingStatus}
+                setPreviewEnabled={setPreviewEnabled}
               />
               <Layout
                 recorderStatus={recorderStatus}
@@ -509,6 +511,8 @@ const WarcraftRecorder = () => {
                 config={config}
                 setConfig={setConfig}
                 advancedLoggingStatus={advancedLoggingStatus}
+                previewEnabled={previewEnabled}
+                setPreviewEnabled={setPreviewEnabled}
               />
             </div>
           </TooltipProvider>

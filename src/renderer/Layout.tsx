@@ -23,6 +23,8 @@ interface IProps {
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   advancedLoggingStatus: AdvancedLoggingStatus;
+  previewEnabled: boolean;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
 /**
@@ -40,6 +42,8 @@ const Layout = (props: IProps) => {
     config,
     setConfig,
     advancedLoggingStatus,
+    previewEnabled,
+    setPreviewEnabled,
   } = props;
   const { page, category } = appState;
 
@@ -77,6 +81,8 @@ const Layout = (props: IProps) => {
         appState={appState}
         config={config}
         setConfig={setConfig}
+        previewEnabled={previewEnabled}
+        setPreviewEnabled={setPreviewEnabled}
       />
     );
   };

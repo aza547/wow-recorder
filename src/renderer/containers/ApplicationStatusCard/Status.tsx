@@ -9,7 +9,7 @@ import {
   RecStatus,
   SaveStatus,
 } from 'main/types';
-import React, { useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Button } from 'renderer/components/Button/Button';
 import {
   HoverCard,
@@ -38,6 +38,7 @@ type StatusProps = {
   appState: AppState;
   activityStatus: ActivityStatus | null;
   advancedLoggingStatus: AdvancedLoggingStatus;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 };
 
 const Status = ({
@@ -48,6 +49,7 @@ const Status = ({
   appState,
   activityStatus,
   advancedLoggingStatus,
+  setPreviewEnabled,
 }: StatusProps) => {
   const { language } = appState;
   const [recTimerSec, setRecTimerSec] = useState(0);
@@ -373,7 +375,12 @@ const Status = ({
   const isSaving = savingStatus === SaveStatus.Saving;
 
   return (
-    <HoverCard openDelay={300}>
+    <HoverCard
+      openDelay={300}
+      onOpenChange={(open) => {
+        if (statusDescription) setPreviewEnabled(!open);
+      }}
+    >
       <HoverCardTrigger>
         <div className="w-full h-full flex relative rounded-md border-t border-[rgba(255,255,255,10%)] hover:cursor-pointer">
           <StatusLight

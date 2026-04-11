@@ -7,6 +7,7 @@ import {
   RecStatus,
   SaveStatus,
 } from 'main/types';
+import { Dispatch, SetStateAction } from 'react';
 import { cn } from 'renderer/components/utils';
 import { ConfigurationSchema } from 'config/configSchema';
 import MicrophoneStatus from './MicStatus';
@@ -23,6 +24,7 @@ type ApplicationStatusCardProps = {
   appState: AppState;
   activityStatus: ActivityStatus | null;
   advancedLoggingStatus: AdvancedLoggingStatus;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 };
 
 const ApplicationStatusCard = ({
@@ -35,6 +37,7 @@ const ApplicationStatusCard = ({
   appState,
   activityStatus,
   advancedLoggingStatus,
+  setPreviewEnabled,
 }: ApplicationStatusCardProps) => {
   const hasExtraBar = !!(micStatus || errorReports?.length);
   return (
@@ -62,6 +65,7 @@ const ApplicationStatusCard = ({
           appState={appState}
           activityStatus={activityStatus}
           advancedLoggingStatus={advancedLoggingStatus}
+          setPreviewEnabled={setPreviewEnabled}
         />
       </div>
       <div

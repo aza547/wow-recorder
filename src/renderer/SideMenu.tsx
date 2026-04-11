@@ -24,7 +24,14 @@ import {
   RecStatus,
   SaveStatus,
 } from 'main/types';
-import { MutableRefObject, useEffect, useRef, useState } from 'react';
+import {
+  Dispatch,
+  MutableRefObject,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
 import {
   getLocaleCategoryLabel,
@@ -64,6 +71,7 @@ interface IProps {
   recorderCategory: VideoCategory | undefined;
   activityStatus: ActivityStatus | null;
   advancedLoggingStatus: AdvancedLoggingStatus;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
 const SideMenu = (props: IProps) => {
@@ -82,6 +90,7 @@ const SideMenu = (props: IProps) => {
     updateAvailable,
     activityStatus,
     advancedLoggingStatus,
+    setPreviewEnabled,
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
@@ -252,6 +261,7 @@ const SideMenu = (props: IProps) => {
         config={config}
         appState={appState}
         advancedLoggingStatus={advancedLoggingStatus}
+        setPreviewEnabled={setPreviewEnabled}
       />
       <CloudStatusCard appState={appState} />
       <Separator className="mb-4" />

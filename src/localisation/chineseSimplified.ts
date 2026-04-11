@@ -506,7 +506,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.StartManualRecordingTooltip]: '开始手动录制',
   [Phrase.StopManualRecordingTooltip]: '停止手动录制',
   [Phrase.RecordedAt]: '录制于',
-  [Phrase.AdvancedCombatLoggingDisabledWarning]: '高级战斗日志未启用。请在魔兽世界中启用：系统 > 网络 > 高级战斗日志。',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: '高级战斗日志未启用。请在魔兽世界中启用：系统 > 网络 > 高级战斗日志。注意：启用后需完全关闭魔兽世界 - 该设置仅在退出时写入 Config.wtf。',
   [Phrase.RecordedAt]: '录制时间',
   [Phrase.KillVideoCreatorTooltip]: '创建多视角视频。',
   [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: '此功能只能用于本地录制。请先使用下载按钮。',
