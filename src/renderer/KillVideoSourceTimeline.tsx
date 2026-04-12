@@ -17,7 +17,7 @@ import React, {
   useState,
 } from 'react';
 import { specImages } from './images';
-import { Copy, Film, Music, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { Copy, Film, Music, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { Language, Phrase } from 'localisation/phrases';
 
@@ -406,26 +406,21 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
 
   const [musicDragOver, setMusicDragOver] = useState(false);
   const [musicDragIdx, setMusicDragIdx] = useState<number | null>(null);
-  const [musicOverIdx, setMusicOverIdx] = useState<number | null>(null);
   const [musicOverBin, setMusicOverBin] = useState(false);
   const musicTimelineRef = useRef<HTMLDivElement>(null);
 
   const normalizeMusicTracks = (tracks: KillVideoMusicTrack[]) => {
     if (tracks.length === 0) return tracks;
 
-    // Place tracks sequentially at their natural duration, capping at
-    // the total video length. No stretching — a 40s track in an 8min
-    // video only occupies a small slice.
-    let cursor = 0;
+    // Sort by start time and clamp to video duration.
     return tracks
       .map((t) => {
-        if (cursor >= videoDuration) return null;
-        const duration = Math.min(t.stop - t.start, videoDuration - cursor);
-        const next = { ...t, start: cursor, stop: cursor + duration };
-        cursor += duration;
-        return next;
+        const duration = t.stop - t.start;
+        const start = Math.max(0, Math.min(t.start, videoDuration - 5));
+        const stop = Math.min(start + duration, videoDuration);
+        return { ...t, start, stop };
       })
-      .filter((t): t is KillVideoMusicTrack => t !== null);
+      .sort((a, b) => a.start - b.start);
   };
 
   const getAudioFileDuration = (file: File): Promise<number> => {
@@ -459,15 +454,35 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
 
     const newTracks: KillVideoMusicTrack[] = [];
 
+    // Place new tracks after the last existing track (or at click position).
+    let cursor =
+      musicTracks.length > 0 ? Math.max(...musicTracks.map((t) => t.stop)) : 0;
+
+    // If dropped on the timeline, try to place at the drop position.
+    const container = musicTimelineRef.current;
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      const clickPct = (e.clientX - rect.left) / rect.width;
+      const clickTime = clickPct * videoDuration;
+      // Only use click position if it doesn't overlap existing tracks.
+      const overlaps = musicTracks.some(
+        (t) => clickTime >= t.start && clickTime < t.stop,
+      );
+      if (!overlaps) cursor = Math.max(0, clickTime);
+    }
+
     for (const f of audioFiles) {
       const duration = await getAudioFileDuration(f);
+      const start = Math.min(cursor, videoDuration);
+      const stop = Math.min(start + duration, videoDuration);
       newTracks.push({
         id: crypto.randomUUID(),
         name: f.name,
         path: ipc.getPathForFile(f),
-        start: 0,
-        stop: duration,
+        start,
+        stop,
       });
+      cursor = stop;
     }
 
     setMusicTracks((prev) => normalizeMusicTracks([...prev, ...newTracks]));
@@ -476,56 +491,95 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
   const removeMusicTrack = (idx: number) => {
     setMusicTracks((prev) => {
       if (prev.length <= 1) return [];
-      const next = prev.filter((_, i) => i !== idx);
-      return normalizeMusicTracks(next);
+      return prev.filter((_, i) => i !== idx);
     });
   };
 
-  const musicShowDropIndicator =
-    musicDragIdx !== null &&
-    musicOverIdx !== null &&
-    musicOverIdx !== musicDragIdx &&
-    musicOverIdx !== musicDragIdx + 1;
+  // --- Drag entire music track to slide-reposition ---
+  const musicSlideRef = useRef<{
+    trackIdx: number;
+    startX: number;
+    origStart: number;
+    origStop: number;
+    totalWidth: number;
+  } | null>(null);
 
+  const handleMusicSlideMouseDown = (e: React.MouseEvent, idx: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const container = musicTimelineRef.current;
+    if (!container) return;
+
+    setMusicDragIdx(idx);
+
+    musicSlideRef.current = {
+      trackIdx: idx,
+      startX: e.clientX,
+      origStart: musicTracks[idx].start,
+      origStop: musicTracks[idx].stop,
+      totalWidth: container.getBoundingClientRect().width,
+    };
+
+    const handleMouseMove = (me: MouseEvent) => {
+      if (!musicSlideRef.current) return;
+      const {
+        trackIdx: tIdx,
+        startX,
+        origStart,
+        origStop,
+        totalWidth,
+      } = musicSlideRef.current;
+      const dx = me.clientX - startX;
+      const timeDelta = (dx / totalWidth) * videoDuration;
+      const duration = origStop - origStart;
+
+      let newStart = origStart + timeDelta;
+      // Clamp to [0, videoDuration - duration].
+      newStart = Math.max(0, Math.min(newStart, videoDuration - duration));
+
+      // Prevent overlap with other tracks.
+      setMusicTracks((prev) => {
+        const others = prev.filter((_, i) => i !== tIdx);
+        for (const other of others) {
+          // If we'd overlap, snap to edge.
+          if (newStart < other.stop && newStart + duration > other.start) {
+            // Determine snap direction based on original position.
+            if (origStart < other.start) {
+              newStart = other.start - duration;
+            } else {
+              newStart = other.stop;
+            }
+          }
+        }
+        newStart = Math.max(0, Math.min(newStart, videoDuration - duration));
+        const next = [...prev];
+        next[tIdx] = {
+          ...next[tIdx],
+          start: newStart,
+          stop: newStart + duration,
+        };
+        return next;
+      });
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      musicSlideRef.current = null;
+      setMusicDragIdx(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  // --- HTML5 drag to bin for deletion ---
   const handleMusicDragStart = (idx: number) => {
     setMusicDragIdx(idx);
   };
 
-  const handleMusicDragOver = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const midX = rect.left + rect.width / 2;
-    setMusicOverIdx(e.clientX < midX ? idx : idx + 1);
-  };
-
-  const handleMusicDrop2 = (e: React.DragEvent) => {
-    e.preventDefault();
-
-    if (
-      musicDragIdx === null ||
-      musicOverIdx === null ||
-      musicOverIdx === musicDragIdx ||
-      musicOverIdx === musicDragIdx + 1
-    ) {
-      setMusicDragIdx(null);
-      setMusicOverIdx(null);
-      return;
-    }
-
-    const next = [...musicTracks];
-    const [moved] = next.splice(musicDragIdx, 1);
-    const insertIdx =
-      musicOverIdx > musicDragIdx ? musicOverIdx - 1 : musicOverIdx;
-    next.splice(insertIdx, 0, moved);
-
-    setMusicTracks(normalizeMusicTracks(next));
-    setMusicDragIdx(null);
-    setMusicOverIdx(null);
-  };
-
   const handleMusicDragEnd = () => {
     setMusicDragIdx(null);
-    setMusicOverIdx(null);
     setMusicOverBin(false);
   };
 
@@ -535,7 +589,6 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
       removeMusicTrack(musicDragIdx);
     }
     setMusicDragIdx(null);
-    setMusicOverIdx(null);
     setMusicOverBin(false);
   };
 
@@ -543,10 +596,9 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     trackIdx: number;
     edge: 'left' | 'right';
     startX: number;
-    startDuration: number;
-    neighbourDuration: number;
+    origStart: number;
+    origStop: number;
     totalWidth: number;
-    totalDuration: number;
   } | null>(null);
 
   const handleMusicEdgeMouseDown = (
@@ -557,9 +609,6 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const neighbourIdx = edge === 'left' ? trackIdx - 1 : trackIdx + 1;
-    if (neighbourIdx < 0 || neighbourIdx >= musicTracks.length) return;
-
     const container = musicTimelineRef.current;
     if (!container) return;
 
@@ -567,11 +616,9 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
       trackIdx,
       edge,
       startX: e.clientX,
-      startDuration: musicTracks[trackIdx].stop - musicTracks[trackIdx].start,
-      neighbourDuration:
-        musicTracks[neighbourIdx].stop - musicTracks[neighbourIdx].start,
+      origStart: musicTracks[trackIdx].start,
+      origStop: musicTracks[trackIdx].stop,
       totalWidth: container.getBoundingClientRect().width,
-      totalDuration: videoDuration,
     };
 
     const handleMouseMove = (me: MouseEvent) => {
@@ -581,47 +628,46 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
         trackIdx: tIdx,
         edge: tEdge,
         startX,
-        startDuration,
-        neighbourDuration,
+        origStart,
+        origStop,
         totalWidth,
-        totalDuration: td,
       } = musicResizeRef.current;
 
       const dx = me.clientX - startX;
-      const durationDelta = (dx / totalWidth) * td;
-
-      let newDuration: number;
-      let newNeighbourDuration: number;
-
-      if (tEdge === 'right') {
-        newDuration = startDuration + durationDelta;
-        newNeighbourDuration = neighbourDuration - durationDelta;
-      } else {
-        newDuration = startDuration - durationDelta;
-        newNeighbourDuration = neighbourDuration + durationDelta;
-      }
-
+      const timeDelta = (dx / totalWidth) * videoDuration;
       const minDuration = 5;
-      const combined = startDuration + neighbourDuration;
-      newDuration = Math.max(
-        minDuration,
-        Math.min(newDuration, combined - minDuration),
-      );
-      newNeighbourDuration = combined - newDuration;
 
       setMusicTracks((prev) => {
         const next = [...prev];
-        if (tEdge === 'right') {
-          const nIdx = tIdx + 1;
-          const boundary = prev[tIdx].start + newDuration;
-          next[tIdx] = { ...next[tIdx], stop: boundary };
-          next[nIdx] = { ...next[nIdx], start: boundary };
+        const track = { ...next[tIdx] };
+        const others = prev.filter((_, i) => i !== tIdx);
+
+        if (tEdge === 'left') {
+          let newStart = origStart + timeDelta;
+          newStart = Math.max(0, Math.min(newStart, origStop - minDuration));
+          // Don't overlap with a track to the left.
+          for (const other of others) {
+            if (other.stop > newStart && other.start < newStart) {
+              newStart = other.stop;
+            }
+          }
+          track.start = newStart;
         } else {
-          const nIdx = tIdx - 1;
-          const boundary = prev[nIdx].start + newNeighbourDuration;
-          next[nIdx] = { ...next[nIdx], stop: boundary };
-          next[tIdx] = { ...next[tIdx], start: boundary };
+          let newStop = origStop + timeDelta;
+          newStop = Math.max(
+            origStart + minDuration,
+            Math.min(newStop, videoDuration),
+          );
+          // Don't overlap with a track to the right.
+          for (const other of others) {
+            if (other.start < newStop && other.stop > newStop) {
+              newStop = other.start;
+            }
+          }
+          track.stop = newStop;
         }
+
+        next[tIdx] = track;
         return next;
       });
     };
@@ -939,15 +985,6 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
                         }}
                       />
 
-                      <div className="absolute top-1 right-1 grid grid-cols-3 gap-[2px] pointer-events-none opacity-40">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="w-[3px] h-[3px] rounded-full bg-black/50"
-                          />
-                        ))}
-                      </div>
-
                       <button
                         type="button"
                         title={getLocalePhrase(
@@ -1055,7 +1092,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
             ref={musicTimelineRef}
             data-timeline-container
             className={[
-              'flex h-8 overflow-hidden border-t border-border/20 transition-colors',
+              'relative h-8 overflow-hidden border-t border-border/20 transition-colors',
               musicDragOver ? 'bg-purple-500/10' : '',
             ].join(' ')}
             onDragOver={(e) => {
@@ -1064,11 +1101,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
             }}
             onDragLeave={() => setMusicDragOver(false)}
             onDrop={(e) => {
-              if (musicDragIdx !== null) {
-                handleMusicDrop2(e);
-              } else {
-                handleMusicDrop(e);
-              }
+              handleMusicDrop(e);
             }}
           >
             {musicTracks.length === 0 ? (
@@ -1080,88 +1113,62 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
               </div>
             ) : (
               <>
-                {musicShowDropIndicator && musicOverIdx === 0 && (
-                  <div className="flex-shrink-0 w-0.5 h-full bg-white rounded-full" />
-                )}
+                {/* Empty area still accepts drops */}
+                <div
+                  className="absolute inset-0"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (musicDragIdx === null) setMusicDragOver(true);
+                  }}
+                  onDragLeave={() => setMusicDragOver(false)}
+                  onDrop={(e) => handleMusicDrop(e)}
+                />
                 {musicTracks.map((track, idx) => {
-                  const widthPercent =
+                  const leftPct = (track.start / videoDuration) * 100;
+                  const widthPct =
                     ((track.stop - track.start) / videoDuration) * 100;
                   const isDragging = musicDragIdx === idx;
 
                   return (
-                    <React.Fragment key={track.id}>
+                    <div
+                      key={track.id}
+                      className={[
+                        'absolute top-0 h-full flex items-center justify-center select-none cursor-grab group/music',
+                        'transition-opacity bg-purple-700/50 overflow-hidden',
+                        isDragging ? 'opacity-40' : 'opacity-100',
+                      ].join(' ')}
+                      style={{
+                        left: `${leftPct}%`,
+                        width: `${widthPct}%`,
+                      }}
+                      onMouseDown={(e) => handleMusicSlideMouseDown(e, idx)}
+                      draggable
+                      onDragStart={() => handleMusicDragStart(idx)}
+                      onDragEnd={handleMusicDragEnd}
+                    >
+                      {/* Left resize handle */}
                       <div
-                        className={[
-                          'relative flex items-center justify-center select-none cursor-grab group/music',
-                          'transition-opacity bg-purple-700/50 overflow-hidden',
-                          isDragging ? 'opacity-40' : 'opacity-100',
-                        ].join(' ')}
-                        style={{ width: `${widthPercent}%` }}
-                        draggable
-                        onDragStart={() => handleMusicDragStart(idx)}
-                        onDragOver={(e) => handleMusicDragOver(e, idx)}
-                        onDrop={handleMusicDrop2}
-                        onDragEnd={handleMusicDragEnd}
-                      >
-                        {track.waveform && (
-                          <WaveformSVG peaks={track.waveform} />
-                        )}
-                        <button
-                          type="button"
-                          className="absolute top-0.5 right-0.5 p-0.5 rounded text-white/40 hover:text-white opacity-0 group-hover/music:opacity-100 transition-opacity z-10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeMusicTrack(idx);
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                        >
-                          <X size={10} />
-                        </button>
-                        <div className="text-white/90 flex flex-col items-center pointer-events-none px-1 overflow-hidden z-[1]">
-                          <span className="text-[10px] font-medium truncate max-w-full">
-                            {track.name}
-                          </span>
-                        </div>
+                        className="absolute left-0 top-0 w-1.5 h-full cursor-col-resize z-10 hover:bg-white/20"
+                        onMouseDown={(e) =>
+                          handleMusicEdgeMouseDown(e, idx, 'left')
+                        }
+                      />
+                      {track.waveform && <WaveformSVG peaks={track.waveform} />}
+                      <div className="text-white/90 flex flex-col items-center pointer-events-none px-1 overflow-hidden z-[1]">
+                        <span className="text-[10px] font-medium truncate max-w-full">
+                          {track.name}
+                        </span>
                       </div>
-
-                      {idx < musicTracks.length - 1 && (
-                        <div
-                          className={[
-                            'flex-shrink-0 w-1.5 h-full z-10 flex flex-col items-center justify-center gap-[2px] cursor-col-resize transition-colors',
-                            musicShowDropIndicator && musicOverIdx === idx + 1
-                              ? 'bg-white/30'
-                              : 'hover:bg-white/10',
-                          ].join(' ')}
-                          onMouseDown={(e) =>
-                            handleMusicEdgeMouseDown(e, idx, 'right')
-                          }
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setMusicOverIdx(idx + 1);
-                          }}
-                          onDrop={handleMusicDrop2}
-                        >
-                          {Array.from({ length: 3 }).map((_, i) => (
-                            <div
-                              key={i}
-                              className={[
-                                'w-[2px] h-[2px] rounded-full',
-                                musicShowDropIndicator &&
-                                musicOverIdx === idx + 1
-                                  ? 'bg-white'
-                                  : 'bg-white/25',
-                              ].join(' ')}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </React.Fragment>
+                      {/* Right resize handle */}
+                      <div
+                        className="absolute right-0 top-0 w-1.5 h-full cursor-col-resize z-10 hover:bg-white/20"
+                        onMouseDown={(e) =>
+                          handleMusicEdgeMouseDown(e, idx, 'right')
+                        }
+                      />
+                    </div>
                   );
                 })}
-                {musicShowDropIndicator &&
-                  musicOverIdx === musicTracks.length && (
-                    <div className="flex-shrink-0 w-0.5 h-full bg-white rounded-full" />
-                  )}
               </>
             )}
           </div>
