@@ -264,13 +264,15 @@ const KillVideoDialog = (props: IProps) => {
           setSegments={setSegments}
           musicTracks={musicTracks}
           setMusicTracks={setMusicTracks}
+          singleAudio={singleAudio}
+          audioTrackPlayer={audioTrackPlayer}
           language={language}
         >
           <div className="flex flex-col gap-4">
             {getFpsSelect()}
             {getResolutionSelect()}
-            {!hasMusicTracks && getAudioSwitch()}
-            {!hasMusicTracks && singleAudio && getAudioTrackSelect()}
+            {getAudioSwitch()}
+            {singleAudio && getAudioTrackSelect()}
           </div>
         </KillVideoSourceTimeline>
 
