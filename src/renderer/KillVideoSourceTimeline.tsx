@@ -804,12 +804,18 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
         />
       ))}
 
+      {/* Playhead time display */}
+      <div className="flex justify-start ml-20 mb-1">
+        <span className="text-[10px] text-muted-foreground tabular-nums">
+          {secToMmSs(playheadTime)} / {secToMmSs(videoDuration)}
+        </span>
+      </div>
+
       {/* Timeline */}
       <div className="flex rounded-lg border border-border/30 overflow-hidden bg-background/50">
         {/* Track labels */}
         <div className="flex flex-col shrink-0 w-20 bg-muted/30 border-r border-border/20">
-          <div className="h-6" />
-          <div className="flex flex-col border-t border-border/20">
+          <div className="flex flex-col">
             <div className="h-14 flex items-center gap-1.5 px-2.5">
               <Film size={12} className="shrink-0 text-muted-foreground" />
               <span className="text-[11px] text-muted-foreground font-medium">
@@ -829,6 +835,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
               Music
             </span>
           </div>
+          <div className="h-6" />
         </div>
 
         {/* Timeline content */}
@@ -836,50 +843,6 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           className="flex-1 flex flex-col min-w-0 relative"
           ref={timelineWrapperRef}
         >
-          {/* Ruler */}
-          <div
-            className="relative h-6 cursor-pointer select-none bg-muted/10"
-            onMouseDown={handlePlayheadMouseDown}
-          >
-            <div className="absolute top-0 left-0 flex flex-col items-start">
-              <div className="w-px h-2 bg-border" />
-              <span className="text-[9px] text-muted-foreground leading-none mt-0.5 ml-0.5">
-                0:00
-              </span>
-            </div>
-            {minorTicks.map((t) => {
-              const pct = (t / videoDuration) * 100;
-              return (
-                <div
-                  key={`minor-${t}`}
-                  className="absolute top-0 w-px h-1.5 bg-border/50"
-                  style={{ left: `${pct}%` }}
-                />
-              );
-            })}
-            {majorTicks.map((t) => {
-              const pct = (t / videoDuration) * 100;
-              return (
-                <div
-                  key={t}
-                  className="absolute top-0 flex flex-col items-center"
-                  style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
-                >
-                  <div className="w-px h-2 bg-border" />
-                  <span className="text-[9px] text-muted-foreground leading-none mt-0.5">
-                    {secToMmSs(t)}
-                  </span>
-                </div>
-              );
-            })}
-            <div className="absolute top-0 right-0 flex flex-col items-end">
-              <div className="w-px h-2 bg-border" />
-              <span className="text-[9px] text-muted-foreground leading-none mt-0.5 mr-0.5">
-                {secToMmSs(videoDuration)}
-              </span>
-            </div>
-          </div>
-
           {/* Video + Audio rows (linked) */}
           <div
             data-timeline-container
@@ -1126,6 +1089,50 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
             )}
           </div>
 
+          {/* Ruler */}
+          <div
+            className="relative h-6 cursor-pointer select-none bg-muted/10 border-t border-card"
+            onMouseDown={handlePlayheadMouseDown}
+          >
+            <div className="absolute top-0 left-0 flex flex-col items-start">
+              <div className="w-px h-2 bg-border" />
+              <span className="text-[9px] text-muted-foreground leading-none mt-0.5 ml-0.5">
+                0:00
+              </span>
+            </div>
+            {minorTicks.map((t) => {
+              const pct = (t / videoDuration) * 100;
+              return (
+                <div
+                  key={`minor-${t}`}
+                  className="absolute top-0 w-px h-1.5 bg-border/50"
+                  style={{ left: `${pct}%` }}
+                />
+              );
+            })}
+            {majorTicks.map((t) => {
+              const pct = (t / videoDuration) * 100;
+              return (
+                <div
+                  key={t}
+                  className="absolute top-0 flex flex-col items-center"
+                  style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
+                >
+                  <div className="w-px h-2 bg-border" />
+                  <span className="text-[9px] text-muted-foreground leading-none mt-0.5">
+                    {secToMmSs(t)}
+                  </span>
+                </div>
+              );
+            })}
+            <div className="absolute top-0 right-0 flex flex-col items-end">
+              <div className="w-px h-2 bg-border" />
+              <span className="text-[9px] text-muted-foreground leading-none mt-0.5 mr-0.5">
+                {secToMmSs(videoDuration)}
+              </span>
+            </div>
+          </div>
+
           {/* Playhead */}
           <div
             className="absolute top-0 w-0.5 bg-white/90 z-20 pointer-events-auto cursor-ew-resize"
@@ -1136,16 +1143,9 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
             }}
             onMouseDown={handlePlayheadMouseDown}
           >
-            <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white" />
+            <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[6px] border-b-white" />
           </div>
         </div>
-      </div>
-
-      {/* Playhead time display */}
-      <div className="flex justify-start ml-20 mt-1">
-        <span className="text-[10px] text-muted-foreground tabular-nums">
-          {secToMmSs(playheadTime)} / {secToMmSs(videoDuration)}
-        </span>
       </div>
 
       {/* Trash bin — accepts both video segments and music tracks */}
