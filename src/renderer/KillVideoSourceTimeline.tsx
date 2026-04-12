@@ -808,17 +808,14 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
         {/* Track labels */}
         <div className="flex flex-col shrink-0 w-20 bg-muted/30 border-r border-border/20">
           <div className="h-6" />
-          <div
-            className="flex flex-col items-start justify-center gap-0.5 px-2.5 border-t border-border/20"
-            style={{ height: 'calc(3.5rem + 2rem)' }}
-          >
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-col border-t border-border/20">
+            <div className="h-14 flex items-center gap-1.5 px-2.5">
               <Film size={12} className="shrink-0 text-muted-foreground" />
               <span className="text-[11px] text-muted-foreground font-medium">
                 Video
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="h-8 flex items-center gap-1.5 px-2.5 border-t border-border/20">
               <Volume2 size={12} className="shrink-0 text-emerald-500/70" />
               <span className="text-[11px] text-muted-foreground font-medium">
                 Audio
