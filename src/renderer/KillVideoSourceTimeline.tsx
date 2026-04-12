@@ -17,7 +17,7 @@ import React, {
   useState,
 } from 'react';
 import { specImages } from './images';
-import { Copy, Music, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { Copy, Film, Music, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { Language, Phrase } from 'localisation/phrases';
 
@@ -66,6 +66,8 @@ interface SourceTimelineProps {
   setSegments: Dispatch<SetStateAction<KillVideoSegment[]>>;
   musicTracks: KillVideoMusicTrack[];
   setMusicTracks: Dispatch<SetStateAction<KillVideoMusicTrack[]>>;
+  singleAudio: boolean;
+  audioTrackPlayer: string;
   children?: ReactNode;
   language: Language;
 }
@@ -86,8 +88,15 @@ interface SourceTimelineProps {
  * - Drag left/right edges to resize (min 10s per segment)
  */
 const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
-  const { segments, setSegments, musicTracks, setMusicTracks, language } =
-    props;
+  const {
+    segments,
+    setSegments,
+    musicTracks,
+    setMusicTracks,
+    singleAudio,
+    audioTrackPlayer,
+    language,
+  } = props;
 
   const videoDuration = segments.reduce(
     (sum, seg) => sum + (seg.stop - seg.start),
@@ -753,10 +762,10 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     videoDuration > 0 ? (playheadTime / videoDuration) * 100 : 0;
 
   return (
-    <div className="flex flex-col gap-0 w-full border-card">
+    <div className="flex flex-col w-full">
       {/* Video preview + settings side by side */}
-      <div className="flex flex-row gap-2 mb-2 items-start">
-        <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm group">
+      <div className="flex flex-row gap-3 items-start mb-3">
+        <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg overflow-hidden shadow-lg group">
           <video
             ref={videoPreviewRef}
             key={activeSegment.video.videoName}
@@ -771,13 +780,13 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           <button
             type="button"
             onClick={() => setMuted((m) => !m)}
-            className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/60 text-white/80 hover:text-white hover:bg-black/80 transition-opacity "
+            className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/60 text-white/80 hover:text-white hover:bg-black/80 transition-opacity"
           >
-            {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
         </div>
         {props.children && (
-          <div className="flex-shrink-0 p-2 border-l border-card h-full pl-2">
+          <div className="flex-shrink-0 pl-3 border-l border-card self-stretch flex items-start">
             {props.children}
           </div>
         )}
@@ -794,207 +803,191 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
         />
       ))}
 
-      {/* Timeline + playhead wrapper */}
-      <div
-        className="relative mx-2 border-b border-t border-card py-2"
-        ref={timelineWrapperRef}
-      >
-        {/* Video segments row */}
-        <div
-          data-timeline-container
-          className="flex w-full h-20 overflow-hidden"
-        >
-          {showDropIndicator && overIdx === 0 && (
-            <div className="flex-shrink-0 w-1 h-full bg-white rounded-full" />
-          )}
-          {segments.map((seg, idx) => {
-            const widthPercent = ((seg.stop - seg.start) / videoDuration) * 100;
-            const isDragging = dragIdx === idx;
-
-            const playerClass = getPlayerClass(seg.video);
-            const bgColor =
-              playerClass === 'UNKNOWN'
-                ? 'gray'
-                : getWoWClassColor(playerClass);
-
-            return (
-              <React.Fragment key={seg.id}>
-                <div
-                  className={[
-                    'relative flex items-center justify-center select-none cursor-grab group/seg',
-                    'transition-opacity rounded-md',
-                    isDragging ? 'opacity-40' : 'opacity-100',
-                  ].join(' ')}
-                  style={{
-                    width: `${widthPercent}%`,
-                    backgroundColor: bgColor,
-                  }}
-                  draggable
-                  onDragStart={() => handleDragStart(idx)}
-                  onDragOver={(e) => handleDragOver(e, idx)}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
-                >
-                  <img
-                    src={
-                      specImages[
-                        getPlayerSpecID(seg.video) as keyof typeof specImages
-                      ]
-                    }
-                    alt="spec"
-                    className="absolute top-1 left-1 w-4 h-4 rounded-[15%] pointer-events-none"
-                    style={{
-                      border: '1px solid black',
-                      objectFit: 'cover',
-                    }}
-                  />
-
-                  <div className="absolute top-1 right-1 grid grid-cols-3 gap-[2px] pointer-events-none">
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-[3px] h-[3px] rounded-full bg-black/40"
-                      />
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    title={getLocalePhrase(language, Phrase.KillVideoDuplicate)}
-                    className="absolute bottom-1 right-1 p-0.5 rounded bg-black/40 text-white/70 hover:text-white hover:bg-black/60 opacity-0 group-hover/seg:opacity-100 transition-opacity z-10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      duplicateSegment(idx);
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                  >
-                    <Copy size={12} />
-                  </button>
-
-                  <div className="text-black rounded-sm flex flex-col items-center pointer-events-none px-2 pt-2 overflow-hidden">
-                    <span className="text-[12px] font-bold truncate max-w-full">
-                      {getPlayerName(seg.video) || seg.video.videoName}
-                    </span>
-                    <span className="text-[10px]">
-                      {secToMmSs(seg.stop - seg.start)}
-                    </span>
-                  </div>
-                </div>
-
-                {idx < segments.length - 1 && (
-                  <div
-                    className={[
-                      'flex-shrink-0 w-3 h-full z-10 flex flex-col items-center justify-center gap-[3px] cursor-col-resize transition-colors rounded-md',
-                      showDropIndicator && overIdx === idx + 1
-                        ? 'bg-white/40'
-                        : '',
-                    ].join(' ')}
-                    onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'right')}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setOverIdx(idx + 1);
-                    }}
-                    onDrop={handleDrop}
-                  >
-                    {/* Vertical grip dots */}
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={[
-                          'w-[3px] h-[3px] rounded-full',
-                          showDropIndicator && overIdx === idx + 1
-                            ? 'bg-white'
-                            : 'bg-white/30',
-                        ].join(' ')}
-                      />
-                    ))}
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
-          {showDropIndicator && overIdx === segments.length && (
-            <div className="flex-shrink-0 w-1 h-full bg-white rounded-full" />
+      {/* Timeline */}
+      <div className="flex rounded-lg border border-card overflow-hidden bg-background/50">
+        {/* Track labels */}
+        <div className="flex flex-col shrink-0 w-20 bg-muted/30 border-r border-card">
+          <div className="h-6" />
+          <div className="h-14 flex items-center gap-1.5 px-2.5 border-t border-card">
+            <Film size={12} className="shrink-0 text-muted-foreground" />
+            <span className="text-[11px] text-muted-foreground font-medium">
+              Video
+            </span>
+          </div>
+          <div className="h-7 flex items-center gap-1.5 px-2.5 border-t border-card">
+            <Volume2 size={12} className="shrink-0 text-emerald-500/70" />
+            <span className="text-[11px] text-muted-foreground font-medium">
+              Audio
+            </span>
+          </div>
+          {musicTracks.length > 0 && (
+            <div className="h-10 flex items-center gap-1.5 px-2.5 border-t border-card">
+              <Music size={12} className="shrink-0 text-purple-400/70" />
+              <span className="text-[11px] text-muted-foreground font-medium">
+                Music
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Music tracks row (inside the same timeline area) */}
-        {musicTracks.length > 0 && (
+        {/* Timeline content */}
+        <div
+          className="flex-1 flex flex-col min-w-0 relative"
+          ref={timelineWrapperRef}
+        >
+          {/* Ruler */}
           <div
-            ref={musicTimelineRef}
-            data-timeline-container
-            className="flex w-full h-10 overflow-hidden mt-1"
+            className="relative h-6 cursor-pointer select-none bg-muted/10"
+            onMouseDown={handlePlayheadMouseDown}
           >
-            {musicShowDropIndicator && musicOverIdx === 0 && (
-              <div className="flex-shrink-0 w-1 h-full bg-white rounded-full" />
+            <div className="absolute top-0 left-0 flex flex-col items-start">
+              <div className="w-px h-2 bg-border" />
+              <span className="text-[9px] text-muted-foreground leading-none mt-0.5 ml-0.5">
+                0:00
+              </span>
+            </div>
+            {minorTicks.map((t) => {
+              const pct = (t / videoDuration) * 100;
+              return (
+                <div
+                  key={`minor-${t}`}
+                  className="absolute top-0 w-px h-1.5 bg-border/50"
+                  style={{ left: `${pct}%` }}
+                />
+              );
+            })}
+            {majorTicks.map((t) => {
+              const pct = (t / videoDuration) * 100;
+              return (
+                <div
+                  key={t}
+                  className="absolute top-0 flex flex-col items-center"
+                  style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
+                >
+                  <div className="w-px h-2 bg-border" />
+                  <span className="text-[9px] text-muted-foreground leading-none mt-0.5">
+                    {secToMmSs(t)}
+                  </span>
+                </div>
+              );
+            })}
+            <div className="absolute top-0 right-0 flex flex-col items-end">
+              <div className="w-px h-2 bg-border" />
+              <span className="text-[9px] text-muted-foreground leading-none mt-0.5 mr-0.5">
+                {secToMmSs(videoDuration)}
+              </span>
+            </div>
+          </div>
+
+          {/* Video segments row */}
+          <div
+            data-timeline-container
+            className="flex h-14 overflow-hidden border-t border-card"
+          >
+            {showDropIndicator && overIdx === 0 && (
+              <div className="flex-shrink-0 w-0.5 h-full bg-white rounded-full" />
             )}
-            {musicTracks.map((track, idx) => {
+            {segments.map((seg, idx) => {
               const widthPercent =
-                ((track.stop - track.start) / videoDuration) * 100;
-              const isDragging = musicDragIdx === idx;
+                ((seg.stop - seg.start) / videoDuration) * 100;
+              const isDragging = dragIdx === idx;
+
+              const playerClass = getPlayerClass(seg.video);
+              const bgColor =
+                playerClass === 'UNKNOWN'
+                  ? '#4b5563'
+                  : getWoWClassColor(playerClass);
 
               return (
-                <React.Fragment key={track.id}>
+                <React.Fragment key={seg.id}>
                   <div
                     className={[
-                      'relative flex items-center justify-center select-none cursor-grab group/music',
-                      'transition-opacity rounded-md bg-purple-600/80 overflow-hidden',
+                      'relative flex items-center justify-center select-none cursor-grab group/seg',
+                      'transition-opacity',
                       isDragging ? 'opacity-40' : 'opacity-100',
                     ].join(' ')}
-                    style={{ width: `${widthPercent}%` }}
+                    style={{
+                      width: `${widthPercent}%`,
+                      backgroundColor: bgColor,
+                    }}
                     draggable
-                    onDragStart={() => handleMusicDragStart(idx)}
-                    onDragOver={(e) => handleMusicDragOver(e, idx)}
-                    onDrop={handleMusicDrop2}
-                    onDragEnd={handleMusicDragEnd}
+                    onDragStart={() => handleDragStart(idx)}
+                    onDragOver={(e) => handleDragOver(e, idx)}
+                    onDrop={handleDrop}
+                    onDragEnd={handleDragEnd}
                   >
-                    {track.waveform && <WaveformSVG peaks={track.waveform} />}
+                    <img
+                      src={
+                        specImages[
+                          getPlayerSpecID(seg.video) as keyof typeof specImages
+                        ]
+                      }
+                      alt="spec"
+                      className="absolute top-1 left-1 w-4 h-4 rounded-[15%] pointer-events-none"
+                      style={{
+                        border: '1px solid rgba(0,0,0,0.4)',
+                        objectFit: 'cover',
+                      }}
+                    />
+
+                    <div className="absolute top-1 right-1 grid grid-cols-3 gap-[2px] pointer-events-none opacity-40">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-[3px] h-[3px] rounded-full bg-black/50"
+                        />
+                      ))}
+                    </div>
+
                     <button
                       type="button"
-                      className="absolute top-0.5 right-0.5 p-0.5 rounded text-white/50 hover:text-white opacity-0 group-hover/music:opacity-100 transition-opacity z-10"
+                      title={getLocalePhrase(
+                        language,
+                        Phrase.KillVideoDuplicate,
+                      )}
+                      className="absolute bottom-1 right-1 p-0.5 rounded bg-black/40 text-white/70 hover:text-white hover:bg-black/60 opacity-0 group-hover/seg:opacity-100 transition-opacity z-10"
                       onClick={(e) => {
                         e.stopPropagation();
-                        removeMusicTrack(idx);
+                        duplicateSegment(idx);
                       }}
                       onMouseDown={(e) => e.stopPropagation()}
                     >
-                      <X size={10} />
+                      <Copy size={12} />
                     </button>
-                    <div className="text-white rounded-sm flex flex-col items-center pointer-events-none px-1 overflow-hidden z-[1]">
-                      <span className="text-[10px] font-medium truncate max-w-full">
-                        {track.name}
+
+                    <div className="text-black/90 flex flex-col items-center pointer-events-none px-2 pt-2 overflow-hidden">
+                      <span className="text-[11px] font-bold truncate max-w-full drop-shadow-[0_1px_0_rgba(255,255,255,0.2)]">
+                        {getPlayerName(seg.video) || seg.video.videoName}
                       </span>
-                      <span className="text-[9px] text-white/70">
-                        {secToMmSs(track.stop - track.start)}
+                      <span className="text-[10px]">
+                        {secToMmSs(seg.stop - seg.start)}
                       </span>
                     </div>
                   </div>
 
-                  {idx < musicTracks.length - 1 && (
+                  {idx < segments.length - 1 && (
                     <div
                       className={[
-                        'flex-shrink-0 w-3 h-full z-10 flex flex-col items-center justify-center gap-[3px] cursor-col-resize transition-colors rounded-md',
-                        musicShowDropIndicator && musicOverIdx === idx + 1
-                          ? 'bg-white/40'
-                          : '',
+                        'flex-shrink-0 w-2 h-full z-10 flex flex-col items-center justify-center gap-[2px] cursor-col-resize transition-colors',
+                        showDropIndicator && overIdx === idx + 1
+                          ? 'bg-white/30'
+                          : 'hover:bg-white/10',
                       ].join(' ')}
-                      onMouseDown={(e) =>
-                        handleMusicEdgeMouseDown(e, idx, 'right')
-                      }
+                      onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'right')}
                       onDragOver={(e) => {
                         e.preventDefault();
-                        setMusicOverIdx(idx + 1);
+                        setOverIdx(idx + 1);
                       }}
-                      onDrop={handleMusicDrop2}
+                      onDrop={handleDrop}
                     >
-                      {Array.from({ length: 3 }).map((_, i) => (
+                      {Array.from({ length: 4 }).map((_, i) => (
                         <div
                           key={i}
                           className={[
-                            'w-[3px] h-[3px] rounded-full',
-                            musicShowDropIndicator && musicOverIdx === idx + 1
+                            'w-[2px] h-[2px] rounded-full',
+                            showDropIndicator && overIdx === idx + 1
                               ? 'bg-white'
-                              : 'bg-white/30',
+                              : 'bg-white/25',
                           ].join(' ')}
                         />
                       ))}
@@ -1003,86 +996,164 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
                 </React.Fragment>
               );
             })}
-            {musicShowDropIndicator && musicOverIdx === musicTracks.length && (
-              <div className="flex-shrink-0 w-1 h-full bg-white rounded-full" />
+            {showDropIndicator && overIdx === segments.length && (
+              <div className="flex-shrink-0 w-0.5 h-full bg-white rounded-full" />
             )}
           </div>
-        )}
 
-        {/* Playhead — spans both video and music rows */}
-        <div
-          className="absolute top-0 w-0.5 bg-white z-20 cursor-ew-resize"
-          style={{
-            left: `${playheadPct}%`,
-            height: '100%',
-            transform: 'translateX(-50%)',
-          }}
-          onMouseDown={handlePlayheadMouseDown}
-        >
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white" />
-          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full text-[9px] text-white/90 px-1 whitespace-nowrap pointer-events-none">
-            {secToMmSs(playheadTime)}
-          </span>
-        </div>
-
-        {/* Clickable ruler area to jump playhead */}
-        <div
-          className="relative w-full h-6 mt-2 cursor-pointer"
-          onMouseDown={handlePlayheadMouseDown}
-        >
-          <div className="absolute top-0 left-0 right-0 h-px bg-card" />
-          <div className="absolute top-0 left-0 flex flex-col items-start">
-            <div className="w-px h-2 bg-card" />
-            <span className="text-[9px] text-card-foreground leading-none mt-0.5">
-              0:00
-            </span>
-          </div>
-
-          {minorTicks.map((t) => {
-            const pct = (t / videoDuration) * 100;
-            return (
-              <div
-                key={`minor-${t}`}
-                className="absolute top-0 w-px h-1 bg-card"
-                style={{ left: `${pct}%` }}
-              />
-            );
-          })}
-
-          {majorTicks.map((t) => {
-            const pct = (t / videoDuration) * 100;
-            return (
-              <div
-                key={t}
-                className="absolute top-0 flex flex-col items-center"
-                style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
-              >
-                <div className="w-px h-2 bg-card" />
-                <span className="text-[9px] text-card-foreground leading-none mt-0.5">
-                  {secToMmSs(t)}
+          {/* Video audio row */}
+          <div className="flex h-7 overflow-hidden border-t border-card">
+            {singleAudio ? (
+              <div className="w-full h-full flex items-center justify-center bg-emerald-800/50 overflow-hidden">
+                <span className="text-[10px] text-emerald-200/80 truncate px-2 font-medium">
+                  {audioTrackPlayer}
                 </span>
               </div>
-            );
-          })}
+            ) : (
+              segments.map((seg, idx) => {
+                const widthPercent =
+                  ((seg.stop - seg.start) / videoDuration) * 100;
+                return (
+                  <div
+                    key={`audio-${seg.id}`}
+                    className="h-full flex items-center justify-center bg-emerald-800/40 overflow-hidden"
+                    style={{
+                      width: `${widthPercent}%`,
+                      borderRight:
+                        idx < segments.length - 1
+                          ? '1px solid rgba(255,255,255,0.06)'
+                          : 'none',
+                    }}
+                  >
+                    <span className="text-[9px] text-emerald-200/50 truncate px-1">
+                      {getPlayerName(seg.video)}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
 
-          <div className="absolute top-0 right-0 flex flex-col items-end">
-            <div className="w-px h-2 bg-card" />
-            <span className="text-[9px] text-card-foreground leading-none mt-0.5">
-              {secToMmSs(videoDuration)}
-            </span>
+          {/* Music tracks row */}
+          {musicTracks.length > 0 && (
+            <div
+              ref={musicTimelineRef}
+              data-timeline-container
+              className="flex h-10 overflow-hidden border-t border-card"
+            >
+              {musicShowDropIndicator && musicOverIdx === 0 && (
+                <div className="flex-shrink-0 w-0.5 h-full bg-white rounded-full" />
+              )}
+              {musicTracks.map((track, idx) => {
+                const widthPercent =
+                  ((track.stop - track.start) / videoDuration) * 100;
+                const isDragging = musicDragIdx === idx;
+
+                return (
+                  <React.Fragment key={track.id}>
+                    <div
+                      className={[
+                        'relative flex items-center justify-center select-none cursor-grab group/music',
+                        'transition-opacity bg-purple-700/50 overflow-hidden',
+                        isDragging ? 'opacity-40' : 'opacity-100',
+                      ].join(' ')}
+                      style={{ width: `${widthPercent}%` }}
+                      draggable
+                      onDragStart={() => handleMusicDragStart(idx)}
+                      onDragOver={(e) => handleMusicDragOver(e, idx)}
+                      onDrop={handleMusicDrop2}
+                      onDragEnd={handleMusicDragEnd}
+                    >
+                      {track.waveform && <WaveformSVG peaks={track.waveform} />}
+                      <button
+                        type="button"
+                        className="absolute top-0.5 right-0.5 p-0.5 rounded text-white/40 hover:text-white opacity-0 group-hover/music:opacity-100 transition-opacity z-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeMusicTrack(idx);
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        <X size={10} />
+                      </button>
+                      <div className="text-white/90 flex flex-col items-center pointer-events-none px-1 overflow-hidden z-[1]">
+                        <span className="text-[10px] font-medium truncate max-w-full">
+                          {track.name}
+                        </span>
+                      </div>
+                    </div>
+
+                    {idx < musicTracks.length - 1 && (
+                      <div
+                        className={[
+                          'flex-shrink-0 w-1.5 h-full z-10 flex flex-col items-center justify-center gap-[2px] cursor-col-resize transition-colors',
+                          musicShowDropIndicator && musicOverIdx === idx + 1
+                            ? 'bg-white/30'
+                            : 'hover:bg-white/10',
+                        ].join(' ')}
+                        onMouseDown={(e) =>
+                          handleMusicEdgeMouseDown(e, idx, 'right')
+                        }
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setMusicOverIdx(idx + 1);
+                        }}
+                        onDrop={handleMusicDrop2}
+                      >
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={[
+                              'w-[2px] h-[2px] rounded-full',
+                              musicShowDropIndicator && musicOverIdx === idx + 1
+                                ? 'bg-white'
+                                : 'bg-white/25',
+                            ].join(' ')}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+              {musicShowDropIndicator &&
+                musicOverIdx === musicTracks.length && (
+                  <div className="flex-shrink-0 w-0.5 h-full bg-white rounded-full" />
+                )}
+            </div>
+          )}
+
+          {/* Playhead */}
+          <div
+            className="absolute top-0 w-0.5 bg-white/90 z-20 pointer-events-auto cursor-ew-resize"
+            style={{
+              left: `${playheadPct}%`,
+              height: '100%',
+              transform: 'translateX(-50%)',
+            }}
+            onMouseDown={handlePlayheadMouseDown}
+          >
+            <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white" />
           </div>
         </div>
+      </div>
+
+      {/* Playhead time display */}
+      <div className="flex justify-start ml-20 mt-1">
+        <span className="text-[10px] text-muted-foreground tabular-nums">
+          {secToMmSs(playheadTime)} / {secToMmSs(videoDuration)}
+        </span>
       </div>
 
       {/* Trash bin — accepts both video segments and music tracks */}
       {(canRemove || musicDragIdx !== null) && (
         <div
           className={[
-            'flex items-center justify-center gap-2 w-full h-8 mt-1 rounded-md border-2 border-dashed transition-colors',
+            'flex items-center justify-center gap-2 w-full h-8 mt-1.5 rounded-md border border-dashed transition-colors',
             overBin || musicOverBin
-              ? 'border-red-500 bg-red-500/20 text-red-400'
+              ? 'border-red-500 bg-red-500/10 text-red-400'
               : dragIdx !== null || musicDragIdx !== null
-                ? 'border-card bg-muted/10 text-card-foreground'
+                ? 'border-card bg-muted/10 text-muted-foreground'
                 : 'border-transparent bg-transparent text-transparent',
           ].join(' ')}
           onDragOver={(e) => {
@@ -1107,13 +1178,13 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
       )}
 
       {/* Music drop zone to add tracks */}
-      <div className="mx-2 mt-2 mb-1">
+      <div className="mt-2 mb-1">
         <div
           className={[
-            'flex items-center justify-center w-full h-10 rounded-md border-2 border-dashed transition-colors',
+            'flex items-center justify-center w-full h-9 rounded-md border border-dashed transition-colors',
             musicDragOver
-              ? 'border-primary bg-primary/10 text-primary'
-              : 'border-muted-foreground/30 text-muted-foreground',
+              ? 'border-purple-400 bg-purple-500/10 text-purple-300'
+              : 'border-border/40 text-muted-foreground/60 hover:border-card hover:text-muted-foreground/80',
           ].join(' ')}
           onDragOver={(e) => {
             e.preventDefault();
