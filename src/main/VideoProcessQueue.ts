@@ -926,38 +926,52 @@ export default class VideoProcessQueue {
 
     if (hasMusic) {
       // Music tracks: inputs start after the video segment inputs.
-      // Each track is trimmed to its allocated duration on the output timeline.
+      // Tracks may have gaps; we insert silence for any gaps.
       const musicStartIdx = item.segments.length;
-
-      item.musicTracks.forEach((track, i) => {
-        const trackDuration = track.stop - track.start;
-        filter +=
-          `[${musicStartIdx + i}:a]atrim=start=0:end=${trackDuration},` +
-          `asetpts=PTS-STARTPTS[m${i}];`;
-      });
-
-      if (item.musicTracks.length === 1) {
-        filter += `[m0]anull[musicraw];`;
-      } else {
-        const musicInputs = item.musicTracks.map((_, i) => `[m${i}]`).join('');
-        filter += `${musicInputs}concat=n=${item.musicTracks.length}:v=0:a=1[musicraw];`;
-      }
-
-      // Pad music with silence to match the video duration so ffmpeg
-      // doesn't truncate the output to the shorter audio stream.
       const totalVideoDuration = item.segments.reduce(
         (sum, s) => sum + (s.stop - s.start),
         0,
       );
-      const totalMusicDuration = item.musicTracks.reduce(
-        (sum, t) => sum + (t.stop - t.start),
-        0,
-      );
 
-      if (totalMusicDuration < totalVideoDuration) {
-        filter += `[musicraw]apad=whole_dur=${totalVideoDuration}[music];`;
+      // Sort tracks by start time and build an ordered list of
+      // audio pieces (silence gaps + music tracks) to concat.
+      const sorted = [...item.musicTracks]
+        .map((t, i) => ({ ...t, inputIdx: i }))
+        .sort((a, b) => a.start - b.start);
+
+      const pieces: string[] = [];
+      let cursor = 0;
+      let silenceCount = 0;
+
+      for (const track of sorted) {
+        // Insert silence for the gap before this track.
+        if (track.start > cursor + 0.01) {
+          const gapDuration = track.start - cursor;
+          const silLabel = `sil${silenceCount++}`;
+          filter += `aevalsrc=0:d=${gapDuration}[${silLabel}];`;
+          pieces.push(`[${silLabel}]`);
+        }
+
+        const trackDuration = track.stop - track.start;
+        filter +=
+          `[${musicStartIdx + track.inputIdx}:a]atrim=start=0:end=${trackDuration},` +
+          `asetpts=PTS-STARTPTS[m${track.inputIdx}];`;
+        pieces.push(`[m${track.inputIdx}]`);
+        cursor = track.stop;
+      }
+
+      // Silence after the last track to fill to video duration.
+      if (cursor < totalVideoDuration - 0.01) {
+        const gapDuration = totalVideoDuration - cursor;
+        const silLabel = `sil${silenceCount++}`;
+        filter += `aevalsrc=0:d=${gapDuration}[${silLabel}];`;
+        pieces.push(`[${silLabel}]`);
+      }
+
+      if (pieces.length === 1) {
+        filter += `${pieces[0]}anull[music];`;
       } else {
-        filter += `[musicraw]anull[music];`;
+        filter += `${pieces.join('')}concat=n=${pieces.length}:v=0:a=1[music];`;
       }
 
       // Video-only concat.
