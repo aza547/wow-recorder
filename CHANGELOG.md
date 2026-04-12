@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [7.6.2] - 2026-04-12
+### Added
 - [Issue 695](https://github.com/aza547/wow-recorder/issues/695) - Warn users when Advanced Combat Logging is disabled in WoW settings.
 
 ### Fixed
