@@ -158,8 +158,8 @@ export default class Manager {
     if (success) {
       this.setConfigValid();
       this.poller.start();
-      this.watchConfigWtfFiles();
-      this.checkAdvancedLogging();
+      await this.watchConfigWtfFiles();
+      await this.checkAdvancedLogging();
     }
 
     this.reconfiguring = false;
@@ -203,8 +203,8 @@ export default class Manager {
     await DiskClient.getInstance().refreshStatus();
     await DiskClient.getInstance().refreshVideos();
 
-    this.watchConfigWtfFiles();
-    this.checkAdvancedLogging();
+    await this.watchConfigWtfFiles();
+    await this.checkAdvancedLogging();
   }
 
   /**
