@@ -379,19 +379,20 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
 
   const normalizeMusicTracks = (tracks: KillVideoMusicTrack[]) => {
     if (tracks.length === 0) return tracks;
-    const totalDuration = videoDuration;
-    const totalTrackDuration = tracks.reduce(
-      (sum, t) => sum + (t.stop - t.start),
-      0,
-    );
-    const scale = totalDuration / totalTrackDuration;
+
+    // Place tracks sequentially at their natural duration, capping at
+    // the total video length. No stretching — a 40s track in an 8min
+    // video only occupies a small slice.
     let cursor = 0;
-    return tracks.map((t) => {
-      const duration = (t.stop - t.start) * scale;
-      const next = { ...t, start: cursor, stop: cursor + duration };
-      cursor += duration;
-      return next;
-    });
+    return tracks
+      .map((t) => {
+        if (cursor >= videoDuration) return null;
+        const duration = Math.min(t.stop - t.start, videoDuration - cursor);
+        const next = { ...t, start: cursor, stop: cursor + duration };
+        cursor += duration;
+        return next;
+      })
+      .filter((t): t is KillVideoMusicTrack => t !== null);
   };
 
   const getAudioFileDuration = (file: File): Promise<number> => {
@@ -822,14 +823,12 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
               </span>
             </div>
           </div>
-          {musicTracks.length > 0 && (
-            <div className="h-8 flex items-center gap-1.5 px-2.5 border-t border-border/20">
-              <Music size={12} className="shrink-0 text-purple-400/70" />
-              <span className="text-[11px] text-muted-foreground font-medium">
-                Music
-              </span>
-            </div>
-          )}
+          <div className="h-8 flex items-center gap-1.5 px-2.5 border-t border-border/20">
+            <Music size={12} className="shrink-0 text-purple-400/70" />
+            <span className="text-[11px] text-muted-foreground font-medium">
+              Music
+            </span>
+          </div>
         </div>
 
         {/* Timeline content */}
@@ -1011,94 +1010,121 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
             )}
           </div>
 
-          {/* Music tracks row */}
-          {musicTracks.length > 0 && (
-            <div
-              ref={musicTimelineRef}
-              data-timeline-container
-              className="flex h-8 overflow-hidden border-t border-border/20"
-            >
-              {musicShowDropIndicator && musicOverIdx === 0 && (
-                <div className="flex-shrink-0 w-0.5 h-full bg-white rounded-full" />
-              )}
-              {musicTracks.map((track, idx) => {
-                const widthPercent =
-                  ((track.stop - track.start) / videoDuration) * 100;
-                const isDragging = musicDragIdx === idx;
-
-                return (
-                  <React.Fragment key={track.id}>
-                    <div
-                      className={[
-                        'relative flex items-center justify-center select-none cursor-grab group/music',
-                        'transition-opacity bg-purple-700/50 overflow-hidden',
-                        isDragging ? 'opacity-40' : 'opacity-100',
-                      ].join(' ')}
-                      style={{ width: `${widthPercent}%` }}
-                      draggable
-                      onDragStart={() => handleMusicDragStart(idx)}
-                      onDragOver={(e) => handleMusicDragOver(e, idx)}
-                      onDrop={handleMusicDrop2}
-                      onDragEnd={handleMusicDragEnd}
-                    >
-                      {track.waveform && <WaveformSVG peaks={track.waveform} />}
-                      <button
-                        type="button"
-                        className="absolute top-0.5 right-0.5 p-0.5 rounded text-white/40 hover:text-white opacity-0 group-hover/music:opacity-100 transition-opacity z-10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeMusicTrack(idx);
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
-                      >
-                        <X size={10} />
-                      </button>
-                      <div className="text-white/90 flex flex-col items-center pointer-events-none px-1 overflow-hidden z-[1]">
-                        <span className="text-[10px] font-medium truncate max-w-full">
-                          {track.name}
-                        </span>
-                      </div>
-                    </div>
-
-                    {idx < musicTracks.length - 1 && (
-                      <div
-                        className={[
-                          'flex-shrink-0 w-1.5 h-full z-10 flex flex-col items-center justify-center gap-[2px] cursor-col-resize transition-colors',
-                          musicShowDropIndicator && musicOverIdx === idx + 1
-                            ? 'bg-white/30'
-                            : 'hover:bg-white/10',
-                        ].join(' ')}
-                        onMouseDown={(e) =>
-                          handleMusicEdgeMouseDown(e, idx, 'right')
-                        }
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          setMusicOverIdx(idx + 1);
-                        }}
-                        onDrop={handleMusicDrop2}
-                      >
-                        {Array.from({ length: 3 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className={[
-                              'w-[2px] h-[2px] rounded-full',
-                              musicShowDropIndicator && musicOverIdx === idx + 1
-                                ? 'bg-white'
-                                : 'bg-white/25',
-                            ].join(' ')}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-              {musicShowDropIndicator &&
-                musicOverIdx === musicTracks.length && (
+          {/* Music tracks row / drop zone */}
+          <div
+            ref={musicTimelineRef}
+            data-timeline-container
+            className={[
+              'flex h-8 overflow-hidden border-t border-border/20 transition-colors',
+              musicDragOver ? 'bg-purple-500/10' : '',
+            ].join(' ')}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (musicDragIdx === null) setMusicDragOver(true);
+            }}
+            onDragLeave={() => setMusicDragOver(false)}
+            onDrop={(e) => {
+              if (musicDragIdx !== null) {
+                handleMusicDrop2(e);
+              } else {
+                handleMusicDrop(e);
+              }
+            }}
+          >
+            {musicTracks.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center gap-1.5 text-muted-foreground/40">
+                <Music size={12} />
+                <span className="text-[10px]">
+                  {getLocalePhrase(language, Phrase.KillVideoMusicDropHint)}
+                </span>
+              </div>
+            ) : (
+              <>
+                {musicShowDropIndicator && musicOverIdx === 0 && (
                   <div className="flex-shrink-0 w-0.5 h-full bg-white rounded-full" />
                 )}
-            </div>
-          )}
+                {musicTracks.map((track, idx) => {
+                  const widthPercent =
+                    ((track.stop - track.start) / videoDuration) * 100;
+                  const isDragging = musicDragIdx === idx;
+
+                  return (
+                    <React.Fragment key={track.id}>
+                      <div
+                        className={[
+                          'relative flex items-center justify-center select-none cursor-grab group/music',
+                          'transition-opacity bg-purple-700/50 overflow-hidden',
+                          isDragging ? 'opacity-40' : 'opacity-100',
+                        ].join(' ')}
+                        style={{ width: `${widthPercent}%` }}
+                        draggable
+                        onDragStart={() => handleMusicDragStart(idx)}
+                        onDragOver={(e) => handleMusicDragOver(e, idx)}
+                        onDrop={handleMusicDrop2}
+                        onDragEnd={handleMusicDragEnd}
+                      >
+                        {track.waveform && (
+                          <WaveformSVG peaks={track.waveform} />
+                        )}
+                        <button
+                          type="button"
+                          className="absolute top-0.5 right-0.5 p-0.5 rounded text-white/40 hover:text-white opacity-0 group-hover/music:opacity-100 transition-opacity z-10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMusicTrack(idx);
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                        >
+                          <X size={10} />
+                        </button>
+                        <div className="text-white/90 flex flex-col items-center pointer-events-none px-1 overflow-hidden z-[1]">
+                          <span className="text-[10px] font-medium truncate max-w-full">
+                            {track.name}
+                          </span>
+                        </div>
+                      </div>
+
+                      {idx < musicTracks.length - 1 && (
+                        <div
+                          className={[
+                            'flex-shrink-0 w-1.5 h-full z-10 flex flex-col items-center justify-center gap-[2px] cursor-col-resize transition-colors',
+                            musicShowDropIndicator && musicOverIdx === idx + 1
+                              ? 'bg-white/30'
+                              : 'hover:bg-white/10',
+                          ].join(' ')}
+                          onMouseDown={(e) =>
+                            handleMusicEdgeMouseDown(e, idx, 'right')
+                          }
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setMusicOverIdx(idx + 1);
+                          }}
+                          onDrop={handleMusicDrop2}
+                        >
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div
+                              key={i}
+                              className={[
+                                'w-[2px] h-[2px] rounded-full',
+                                musicShowDropIndicator &&
+                                musicOverIdx === idx + 1
+                                  ? 'bg-white'
+                                  : 'bg-white/25',
+                              ].join(' ')}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+                {musicShowDropIndicator &&
+                  musicOverIdx === musicTracks.length && (
+                    <div className="flex-shrink-0 w-0.5 h-full bg-white rounded-full" />
+                  )}
+              </>
+            )}
+          </div>
 
           {/* Playhead */}
           <div
@@ -1153,29 +1179,6 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           </span>
         </div>
       )}
-
-      {/* Music drop zone to add tracks */}
-      <div className="mt-2 mb-1">
-        <div
-          className={[
-            'flex items-center justify-center w-full h-9 rounded-md border border-dashed transition-colors',
-            musicDragOver
-              ? 'border-purple-400 bg-purple-500/10 text-purple-300'
-              : 'border-border/40 text-muted-foreground/60 hover:border-card hover:text-muted-foreground/80',
-          ].join(' ')}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setMusicDragOver(true);
-          }}
-          onDragLeave={() => setMusicDragOver(false)}
-          onDrop={handleMusicDrop}
-        >
-          <Music size={14} className="mr-2" />
-          <span className="text-xs">
-            {getLocalePhrase(language, Phrase.KillVideoMusicDropHint)}
-          </span>
-        </div>
-      </div>
     </div>
   );
 };

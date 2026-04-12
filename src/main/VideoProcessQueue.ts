@@ -937,10 +937,27 @@ export default class VideoProcessQueue {
       });
 
       if (item.musicTracks.length === 1) {
-        filter += `[m0]anull[music];`;
+        filter += `[m0]anull[musicraw];`;
       } else {
         const musicInputs = item.musicTracks.map((_, i) => `[m${i}]`).join('');
-        filter += `${musicInputs}concat=n=${item.musicTracks.length}:v=0:a=1[music];`;
+        filter += `${musicInputs}concat=n=${item.musicTracks.length}:v=0:a=1[musicraw];`;
+      }
+
+      // Pad music with silence to match the video duration so ffmpeg
+      // doesn't truncate the output to the shorter audio stream.
+      const totalVideoDuration = item.segments.reduce(
+        (sum, s) => sum + (s.stop - s.start),
+        0,
+      );
+      const totalMusicDuration = item.musicTracks.reduce(
+        (sum, t) => sum + (t.stop - t.start),
+        0,
+      );
+
+      if (totalMusicDuration < totalVideoDuration) {
+        filter += `[musicraw]apad=whole_dur=${totalVideoDuration}[music];`;
+      } else {
+        filter += `[musicraw]anull[music];`;
       }
 
       // Video-only concat.
