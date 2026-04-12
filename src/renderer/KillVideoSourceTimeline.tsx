@@ -194,6 +194,39 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     };
   }, [musicTracks, setMusicTracks]);
 
+  // Fetch audio waveform data for video segments.
+  const [videoWaveforms, setVideoWaveforms] = useState<
+    Record<string, number[]>
+  >({});
+
+  useEffect(() => {
+    const sources = segments
+      .map((s) => s.video.videoSource)
+      .filter((src, i, arr) => arr.indexOf(src) === i)
+      .filter((src) => !src.startsWith('https://'));
+
+    // Only fetch sources we haven't already got.
+    const pending = sources.filter((src) => !videoWaveforms[src]);
+    if (pending.length === 0) return;
+
+    let cancelled = false;
+
+    const fetchWaveforms = async () => {
+      for (const src of pending) {
+        if (cancelled) return;
+        const peaks = await ipc.getWaveform(src, 200);
+        if (cancelled || peaks.length === 0) continue;
+        setVideoWaveforms((prev) => ({ ...prev, [src]: peaks }));
+      }
+    };
+
+    fetchWaveforms();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [segments]);
+
   // Sync music audio playback with the video preview and playhead.
   useEffect(() => {
     const hasMusicTracks = musicTracks.length > 0;
@@ -872,10 +905,6 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
                     ].join(' ')}
                     style={{
                       width: `${widthPercent}%`,
-                      borderRight:
-                        idx < segments.length - 1
-                          ? '1px solid rgba(255,255,255,0.08)'
-                          : 'none',
                     }}
                     draggable
                     onDragStart={() => handleDragStart(idx)}
@@ -886,7 +915,13 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
                     {/* Video portion */}
                     <div
                       className="relative h-14 flex items-center justify-center"
-                      style={{ backgroundColor: bgColor }}
+                      style={{
+                        backgroundColor: bgColor,
+                        borderRight:
+                          idx < segments.length - 1
+                            ? '1px solid rgba(255,255,255,0.08)'
+                            : 'none',
+                      }}
                     >
                       <img
                         src={
@@ -940,20 +975,42 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
                     </div>
 
                     {/* Audio portion */}
-                    <div className="h-8 flex items-center justify-center bg-emerald-800/40 border-t border-border/20 overflow-hidden">
-                      <span className="text-[9px] text-emerald-200/50 truncate px-1">
-                        {singleAudio
-                          ? audioTrackPlayer
-                          : getPlayerName(seg.video)}
-                      </span>
+                    <div
+                      className="relative h-8 flex items-center justify-center bg-emerald-800/40 border-t border-border/20 overflow-hidden"
+                      style={{
+                        borderRight:
+                          !singleAudio && idx < segments.length - 1
+                            ? '1px solid rgba(255,255,255,0.06)'
+                            : 'none',
+                      }}
+                    >
+                      {!singleAudio &&
+                        videoWaveforms[seg.video.videoSource] &&
+                        (() => {
+                          const allPeaks =
+                            videoWaveforms[seg.video.videoSource];
+                          const startPct = seg.start / videoDuration;
+                          const stopPct = seg.stop / videoDuration;
+                          const from = Math.floor(startPct * allPeaks.length);
+                          const to = Math.ceil(stopPct * allPeaks.length);
+                          return (
+                            <WaveformSVG peaks={allPeaks.slice(from, to)} />
+                          );
+                        })()}
+                      {!singleAudio && (
+                        <span className="text-[9px] text-emerald-200/50 truncate px-1 z-[1]">
+                          {getPlayerName(seg.video)}
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Resize handle spanning both rows */}
+                  {/* Resize handle spanning video row (and audio row when not single audio) */}
                   {idx < segments.length - 1 && (
                     <div
-                      className="absolute top-0 h-full w-3 z-10 cursor-col-resize"
+                      className="absolute top-0 w-3 z-10 cursor-col-resize"
                       style={{
+                        height: singleAudio ? '3.5rem' : '100%',
                         left: `${segments.slice(0, idx + 1).reduce((sum, s) => sum + ((s.stop - s.start) / videoDuration) * 100, 0)}%`,
                         transform: 'translateX(-50%)',
                       }}
@@ -970,6 +1027,26 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
             })}
             {showDropIndicator && overIdx === segments.length && (
               <div className="flex-shrink-0 w-0.5 bg-white rounded-full" />
+            )}
+
+            {/* Single audio mode: centered label spanning entire audio row */}
+            {singleAudio && (
+              <div className="absolute bottom-0 left-0 right-0 h-8 flex items-center justify-center pointer-events-none z-[1]">
+                {(() => {
+                  const src = segments.find(
+                    (s) => s.video.player?._name === audioTrackPlayer,
+                  )?.video.videoSource;
+                  return (
+                    src &&
+                    videoWaveforms[src] && (
+                      <WaveformSVG peaks={videoWaveforms[src]} />
+                    )
+                  );
+                })()}
+                <span className="text-[9px] text-emerald-200/50 truncate px-1">
+                  {audioTrackPlayer}
+                </span>
+              </div>
             )}
           </div>
 
