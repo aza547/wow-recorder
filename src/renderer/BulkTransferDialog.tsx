@@ -49,7 +49,7 @@ const BulkTransferDialog = ({
       if (upload) {
         ipc.sendMessage('videoButtonCloud', ['upload', rv.videoSource]);
       } else {
-        ipc.sendMessage('videoButtonDisk', ['download', rv]);
+        ipc.sendMessage('videoButtonCloud', ['download', rv]);
       }
     });
   };
