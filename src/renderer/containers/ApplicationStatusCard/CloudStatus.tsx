@@ -2,7 +2,7 @@ import { Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
 import { CloudDownload, CloudUpload } from 'lucide-react';
 import { AppState, CloudState } from 'main/types';
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import {
   HoverCard,
   HoverCardContent,
@@ -15,11 +15,12 @@ import StatusLight, {
 
 type StatusProps = {
   appState: AppState;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 };
 
 const ipc = window.electron.ipcRenderer;
 
-const CloudStatus = ({ appState }: StatusProps) => {
+const CloudStatus = ({ appState, setPreviewEnabled }: StatusProps) => {
   const { cloudStatus, language } = appState;
 
   const [cloudState, setCloudState] = useState<CloudState>({
@@ -161,7 +162,10 @@ const CloudStatus = ({ appState }: StatusProps) => {
   };
 
   return (
-    <HoverCard openDelay={300}>
+    <HoverCard
+      openDelay={300}
+      onOpenChange={(open) => setPreviewEnabled(!open)}
+    >
       <HoverCardTrigger>
         <div className="w-full h-full flex relative rounded-md border-t border-[rgba(255,255,255,10%)] hover:cursor-pointer">
           <StatusLight
@@ -183,7 +187,7 @@ const CloudStatus = ({ appState }: StatusProps) => {
             {renderUploadIcon()}
           </div>
         </div>
-        <HoverCardContent className="w-[260px] mx-4">
+        <HoverCardContent className="w-fit mx-4">
           {description}
         </HoverCardContent>
       </HoverCardTrigger>
