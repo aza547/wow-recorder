@@ -1,12 +1,17 @@
+import { Dispatch, SetStateAction } from 'react';
 import { AppState } from 'main/types';
 
 import CloudStatus from './CloudStatus';
 
 type CloudStatusCardProps = {
   appState: AppState;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 };
 
-const CloudStatusCard = ({ appState }: CloudStatusCardProps) => {
+const CloudStatusCard = ({
+  appState,
+  setPreviewEnabled,
+}: CloudStatusCardProps) => {
   return (
     <div className="w-full h-14 rounded-md mb-4 flex relative">
       <div
@@ -23,7 +28,10 @@ const CloudStatusCard = ({ appState }: CloudStatusCardProps) => {
           id="gradient-layer"
           className="w-full h-full rounded-md bg-gradient-to-r from-background-dark-gradient-from to-transparent absolute"
         />
-        <CloudStatus appState={appState} />
+        <CloudStatus
+          appState={appState}
+          setPreviewEnabled={setPreviewEnabled}
+        />
       </div>
     </div>
   );
