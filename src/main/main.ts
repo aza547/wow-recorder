@@ -35,6 +35,7 @@ import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
+import { getPermissionsGate } from './platform';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -466,6 +467,15 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
     videoPlayerSettings.volume = settings.volume;
   }
 });
+
+ipcMain.handle('permissions:snapshot', () => getPermissionsGate().snapshot());
+
+ipcMain.on(
+  'permissions:open-settings',
+  (_evt, key: 'screen' | 'microphone' | 'accessibility') => {
+    getPermissionsGate().openSettingsFor(key);
+  },
+);
 
 /**
  * Shutdown the app if all windows closed.

@@ -13,6 +13,10 @@ import type {
   SourceDimensions,
 } from 'main/platform/recorder/types';
 import { TChatMessageWithId } from 'types/api';
+import type {
+  PermissionsSnapshot,
+  PermissionKey,
+} from 'main/platform/permissions/IPermissionsGate';
 
 declare global {
   interface Window {
@@ -100,6 +104,14 @@ declare global {
 
         clipVideo(video: RendererVideo, offset: number, duration: number): void;
       };
+    };
+    permissions: {
+      snapshot: () => Promise<PermissionsSnapshot>;
+      openSettingsFor: (key: PermissionKey) => void;
+      refresh: () => Promise<PermissionsSnapshot>;
+    };
+    platformInfo: {
+      platform: NodeJS.Platform;
     };
   }
 }

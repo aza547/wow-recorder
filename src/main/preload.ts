@@ -255,3 +255,14 @@ contextBridge.exposeInMainWorld('electron', {
     },
   },
 });
+
+contextBridge.exposeInMainWorld('permissions', {
+  snapshot: () => ipcRenderer.invoke('permissions:snapshot'),
+  openSettingsFor: (key: 'screen' | 'microphone' | 'accessibility') =>
+    ipcRenderer.send('permissions:open-settings', key),
+  refresh: () => ipcRenderer.invoke('permissions:snapshot'),
+});
+
+contextBridge.exposeInMainWorld('platformInfo', {
+  platform: process.platform,
+});
