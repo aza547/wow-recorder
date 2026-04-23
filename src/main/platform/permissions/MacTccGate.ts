@@ -7,16 +7,24 @@ import type {
 } from './IPermissionsGate';
 
 const SETTINGS_URL: Record<PermissionKey, string> = {
-  screen: 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture',
-  microphone: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone',
-  accessibility: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility',
+  screen:
+    'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture',
+  microphone:
+    'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone',
+  accessibility:
+    'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility',
 };
 
 function normaliseMediaStatus(s: string): PermissionStatus {
   // Electron returns 'not-determined' | 'granted' | 'denied' | 'restricted' | 'unknown'.
   // We collapse 'restricted' (institutional MDM block) into 'denied' since the
   // user cannot grant it from our settings flow anyway.
-  if (s === 'granted' || s === 'denied' || s === 'not-determined' || s === 'unknown') {
+  if (
+    s === 'granted' ||
+    s === 'denied' ||
+    s === 'not-determined' ||
+    s === 'unknown'
+  ) {
     return s as PermissionStatus;
   }
   if (s === 'restricted') return 'denied';
@@ -32,8 +40,12 @@ function normaliseMediaStatus(s: string): PermissionStatus {
 export default class MacTccGate implements IPermissionsGate {
   snapshot(): PermissionsSnapshot {
     return {
-      screen: normaliseMediaStatus(systemPreferences.getMediaAccessStatus('screen')),
-      microphone: normaliseMediaStatus(systemPreferences.getMediaAccessStatus('microphone')),
+      screen: normaliseMediaStatus(
+        systemPreferences.getMediaAccessStatus('screen'),
+      ),
+      microphone: normaliseMediaStatus(
+        systemPreferences.getMediaAccessStatus('microphone'),
+      ),
       accessibility: systemPreferences.isTrustedAccessibilityClient(false)
         ? 'granted'
         : 'denied',

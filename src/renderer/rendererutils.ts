@@ -143,13 +143,13 @@ const getAllDeathMarkers = (video: RendererVideo, language: Language) => {
   );
 
   const singleDeaths = Object.entries(groupedDeathsByTimestamp)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     .map(([_, arr]) => arr)
     .filter((arr) => arr.length === 1)
     .map((arr) => arr[0]);
 
   const simultaenousDeaths = Object.entries(groupedDeathsByTimestamp)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     .map(([_, arr]) => arr)
     .filter((arr) => arr.length !== 1)
     .map((arr) => arr[0]);
