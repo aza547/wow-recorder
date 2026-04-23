@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from './components/Select/Select';
 
-import { ObsListItem } from 'noobs';
+import type { ObsListItem } from 'main/platform/recorder/types';
 import {
   Popover,
   PopoverContent,
