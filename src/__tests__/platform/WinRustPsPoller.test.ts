@@ -40,7 +40,9 @@ describe('WinRustPsPoller', () => {
 
   it('emits STARTED when Retail is detected and recordRetail is true', (done) => {
     const child = new FakeChild();
-    (spawn as jest.Mock).mockReturnValue(child as unknown as ChildProcessWithoutNullStreams);
+    (spawn as jest.Mock).mockReturnValue(
+      child as unknown as ChildProcessWithoutNullStreams,
+    );
 
     const poller = new WinRustPsPoller();
     poller.on(WowProcessEvent.STARTED, () => {
@@ -54,7 +56,9 @@ describe('WinRustPsPoller', () => {
 
   it('emits STOPPED after STARTED when Retail disappears', (done) => {
     const child = new FakeChild();
-    (spawn as jest.Mock).mockReturnValue(child as unknown as ChildProcessWithoutNullStreams);
+    (spawn as jest.Mock).mockReturnValue(
+      child as unknown as ChildProcessWithoutNullStreams,
+    );
 
     const poller = new WinRustPsPoller();
     const events: string[] = [];
@@ -67,6 +71,9 @@ describe('WinRustPsPoller', () => {
 
     poller.start();
     child.stdout.emit('data', JSON.stringify({ Retail: true, Classic: false }));
-    child.stdout.emit('data', JSON.stringify({ Retail: false, Classic: false }));
+    child.stdout.emit(
+      'data',
+      JSON.stringify({ Retail: false, Classic: false }),
+    );
   });
 });

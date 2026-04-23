@@ -11,7 +11,10 @@ import type { IProcessPoller } from './IProcessPoller';
  * the app, which periodically emits `{"Retail":bool,"Classic":bool}`
  * JSON on stdout.
  */
-export default class WinRustPsPoller extends EventEmitter implements IProcessPoller {
+export default class WinRustPsPoller
+  extends EventEmitter
+  implements IProcessPoller
+{
   private cfg = ConfigService.getInstance();
   private wowRunning = false;
   private child: ChildProcessWithoutNullStreams | undefined;

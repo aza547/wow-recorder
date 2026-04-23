@@ -17,7 +17,10 @@ export type {
   IFileReveal,
   IFfmpegPathProvider,
 };
-export type { RecorderCapabilities, SignalCallback } from './recorder/IRecorderBackend';
+export type {
+  RecorderCapabilities,
+  SignalCallback,
+} from './recorder/IRecorderBackend';
 export type { WowFlavour } from './paths/IWowPathResolver';
 export type {
   ObsData,

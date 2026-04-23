@@ -1,5 +1,9 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import type { ObsProperty, SceneItemPosition, SourceDimensions } from './platform/recorder/types';
+import type {
+  ObsProperty,
+  SceneItemPosition,
+  SourceDimensions,
+} from './platform/recorder/types';
 import { AudioSourceType, RendererVideo, SceneItem } from './types';
 import { TChatMessageWithId } from 'types/api';
 

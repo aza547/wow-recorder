@@ -1,5 +1,5 @@
 jest.mock('child_process', () => ({
-  exec: jest.fn((_cmd: string, _cb: () => void) => undefined),
+  exec: jest.fn(),
 }));
 
 import { exec } from 'child_process';

@@ -31,7 +31,11 @@ export interface IRecorderBackend {
   capabilities: RecorderCapabilities;
 
   // Lifecycle
-  init(noobsPath: string, logPath: string, signalCallback: SignalCallback): void;
+  init(
+    noobsPath: string,
+    logPath: string,
+    signalCallback: SignalCallback,
+  ): void;
   initPreview(windowHandle: Buffer): void;
   shutdown(): void;
   setBuffering(enabled: boolean): void;

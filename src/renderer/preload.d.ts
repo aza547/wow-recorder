@@ -1,8 +1,17 @@
 import ElectronStore from 'electron-store';
 import { QualityPresets } from 'main/obsEnums';
 import { Channels } from 'main/preload';
-import { AudioSourceType, KillVideoSegment, RendererVideo, SceneItem } from 'main/types';
-import type { ObsProperty, SceneItemPosition, SourceDimensions } from 'main/platform/recorder/types';
+import {
+  AudioSourceType,
+  KillVideoSegment,
+  RendererVideo,
+  SceneItem,
+} from 'main/types';
+import type {
+  ObsProperty,
+  SceneItemPosition,
+  SourceDimensions,
+} from 'main/platform/recorder/types';
 import { TChatMessageWithId } from 'types/api';
 
 declare global {

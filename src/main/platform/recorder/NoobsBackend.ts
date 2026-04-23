@@ -36,10 +36,18 @@ export default class NoobsBackend implements IRecorderBackend {
   init(noobsPath: string, logPath: string, cb: SignalCallback): void {
     noobs.Init(noobsPath, logPath, cb);
   }
-  initPreview(hwnd: Buffer): void { noobs.InitPreview(hwnd); }
-  shutdown(): void { noobs.Shutdown(); }
-  setBuffering(enabled: boolean): void { noobs.SetBuffering(enabled); }
-  setDrawSourceOutline(enabled: boolean): void { noobs.SetDrawSourceOutline(enabled); }
+  initPreview(hwnd: Buffer): void {
+    noobs.InitPreview(hwnd);
+  }
+  shutdown(): void {
+    noobs.Shutdown();
+  }
+  setBuffering(enabled: boolean): void {
+    noobs.SetBuffering(enabled);
+  }
+  setDrawSourceOutline(enabled: boolean): void {
+    noobs.SetDrawSourceOutline(enabled);
+  }
 
   // Video context
   resetVideoContext(fps: number, width: number, height: number): void {
@@ -53,9 +61,15 @@ export default class NoobsBackend implements IRecorderBackend {
   configurePreview(x: number, y: number, width: number, height: number): void {
     noobs.ConfigurePreview(x, y, width, height);
   }
-  showPreview(): void { noobs.ShowPreview(); }
-  hidePreview(): void { noobs.HidePreview(); }
-  disablePreview(): void { noobs.DisablePreview(); }
+  showPreview(): void {
+    noobs.ShowPreview();
+  }
+  hidePreview(): void {
+    noobs.HidePreview();
+  }
+  disablePreview(): void {
+    noobs.DisablePreview();
+  }
 
   // Recording output
   setRecordingCfg(outputPath: string, container: string): void {
@@ -72,9 +86,15 @@ export default class NoobsBackend implements IRecorderBackend {
   createSource(id: string, type: string): string {
     return noobs.CreateSource(id, type);
   }
-  deleteSource(id: string): void { noobs.DeleteSource(id); }
-  addSourceToScene(name: string): void { noobs.AddSourceToScene(name); }
-  removeSourceFromScene(name: string): void { noobs.RemoveSourceFromScene(name); }
+  deleteSource(id: string): void {
+    noobs.DeleteSource(id);
+  }
+  addSourceToScene(name: string): void {
+    noobs.AddSourceToScene(name);
+  }
+  removeSourceFromScene(name: string): void {
+    noobs.RemoveSourceFromScene(name);
+  }
   getSourceSettings(id: string): ObsData {
     return noobs.GetSourceSettings(id);
   }
@@ -95,15 +115,33 @@ export default class NoobsBackend implements IRecorderBackend {
   }
 
   // Audio
-  setVolmeterEnabled(enabled: boolean): void { noobs.SetVolmeterEnabled(enabled); }
-  setForceMono(enabled: boolean): void { noobs.SetForceMono(enabled); }
-  setAudioSuppression(enabled: boolean): void { noobs.SetAudioSuppression(enabled); }
-  setMuteAudioInputs(muted: boolean): void { noobs.SetMuteAudioInputs(muted); }
+  setVolmeterEnabled(enabled: boolean): void {
+    noobs.SetVolmeterEnabled(enabled);
+  }
+  setForceMono(enabled: boolean): void {
+    noobs.SetForceMono(enabled);
+  }
+  setAudioSuppression(enabled: boolean): void {
+    noobs.SetAudioSuppression(enabled);
+  }
+  setMuteAudioInputs(muted: boolean): void {
+    noobs.SetMuteAudioInputs(muted);
+  }
 
   // Recording lifecycle
-  startBuffer(): void { noobs.StartBuffer(); }
-  startRecording(offsetSeconds: number): void { noobs.StartRecording(offsetSeconds); }
-  stopRecording(): void { noobs.StopRecording(); }
-  forceStopRecording(): void { noobs.ForceStopRecording(); }
-  getLastRecording(): string { return noobs.GetLastRecording(); }
+  startBuffer(): void {
+    noobs.StartBuffer();
+  }
+  startRecording(offsetSeconds: number): void {
+    noobs.StartRecording(offsetSeconds);
+  }
+  stopRecording(): void {
+    noobs.StopRecording();
+  }
+  forceStopRecording(): void {
+    noobs.ForceStopRecording();
+  }
+  getLastRecording(): string {
+    return noobs.GetLastRecording();
+  }
 }
