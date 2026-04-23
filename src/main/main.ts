@@ -200,7 +200,14 @@ const createWindow = async () => {
   });
 
   // We need to do this AFTER creating the window as it's used by the preview.
-  Recorder.getInstance().initializeObs();
+  const perms = getPermissionsGate();
+  if (perms.canRecord()) {
+    Recorder.getInstance().initializeObs();
+  } else {
+    console.warn(
+      '[Main] Screen Recording permission missing — recorder disabled until granted',
+    );
+  }
   await manager.startup();
 
   if (firstTimeSetup) {
@@ -268,7 +275,13 @@ const createWindow = async () => {
     return { action: 'deny' };
   });
 
-  uIOhook.start();
+  if (getPermissionsGate().canUseGlobalHotkeys()) {
+    uIOhook.start();
+  } else {
+    console.warn(
+      '[Main] Accessibility permission missing — global hotkeys disabled',
+    );
+  }
 
   // Runs the auto-updater, which checks GitHub for new releases
   // and will prompt the user if any are available.
