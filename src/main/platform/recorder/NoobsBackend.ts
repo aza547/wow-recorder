@@ -4,7 +4,6 @@ import type {
   ObsData,
   ObsProperty,
   SceneItemPosition,
-  Signal,
   SourceDimensions,
 } from './types';
 import type {
@@ -35,7 +34,7 @@ export default class NoobsBackend implements IRecorderBackend {
 
   // Lifecycle
   init(noobsPath: string, logPath: string, cb: SignalCallback): void {
-    noobs.Init(noobsPath, logPath, cb as (s: Signal) => void);
+    noobs.Init(noobsPath, logPath, cb);
   }
   initPreview(hwnd: Buffer): void { noobs.InitPreview(hwnd); }
   shutdown(): void { noobs.Shutdown(); }
