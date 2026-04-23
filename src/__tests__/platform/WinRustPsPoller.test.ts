@@ -9,16 +9,18 @@ jest.mock('electron', () => ({
   app: { isPackaged: false },
 }));
 
+// Per-test control of config flags.
+const cfgFlags: { [k: string]: boolean } = {
+  recordRetail: true,
+  recordClassic: false,
+  recordEra: false,
+};
+
 jest.mock('config/ConfigService', () => ({
   __esModule: true,
   default: {
     getInstance: () => ({
-      get: jest.fn((key: string) => {
-        if (key === 'recordRetail') return true;
-        if (key === 'recordClassic') return false;
-        if (key === 'recordEra') return false;
-        return undefined;
-      }),
+      get: jest.fn((key: string) => cfgFlags[key]),
     }),
   },
 }));
@@ -33,34 +35,35 @@ class FakeChild extends EventEmitter {
   kill = jest.fn();
 }
 
+function makePoller() {
+  const child = new FakeChild();
+  (spawn as jest.Mock).mockReturnValue(
+    child as unknown as ChildProcessWithoutNullStreams,
+  );
+  const poller = new WinRustPsPoller();
+  poller.start();
+  return { child, poller };
+}
+
 describe('WinRustPsPoller', () => {
   beforeEach(() => {
     (spawn as jest.Mock).mockReset();
+    cfgFlags.recordRetail = true;
+    cfgFlags.recordClassic = false;
+    cfgFlags.recordEra = false;
   });
 
   it('emits STARTED when Retail is detected and recordRetail is true', (done) => {
-    const child = new FakeChild();
-    (spawn as jest.Mock).mockReturnValue(
-      child as unknown as ChildProcessWithoutNullStreams,
-    );
-
-    const poller = new WinRustPsPoller();
+    const { child, poller } = makePoller();
     poller.on(WowProcessEvent.STARTED, () => {
       expect(poller.isWowRunning()).toBe(true);
       done();
     });
-
-    poller.start();
     child.stdout.emit('data', JSON.stringify({ Retail: true, Classic: false }));
   });
 
   it('emits STOPPED after STARTED when Retail disappears', (done) => {
-    const child = new FakeChild();
-    (spawn as jest.Mock).mockReturnValue(
-      child as unknown as ChildProcessWithoutNullStreams,
-    );
-
-    const poller = new WinRustPsPoller();
+    const { child, poller } = makePoller();
     const events: string[] = [];
     poller.on(WowProcessEvent.STARTED, () => events.push('started'));
     poller.on(WowProcessEvent.STOPPED, () => {
@@ -68,12 +71,52 @@ describe('WinRustPsPoller', () => {
       expect(events).toEqual(['started', 'stopped']);
       done();
     });
-
-    poller.start();
     child.stdout.emit('data', JSON.stringify({ Retail: true, Classic: false }));
-    child.stdout.emit(
-      'data',
-      JSON.stringify({ Retail: false, Classic: false }),
-    );
+    child.stdout.emit('data', JSON.stringify({ Retail: false, Classic: false }));
+  });
+
+  it('emits STARTED on Classic when recordClassic is true', (done) => {
+    cfgFlags.recordRetail = false;
+    cfgFlags.recordClassic = true;
+    const { child, poller } = makePoller();
+    poller.on(WowProcessEvent.STARTED, () => done());
+    child.stdout.emit('data', JSON.stringify({ Retail: false, Classic: true }));
+  });
+
+  it('emits STARTED on Classic when recordEra is true (Era shares Classic binary)', (done) => {
+    cfgFlags.recordRetail = false;
+    cfgFlags.recordEra = true;
+    const { child, poller } = makePoller();
+    poller.on(WowProcessEvent.STARTED, () => done());
+    child.stdout.emit('data', JSON.stringify({ Retail: false, Classic: true }));
+  });
+
+  it('does NOT emit when Retail is detected but recordRetail is false', (done) => {
+    cfgFlags.recordRetail = false;
+    const { child, poller } = makePoller();
+    const events: string[] = [];
+    poller.on(WowProcessEvent.STARTED, () => events.push('started'));
+    poller.on(WowProcessEvent.STOPPED, () => events.push('stopped'));
+    child.stdout.emit('data', JSON.stringify({ Retail: true, Classic: false }));
+    // Give the event loop a tick, then assert nothing emitted.
+    setImmediate(() => {
+      expect(events).toEqual([]);
+      expect(poller.isWowRunning()).toBe(false);
+      done();
+    });
+  });
+
+  it('does not throw or emit on malformed JSON stdout', (done) => {
+    const { child, poller } = makePoller();
+    const events: string[] = [];
+    poller.on(WowProcessEvent.STARTED, () => events.push('started'));
+    poller.on(WowProcessEvent.STOPPED, () => events.push('stopped'));
+    expect(() => {
+      child.stdout.emit('data', '{Retail:true,Classic:false}{Retail:false');
+    }).not.toThrow();
+    setImmediate(() => {
+      expect(events).toEqual([]);
+      done();
+    });
   });
 });
