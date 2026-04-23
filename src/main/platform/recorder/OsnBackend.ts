@@ -43,7 +43,12 @@ export default class OsnBackend implements IRecorderBackend {
     previewWidth: number;
     previewHeight: number;
   } {
-    return { canvasWidth: 0, canvasHeight: 0, previewWidth: 0, previewHeight: 0 };
+    return {
+      canvasWidth: 0,
+      canvasHeight: 0,
+      previewWidth: 0,
+      previewHeight: 0,
+    };
   }
 
   configurePreview(_x: number, _y: number, _w: number, _h: number): void {}

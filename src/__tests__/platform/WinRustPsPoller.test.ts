@@ -72,7 +72,10 @@ describe('WinRustPsPoller', () => {
       done();
     });
     child.stdout.emit('data', JSON.stringify({ Retail: true, Classic: false }));
-    child.stdout.emit('data', JSON.stringify({ Retail: false, Classic: false }));
+    child.stdout.emit(
+      'data',
+      JSON.stringify({ Retail: false, Classic: false }),
+    );
   });
 
   it('emits STARTED on Classic when recordClassic is true', (done) => {

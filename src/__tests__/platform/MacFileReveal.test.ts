@@ -12,7 +12,10 @@ describe('MacFileReveal', () => {
 
   it('invokes `open -R <path>` with the file path unchanged', () => {
     new MacFileReveal().reveal('/Users/me/Movies/clip.mkv');
-    expect(spawn).toHaveBeenCalledWith('open', ['-R', '/Users/me/Movies/clip.mkv']);
+    expect(spawn).toHaveBeenCalledWith('open', [
+      '-R',
+      '/Users/me/Movies/clip.mkv',
+    ]);
   });
 
   it('does not rewrite forward slashes on mac paths', () => {

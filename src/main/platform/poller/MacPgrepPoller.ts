@@ -15,7 +15,10 @@ const CLASSIC_PROCESS = 'World of Warcraft Classic';
  * applied before emitting. Era shares the Classic binary on mac,
  * mirroring the Windows behaviour.
  */
-export default class MacPgrepPoller extends EventEmitter implements IProcessPoller {
+export default class MacPgrepPoller
+  extends EventEmitter
+  implements IProcessPoller
+{
   private cfg = ConfigService.getInstance();
   private wowRunning = false;
   private timer: NodeJS.Timeout | undefined;
@@ -40,10 +43,9 @@ export default class MacPgrepPoller extends EventEmitter implements IProcessPoll
   }
 
   private poll = () => {
-    Promise.all([
-      this.pgrep(RETAIL_PROCESS),
-      this.pgrep(CLASSIC_PROCESS),
-    ]).then(([retail, classic]) => this.apply(retail, classic));
+    Promise.all([this.pgrep(RETAIL_PROCESS), this.pgrep(CLASSIC_PROCESS)]).then(
+      ([retail, classic]) => this.apply(retail, classic),
+    );
   };
 
   private pgrep(name: string): Promise<boolean> {
