@@ -53,7 +53,12 @@ export default class NoobsBackend implements IRecorderBackend {
   resetVideoContext(fps: number, width: number, height: number): void {
     noobs.ResetVideoContext(fps, width, height);
   }
-  getPreviewInfo(): { canvasWidth: number; canvasHeight: number } {
+  getPreviewInfo(): {
+    canvasWidth: number;
+    canvasHeight: number;
+    previewWidth: number;
+    previewHeight: number;
+  } {
     return noobs.GetPreviewInfo();
   }
 

@@ -43,7 +43,12 @@ export interface IRecorderBackend {
 
   // Video context
   resetVideoContext(fps: number, width: number, height: number): void;
-  getPreviewInfo(): { canvasWidth: number; canvasHeight: number };
+  getPreviewInfo(): {
+    canvasWidth: number;
+    canvasHeight: number;
+    previewWidth: number;
+    previewHeight: number;
+  };
 
   // Preview window
   configurePreview(x: number, y: number, width: number, height: number): void;

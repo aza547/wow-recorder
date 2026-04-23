@@ -33,7 +33,7 @@ import { send } from './main';
 import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
-import { specializationById, wowInstallSearchPaths } from './constants';
+import { specializationById } from './constants';
 import { getFileReveal, getWowPathResolver } from 'main/platform';
 import {
   getPlayerName,
