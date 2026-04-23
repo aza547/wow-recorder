@@ -103,7 +103,7 @@
   },
   "jest": {
     "transform": {
-      "\\.(ts|tsx|js|jsx)$": "ts-jest"
+      "\\.(ts|tsx|js|jsx)$": ["ts-jest", { "isolatedModules": true }]
     },
     "moduleDirectories": ["node_modules", "src"]
   },
