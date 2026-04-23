@@ -17,7 +17,6 @@ import {
   getMetadataForVideo,
   rendererVideoToMetadata,
   getFileInfo,
-  fixPathWhenPackaged,
   logAxiosError,
   tryUnlink,
   buildKillVideoMetadata,
@@ -29,20 +28,13 @@ import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
 import DiskClient from 'storage/DiskClient';
 import Recorder from './Recorder';
+import { getFfmpegPathProvider } from 'main/platform';
 
 const atomicQueue = require('atomic-queue');
 const devMode = process.env.NODE_ENV === 'development';
 const isDebug = devMode || process.env.DEBUG_PROD === 'true';
 
-// Use the dynamically linked ffmpeg.exe we package with OBS in noobs. This
-// allows us to avoid including a static ffmpeg.exe which is an extra 60MB.
-const ffmpegPathRel = 'node_modules/noobs/dist/bin/ffmpeg.exe';
-
-let ffmpegPathAbs = devMode
-  ? path.resolve(__dirname, '../../release/app/', ffmpegPathRel)
-  : path.resolve(__dirname, '../../', ffmpegPathRel);
-
-ffmpegPathAbs = fixPathWhenPackaged(ffmpegPathAbs);
+const ffmpegPathAbs = getFfmpegPathProvider().getPath();
 ffmpeg.setFfmpegPath(ffmpegPathAbs);
 
 /**
