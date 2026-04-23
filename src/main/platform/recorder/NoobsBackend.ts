@@ -6,6 +6,7 @@ import type {
   SceneItemPosition,
   SourceDimensions,
 } from './types';
+import { CaptureModeCapability } from './IRecorderBackend';
 import type {
   BackendInitOptions,
   IRecorderBackend,
@@ -19,7 +20,11 @@ import type {
  */
 export default class NoobsBackend implements IRecorderBackend {
   public readonly capabilities: RecorderCapabilities = {
-    captureModes: ['game_capture', 'window_capture', 'monitor_capture'],
+    captureModes: [
+      CaptureModeCapability.GAME,
+      CaptureModeCapability.WINDOW,
+      CaptureModeCapability.MONITOR,
+    ],
     encoders: [
       ESupportedEncoders.OBS_X264,
       ESupportedEncoders.AMD_H264,

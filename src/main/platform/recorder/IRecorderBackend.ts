@@ -7,12 +7,24 @@ import type {
 } from './types';
 
 /**
+ * Platform-neutral capture-mode identifiers. Each backend maps these
+ * to its own native source IDs (Windows noobs: `game_capture` /
+ * `window_capture` / `monitor_capture`; macOS OSN: `window_capture` /
+ * `display_capture`, no game-capture equivalent).
+ */
+export enum CaptureModeCapability {
+  GAME = 'GAME',
+  WINDOW = 'WINDOW',
+  MONITOR = 'MONITOR',
+}
+
+/**
  * Recording-backend feature flags. Renderer reads these via IPC so the
  * Settings UI can show only options supported on the current platform.
  */
 export interface RecorderCapabilities {
   /** Capture source types this backend can create. */
-  captureModes: Array<'game_capture' | 'window_capture' | 'monitor_capture'>;
+  captureModes: CaptureModeCapability[];
   /** Encoder ids (ESupportedEncoders values) this backend exposes. */
   encoders: string[];
   /** Whether libobs replay buffer is supported. */
