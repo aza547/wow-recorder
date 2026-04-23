@@ -175,12 +175,16 @@ const createWindow = async () => {
     await installExtensions();
   }
 
+  const isMac = process.platform === 'darwin';
+
   window = new BrowserWindow({
     show: false,
     height: 1020 * 0.9,
     width: 1980 * 0.8,
     icon: getAssetPath('./icon/small-icon.png'),
-    frame: false,
+    frame: isMac, // native traffic-light chrome on macOS, borderless on Windows
+    titleBarStyle: isMac ? 'hiddenInset' : undefined,
+    trafficLightPosition: isMac ? { x: 12, y: 14 } : undefined,
     title: `Warcraft Recorder v${appVersion}`,
     webPreferences: {
       sandbox: true, // Good security practice.
