@@ -360,6 +360,25 @@ New harness under `tests/e2e/`. Uses `@playwright/test` with the `electron` laun
 
 Runs on both `windows-latest` and `macos-latest` GitHub Actions runners. Fast enough for per-PR gating. Does **not** attempt real recording — Playwright can't drive a real GPU capture session meaningfully, and TCC isn't user-grantable in CI.
 
+#### Layer 2.5 — Post-TCC integration (dev machine / seeded runner)
+Once TCC permissions are granted **once** on a machine for the signed app bundle (Screen Recording, Microphone, Accessibility), the grants persist across runs. On such a machine, Playwright-for-Electron can drive the **full recording pipeline** end-to-end, merging Layer 1's log-replay fixtures with Layer 2's UI driver. Covers:
+- Launch app → navigate to manual record UI → start buffer → verify `Recorder` state transitions.
+- While buffer is live, feed a pre-captured combat log fixture (from `tests/src/`) to trigger an activity (`ENCOUNTER_START` line etc.).
+- Assert activity starts, metadata JSON written, MKV + derived MP4 land in `storagePath` with expected name + duration.
+- Stop recording via UI, verify post-processing completes (fluent-ffmpeg cut round-trips).
+- Run on real VideoToolbox encoder path to catch OSN-specific regressions the pure-UI layer can't.
+
+Preconditions (run-once per machine):
+- Signed dev build installed to `/Applications/` (or dev path in TCC database).
+- User grants Screen Recording + Accessibility through System Settings.
+- Optionally microphone for audio-source tests.
+
+Tooling:
+- `npm run test:e2e:integration` — opt-in command, not run on PR CI. Checks precondition via `MacTccGate` and refuses to run with clear error if any grant missing.
+- Two runner options once stable: (a) dev machines run pre-release; (b) self-hosted mac runner with SIP off + pre-seeded TCC database runs on merge-to-main.
+
+Scope note: does **not** require WoW — the log-replay approach feeds fixtures directly into the log path, so the recorder captures desktop/window output while we pretend WoW is in-game. Sufficient to exercise capture pipeline + parser + activity lifecycle.
+
 #### Layer 3 — Manual smoke checklist (macOS)
 Unavoidable for the bits CI can't touch. Executed before each release on real hardware:
 - First-run permissions wizard fires; Screen Recording + Mic prompts succeed.
@@ -417,6 +436,7 @@ On first run (or first launch after cross-platform cloud config sync):
 13. Auto-updater end-to-end verified.
 14. Python log-replay E2E ported cross-platform (env-var paths, POSIX strftime, parameterised binary path). Full retail/classic/era suites run on mac CI.
 15. Playwright-for-Electron UI regression harness added under `tests/e2e/`, wired into GitHub Actions for both `windows-latest` and `macos-latest`. Permissions-wizard stub landed behind `WCR_TCC_STUB` env var.
+16. Post-TCC integration suite (`npm run test:e2e:integration`) — Playwright-driven full-pipeline tests that exercise real VideoToolbox capture + log-replay fixtures on any machine with TCC grants. Opt-in, not PR-gating. Self-hosted mac runner wiring deferred until suite is stable.
 
 ### Effort estimate
 - Phase 0: 3–5 days
