@@ -17,7 +17,7 @@
 - Linux support (no current demand; design leaves door open via the same adapter pattern).
 - Game Capture on macOS — not possible; no DirectX/Vulkan hook injection equivalent on the platform.
 - AV1 hardware encoding on macOS — Apple's media engine lacks AV1 encode as of 2026.
-- Porting the Python E2E test scripts to macOS (those drive WoW directly; out of scope).
+- Fully unattended CI verification of real on-GPU capture with TCC-gated macOS APIs — still requires a manual smoke pass before release (Screen Recording consent is kernel-gated and user-interactive).
 
 ---
 
@@ -340,11 +340,28 @@ Notarization handled in `scripts/notarize.js` using `@electron/notarize` with en
   - `WowPathResolver.mac.test.ts` — mock `existsSync`, verify path detection.
 
 ### Integration / E2E
-- Python E2E scripts stay Windows-only (they drive an installed `.exe`).
-- New `resources/test-scripts/mac/smoke.sh` — launch, manual record, verify output file exists + is playable.
-- Full combat E2E (arena/raid/M+) remains Windows-only — no mac CI WoW instance.
 
-### Manual smoke checklist (macOS)
+Three layers, each with a clear scope:
+
+#### Layer 1 — Python log-replay E2E (cross-platform)
+The existing `tests/src/*.py` scripts are **not UI automation** — they're log-replay harnesses. They spawn the packaged app binary via subprocess, write pre-captured combat-log fixtures with refreshed timestamps into the configured `retailLogPath` / `classicLogPath`, then assert that MP4 + metadata JSON output appears. This is portable to macOS with small changes:
+- Replace hardcoded Windows paths in `tests/src/test.py` (top-level `RETAIL_LOG_PATH`, `CLASSIC_LOG_PATH`, `ERA_LOG_PATH`, `PTR_LOG_PATH`, `STORAGE_PATH`) with env-var overrides so CI can point at macOS paths.
+- Replace Windows-only `%#m` / `%#d` strftime specifiers in `replace_date()` with POSIX `%-m` / `%-d`. Either branch on `os.name` or use a shared helper.
+- Parameterize the app binary path: today tests expect an installed `.exe`; extend to accept a path to `.app/Contents/MacOS/WarcraftRecorder` on darwin.
+- All test fixtures (combat log lines, metadata assertions) are platform-neutral — no changes needed.
+- Keep the test harness checked in at `tests/src/`; mac CI runs the same suite with different env.
+
+#### Layer 2 — Playwright-for-Electron UI regression (cross-platform)
+New harness under `tests/e2e/`. Uses `@playwright/test` with the `electron` launcher to drive the dev or packaged app. Covers:
+- Settings UI: capture-mode dropdown shows `game_capture` only on Windows; shows only `window_capture`/`monitor_capture` on macOS. Encoder dropdown shows platform-appropriate options.
+- First-run permissions wizard on macOS: assert the blocking modal appears when `MacTccGate.getMediaAccessStatus('screen')` is stubbed as `denied` (inject stubs via an env-var backdoor in `MacTccGate` — see Layer 3 note below).
+- Window chrome: assert `titleBarStyle: 'hiddenInset'` on macOS launch, `frame: false` custom chrome on Windows.
+- Platform-agnostic: settings persistence, navigation, video list rendering, preview rendering.
+
+Runs on both `windows-latest` and `macos-latest` GitHub Actions runners. Fast enough for per-PR gating. Does **not** attempt real recording — Playwright can't drive a real GPU capture session meaningfully, and TCC isn't user-grantable in CI.
+
+#### Layer 3 — Manual smoke checklist (macOS)
+Unavoidable for the bits CI can't touch. Executed before each release on real hardware:
 - First-run permissions wizard fires; Screen Recording + Mic prompts succeed.
 - Window Capture latches onto running WoW.
 - Recording produces valid MKV with VideoToolbox H.264.
@@ -352,6 +369,11 @@ Notarization handled in `scripts/notarize.js` using `@electron/notarize` with en
 - Global hotkey (push-to-talk) works post-Accessibility grant.
 - Auto-updater picks up a newer release.
 - Notarized DMG installs without Gatekeeper warning.
+
+#### TCC in CI — scope note
+Real TCC grants are kernel-gated and user-interactive. Two escape hatches for CI if we ever want to exercise the real permissions flow:
+- **Self-hosted macOS runner with SIP disabled** — pre-seed the TCC database with grants for the app bundle ID. Heavy ops burden, out of scope for Phase 3.
+- **Permissions stub via env var** — `MacTccGate` honors `WCR_TCC_STUB=screen:granted,mic:denied` in non-packaged builds for testing. Implemented as part of Layer 2 so Playwright can exercise both branches of the wizard. Production builds ignore the env var.
 
 ---
 
@@ -393,14 +415,16 @@ On first run (or first launch after cross-platform cloud config sync):
 11. Localisation sweep for mac-specific phrases across all 4 languages.
 12. Universal binary verified on M-series + Intel mac.
 13. Auto-updater end-to-end verified.
+14. Python log-replay E2E ported cross-platform (env-var paths, POSIX strftime, parameterised binary path). Full retail/classic/era suites run on mac CI.
+15. Playwright-for-Electron UI regression harness added under `tests/e2e/`, wired into GitHub Actions for both `windows-latest` and `macos-latest`. Permissions-wizard stub landed behind `WCR_TCC_STUB` env var.
 
 ### Effort estimate
 - Phase 0: 3–5 days
 - Phase 1: 5–7 days
 - Phase 2: 7–14 days (riskiest — OSN learning curve)
 - Phase 3: 3–5 days
-- Phase 4: 3 days
-- **Total: ~3–5 weeks of focused work.**
+- Phase 4: 5–7 days (includes Playwright harness + Python port)
+- **Total: ~3.5–6 weeks of focused work.**
 
 ---
 
