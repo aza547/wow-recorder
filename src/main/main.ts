@@ -130,7 +130,11 @@ const installExtensions = async () => {
  * Setup tray icon, menu and event listeners.
  */
 const setupTray = () => {
-  tray = new Tray(getAssetPath('./icon/small-icon.png'));
+  const isMac = process.platform === 'darwin';
+  const trayIconPath = isMac
+    ? getAssetPath('./icon/tray/Template.png')
+    : getAssetPath('./icon/small-icon.png');
+  tray = new Tray(trayIconPath);
 
   // This wont update without an app restart but whatever.
   const language = cfg.get<string>('language') as Language;
