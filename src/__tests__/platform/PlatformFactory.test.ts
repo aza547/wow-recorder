@@ -1,4 +1,4 @@
-jest.mock('noobs');
+jest.mock('noobs', () => ({}), { virtual: true });
 jest.mock('electron', () => ({
   app: { isPackaged: false },
 }));
