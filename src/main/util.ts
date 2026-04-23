@@ -1101,6 +1101,26 @@ const runFirstTimeSetupActionsObs = () => {
 const runFirstTimeSetupActionsNoObs = () => {
   const cfg = ConfigService.getInstance();
 
+  if (process.platform === 'darwin') {
+    if (cfg.get<string>('obsCaptureMode') === 'game_capture') {
+      console.info(
+        '[Util] Migrating obsCaptureMode game_capture → window_capture on macOS',
+      );
+      cfg.set('obsCaptureMode', 'window_capture');
+    }
+
+    const currentEncoder = cfg.get<string>('obsRecEncoder');
+    const macCompatibleEncoders = new Set(['OBS_X264']);
+    if (currentEncoder && !macCompatibleEncoders.has(currentEncoder)) {
+      console.info(
+        '[Util] Migrating obsRecEncoder',
+        currentEncoder,
+        '→ OBS_X264 on macOS',
+      );
+      cfg.set('obsRecEncoder', 'OBS_X264');
+    }
+  }
+
   const isRetailConfigured =
     cfg.get<boolean>('recordRetail') && cfg.get<string>('retailLogPath');
 
