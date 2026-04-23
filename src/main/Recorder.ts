@@ -47,12 +47,14 @@ import {
   getObsVideoConfig,
   getOverlayConfig,
 } from '../utils/configUtils';
-import noobs, {
+import type {
   ObsData,
   SceneItemPosition,
   Signal,
   SourceDimensions,
-} from 'noobs';
+} from 'main/platform/recorder/types';
+import { getRecorderBackend } from 'main/platform';
+import type { IRecorderBackend } from 'main/platform/recorder/IRecorderBackend';
 import { getNativeWindowHandle, send } from './main';
 import { ipcMain } from 'electron';
 import Poller from 'utils/Poller';
@@ -92,6 +94,12 @@ export default class Recorder extends EventEmitter {
    * ConfigService instance.
    */
   private cfg = ConfigService.getInstance();
+
+  /**
+   * Platform recorder backend — Windows wraps `noobs`, macOS wraps
+   * `obs-studio-node` (added in a later phase).
+   */
+  private backend: IRecorderBackend = getRecorderBackend();
 
   /**
    * Timer for latching onto a window for either game capture or
@@ -237,7 +245,7 @@ export default class Recorder extends EventEmitter {
      */
     ipcMain.handle('audioSettingsOpen', () => {
       console.info('[Manager] Audio settings were opened');
-      noobs.SetVolmeterEnabled(true);
+      this.backend.setVolmeterEnabled(true);
 
       if (Poller.getInstance().isWowRunning()) {
         console.info('[Manager] Wont touch audio sources as WoW is running');
@@ -250,7 +258,7 @@ export default class Recorder extends EventEmitter {
 
     ipcMain.handle('audioSettingsClosed', () => {
       console.info('[Manager] Audio settings were closed');
-      noobs.SetVolmeterEnabled(false);
+      this.backend.setVolmeterEnabled(false);
 
       if (Poller.getInstance().isWowRunning()) {
         console.info('[Manager] Wont touch audio sources as WoW is running');
@@ -304,21 +312,21 @@ export default class Recorder extends EventEmitter {
       'createAudioSource',
       (event, id: string, type: AudioSourceType) => {
         console.info('[Manager] Creating audio source', id, 'of type', type);
-        const name = noobs.CreateSource(id, type);
+        const name = this.backend.createSource(id, type);
         console.info('[Manager] Created audio source', name);
-        noobs.AddSourceToScene(name);
+        this.backend.addSourceToScene(name);
         return name;
       },
     );
 
     ipcMain.handle('getAudioSourceProperties', (_event, id: string) => {
       console.info('[Manager] Getting audio source properties for', id);
-      return noobs.GetSourceProperties(id);
+      return this.backend.getSourceProperties(id);
     });
 
     ipcMain.on('deleteAudioSource', (_event, id: string) => {
       console.info('[Manager] Deleting audio source', id);
-      noobs.DeleteSource(id);
+      this.backend.deleteSource(id);
     });
 
     ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
@@ -328,9 +336,9 @@ export default class Recorder extends EventEmitter {
         'to',
         value,
       );
-      const settings = noobs.GetSourceSettings(id);
+      const settings = this.backend.getSourceSettings(id);
       settings['device_id'] = value;
-      noobs.SetSourceSettings(id, settings);
+      this.backend.setSourceSettings(id, settings);
     });
 
     ipcMain.on('setAudioSourceWindow', (_event, id: string, value: string) => {
@@ -340,10 +348,10 @@ export default class Recorder extends EventEmitter {
         'to',
         value,
       );
-      const settings = noobs.GetSourceSettings(id);
+      const settings = this.backend.getSourceSettings(id);
       settings['window'] = value;
       settings['priority'] = 2; // Executable matching
-      noobs.SetSourceSettings(id, settings);
+      this.backend.setSourceSettings(id, settings);
     });
 
     ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
@@ -353,17 +361,17 @@ export default class Recorder extends EventEmitter {
         'to',
         value,
       );
-      noobs.SetSourceVolume(id, value);
+      this.backend.setSourceVolume(id, value);
     });
 
     ipcMain.on('setForceMono', (_event, enabled: boolean) => {
       console.info('[Manager] Setting force mono to', enabled);
-      noobs.SetForceMono(enabled);
+      this.backend.setForceMono(enabled);
     });
 
     ipcMain.on('setAudioSuppression', (_event, enabled: boolean) => {
       console.info('[Manager] Setting audio suppression to', enabled);
-      noobs.SetAudioSuppression(enabled);
+      this.backend.setAudioSuppression(enabled);
     });
 
     ipcMain.on(
@@ -513,8 +521,8 @@ export default class Recorder extends EventEmitter {
     const { height, width } = obsResolutions[this.resolution];
     console.info('[Recorder] Configure OBS video context');
 
-    const canvas = noobs.GetPreviewInfo();
-    noobs.ResetVideoContext(obsFPS, width, height);
+    const canvas = this.backend.getPreviewInfo();
+    this.backend.resetVideoContext(obsFPS, width, height);
 
     const { canvasHeight, canvasWidth } = canvas;
     const changedResolution = canvasHeight !== height || canvasWidth !== width;
@@ -538,7 +546,7 @@ export default class Recorder extends EventEmitter {
     // recovered in that event but MKV can. We will remux to MP4 for browser
     // player compatibility in the VideoProcessQueue.
     console.info('[Recorder] Set recording directory', outputPath);
-    noobs.SetRecordingCfg(outputPath, 'mkv');
+    this.backend.setRecordingCfg(outputPath, 'mkv');
 
     // Configure the encoder. It's possible that a user has replaced their
     // GPU since we last ran, so double check the encoder is still valid.
@@ -553,7 +561,7 @@ export default class Recorder extends EventEmitter {
     }
 
     const settings = Recorder.getEncoderSettings(encoder, obsQuality);
-    noobs.SetVideoEncoder(encoder, settings);
+    this.backend.setVideoEncoder(encoder, settings);
   }
 
   private static getEncoderSettings(encoder: string, quality: string) {
@@ -606,8 +614,8 @@ export default class Recorder extends EventEmitter {
         this.captureSource,
       );
 
-      noobs.RemoveSourceFromScene(this.captureSource);
-      noobs.DeleteSource(this.captureSource);
+      this.backend.removeSourceFromScene(this.captureSource);
+      this.backend.deleteSource(this.captureSource);
       this.captureSource = undefined;
       this.captureMode = CaptureMode.NONE;
     }
@@ -651,16 +659,16 @@ export default class Recorder extends EventEmitter {
       chatOverlayOwnImagePath,
     } = config;
 
-    const settings = noobs.GetSourceSettings(this.overlaySource);
+    const settings = this.backend.getSourceSettings(this.overlaySource);
 
-    noobs.SetSourceSettings(this.overlaySource, {
+    this.backend.setSourceSettings(this.overlaySource, {
       ...settings,
       file: chatOverlayOwnImagePath,
     });
 
-    noobs.AddSourceToScene(this.overlaySource);
+    this.backend.addSourceToScene(this.overlaySource);
 
-    noobs.SetSourcePos(this.overlaySource, {
+    this.backend.setSourcePos(this.overlaySource, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
@@ -686,16 +694,16 @@ export default class Recorder extends EventEmitter {
     const { chatOverlayXPosition, chatOverlayYPosition, chatOverlayScale } =
       config;
 
-    const settings = noobs.GetSourceSettings(this.overlaySource);
+    const settings = this.backend.getSourceSettings(this.overlaySource);
 
-    noobs.SetSourceSettings(this.overlaySource, {
+    this.backend.setSourceSettings(this.overlaySource, {
       ...settings,
       file: this.chatOverlayDefaultImage,
     });
 
-    noobs.AddSourceToScene(this.overlaySource);
+    this.backend.addSourceToScene(this.overlaySource);
 
-    noobs.SetSourcePos(this.overlaySource, {
+    this.backend.setSourcePos(this.overlaySource, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
@@ -722,8 +730,8 @@ export default class Recorder extends EventEmitter {
     uIOhook.off('mousedown', this.pushToTalkMouseListener);
     uIOhook.off('mouseup', this.pushToTalkMouseListener);
 
-    noobs.SetForceMono(config.obsForceMono);
-    noobs.SetAudioSuppression(config.obsAudioSuppression);
+    this.backend.setForceMono(config.obsForceMono);
+    this.backend.setAudioSuppression(config.obsAudioSuppression);
 
     config.audioSources.forEach((src) => {
       console.info('[Recorder] Create audio source', src.id);
@@ -731,16 +739,16 @@ export default class Recorder extends EventEmitter {
       // OBS may have renamed the source if there was a naming conflict,
       // log that for posterity. Use that name going forward even if it
       // doesn't match what we asked for.
-      const name = noobs.CreateSource(src.id, src.type);
+      const name = this.backend.createSource(src.id, src.type);
       console.info('[Recorder] Created audio source', name);
-      const settings = noobs.GetSourceSettings(name);
+      const settings = this.backend.getSourceSettings(name);
 
       if (src.type === AudioSourceType.PROCESS && src.device) {
         settings['window'] = src.device;
         settings['priority'] = 2; // Executable matching
-        noobs.SetSourceSettings(name, settings);
+        this.backend.setSourceSettings(name, settings);
       } else if (src.type !== AudioSourceType.PROCESS) {
-        const properties = noobs.GetSourceProperties(name);
+        const properties = this.backend.getSourceProperties(name);
         const available = properties.find((prop) => prop.name === 'device_id');
         assert(available && available.type === 'list'); // To help the compiler out.
 
@@ -778,14 +786,14 @@ export default class Recorder extends EventEmitter {
 
         // Finish configuring the source.
         settings['device_id'] = match.value;
-        noobs.SetSourceSettings(name, settings);
-        noobs.SetSourceVolume(name, src.volume);
+        this.backend.setSourceSettings(name, settings);
+        this.backend.setSourceVolume(name, src.volume);
       } else {
         // Can happen if a user adds an app source but never selects a window.
         console.warn('[Recorder] Unable to configure audio source', src);
       }
 
-      noobs.AddSourceToScene(name);
+      this.backend.addSourceToScene(name);
       this.audioSources.push(src);
     });
 
@@ -829,8 +837,8 @@ export default class Recorder extends EventEmitter {
 
     this.audioSources.forEach((src) => {
       console.info('[Recorder] Remove audio source', src.id);
-      noobs.RemoveSourceFromScene(src.id);
-      noobs.DeleteSource(src.id);
+      this.backend.removeSourceFromScene(src.id);
+      this.backend.deleteSource(src.id);
     });
 
     this.audioSources = [];
@@ -860,7 +868,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    noobs.Shutdown();
+    this.backend.shutdown();
     this.obsInitialized = false;
     console.info('[Recorder] OBS shut down successfully');
   }
@@ -875,7 +883,7 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    const encoders = noobs.ListVideoEncoders();
+    const encoders = this.backend.listVideoEncoders();
     console.info('[Recorder] Encoders:', encoders);
     return encoders;
   }
@@ -885,7 +893,7 @@ export default class Recorder extends EventEmitter {
    */
   public configurePreview(x: number, y: number, width: number, height: number) {
     console.info('[Recorder] Configure preview with', x, y, width, height);
-    noobs.ConfigurePreview(x, y, width, height);
+    this.backend.configurePreview(x, y, width, height);
   }
 
   /**
@@ -893,7 +901,7 @@ export default class Recorder extends EventEmitter {
    */
   public showPreview() {
     console.info('[Recorder] Show preview');
-    noobs.ShowPreview();
+    this.backend.showPreview();
   }
 
   /**
@@ -901,7 +909,7 @@ export default class Recorder extends EventEmitter {
    */
   public hidePreview() {
     console.info('[Recorder] Hide preview');
-    noobs.HidePreview();
+    this.backend.hidePreview();
   }
 
   /**
@@ -909,7 +917,7 @@ export default class Recorder extends EventEmitter {
    */
   public disablePreview() {
     console.info('[Recorder] Disable preview');
-    noobs.DisablePreview();
+    this.backend.disablePreview();
   }
 
   /**
@@ -949,7 +957,7 @@ export default class Recorder extends EventEmitter {
     }
 
     this.startQueue.empty();
-    noobs.StartBuffer();
+    this.backend.startBuffer();
 
     await Promise.race([
       this.startQueue.shift(),
@@ -977,7 +985,7 @@ export default class Recorder extends EventEmitter {
 
     // The native code expects an integer.
     const rounded = Math.round(offset);
-    noobs.StartRecording(rounded);
+    this.backend.startRecording(rounded);
   }
 
   /**
@@ -998,7 +1006,7 @@ export default class Recorder extends EventEmitter {
     }
 
     this.stopQueue.empty();
-    noobs.StopRecording();
+    this.backend.stopRecording();
     const wrote = this.stopQueue.shift();
 
     try {
@@ -1011,7 +1019,7 @@ export default class Recorder extends EventEmitter {
         'Failed to stop OBS cleanly. This may lead to miscut videos and is typically a symptom of encoder overload.',
       );
 
-      noobs.ForceStopRecording();
+      this.backend.forceStopRecording();
 
       await Promise.race([
         wrote,
@@ -1023,7 +1031,7 @@ export default class Recorder extends EventEmitter {
 
     // Now that we record in MKV we can still attempt to save
     // a recording here even if we failed to stop cleanly.
-    this.lastFile = noobs.GetLastRecording();
+    this.lastFile = this.backend.getLastRecording();
   }
 
   /**
@@ -1045,7 +1053,7 @@ export default class Recorder extends EventEmitter {
     }
 
     this.stopQueue.empty();
-    noobs.ForceStopRecording();
+    this.backend.forceStopRecording();
 
     const wrote = this.stopQueue.shift();
 
@@ -1100,14 +1108,14 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Noobs path:', noobsPath);
     console.info('[Recorder] Log path:', logPath);
-    noobs.Init(noobsPath, logPath, cb);
-    noobs.SetBuffering(true);
+    this.backend.init(noobsPath, logPath, cb);
+    this.backend.setBuffering(true);
 
     const hwnd = getNativeWindowHandle();
-    noobs.InitPreview(hwnd);
-    noobs.SetDrawSourceOutline(true);
+    this.backend.initPreview(hwnd);
+    this.backend.setDrawSourceOutline(true);
 
-    this.overlaySource = noobs.CreateSource(
+    this.overlaySource = this.backend.createSource(
       VideoSourceName.OVERLAY,
       'image_source',
     );
@@ -1177,14 +1185,14 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     this.captureMode = CaptureMode.WINDOW;
-    this.captureSource = noobs.CreateSource(
+    this.captureSource = this.backend.createSource(
       VideoSourceName.WINDOW,
       'window_capture',
     );
 
-    const settings = noobs.GetSourceSettings(this.captureSource);
+    const settings = this.backend.getSourceSettings(this.captureSource);
 
-    noobs.SetSourceSettings(this.captureSource, {
+    this.backend.setSourceSettings(this.captureSource, {
       ...settings,
       capture_mode: 'window',
       force_sdr: forceSdr,
@@ -1193,9 +1201,9 @@ export default class Recorder extends EventEmitter {
       compatibility: true,
     });
 
-    noobs.AddSourceToScene(this.captureSource);
+    this.backend.addSourceToScene(this.captureSource);
 
-    noobs.SetSourcePos(this.captureSource, {
+    this.backend.setSourcePos(this.captureSource, {
       x: videoSourceXPosition,
       y: videoSourceYPosition,
       scaleX: videoSourceScale,
@@ -1222,12 +1230,12 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     this.captureMode = CaptureMode.GAME;
-    this.captureSource = noobs.CreateSource(
+    this.captureSource = this.backend.createSource(
       VideoSourceName.GAME,
       'game_capture',
     );
 
-    const defaults = noobs.GetSourceSettings(this.captureSource);
+    const defaults = this.backend.getSourceSettings(this.captureSource);
 
     const settings = {
       ...defaults,
@@ -1248,9 +1256,9 @@ export default class Recorder extends EventEmitter {
       cropBottom: 0,
     };
 
-    noobs.SetSourceSettings(this.captureSource, settings);
-    noobs.AddSourceToScene(this.captureSource);
-    noobs.SetSourcePos(this.captureSource, position);
+    this.backend.setSourceSettings(this.captureSource, settings);
+    this.backend.addSourceToScene(this.captureSource);
+    this.backend.setSourcePos(this.captureSource, position);
   }
 
   /**
@@ -1269,13 +1277,13 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     this.captureMode = CaptureMode.MONITOR;
-    this.captureSource = noobs.CreateSource(
+    this.captureSource = this.backend.createSource(
       VideoSourceName.MONITOR,
       'monitor_capture',
     );
 
-    const defaults = noobs.GetSourceSettings(this.captureSource);
-    const properties = noobs.GetSourceProperties(this.captureSource);
+    const defaults = this.backend.getSourceSettings(this.captureSource);
+    const properties = this.backend.getSourceProperties(this.captureSource);
 
     const monitors = properties.find((p) => p.name === 'monitor_id');
 
@@ -1330,9 +1338,9 @@ export default class Recorder extends EventEmitter {
       cropBottom: 0,
     };
 
-    noobs.SetSourceSettings(this.captureSource, settings);
-    noobs.AddSourceToScene(this.captureSource);
-    noobs.SetSourcePos(this.captureSource, position);
+    this.backend.setSourceSettings(this.captureSource, settings);
+    this.backend.addSourceToScene(this.captureSource);
+    this.backend.setSourcePos(this.captureSource, position);
   }
 
   /**
@@ -1344,7 +1352,7 @@ export default class Recorder extends EventEmitter {
 
     if (this.overlaySource) {
       // Might be a no-op, we never actually delete this source.
-      noobs.RemoveSourceFromScene(this.overlaySource);
+      this.backend.removeSourceFromScene(this.overlaySource);
     }
 
     if (!chatOverlayEnabled) {
@@ -1371,7 +1379,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    noobs.SetMuteAudioInputs(true);
+    this.backend.setMuteAudioInputs(true);
 
     this.inputDevicesMuted = true;
     this.obsMicState = MicStatus.MUTED;
@@ -1386,7 +1394,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    noobs.SetMuteAudioInputs(false);
+    this.backend.setMuteAudioInputs(false);
 
     this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.LISTENING;
@@ -1499,7 +1507,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    const properties = noobs.GetSourceProperties(this.captureSource);
+    const properties = this.backend.getSourceProperties(this.captureSource);
     const windows = properties.find((item) => item.name === 'window');
 
     if (!windows) {
@@ -1517,9 +1525,9 @@ export default class Recorder extends EventEmitter {
 
     if (match) {
       console.info('[Recorder] Found matching window for game capture:', match);
-      const settings = noobs.GetSourceSettings(this.captureSource);
+      const settings = this.backend.getSourceSettings(this.captureSource);
       const updated = { ...settings, window: match.value };
-      noobs.SetSourceSettings(this.captureSource, updated);
+      this.backend.setSourceSettings(this.captureSource, updated);
       return;
     }
 
@@ -1552,7 +1560,7 @@ export default class Recorder extends EventEmitter {
     previewWidth: number;
     previewHeight: number;
   } {
-    return noobs.GetPreviewInfo();
+    return this.backend.getPreviewInfo();
   }
 
   /**
@@ -1577,7 +1585,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    const current = noobs.GetSourcePos(src);
+    const current = this.backend.getSourcePos(src);
 
     const position: SceneItemPosition & SourceDimensions = {
       x: current.x * sf,
@@ -1611,8 +1619,8 @@ export default class Recorder extends EventEmitter {
       cropBottom: number;
     },
   ) {
-    const previewInfo = noobs.GetPreviewInfo(); // Could be cached?
-    const current = noobs.GetSourcePos(src);
+    const previewInfo = this.backend.getPreviewInfo(); // Could be cached?
+    const current = this.backend.getSourcePos(src);
 
     // This is confusing because there are two forms of scaling at play
     // that we need to account for.
@@ -1641,7 +1649,7 @@ export default class Recorder extends EventEmitter {
       cropBottom: target.cropBottom / (sf * scale),
     };
 
-    noobs.SetSourcePos(src, updated);
+    this.backend.setSourcePos(src, updated);
 
     const item = src.startsWith('WCR Chat Overlay')
       ? SceneItem.OVERLAY
@@ -1700,8 +1708,8 @@ export default class Recorder extends EventEmitter {
     if (item === SceneItem.GAME) {
       console.info('[Recorder] Resetting game source so fit to window');
 
-      const { height, width } = noobs.GetSourcePos(src);
-      const { canvasHeight, canvasWidth } = noobs.GetPreviewInfo();
+      const { height, width } = this.backend.getSourcePos(src);
+      const { canvasHeight, canvasWidth } = this.backend.getPreviewInfo();
 
       const scaleX = canvasWidth / width;
       const scaleY = canvasHeight / height;
@@ -1720,7 +1728,7 @@ export default class Recorder extends EventEmitter {
     }
 
     // scaleX and scaleY are the same by this point as we maintain aspect ratio.
-    noobs.SetSourcePos(src, updated);
+    this.backend.setSourcePos(src, updated);
     this.saveSourcePosition(item, updated.x, updated.y, updated.scaleX);
   }
 
