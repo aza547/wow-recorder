@@ -104,7 +104,8 @@
   "jest": {
     "transform": {
       "\\.(ts|tsx|js|jsx)$": "ts-jest"
-    }
+    },
+    "moduleDirectories": ["node_modules", "src"]
   },
   "dependencies": {
     "@electron/notarize": "^3.0.0",
