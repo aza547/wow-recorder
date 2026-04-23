@@ -34,7 +34,7 @@ import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
 import { specializationById, wowInstallSearchPaths } from './constants';
-import { getWowPathResolver } from 'main/platform';
+import { getFileReveal, getWowPathResolver } from 'main/platform';
 import {
   getPlayerName,
   getPlayerSpecID,
@@ -65,8 +65,6 @@ const setupApplicationLogging = () => {
   Object.assign(console, log.functions);
   return path.dirname(logPath);
 };
-
-const { exec } = require('child_process');
 
 const getResolvedHtmlPath = () => {
   if (process.env.NODE_ENV === 'development') {
@@ -307,12 +305,11 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
 };
 
 /**
- * Open a folder in system explorer.
+ * Reveal a file in the system file manager (Explorer on Windows,
+ * Finder on macOS).
  */
 const openSystemExplorer = (filePath: string) => {
-  const windowsPath = filePath.replace(/\//g, '\\');
-  const cmd = `explorer.exe /select,"${windowsPath}"`;
-  exec(cmd, () => {});
+  getFileReveal().reveal(filePath);
 };
 
 /**
