@@ -34,6 +34,7 @@ import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
 import { specializationById, wowInstallSearchPaths } from './constants';
+import { getWowPathResolver } from 'main/platform';
 import {
   getPlayerName,
   getPlayerSpecID,
@@ -1108,12 +1109,11 @@ const runFirstTimeSetupActionsNoObs = () => {
 
   if (!isRetailConfigured) {
     console.info('[Util] Attempt to first time configure retail installation');
+    const resolver = getWowPathResolver();
 
-    for (let i = 0; i < wowInstallSearchPaths.length; i++) {
-      const installPath = wowInstallSearchPaths[i] + '\\_retail_\\Logs';
-      const installExists = existsSync(installPath);
-
-      if (installExists) {
+    for (const root of resolver.searchRoots()) {
+      const installPath = resolver.joinLogPath(root, 'retail');
+      if (existsSync(installPath)) {
         console.info('[Util] Found retail WoW installation at', installPath);
         cfg.set('retailLogPath', installPath);
         cfg.set('recordRetail', true);
@@ -1127,12 +1127,11 @@ const runFirstTimeSetupActionsNoObs = () => {
 
   if (!isClassicConfigured) {
     console.info('[Util] Attempt to first time configure classic installation');
+    const resolver = getWowPathResolver();
 
-    for (let i = 0; i < wowInstallSearchPaths.length; i++) {
-      const installPath = wowInstallSearchPaths[i] + '\\_classic_\\Logs';
-      const installExists = existsSync(installPath);
-
-      if (installExists) {
+    for (const root of resolver.searchRoots()) {
+      const installPath = resolver.joinLogPath(root, 'classic');
+      if (existsSync(installPath)) {
         console.info('[Util] Found classic WoW installation at', installPath);
         cfg.set('classicLogPath', installPath);
         cfg.set('recordClassic', true);
