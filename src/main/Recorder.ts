@@ -1108,7 +1108,11 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Noobs path:', noobsPath);
     console.info('[Recorder] Log path:', logPath);
-    this.backend.init(noobsPath, logPath, cb);
+    this.backend.init({
+      noobsDistPath: noobsPath,
+      logPath,
+      signalCallback: cb,
+    });
     this.backend.setBuffering(true);
 
     const hwnd = getNativeWindowHandle();

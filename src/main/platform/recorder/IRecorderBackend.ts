@@ -22,6 +22,21 @@ export interface RecorderCapabilities {
 export type SignalCallback = (signal: Signal) => void;
 
 /**
+ * Options passed to IRecorderBackend.init(). Each field may be
+ * backend-irrelevant (e.g. `noobsDistPath` only matters for NoobsBackend,
+ * but is still passed uniformly so the caller doesn't need platform
+ * branches).
+ */
+export interface BackendInitOptions {
+  /** Absolute path to libobs data/modules (Windows: `noobs/dist`). */
+  noobsDistPath: string;
+  /** Absolute path for OBS log output. */
+  logPath: string;
+  /** Signal callback for recording lifecycle events. */
+  signalCallback: SignalCallback;
+}
+
+/**
  * Abstract recorder backend. Windows implementation wraps `noobs`;
  * macOS implementation wraps `obs-studio-node` (added in a later plan).
  * Method shapes mirror the underlying `noobs` surface to keep the
@@ -31,11 +46,7 @@ export interface IRecorderBackend {
   capabilities: RecorderCapabilities;
 
   // Lifecycle
-  init(
-    noobsPath: string,
-    logPath: string,
-    signalCallback: SignalCallback,
-  ): void;
+  init(options: BackendInitOptions): void;
   initPreview(windowHandle: Buffer): void;
   shutdown(): void;
   setBuffering(enabled: boolean): void;

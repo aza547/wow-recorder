@@ -7,9 +7,9 @@ import type {
   SourceDimensions,
 } from './types';
 import type {
+  BackendInitOptions,
   IRecorderBackend,
   RecorderCapabilities,
-  SignalCallback,
 } from './IRecorderBackend';
 
 /**
@@ -33,8 +33,8 @@ export default class NoobsBackend implements IRecorderBackend {
   };
 
   // Lifecycle
-  init(noobsPath: string, logPath: string, cb: SignalCallback): void {
-    noobs.Init(noobsPath, logPath, cb);
+  init(options: BackendInitOptions): void {
+    noobs.Init(options.noobsDistPath, options.logPath, options.signalCallback);
   }
   initPreview(hwnd: Buffer): void {
     noobs.InitPreview(hwnd);
