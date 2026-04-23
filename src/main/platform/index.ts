@@ -1,20 +1,4 @@
-import NoobsBackend from './recorder/NoobsBackend';
-import OsnBackend from './recorder/OsnBackend';
-
-import WinRustPsPoller from './poller/WinRustPsPoller';
-import MacPgrepPoller from './poller/MacPgrepPoller';
-
-import WinWowPathResolver from './paths/WinWowPathResolver';
-import MacWowPathResolver from './paths/MacWowPathResolver';
-
-import WinFileReveal from './files/WinFileReveal';
-import MacFileReveal from './files/MacFileReveal';
-
-import WinFfmpegPathProvider from './ffmpeg/WinFfmpegPathProvider';
-import MacFfmpegPathProvider from './ffmpeg/MacFfmpegPathProvider';
-
-import WinPermissionsGate from './permissions/WinPermissionsGate';
-import MacTccGate from './permissions/MacTccGate';
+/* eslint-disable @typescript-eslint/no-require-imports, global-require */
 
 import type { IRecorderBackend } from './recorder/IRecorderBackend';
 import type { IProcessPoller } from './poller/IProcessPoller';
@@ -61,48 +45,91 @@ let fileReveal: IFileReveal | undefined;
 let ffmpegPathProvider: IFfmpegPathProvider | undefined;
 let permissionsGate: IPermissionsGate | undefined;
 
+/**
+ * Platform impls are lazy-required so the wrong-platform file never loads.
+ * NoobsBackend on mac would trigger a runtime `require('noobs')` — which
+ * resolves to an unbuilt native module there. OsnBackend on Windows would
+ * similarly try to pull in `obs-studio-node`. Keeping the imports conditional
+ * means only the correct backend module is ever evaluated.
+ */
+
 export function getRecorderBackend(): IRecorderBackend {
   if (!recorderBackend) {
-    recorderBackend = isMac ? new OsnBackend() : new NoobsBackend();
+    if (isMac) {
+      const OsnBackend = require('./recorder/OsnBackend').default;
+      recorderBackend = new OsnBackend();
+    } else {
+      const NoobsBackend = require('./recorder/NoobsBackend').default;
+      recorderBackend = new NoobsBackend();
+    }
   }
-  return recorderBackend;
+  return recorderBackend as IRecorderBackend;
 }
 
 export function getProcessPoller(): IProcessPoller {
   if (!processPoller) {
-    processPoller = isMac ? new MacPgrepPoller() : new WinRustPsPoller();
+    if (isMac) {
+      const MacPgrepPoller = require('./poller/MacPgrepPoller').default;
+      processPoller = new MacPgrepPoller();
+    } else {
+      const WinRustPsPoller = require('./poller/WinRustPsPoller').default;
+      processPoller = new WinRustPsPoller();
+    }
   }
-  return processPoller;
+  return processPoller as IProcessPoller;
 }
 
 export function getWowPathResolver(): IWowPathResolver {
   if (!wowPathResolver) {
-    wowPathResolver = isMac
-      ? new MacWowPathResolver()
-      : new WinWowPathResolver();
+    if (isMac) {
+      const MacWowPathResolver = require('./paths/MacWowPathResolver').default;
+      wowPathResolver = new MacWowPathResolver();
+    } else {
+      const WinWowPathResolver = require('./paths/WinWowPathResolver').default;
+      wowPathResolver = new WinWowPathResolver();
+    }
   }
-  return wowPathResolver;
+  return wowPathResolver as IWowPathResolver;
 }
 
 export function getFileReveal(): IFileReveal {
   if (!fileReveal) {
-    fileReveal = isMac ? new MacFileReveal() : new WinFileReveal();
+    if (isMac) {
+      const MacFileReveal = require('./files/MacFileReveal').default;
+      fileReveal = new MacFileReveal();
+    } else {
+      const WinFileReveal = require('./files/WinFileReveal').default;
+      fileReveal = new WinFileReveal();
+    }
   }
-  return fileReveal;
+  return fileReveal as IFileReveal;
 }
 
 export function getFfmpegPathProvider(): IFfmpegPathProvider {
   if (!ffmpegPathProvider) {
-    ffmpegPathProvider = isMac
-      ? new MacFfmpegPathProvider()
-      : new WinFfmpegPathProvider();
+    if (isMac) {
+      const MacFfmpegPathProvider =
+        require('./ffmpeg/MacFfmpegPathProvider').default;
+      ffmpegPathProvider = new MacFfmpegPathProvider();
+    } else {
+      const WinFfmpegPathProvider =
+        require('./ffmpeg/WinFfmpegPathProvider').default;
+      ffmpegPathProvider = new WinFfmpegPathProvider();
+    }
   }
-  return ffmpegPathProvider;
+  return ffmpegPathProvider as IFfmpegPathProvider;
 }
 
 export function getPermissionsGate(): IPermissionsGate {
   if (!permissionsGate) {
-    permissionsGate = isMac ? new MacTccGate() : new WinPermissionsGate();
+    if (isMac) {
+      const MacTccGate = require('./permissions/MacTccGate').default;
+      permissionsGate = new MacTccGate();
+    } else {
+      const WinPermissionsGate =
+        require('./permissions/WinPermissionsGate').default;
+      permissionsGate = new WinPermissionsGate();
+    }
   }
-  return permissionsGate;
+  return permissionsGate as IPermissionsGate;
 }
