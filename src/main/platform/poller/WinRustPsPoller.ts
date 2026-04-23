@@ -18,7 +18,7 @@ export default class WinRustPsPoller extends EventEmitter implements IProcessPol
 
   private readonly binary = app.isPackaged
     ? path.join(process.resourcesPath, 'binaries', 'rust-ps.exe')
-    : path.join(__dirname, '../../../../binaries', 'rust-ps.exe');
+    : path.join(__dirname, '../../binaries', 'rust-ps.exe');
 
   isWowRunning(): boolean {
     return this.wowRunning;
