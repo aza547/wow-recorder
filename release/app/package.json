@@ -16,7 +16,8 @@
     "uiohook-napi": "^1.5.2"
   },
   "optionalDependencies": {
-    "noobs": "^0.0.184"
+    "noobs": "^0.0.184",
+    "obs-studio-node": "https://s3-us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/osn-0.26.17-release-osx-arm64.tar.gz"
   },
   "license": "MIT"
 }

@@ -18,9 +18,11 @@ const isMac = process.platform === 'darwin';
 // still externalise it so webpack doesn't bundle the native module.
 const baseExternals = [
   ...Object.keys(externals || {}),
-  ...Object.keys(optionalExternals || {}).filter(
-    (dep) => !(isMac && dep === 'noobs'),
-  ),
+  ...Object.keys(optionalExternals || {}).filter((dep) => {
+    if (isMac && dep === 'noobs') return false;
+    if (!isMac && dep === 'obs-studio-node') return false;
+    return true;
+  }),
 ];
 
 const configuration: webpack.Configuration = {
@@ -86,7 +88,12 @@ const configuration: webpack.Configuration = {
             path.resolve(__dirname, '../stubs/noobs-stub.js'),
           ),
         ]
-      : []),
+      : [
+          new webpack.NormalModuleReplacementPlugin(
+            /^obs-studio-node$/,
+            path.resolve(__dirname, '../stubs/osn-stub.js'),
+          ),
+        ]),
   ],
 };
 
