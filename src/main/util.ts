@@ -429,7 +429,6 @@ const checkAdvancedCombatLogging = async (
   logPath: string,
 ): Promise<boolean> => {
   const configWtfFile = getConfigWtfPath(logPath);
-  console.info('[Util] Checking advanced combat logging:', configWtfFile);
 
   if (!(await exists(configWtfFile))) {
     console.warn('[Util] Config.wtf not found at', configWtfFile);
@@ -440,11 +439,10 @@ const checkAdvancedCombatLogging = async (
   const match = content.match(/^SET advancedCombatLogging\s+"(\d+)"/m);
 
   if (match && match[1] === '1') {
-    console.info('[Util] Advanced combat logging is enabled', configWtfFile);
     return true;
   }
 
-  console.info('[Util] Advanced combat logging is disabled', configWtfFile);
+  console.warn('[Util] Advanced combat logging is disabled', configWtfFile);
   return false;
 };
 

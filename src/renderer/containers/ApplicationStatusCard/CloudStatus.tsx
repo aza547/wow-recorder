@@ -187,7 +187,7 @@ const CloudStatus = ({ appState, setPreviewEnabled }: StatusProps) => {
             {renderUploadIcon()}
           </div>
         </div>
-        <HoverCardContent className="w-fit mx-4">
+        <HoverCardContent className="w-[300px] mx-4">
           {description}
         </HoverCardContent>
       </HoverCardTrigger>
