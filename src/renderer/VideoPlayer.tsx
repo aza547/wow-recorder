@@ -1305,7 +1305,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   }, []);
 
   // This hook updates some state to force a re-render on progress slider resize,
-  // otherwise resizing the slider causes all the makers to be offset until next
+  // otherwise resizing the slider causes all the markers to be offset until next
   // render. Fullscreen changes do not reliably fire a window resize at the
   // right time, so observe the slider itself and listen for fullscreen changes.
   useLayoutEffect(() => {
