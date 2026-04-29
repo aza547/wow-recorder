@@ -90,7 +90,13 @@
       "entitlementsInherit": "assets/entitlements.mac.plist",
       "identity": "Yuri Piratello (Y36BG56F47)",
       "type": "distribution",
-      "signIgnore": ["\\.pak$", "\\.bin$", "\\.dat$"],
+      "signIgnore": [
+        "\\.pak$",
+        "\\.bin$",
+        "\\.dat$",
+        "Chromium Embedded Framework\\.framework",
+        "obs-studio-node/"
+      ],
       "extendInfo": {
         "NSScreenCaptureUsageDescription": "Warcraft Recorder needs Screen Recording to capture your gameplay.",
         "NSMicrophoneUsageDescription": "Warcraft Recorder needs microphone access to record your voice.",
