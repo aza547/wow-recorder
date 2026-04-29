@@ -693,6 +693,10 @@ const getFriendlyEncoderName = (enc: ESupportedEncoders) => {
       return 'Intel H.264';
     case ESupportedEncoders.QSV_AV1:
       return 'Intel AV1';
+    case ESupportedEncoders.VT_H264:
+      return 'Apple VideoToolbox H.264';
+    case ESupportedEncoders.VT_HEVC:
+      return 'Apple VideoToolbox HEVC';
     default:
       throw new Error('Unknown Encoder');
   }

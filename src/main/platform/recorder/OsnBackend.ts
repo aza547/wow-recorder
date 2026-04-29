@@ -75,7 +75,11 @@ export default class OsnBackend implements IRecorderBackend {
 
   public readonly capabilities: RecorderCapabilities = {
     captureModes: [CaptureModeCapability.WINDOW, CaptureModeCapability.MONITOR],
-    encoders: [ESupportedEncoders.OBS_X264],
+    encoders: [
+      ESupportedEncoders.OBS_X264,
+      ESupportedEncoders.VT_H264,
+      ESupportedEncoders.VT_HEVC,
+    ],
     supportsReplayBuffer: true,
   };
 
