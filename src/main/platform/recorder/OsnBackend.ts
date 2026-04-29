@@ -604,26 +604,80 @@ export default class OsnBackend implements IRecorderBackend {
     }
     return out;
   }
-  getSourcePos(_id: string): SceneItemPosition & SourceDimensions {
+  setSourceVolume(id: string, volume: number): void {
+    const input = this.inputs.get(id);
+    if (!input) return;
+    input.volume = volume;
+  }
+
+  getSourcePos(id: string): SceneItemPosition & SourceDimensions {
+    const item = this.sceneItems.get(id);
+    const input = this.inputs.get(id);
+    if (!item || !input) {
+      return {
+        x: 0,
+        y: 0,
+        scaleX: 1,
+        scaleY: 1,
+        cropLeft: 0,
+        cropRight: 0,
+        cropTop: 0,
+        cropBottom: 0,
+        width: 0,
+        height: 0,
+      } as SceneItemPosition & SourceDimensions;
+    }
     return {
-      x: 0,
-      y: 0,
-      scaleX: 1,
-      scaleY: 1,
-      cropLeft: 0,
-      cropRight: 0,
-      cropTop: 0,
-      cropBottom: 0,
-      width: 0,
-      height: 0,
+      x: item.position.x,
+      y: item.position.y,
+      scaleX: item.scale.x,
+      scaleY: item.scale.y,
+      cropLeft: item.crop.left,
+      cropRight: item.crop.right,
+      cropTop: item.crop.top,
+      cropBottom: item.crop.bottom,
+      width: input.width,
+      height: input.height,
     } as SceneItemPosition & SourceDimensions;
   }
-  setSourcePos(_id: string, _pos: SceneItemPosition): void {}
-  setSourceVolume(_id: string, _volume: number): void {}
-  setVolmeterEnabled(_enabled: boolean): void {}
-  setForceMono(_enabled: boolean): void {}
-  setAudioSuppression(_enabled: boolean): void {}
-  setMuteAudioInputs(_muted: boolean): void {}
+
+  setSourcePos(id: string, pos: SceneItemPosition): void {
+    const item = this.sceneItems.get(id);
+    if (!item) return;
+    item.position = { x: pos.x, y: pos.y };
+    item.scale = { x: pos.scaleX, y: pos.scaleY };
+    item.crop = {
+      left: pos.cropLeft,
+      right: pos.cropRight,
+      top: pos.cropTop,
+      bottom: pos.cropBottom,
+    };
+  }
+
+  setVolmeterEnabled(_enabled: boolean): void {
+    // Volmeter wiring (osn.VolmeterFactory.create + attach) is renderer-only
+    // (drives the audio meter UI). Deferred from Phase 2 — Phase 1 record-only
+    // flows don't need it.
+  }
+
+  setForceMono(_enabled: boolean): void {
+    // Global audio setting via OBS_settings_saveSettings('Audio', ...).
+    // Mic-only feature; deferred until mic audio source lands.
+  }
+
+  setAudioSuppression(_enabled: boolean): void {
+    // Same rationale as setForceMono — mic-only feature, deferred.
+  }
+
+  setMuteAudioInputs(muted: boolean): void {
+    for (const input of this.inputs.values()) {
+      // Heuristic: only audio sources expose audioMixers. Filter by that
+      // so we don't accidentally mute the video capture source.
+      if ((input as { audioMixers?: number }).audioMixers !== undefined) {
+        input.muted = muted;
+      }
+    }
+  }
   startBuffer(): void {
     if (this.replayBuffering) {
       console.info('[OsnBackend] startBuffer — already running, ignoring');
