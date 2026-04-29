@@ -678,15 +678,7 @@ export default class OsnBackend implements IRecorderBackend {
   setSourceSettings(id: string, settings: ObsData): void {
     const input = this.inputs.get(id);
     if (!input) return;
-    // Translate Recorder.ts's noobs-shaped setting names to OSN's
-    // mac screen_capture source schema. Recorder writes `monitor_id`
-    // and `window`; OSN expects `display` and `window`.
-    const translated: ObsData = { ...settings };
-    if ('monitor_id' in translated) {
-      translated.display = translated.monitor_id;
-      delete translated.monitor_id;
-    }
-    input.update(translated);
+    input.update(settings);
   }
 
   getSourceProperties(id: string): ObsProperty[] {

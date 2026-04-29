@@ -12,21 +12,22 @@ export interface ResolvedSource {
 }
 
 const MAP: Record<string, ResolvedSource> = {
-  // Capture sources — macOS uses `screen_capture` (ScreenCaptureKit) for both
-  // window and display modes; the `type` field selects which.
+  // Capture sources — OSN's mac-capture plugin registers separate source
+  // IDs for window vs display capture (legacy CGWindowList /
+  // CGDisplayStream impls). The newer ScreenCaptureKit-based 'sck_*'
+  // sources may exist on macOS 14+ but the legacy ones are universally
+  // available and what OSN's properties getter returns data for.
   window_capture: {
-    sourceId: 'screen_capture',
-    // type=1 = window. Specific window selected via subsequent
-    // setSourceSettings call once Recorder.ts knows the target.
-    defaults: { type: 1 },
+    sourceId: 'window_capture',
+    defaults: {},
   },
   monitor_capture: {
-    sourceId: 'screen_capture',
-    defaults: { type: 0 }, // type=0 = display
+    sourceId: 'display_capture',
+    defaults: {},
   },
   display_capture: {
-    sourceId: 'screen_capture',
-    defaults: { type: 0 },
+    sourceId: 'display_capture',
+    defaults: {},
   },
   // Audio — map Windows WASAPI source types to macOS CoreAudio.
   // Recorder.ts only knows the wasapi_* names from its noobs heritage;
