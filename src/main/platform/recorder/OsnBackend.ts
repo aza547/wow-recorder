@@ -66,6 +66,10 @@ export default class OsnBackend implements IRecorderBackend {
     previewHeight: 0,
   };
 
+  private scene: import('obs-studio-node').IScene | undefined;
+  private sceneItems = new Map<string, import('obs-studio-node').ISceneItem>();
+  private inputs = new Map<string, import('obs-studio-node').IInput>();
+
   public readonly capabilities: RecorderCapabilities = {
     captureModes: [CaptureModeCapability.WINDOW, CaptureModeCapability.MONITOR],
     encoders: [ESupportedEncoders.OBS_X264],
@@ -101,6 +105,14 @@ export default class OsnBackend implements IRecorderBackend {
 
   private obs64Path(): string {
     return path.join(this.osnRoot(), 'bin', 'obs64');
+  }
+
+  private ensureScene(): import('obs-studio-node').IScene {
+    if (this.scene) return this.scene;
+    const osn = this.getOsn();
+    this.scene = osn.SceneFactory.create('wcr-scene');
+    osn.Global.setOutputSource(0, this.scene);
+    return this.scene;
   }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────
@@ -295,6 +307,28 @@ export default class OsnBackend implements IRecorderBackend {
     if (!this.initialized) return;
     const osn = this.osn;
 
+    // Tear down scene graph BEFORE killing obs64 so OSN releases handles
+    // cleanly. Errors swallowed — the kill below is the real escape hatch.
+    for (const item of this.sceneItems.values()) {
+      try {
+        item.remove();
+        // eslint-disable-next-line no-empty
+      } catch {}
+    }
+    this.sceneItems.clear();
+    for (const input of this.inputs.values()) {
+      try {
+        input.release();
+        // eslint-disable-next-line no-empty
+      } catch {}
+      try {
+        input.remove();
+        // eslint-disable-next-line no-empty
+      } catch {}
+    }
+    this.inputs.clear();
+    this.scene = undefined;
+
     try {
       osn?.NodeObs.OBS_service_removeCallback?.();
     } catch (err) {
@@ -466,18 +500,100 @@ export default class OsnBackend implements IRecorderBackend {
     // best-available probe. Mirror our capabilities.encoders list.
     return this.capabilities.encoders;
   }
-  createSource(id: string, _type: string): string {
+  createSource(id: string, type: string): string {
+    const osn = this.getOsn();
+    const { resolveMacSource } = require('./osn/sourceFactory');
+    const { sourceId, defaults } = resolveMacSource(type);
+    const input = osn.InputFactory.create(sourceId, id, defaults);
+    this.inputs.set(id, input);
+    console.info('[OsnBackend] createSource', { id, type, sourceId });
     return id;
   }
-  deleteSource(_id: string): void {}
-  addSourceToScene(_name: string): void {}
-  removeSourceFromScene(_name: string): void {}
-  getSourceSettings(_id: string): ObsData {
-    return {};
+
+  deleteSource(id: string): void {
+    const input = this.inputs.get(id);
+    if (!input) return;
+    const item = this.sceneItems.get(id);
+    if (item) {
+      try {
+        item.remove();
+      } catch (e) {
+        console.warn('[OsnBackend] sceneItem.remove threw', e);
+      }
+      this.sceneItems.delete(id);
+    }
+    try {
+      input.release();
+    } catch (e) {
+      console.warn('[OsnBackend] input.release threw', e);
+    }
+    try {
+      input.remove();
+    } catch (e) {
+      console.warn('[OsnBackend] input.remove threw', e);
+    }
+    this.inputs.delete(id);
   }
-  setSourceSettings(_id: string, _settings: ObsData): void {}
-  getSourceProperties(_id: string): ObsProperty[] {
-    return [];
+
+  addSourceToScene(name: string): void {
+    const input = this.inputs.get(name);
+    if (!input) {
+      console.warn(
+        '[OsnBackend] addSourceToScene: no input registered for',
+        name,
+      );
+      return;
+    }
+    const scene = this.ensureScene();
+    const item = scene.add(input);
+    this.sceneItems.set(name, item);
+  }
+
+  removeSourceFromScene(name: string): void {
+    const item = this.sceneItems.get(name);
+    if (!item) return;
+    try {
+      item.remove();
+    } catch (e) {
+      console.warn('[OsnBackend] removeSourceFromScene threw', e);
+    }
+    this.sceneItems.delete(name);
+  }
+
+  getSourceSettings(id: string): ObsData {
+    const input = this.inputs.get(id);
+    if (!input) return {};
+    return (input.settings as ObsData) ?? {};
+  }
+
+  setSourceSettings(id: string, settings: ObsData): void {
+    const input = this.inputs.get(id);
+    if (!input) return;
+    input.update(settings);
+  }
+
+  getSourceProperties(id: string): ObsProperty[] {
+    const input = this.inputs.get(id);
+    if (!input) return [];
+    const props = input.properties;
+    // OSN returns null for properties on some source types (e.g. image_source
+    // before the source has been fully initialised on macOS). Guard defensively.
+    if (!props) return [];
+    const out: ObsProperty[] = [];
+    // OSN's IProperty walking: `props.first()`, then `prop.next()`, until null.
+    // Adapted into a flat list so renderer code can iterate without knowing
+    // the OSN-specific traversal API.
+    let p: import('obs-studio-node').IProperty | undefined = props.first();
+    while (p) {
+      out.push({
+        name: p.name,
+        description: p.description,
+        // OSN's IProperty.type is an enum; cast to string for our shape.
+        type: p.type as unknown as string,
+      } as ObsProperty);
+      p = p.next() ?? undefined;
+    }
+    return out;
   }
   getSourcePos(_id: string): SceneItemPosition & SourceDimensions {
     return {
