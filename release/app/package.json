@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "atomic-queue": "^5.0.4",
+    "deasync": "^0.1.30",
     "uiohook-napi": "^1.5.2"
   },
   "optionalDependencies": {
