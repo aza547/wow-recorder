@@ -95,6 +95,24 @@ function synthesiseScreenCaptureProperties(): ObsProperty[] {
   ];
 }
 
+/**
+ * Synthesize a property list for `coreaudio_*_capture` on macOS when
+ * OSN's properties getter returns null. Returns a minimal `device_id`
+ * list with just the system default — Recorder.ts asserts this exists
+ * before configuring an audio source. Real device enumeration via
+ * CoreAudio is a follow-up; the default device works for smoke tests.
+ */
+function synthesiseCoreAudioProperties(): ObsProperty[] {
+  return [
+    {
+      name: 'device_id',
+      description: 'Device',
+      type: 'list',
+      items: [{ name: 'Default', value: 'default' }],
+    } as unknown as ObsProperty,
+  ];
+}
+
 function encoderToSimpleName(encoder: string): string {
   // Map our ESupportedEncoders values + raw OSN IDs to the OSN
   // Simple-mode RecEncoder values. VT_H264 / VT_HEVC enum entries land
@@ -144,6 +162,7 @@ export default class OsnBackend implements IRecorderBackend {
   private scene: import('obs-studio-node').IScene | undefined;
   private sceneItems = new Map<string, import('obs-studio-node').ISceneItem>();
   private inputs = new Map<string, import('obs-studio-node').IInput>();
+  private inputSourceIds = new Map<string, string>();
 
   private recording = false;
   private replayBuffering = false;
@@ -595,6 +614,7 @@ export default class OsnBackend implements IRecorderBackend {
     const { sourceId, defaults } = resolveMacSource(type);
     const input = osn.InputFactory.create(sourceId, id, defaults);
     this.inputs.set(id, input);
+    this.inputSourceIds.set(id, sourceId);
     console.info('[OsnBackend] createSource', { id, type, sourceId });
     return id;
   }
@@ -687,12 +707,23 @@ export default class OsnBackend implements IRecorderBackend {
     // using Electron APIs as a fallback so monitor + window selection
     // still works.
     if (!props) {
+      const sourceId = this.inputSourceIds.get(id) ?? '';
       console.warn(
         '[OsnBackend] getSourceProperties: input.properties null, synthesising for',
         id,
+        'sourceId:',
+        sourceId,
       );
-
-      return synthesiseScreenCaptureProperties();
+      if (sourceId === 'screen_capture') {
+        return synthesiseScreenCaptureProperties();
+      }
+      if (
+        sourceId === 'coreaudio_input_capture' ||
+        sourceId === 'coreaudio_output_capture'
+      ) {
+        return synthesiseCoreAudioProperties();
+      }
+      return [];
     }
     const out: ObsProperty[] = [];
     // OSN's IProperty walking: `props.first()`, then `prop.next()`, until null.

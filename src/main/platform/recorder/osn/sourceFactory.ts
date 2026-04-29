@@ -28,7 +28,24 @@ const MAP: Record<string, ResolvedSource> = {
     sourceId: 'screen_capture',
     defaults: { type: 0 },
   },
-  // Audio
+  // Audio — map Windows WASAPI source types to macOS CoreAudio.
+  // Recorder.ts only knows the wasapi_* names from its noobs heritage;
+  // we redirect them on mac.
+  wasapi_input_capture: {
+    sourceId: 'coreaudio_input_capture',
+    defaults: {},
+  },
+  wasapi_output_capture: {
+    sourceId: 'coreaudio_output_capture',
+    defaults: {},
+  },
+  wasapi_process_output_capture: {
+    // No mac equivalent (per-process audio). Fall back to whole-system
+    // output capture; user loses per-app audio isolation but recording
+    // still produces audio.
+    sourceId: 'coreaudio_output_capture',
+    defaults: {},
+  },
   coreaudio_input_capture: {
     sourceId: 'coreaudio_input_capture',
     defaults: {},
