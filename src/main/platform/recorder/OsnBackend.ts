@@ -122,8 +122,12 @@ export default class OsnBackend implements IRecorderBackend {
       );
     }
 
-    // Step 3: tell OBS where its data + plugins live.
-    osn.NodeObs.SetWorkingDirectory(osnBinDir);
+    // Step 3: tell OBS where its data + plugins live. Pass the OSN
+    // package root (NOT bin/) so libobs resolves data/, PlugIns/,
+    // Frameworks/ relative to the same anchor the spike script proved
+    // works. Pointing at bin/ leaves data/ unreachable and OBS_API_initAPI
+    // returns -1.
+    osn.NodeObs.SetWorkingDirectory(obsRoot);
 
     // Step 4: real init.
     console.info('[OsnBackend] OBS_API_initAPI');
