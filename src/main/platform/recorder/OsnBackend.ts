@@ -35,6 +35,13 @@ export default class OsnBackend implements IRecorderBackend {
   private obs64: ChildProcess | undefined;
   private initialized = false;
 
+  private cachedPreviewDimensions = {
+    canvasWidth: 0,
+    canvasHeight: 0,
+    previewWidth: 0,
+    previewHeight: 0,
+  };
+
   public readonly capabilities: RecorderCapabilities = {
     captureModes: [CaptureModeCapability.WINDOW, CaptureModeCapability.MONITOR],
     encoders: [ESupportedEncoders.OBS_X264],
@@ -300,23 +307,85 @@ export default class OsnBackend implements IRecorderBackend {
 
   // ─── Stubs for the rest — replaced in later Phase 2 tasks ──────────────
 
-  resetVideoContext(_fps: number, _width: number, _height: number): void {
-    throw new Error(NOT_IMPL);
+  resetVideoContext(fps: number, width: number, height: number): void {
+    const osn = this.getOsn();
+
+    // OSN settings categories use this shape:
+    //   [{ nameSubCategory, parameters: [{ name, currentValue, type }] }]
+    // Mirror what Streamlabs Desktop's setting-manager does.
+    const baseRes = `${width}x${height}`;
+    const video = [
+      {
+        nameSubCategory: 'Untitled',
+        parameters: [
+          { name: 'Base', currentValue: baseRes, type: 'OBS_PROPERTY_LIST' },
+          { name: 'Output', currentValue: baseRes, type: 'OBS_PROPERTY_LIST' },
+          {
+            name: 'FPSCommon',
+            currentValue: String(fps),
+            type: 'OBS_PROPERTY_LIST',
+          },
+          {
+            name: 'FPSType',
+            currentValue: 'Common FPS Values',
+            type: 'OBS_PROPERTY_LIST',
+          },
+        ],
+      },
+    ];
+
+    console.info('[OsnBackend] resetVideoContext', { fps, width, height });
+    osn.NodeObs.OBS_settings_saveSettings('Video', video);
+
+    this.cachedPreviewDimensions = {
+      canvasWidth: width,
+      canvasHeight: height,
+      // Preview dims = canvas dims for now (renderer preview rect TBD).
+      previewWidth: width,
+      previewHeight: height,
+    };
   }
   getPreviewInfo() {
-    return {
-      canvasWidth: 0,
-      canvasHeight: 0,
-      previewWidth: 0,
-      previewHeight: 0,
-    };
+    return this.cachedPreviewDimensions;
   }
   configurePreview(_x: number, _y: number, _w: number, _h: number): void {}
   showPreview(): void {}
   hidePreview(): void {}
   disablePreview(): void {}
-  setRecordingCfg(_outputPath: string, _container: string): void {
-    throw new Error(NOT_IMPL);
+  setRecordingCfg(outputPath: string, container: string): void {
+    const osn = this.getOsn();
+
+    // Output 'Mode' must be set to Simple before nameSubCategory='Recording'
+    // accepts our path/format params. Stream the two saves separately so
+    // the Mode change applies first.
+    osn.NodeObs.OBS_settings_saveSettings('Output', [
+      {
+        nameSubCategory: 'Untitled',
+        parameters: [
+          { name: 'Mode', currentValue: 'Simple', type: 'OBS_PROPERTY_LIST' },
+        ],
+      },
+    ]);
+
+    osn.NodeObs.OBS_settings_saveSettings('Output', [
+      {
+        nameSubCategory: 'Recording',
+        parameters: [
+          {
+            name: 'RecFilePath',
+            currentValue: outputPath,
+            type: 'OBS_PROPERTY_PATH',
+          },
+          {
+            name: 'RecFormat',
+            currentValue: container,
+            type: 'OBS_PROPERTY_LIST',
+          },
+        ],
+      },
+    ]);
+
+    console.info('[OsnBackend] setRecordingCfg', { outputPath, container });
   }
   setVideoEncoder(_encoder: string, _settings: ObsData): void {
     throw new Error(NOT_IMPL);
