@@ -190,11 +190,17 @@ export default class OsnBackend implements IRecorderBackend {
       );
     }
 
-    this.initialized = true;
-    // Signal callback wiring lands in Task 7.
-    void options.signalCallback;
+    // Subscribe to OSN output signals and forward to caller's callback.
+    const { subscribeOsnSignals } = require('./osn/signalWiring');
+    subscribeOsnSignals(osn, options.signalCallback, (path: string) => {
+      this.lastRecordingPath = path;
+      console.info('[OsnBackend] last recording path =', path);
+    });
+
     void options.noobsDistPath;
     void options.logPath;
+
+    this.initialized = true;
   }
 
   /**
