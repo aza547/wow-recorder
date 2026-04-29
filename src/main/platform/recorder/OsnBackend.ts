@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { ChildProcess, spawn } from 'child_process';
-import { app } from 'electron';
+import { app, screen } from 'electron';
 import type {
   BackendInitOptions,
   IRecorderBackend,
@@ -60,6 +60,39 @@ function adaptOsnProperty(p: import('obs-studio-node').IProperty): ObsProperty {
     out.items = items.map((it) => ({ name: it.name, value: it.value }));
   }
   return out as unknown as ObsProperty;
+}
+
+/**
+ * Synthesize a property list for `screen_capture` on macOS when OSN's
+ * native properties getter returns null. Uses Electron's `screen` API
+ * to enumerate displays + a placeholder window list. Recorder.ts
+ * iterates these via `properties.find(p => p.name === 'monitor_id')`
+ * and `'window'` so we expose both names.
+ */
+function synthesiseScreenCaptureProperties(): ObsProperty[] {
+  const displays = screen.getAllDisplays();
+  const monitorItems = displays.map((d, idx) => ({
+    name: d.label || `Display ${idx + 1}`,
+    value: String(d.id),
+  }));
+
+  // Window list cannot be enumerated cheaply from Electron — return
+  // an empty list. Window-capture mode will fail until we wire a real
+  // CGWindowList probe (follow-up). Monitor-capture works.
+  return [
+    {
+      name: 'monitor_id',
+      description: 'Display',
+      type: 'list',
+      items: monitorItems,
+    } as unknown as ObsProperty,
+    {
+      name: 'window',
+      description: 'Window',
+      type: 'list',
+      items: [],
+    } as unknown as ObsProperty,
+  ];
 }
 
 function encoderToSimpleName(encoder: string): string {
@@ -625,16 +658,42 @@ export default class OsnBackend implements IRecorderBackend {
   setSourceSettings(id: string, settings: ObsData): void {
     const input = this.inputs.get(id);
     if (!input) return;
-    input.update(settings);
+    // Translate Recorder.ts's noobs-shaped setting names to OSN's
+    // mac screen_capture source schema. Recorder writes `monitor_id`
+    // and `window`; OSN expects `display` and `window`.
+    const translated: ObsData = { ...settings };
+    if ('monitor_id' in translated) {
+      translated.display = translated.monitor_id;
+      delete translated.monitor_id;
+    }
+    input.update(translated);
   }
 
   getSourceProperties(id: string): ObsProperty[] {
     const input = this.inputs.get(id);
-    if (!input) return [];
+    if (!input) {
+      console.warn(
+        '[OsnBackend] getSourceProperties: no input for id',
+        id,
+        'known ids:',
+        Array.from(this.inputs.keys()),
+      );
+      return [];
+    }
     const props = input.properties;
-    // OSN returns null for properties on some source types (e.g. image_source
-    // before the source has been fully initialised on macOS). Guard defensively.
-    if (!props) return [];
+    // OSN's `input.properties` getter returns null for `screen_capture`
+    // on macOS regardless of source readiness — the IPC reply just
+    // doesn't arrive. Synthesize the property list Recorder.ts expects
+    // using Electron APIs as a fallback so monitor + window selection
+    // still works.
+    if (!props) {
+      console.warn(
+        '[OsnBackend] getSourceProperties: input.properties null, synthesising for',
+        id,
+      );
+
+      return synthesiseScreenCaptureProperties();
+    }
     const out: ObsProperty[] = [];
     // OSN's IProperty walking: `props.first()`, then `prop.next()`, until null.
     // Adapted into the noobs-shaped object Recorder.ts expects: lowercase
@@ -645,6 +704,12 @@ export default class OsnBackend implements IRecorderBackend {
       out.push(adaptOsnProperty(p));
       p = p.next() ?? undefined;
     }
+    console.info(
+      '[OsnBackend] getSourceProperties',
+      id,
+      '→',
+      out.map((o) => `${o.name}:${o.type}`).join(', '),
+    );
     return out;
   }
   setSourceVolume(id: string, volume: number): void {
