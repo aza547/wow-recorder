@@ -49,9 +49,22 @@ export default class OsnBackend implements IRecorderBackend {
   }
 
   private osnRoot(): string {
+    // Webpack bundles main into .erb/dll/main.bundle.dev.js (dev) or
+    // release/app/dist/main/main.js (prod). With node.__dirname=false,
+    // __dirname resolves to that output dir regardless of source path.
+    // Dev path: .erb/dll → ../../release/app → release/app at repo root.
+    // Prod path: process.resourcesPath/app/node_modules.
+    if (app.isPackaged) {
+      return path.join(
+        process.resourcesPath,
+        'app',
+        'node_modules',
+        'obs-studio-node',
+      );
+    }
     return path.resolve(
       __dirname,
-      '../../../../release/app/node_modules/obs-studio-node',
+      '../../release/app/node_modules/obs-studio-node',
     );
   }
 
