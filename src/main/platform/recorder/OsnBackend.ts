@@ -19,6 +19,49 @@ import type {
 const READY_LINE = 'server - start watcher';
 const READY_TIMEOUT_MS = 10000;
 
+/**
+ * Map OSN's EPropertyType numeric enum to the lowercase strings
+ * Recorder.ts inherited from the noobs API ('list', 'int', etc.).
+ */
+const OSN_PROP_TYPE_NAMES: Record<number, string> = {
+  0: 'invalid',
+  1: 'boolean',
+  2: 'int',
+  3: 'float',
+  4: 'text',
+  5: 'path',
+  6: 'list',
+  7: 'color',
+  8: 'button',
+  9: 'font',
+  10: 'editable_list',
+  11: 'frame_rate',
+  12: 'group',
+  13: 'color_alpha',
+  14: 'capture',
+};
+
+/**
+ * Translate one OSN IProperty into the noobs-shaped object Recorder.ts
+ * iterates. List-type properties carry their items array directly on
+ * the result (not nested under `details`) to match noobs's surface.
+ */
+function adaptOsnProperty(p: import('obs-studio-node').IProperty): ObsProperty {
+  const typeNum = p.type as unknown as number;
+  const typeStr = OSN_PROP_TYPE_NAMES[typeNum] ?? String(typeNum);
+  const out: Record<string, unknown> = {
+    name: p.name,
+    description: p.description,
+    type: typeStr,
+  };
+  if (typeStr === 'list') {
+    const list = p as unknown as import('obs-studio-node').IListProperty;
+    const items = list.details?.items ?? [];
+    out.items = items.map((it) => ({ name: it.name, value: it.value }));
+  }
+  return out as unknown as ObsProperty;
+}
+
 function encoderToSimpleName(encoder: string): string {
   // Map our ESupportedEncoders values + raw OSN IDs to the OSN
   // Simple-mode RecEncoder values. VT_H264 / VT_HEVC enum entries land
@@ -594,16 +637,12 @@ export default class OsnBackend implements IRecorderBackend {
     if (!props) return [];
     const out: ObsProperty[] = [];
     // OSN's IProperty walking: `props.first()`, then `prop.next()`, until null.
-    // Adapted into a flat list so renderer code can iterate without knowing
-    // the OSN-specific traversal API.
+    // Adapted into the noobs-shaped object Recorder.ts expects: lowercase
+    // type strings, list-typed properties exposed with `items` directly on
+    // the property (not nested in `details`).
     let p: import('obs-studio-node').IProperty | undefined = props.first();
     while (p) {
-      out.push({
-        name: p.name,
-        description: p.description,
-        // OSN's IProperty.type is an enum; cast to string for our shape.
-        type: p.type as unknown as string,
-      } as ObsProperty);
+      out.push(adaptOsnProperty(p));
       p = p.next() ?? undefined;
     }
     return out;

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports, global-require */
-
 import type { IRecorderBackend } from './recorder/IRecorderBackend';
 import type { IProcessPoller } from './poller/IProcessPoller';
 import type { IWowPathResolver } from './paths/IWowPathResolver';
