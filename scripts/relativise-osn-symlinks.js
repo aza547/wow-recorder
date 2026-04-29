@@ -155,6 +155,37 @@ function fixFrameworkLayout(appPath) {
   console.log(`[relativise-osn] framework layout: ${fixed} symlinks added`);
 }
 
+/**
+ * OSN ships a nested `OSN.app/` that duplicates the framework + binary
+ * layout already present at the OSN package root. At runtime our
+ * OsnBackend points IPC.setServerPath at `obs-studio-node/bin/obs64`
+ * (root), and root obs64 resolves dylibs via
+ * `@executable_path/../Frameworks/...` → `obs-studio-node/Frameworks/`,
+ * so OSN.app is unused. It also fails codesign because `distribute/`
+ * sits at the bundle root ("unsealed contents present in the bundle
+ * root"). Drop it from the packaged build.
+ *
+ * `module.js` falls back to root paths when `OSN.app` is absent
+ * (`hasDeveloperApp` flag).
+ */
+function dropOsnApp(appPath) {
+  const osnAppPath = path.join(
+    appPath,
+    'Contents',
+    'Resources',
+    'app',
+    'node_modules',
+    'obs-studio-node',
+    'OSN.app',
+  );
+  if (!fs.existsSync(osnAppPath)) {
+    console.log('[relativise-osn] OSN.app not present, skipping drop');
+    return;
+  }
+  fs.rmSync(osnAppPath, { recursive: true, force: true });
+  console.log('[relativise-osn] dropped OSN.app duplicate');
+}
+
 module.exports = async function (context) {
   const appPath = path.join(
     context.appOutDir,
@@ -165,6 +196,7 @@ module.exports = async function (context) {
     return;
   }
   console.log('[relativise-osn] walking', appPath);
+  dropOsnApp(appPath);
   relativise(appPath);
   fixFrameworkLayout(appPath);
 };
