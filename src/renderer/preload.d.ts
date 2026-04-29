@@ -113,6 +113,11 @@ declare global {
     platformInfo: {
       platform: NodeJS.Platform;
     };
+    recorderCapabilities: {
+      get: () => Promise<
+        import('main/platform/recorder/IRecorderBackend').RecorderCapabilities
+      >;
+    };
   }
 }
 

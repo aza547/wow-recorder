@@ -266,3 +266,7 @@ contextBridge.exposeInMainWorld('permissions', {
 contextBridge.exposeInMainWorld('platformInfo', {
   platform: process.platform,
 });
+
+contextBridge.exposeInMainWorld('recorderCapabilities', {
+  get: () => ipcRenderer.invoke('recorder:capabilities'),
+});

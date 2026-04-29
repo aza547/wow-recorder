@@ -35,7 +35,7 @@ import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
-import { getPermissionsGate } from './platform';
+import { getPermissionsGate, getRecorderBackend } from './platform';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -482,6 +482,11 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
 });
 
 ipcMain.handle('permissions:snapshot', () => getPermissionsGate().snapshot());
+
+ipcMain.handle(
+  'recorder:capabilities',
+  () => getRecorderBackend().capabilities,
+);
 
 ipcMain.on(
   'permissions:open-settings',

@@ -12,6 +12,8 @@ import {
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Phrase } from 'localisation/phrases';
+import { useRecorderCapabilities } from './useRecorderCapabilities';
+import { CaptureModeCapability } from 'main/platform/recorder/IRecorderBackend';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -24,6 +26,12 @@ const VideoSourceControls = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const [displays, setDisplays] = useState<OurDisplayType[]>([]);
   const initialRender = useRef(true);
+  const caps = useRecorderCapabilities();
+  const captureModeEnabled = {
+    game_capture: caps.captureModes.includes(CaptureModeCapability.GAME),
+    window_capture: caps.captureModes.includes(CaptureModeCapability.WINDOW),
+    monitor_capture: caps.captureModes.includes(CaptureModeCapability.MONITOR),
+  };
 
   useEffect(() => {
     const getDisplays = async () => {
@@ -114,15 +122,21 @@ const VideoSourceControls = (props: IProps) => {
           type="single"
           variant="outline"
         >
-          <ToggleGroupItem value="window_capture">
-            {getLocalePhrase(appState.language, Phrase.WindowCaptureValue)}
-          </ToggleGroupItem>
-          <ToggleGroupItem value="game_capture">
-            {getLocalePhrase(appState.language, Phrase.GameCaptureValue)}
-          </ToggleGroupItem>
-          <ToggleGroupItem value="monitor_capture">
-            {getLocalePhrase(appState.language, Phrase.MonitorCaptureValue)}
-          </ToggleGroupItem>
+          {captureModeEnabled.window_capture && (
+            <ToggleGroupItem value="window_capture">
+              {getLocalePhrase(appState.language, Phrase.WindowCaptureValue)}
+            </ToggleGroupItem>
+          )}
+          {captureModeEnabled.game_capture && (
+            <ToggleGroupItem value="game_capture">
+              {getLocalePhrase(appState.language, Phrase.GameCaptureValue)}
+            </ToggleGroupItem>
+          )}
+          {captureModeEnabled.monitor_capture && (
+            <ToggleGroupItem value="monitor_capture">
+              {getLocalePhrase(appState.language, Phrase.MonitorCaptureValue)}
+            </ToggleGroupItem>
+          )}
         </ToggleGroup>
       </div>
     );
