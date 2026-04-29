@@ -164,9 +164,9 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const [clipStartValue, setClipStartValue] = useState<number>(0);
   const [clipStopValue, setClipStopValue] = useState<number>(100);
 
-  // This exists to force a re-render on resizing of the window, so that
-  // the coloring of the progress slider remains correct across a resize.
-  const [, setWidth] = useState<number>(0);
+  // This exists to force a re-render when the progress slider changes size,
+  // so that marker gradients are recalculated against the current width.
+  const [, forceProgressSliderLayout] = useState<number>(0);
 
   // We show a progress spinner until the video is ready to play.
   const [spinner, setSpinner] = useState<boolean>(true);
@@ -762,6 +762,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     setMuted(!muted);
   };
 
+  const refreshProgressSliderLayout = useCallback(() => {
+    forceProgressSliderLayout((value) => value + 1);
+  }, []);
+
   /**
    * Return an appropriate volume icon for the muted and volume state.
    */
@@ -1300,17 +1304,41 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // This hook updates some state to force a re-render on window resize,
-  // otherwise resizing the window (and hence the progress bar) causes
-  // all the makers to be offset until next render.
+  // This hook updates some state to force a re-render on progress slider resize,
+  // otherwise resizing the slider causes all the makers to be offset until next
+  // render. Fullscreen changes do not reliably fire a window resize at the
+  // right time, so observe the slider itself and listen for fullscreen changes.
   useLayoutEffect(() => {
-    const updateWidth = () => {
-      setWidth(window.innerWidth);
+    const updateLayout = () => {
+      refreshProgressSliderLayout();
     };
 
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
+    const updateLayoutAfterFullscreen = () => {
+      updateLayout();
+      requestAnimationFrame(updateLayout);
+      setTimeout(updateLayout, 100);
+    };
+
+    window.addEventListener('resize', updateLayout);
+
+    const resizeObserver = new ResizeObserver(updateLayout);
+    if (progressSlider.current) {
+      resizeObserver.observe(progressSlider.current);
+    }
+
+    if (screenfull.isEnabled) {
+      screenfull.on('change', updateLayoutAfterFullscreen);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateLayout);
+      resizeObserver.disconnect();
+
+      if (screenfull.isEnabled) {
+        screenfull.off('change', updateLayoutAfterFullscreen);
+      }
+    };
+  }, [refreshProgressSliderLayout]);
 
   // Inform the main process of a volume or muted state change.
   useEffect(() => {
