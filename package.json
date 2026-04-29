@@ -131,6 +131,7 @@
       "owner": "aza547",
       "repo": "wow-recorder"
     },
+    "afterPack": "scripts/relativise-osn-symlinks.js",
     "afterSign": "scripts/sign-osn-binaries.js"
   },
   "jest": {

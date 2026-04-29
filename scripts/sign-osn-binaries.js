@@ -107,60 +107,6 @@ function findSignables(root) {
   return out;
 }
 
-/**
- * Walk the bundle and convert every absolute symlink to a bundle-relative
- * one. OSN's npm install + electron-builder copy preserves absolute
- * symlinks pointing back at the source repo (e.g.
- * `OSN.app/Contents/Frameworks/ffmpeg → /Users/.../release/app/.../Frameworks/ffmpeg`).
- * codesign --verify --deep --strict rejects symlinks pointing outside
- * the bundle as "invalid destination for symbolic link in bundle".
- *
- * Strategy: for each absolute symlink whose target points to a path
- * INSIDE the same bundle (just via the source-repo prefix), rewrite the
- * link to a bundle-relative path. Skip symlinks whose target really is
- * external (we don't want to silently clone external files).
- */
-function relativiseAbsoluteSymlinks(appPath) {
-  const repoSrcOsnRoot = path.resolve(__dirname, '..', 'release', 'app', 'node_modules', 'obs-studio-node');
-  const bundledOsnRoot = path.join(appPath, 'Contents', 'Resources', 'app', 'node_modules', 'obs-studio-node');
-  let fixed = 0;
-  let skipped = 0;
-  function walk(dir) {
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const entry of entries) {
-      const full = path.join(dir, entry.name);
-      if (entry.isSymbolicLink()) {
-        let target;
-        try { target = fs.readlinkSync(full); } catch { continue; }
-        if (!path.isAbsolute(target)) continue;
-        // Map source-repo OSN path → bundled OSN path.
-        let mapped;
-        if (target.startsWith(repoSrcOsnRoot)) {
-          mapped = path.join(bundledOsnRoot, target.slice(repoSrcOsnRoot.length));
-        }
-        if (!mapped || !fs.existsSync(mapped)) {
-          console.warn('[sign-osn] cannot relativise', full, '→', target);
-          skipped++;
-          continue;
-        }
-        const rel = path.relative(path.dirname(full), mapped);
-        fs.unlinkSync(full);
-        fs.symlinkSync(rel, full);
-        fixed++;
-      } else if (entry.isDirectory()) {
-        walk(full);
-      }
-    }
-  }
-  walk(appPath);
-  console.log(`[sign-osn] symlink relativise: ${fixed} fixed, ${skipped} skipped`);
-}
-
 module.exports = async function (context) {
   const identity = resolveIdentity();
   console.log('[sign-osn] identity:', identity);
@@ -186,9 +132,6 @@ module.exports = async function (context) {
     );
     return;
   }
-
-  console.log('[sign-osn] Relativising absolute symlinks');
-  relativiseAbsoluteSymlinks(appPath);
 
   console.log('[sign-osn] OSN root:', osnRoot);
   const targets = findSignables(osnRoot);
