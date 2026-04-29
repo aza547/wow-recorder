@@ -83,6 +83,78 @@ function relativise(appPath) {
   );
 }
 
+/**
+ * Some OSN frameworks ship as `Foo.framework/Versions/A/...` with no
+ * `Versions/Current` symlink and no top-level convenience symlinks
+ * (`Foo`, `Resources`, `_CodeSignature`, …). codesign requires the
+ * canonical layout or it bails with "bundle format unrecognized".
+ *
+ * For each `*.framework` directory containing a single `Versions/<X>/`
+ * entry, create:
+ *   - `Versions/Current` → `<X>`
+ *   - top-level `<name>` → `Versions/Current/<name>` for every child of
+ *     `Versions/<X>/`.
+ */
+function fixFrameworkLayout(appPath) {
+  let fixed = 0;
+  function walk(dir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.isSymbolicLink() || !entry.isDirectory()) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.name.endsWith('.framework')) {
+        repairFramework(full);
+        // Don't recurse inside frameworks.
+      } else {
+        walk(full);
+      }
+    }
+  }
+  function repairFramework(fwPath) {
+    const versionsDir = path.join(fwPath, 'Versions');
+    if (!fs.existsSync(versionsDir)) return;
+    const versions = fs
+      .readdirSync(versionsDir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name);
+    if (versions.length === 0) return;
+    const current = versions.includes('A') ? 'A' : versions[0];
+    const currentLink = path.join(versionsDir, 'Current');
+    if (!fs.existsSync(currentLink)) {
+      fs.symlinkSync(current, currentLink);
+      fixed++;
+    }
+    const versionDir = path.join(versionsDir, current);
+    const versionEntries = fs.readdirSync(versionDir);
+    for (const name of versionEntries) {
+      const topLink = path.join(fwPath, name);
+      try {
+        fs.lstatSync(topLink);
+        continue;
+      } catch {
+        // does not exist — create it
+      }
+      try {
+        fs.symlinkSync(path.join('Versions', 'Current', name), topLink);
+        fixed++;
+      } catch (err) {
+        console.warn(
+          '[relativise-osn] symlink create failed',
+          topLink,
+          err.message,
+        );
+      }
+    }
+  }
+  walk(appPath);
+  console.log(`[relativise-osn] framework layout: ${fixed} symlinks added`);
+}
+
 module.exports = async function (context) {
   const appPath = path.join(
     context.appOutDir,
@@ -94,4 +166,5 @@ module.exports = async function (context) {
   }
   console.log('[relativise-osn] walking', appPath);
   relativise(appPath);
+  fixFrameworkLayout(appPath);
 };
