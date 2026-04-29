@@ -77,6 +77,29 @@
       "include": "installer.nsh",
       "deleteAppDataOnUninstall": true
     },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        { "target": "dir", "arch": ["arm64"] }
+      ],
+      "artifactName": "WarcraftRecorder-${version}-${arch}.${ext}",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist",
+      "identity": "Apple Development: Yuri Piratello (CH2TKJQKKP)",
+      "type": "development",
+      "extendInfo": {
+        "NSScreenCaptureUsageDescription": "Warcraft Recorder needs Screen Recording to capture your gameplay.",
+        "NSMicrophoneUsageDescription": "Warcraft Recorder needs microphone access to record your voice.",
+        "NSCameraUsageDescription": "Warcraft Recorder does not use the camera; this entitlement is reserved for future webcam-overlay support.",
+        "LSUIElement": false
+      },
+      "asar": false,
+      "extraResources": [
+        "./assets/**"
+      ]
+    },
     "win": {
       "signtoolOptions": {
         "certificateSubjectName": "Warcraft Recorder LTD"
@@ -99,7 +122,8 @@
       "provider": "github",
       "owner": "aza547",
       "repo": "wow-recorder"
-    }
+    },
+    "afterSign": "scripts/sign-osn-binaries.js"
   },
   "jest": {
     "transform": {
