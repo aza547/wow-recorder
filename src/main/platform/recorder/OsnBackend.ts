@@ -20,6 +20,30 @@ const NOT_IMPL = 'OsnBackend: feature not yet wired (later Phase 2 task)';
 const READY_LINE = 'server - start watcher';
 const READY_TIMEOUT_MS = 10000;
 
+function encoderToSimpleName(encoder: string): string {
+  // Map our ESupportedEncoders values + raw OSN IDs to the OSN
+  // Simple-mode RecEncoder values. VT_H264 / VT_HEVC enum entries land
+  // in Task 10; this map already accepts them so Task 10 is a one-line
+  // capabilities update.
+  switch (encoder) {
+    case 'OBS_X264':
+    case 'obs_x264':
+      return 'x264';
+    case 'VT_H264':
+    case 'com.apple.videotoolbox.videoencoder.ave.avc':
+      return 'apple_h264';
+    case 'VT_HEVC':
+    case 'com.apple.videotoolbox.videoencoder.ave.hevc':
+      return 'apple_hevc';
+    default:
+      console.warn(
+        '[OsnBackend] unknown encoder id, falling back to x264:',
+        encoder,
+      );
+      return 'x264';
+  }
+}
+
 /**
  * macOS recorder backend — wraps obs-studio-node.
  *
@@ -387,11 +411,60 @@ export default class OsnBackend implements IRecorderBackend {
 
     console.info('[OsnBackend] setRecordingCfg', { outputPath, container });
   }
-  setVideoEncoder(_encoder: string, _settings: ObsData): void {
-    throw new Error(NOT_IMPL);
+  setVideoEncoder(encoder: string, settings: ObsData): void {
+    const osn = this.getOsn();
+    const recEncoder = encoderToSimpleName(encoder);
+
+    const params: Array<{
+      name: string;
+      currentValue: string | number;
+      type: string;
+    }> = [
+      {
+        name: 'RecEncoder',
+        currentValue: recEncoder,
+        type: 'OBS_PROPERTY_LIST',
+      },
+    ];
+
+    // Map quality settings to OSN Simple-mode names. settings.rate_control,
+    // settings.crf and settings.cqp come from Recorder.ts:getEncoderSettings.
+    if (settings.rate_control) {
+      params.push({
+        name: 'RecRB',
+        currentValue: String(settings.rate_control),
+        type: 'OBS_PROPERTY_LIST',
+      });
+    }
+    if (settings.crf !== undefined) {
+      params.push({
+        name: 'RecCRF',
+        currentValue: Number(settings.crf),
+        type: 'OBS_PROPERTY_INT',
+      });
+    }
+    if (settings.cqp !== undefined) {
+      params.push({
+        name: 'RecCQP',
+        currentValue: Number(settings.cqp),
+        type: 'OBS_PROPERTY_INT',
+      });
+    }
+
+    console.info('[OsnBackend] setVideoEncoder', {
+      encoder,
+      recEncoder,
+      settings,
+    });
+    osn.NodeObs.OBS_settings_saveSettings('Output', [
+      { nameSubCategory: 'Recording', parameters: params },
+    ]);
   }
   listVideoEncoders(): string[] {
-    return [ESupportedEncoders.OBS_X264];
+    // Capability-driven Settings UI reads from `capabilities.encoders`,
+    // not this method, but Recorder.configureBase falls through here as a
+    // best-available probe. Mirror our capabilities.encoders list.
+    return this.capabilities.encoders;
   }
   createSource(id: string, _type: string): string {
     return id;
