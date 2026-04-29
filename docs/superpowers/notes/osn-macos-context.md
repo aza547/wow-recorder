@@ -202,3 +202,67 @@ Top-of-stack symbols immediately tell you whether it's the Crashpad bug above or
 - Does Streamlabs Desktop have a pre-launch script that pre-warms obs64 or sets env vars we're missing? (Worth checking their `app.ts` or main process bootstrap — couldn't find publicly accessible source for the relevant init.)
 - Is there a way to make Crashpad init non-fatal when its subprocess can't fork? OSN may not expose a flag.
 - Do older OSN versions (0.25.x, 0.24.x) still hit the macOS 26 fork-pre-exec issue? Worth a one-off downgrade test if patches become brittle.
+
+---
+
+## Phase 2c outcome (2026-04-29)
+
+### Signed dev build
+
+Working signed build at `release/build/mac-arm64/WarcraftRecorder.app`:
+- Identity: `Developer ID Application: Yuri Piratello (Y36BG56F47)`, Team `Y36BG56F47`
+- Hardened runtime active, all 9 entitlements applied
+- `codesign --verify --deep --strict` passes
+
+### Build pipeline (`scripts/`)
+
+1. **`relativise-osn-symlinks.js` (afterPack)** — three structural fixups:
+   - **Drop `OSN.app/`**: nested duplicate of root `obs-studio-node/` tree. `module.js` falls back to root paths when `hasDeveloperApp` is false; `OsnBackend` already targets root `bin/obs64`. Codesign rejects the `OSN.app/distribute/` layout as "unsealed contents present in the bundle root".
+   - **Relativise absolute symlinks**: OSN ships ~22 absolute symlinks into the source-repo path. Codesign rejects those as "invalid destination for symbolic link in bundle". Walk + rewrite to bundle-relative paths.
+   - **Repair framework layout**: OSN's `libobs.framework`, `Syphon.framework`, `Chromium Embedded Framework.framework` ship with only `Versions/A/...` and no `Versions/Current` symlink or top-level convenience links. Codesign rejects as "bundle format unrecognized". Walk each `*.framework`, create `Versions/Current → A` and the top-level entries.
+2. **`sign-osn-binaries.js` (afterSign)** — re-sign every Mach-O / framework / dylib / helper-app inside the bundled OSN tree with our Developer ID. Uses `WCR_SIGN_IDENTITY` env (SHA hash) to disambiguate when both `Apple Distribution` and `Developer ID Application` certs share the team-name string.
+
+### `package.json` build config
+
+- `mac.identity` short form (e.g. `"Yuri Piratello (Y36BG56F47)"`) — electron-builder rejects the `Developer ID Application: ` prefix.
+- `mac.signIgnore` includes `Chromium Embedded Framework\\.framework` and `obs-studio-node/` so electron-builder doesn't recursively sign OSN's pre-shipped frameworks; we re-sign in afterSign.
+- `mac.asar: false` is critical — OSN's native modules need direct filesystem access.
+- `target: "dir"` (not dmg/zip) for fast iteration.
+
+### Launch + TCC behaviour
+
+`tccutil reset All org.WarcraftRecorder` clears prior grants. App launches with no permission prompts; OBS init succeeds, sources/encoders enumerate, MacPgrepPoller detects WoW running. The signed bundle has its own TCC identity rooted in `org.WarcraftRecorder`.
+
+### Recording-start blocker (still open)
+
+`SimpleReplayBufferFactory.legacySettings.start()` returns generic `Failed to make IPC call` with no obs64-side error logged. Diagnostic env knob `WCR_OSN_BUFFER_BYPASS=1` routes startBuffer to `SimpleRecordingFactory.legacySettings.start()` to surface the real error.
+
+Findings via bypass:
+- Without explicit `IVideoEncoder`: obs64 returns `Invalid video encoder`. Fix: `VideoEncoderFactory.create('obs_x264', 'wcr-recording-encoder', settings)` and assign to `rec.videoEncoder`.
+- With video encoder but no `IAudioEncoder`: obs64 SIGABRTs inside `osn::ISimpleRecording::Start +4880`, EXC_BAD_ACCESS at 0x1c. Fix: `AudioEncoderFactory.create('ffmpeg_aac', 'wcr-rec-audio')` → `rec.audioEncoder`.
+- With both encoders set: obs64 still SIGABRTs at the same `Start +4880` 0x1c. Setting `rec.path` and `rec.format` doesn't help. Setting `rec.video = osn.Video` returns `Invalid argument` (osn.Video is the class function, not an IVideo instance — there's no JS-exposed accessor for the global legacy video context).
+- Crash dumps under `~/Library/Application Support/WarcraftRecorder/osn-data/Crashpad/completed/*.dmp`. Backtrace reproduced cleanly with `lldb --batch -o "target create --core ..." -o "thread select 4" -o "bt"`.
+
+Next leads:
+- AdvancedRecording (via `AdvancedRecordingFactory.create()`) sidesteps `legacySettings` entirely — full explicit setup, including video binding via the factory `create()` constructor.
+- Inspect Streamlabs Desktop's recording start path (their main bootstrap) for the IVideo wiring pattern OSN expects.
+- The 0x1c offset suggests a pointer-to-struct read where the struct's field at byte 28 is dereferenced against null. Likely the `streaming` sub-output or an internal `obs_output_t*` that legacySettings doesn't set.
+
+### Useful diagnostic commands
+
+```bash
+# Build signed
+export CSC_NAME="Yuri Piratello (Y36BG56F47)"
+export WCR_SIGN_IDENTITY="F30532B3B818C7850575812B103026F11A5C9FF4"
+npm run package
+
+# Verify signature
+codesign --verify --deep --strict --verbose=2 release/build/mac-arm64/WarcraftRecorder.app
+
+# Reset TCC + launch with diagnostic bypass
+tccutil reset All org.WarcraftRecorder
+WCR_OSN_BUFFER_BYPASS=1 release/build/mac-arm64/WarcraftRecorder.app/Contents/MacOS/WarcraftRecorder
+
+# Latest crash dump
+ls -t ~/Library/Application\ Support/WarcraftRecorder/osn-data/Crashpad/completed/*.dmp | head -1
+```
