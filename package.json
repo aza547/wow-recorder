@@ -79,6 +79,7 @@
     },
     "mac": {
       "category": "public.app-category.utilities",
+      "icon": "assets/icon.icns",
       "target": [
         { "target": "dir", "arch": ["arm64"] }
       ],
@@ -87,8 +88,9 @@
       "gatekeeperAssess": false,
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
-      "identity": "Apple Development: Yuri Piratello (CH2TKJQKKP)",
-      "type": "development",
+      "identity": "Developer ID Application: Yuri Piratello (Y36BG56F47)",
+      "type": "distribution",
+      "signIgnore": ["\\.pak$", "\\.bin$", "\\.dat$"],
       "extendInfo": {
         "NSScreenCaptureUsageDescription": "Warcraft Recorder needs Screen Recording to capture your gameplay.",
         "NSMicrophoneUsageDescription": "Warcraft Recorder needs microphone access to record your voice.",
