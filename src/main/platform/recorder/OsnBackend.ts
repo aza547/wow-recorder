@@ -46,11 +46,22 @@ const OSN_PROP_TYPE_NAMES: Record<number, string> = {
  * iterates. List-type properties carry their items array directly on
  * the result (not nested under `details`) to match noobs's surface.
  */
+/**
+ * macOS OSN source properties use slightly different names than Windows
+ * noobs (Recorder.ts's heritage). Alias mac names → noobs names so
+ * Recorder.ts's `properties.find(p => p.name === 'monitor_id')` etc.
+ * lookups still work.
+ */
+const MAC_PROP_NAME_ALIASES: Record<string, string> = {
+  display_uuid: 'monitor_id',
+};
+
 function adaptOsnProperty(p: import('obs-studio-node').IProperty): ObsProperty {
   const typeNum = p.type as unknown as number;
   const typeStr = OSN_PROP_TYPE_NAMES[typeNum] ?? String(typeNum);
+  const aliasedName = MAC_PROP_NAME_ALIASES[p.name] ?? p.name;
   const out: Record<string, unknown> = {
-    name: p.name,
+    name: aliasedName,
     description: p.description,
     type: typeStr,
   };
@@ -678,7 +689,15 @@ export default class OsnBackend implements IRecorderBackend {
   setSourceSettings(id: string, settings: ObsData): void {
     const input = this.inputs.get(id);
     if (!input) return;
-    input.update(settings);
+    // Reverse the aliasing done in adaptOsnProperty so Recorder.ts
+    // can write `monitor_id` and OSN's mac display_capture source
+    // sees the value under its real key (`display_uuid`).
+    const translated: ObsData = { ...settings };
+    if ('monitor_id' in translated) {
+      translated.display_uuid = translated.monitor_id;
+      delete translated.monitor_id;
+    }
+    input.update(translated);
   }
 
   getSourceProperties(id: string): ObsProperty[] {
