@@ -16,7 +16,6 @@ import type {
   SourceDimensions,
 } from './types';
 
-const NOT_IMPL = 'OsnBackend: feature not yet wired (later Phase 2 task)';
 const READY_LINE = 'server - start watcher';
 const READY_TIMEOUT_MS = 10000;
 
@@ -70,10 +69,14 @@ export default class OsnBackend implements IRecorderBackend {
   private sceneItems = new Map<string, import('obs-studio-node').ISceneItem>();
   private inputs = new Map<string, import('obs-studio-node').IInput>();
 
+  private recording = false;
+  private replayBuffering = false;
+  private lastRecordingPath = '';
+
   public readonly capabilities: RecorderCapabilities = {
     captureModes: [CaptureModeCapability.WINDOW, CaptureModeCapability.MONITOR],
     encoders: [ESupportedEncoders.OBS_X264],
-    supportsReplayBuffer: false,
+    supportsReplayBuffer: true,
   };
 
   private getOsn(): typeof import('obs-studio-node') {
@@ -616,16 +619,69 @@ export default class OsnBackend implements IRecorderBackend {
   setAudioSuppression(_enabled: boolean): void {}
   setMuteAudioInputs(_muted: boolean): void {}
   startBuffer(): void {
-    throw new Error(NOT_IMPL);
+    if (this.replayBuffering) {
+      console.info('[OsnBackend] startBuffer — already running, ignoring');
+      return;
+    }
+    const osn = this.getOsn();
+    console.info('[OsnBackend] startBuffer');
+    osn.NodeObs.OBS_service_startReplayBuffer();
+    this.replayBuffering = true;
   }
-  startRecording(_offsetSeconds: number): void {
-    throw new Error(NOT_IMPL);
+
+  startRecording(offsetSeconds: number): void {
+    if (this.recording) {
+      console.info('[OsnBackend] startRecording — already running, ignoring');
+      return;
+    }
+    const osn = this.getOsn();
+    console.info('[OsnBackend] startRecording', { offsetSeconds });
+    // offsetSeconds is the noobs-era replay-buffer offset. OSN handles
+    // the buffer-to-file conversion via processReplayBufferHotkey when
+    // saving; for the simple-record path we just start a fresh recording.
+    void offsetSeconds;
+    osn.NodeObs.OBS_service_startRecording();
+    this.recording = true;
   }
+
   stopRecording(): void {
-    throw new Error(NOT_IMPL);
+    if (!this.recording) {
+      console.info('[OsnBackend] stopRecording — not running, ignoring');
+      return;
+    }
+    const osn = this.getOsn();
+    console.info('[OsnBackend] stopRecording');
+    osn.NodeObs.OBS_service_stopRecording();
+    this.recording = false;
   }
-  forceStopRecording(): void {}
+
+  forceStopRecording(): void {
+    const osn = this.osn;
+    if (this.recording) {
+      try {
+        osn?.NodeObs.OBS_service_stopRecording();
+      } catch (err) {
+        console.error(
+          '[OsnBackend] forceStopRecording — stopRecording threw',
+          err,
+        );
+      }
+      this.recording = false;
+    }
+    if (this.replayBuffering) {
+      try {
+        osn?.NodeObs.OBS_service_stopReplayBuffer(true);
+      } catch (err) {
+        console.error(
+          '[OsnBackend] forceStopRecording — stopReplayBuffer threw',
+          err,
+        );
+      }
+      this.replayBuffering = false;
+    }
+  }
+
   getLastRecording(): string {
-    return '';
+    return this.lastRecordingPath;
   }
 }
