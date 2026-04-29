@@ -828,14 +828,34 @@ export default class OsnBackend implements IRecorderBackend {
       }
     }
   }
+  /**
+   * Lazy-init the OSN modern factory objects. `legacySettings` returns
+   * a singleton already-configured by OBS_settings_saveSettings, so our
+   * existing setRecordingCfg/setVideoEncoder calls feed into it.
+   * Modern start()/stop() calls bypass the broken legacy
+   * OBS_service_startReplayBuffer that uses streaming-encoder context.
+   */
+  private getReplayBuffer(): import('obs-studio-node').ISimpleReplayBuffer {
+    const osn = this.getOsn();
+    return osn.SimpleReplayBufferFactory.legacySettings;
+  }
+
+  private getRecording(): import('obs-studio-node').ISimpleRecording {
+    const osn = this.getOsn();
+    return osn.SimpleRecordingFactory.legacySettings;
+  }
+
   startBuffer(): void {
     if (this.replayBuffering) {
       console.info('[OsnBackend] startBuffer — already running, ignoring');
       return;
     }
-    const osn = this.getOsn();
-    console.info('[OsnBackend] startBuffer');
-    osn.NodeObs.OBS_service_startReplayBuffer();
+    console.info('[OsnBackend] startBuffer (SimpleReplayBuffer)');
+    const rb = this.getReplayBuffer();
+    rb.signalHandler = (signal) => {
+      console.info('[OsnBackend] replay-buffer signal', signal);
+    };
+    rb.start();
     this.replayBuffering = true;
   }
 
@@ -844,13 +864,25 @@ export default class OsnBackend implements IRecorderBackend {
       console.info('[OsnBackend] startRecording — already running, ignoring');
       return;
     }
-    const osn = this.getOsn();
     console.info('[OsnBackend] startRecording', { offsetSeconds });
-    // offsetSeconds is the noobs-era replay-buffer offset. OSN handles
-    // the buffer-to-file conversion via processReplayBufferHotkey when
-    // saving; for the simple-record path we just start a fresh recording.
     void offsetSeconds;
-    osn.NodeObs.OBS_service_startRecording();
+    const rec = this.getRecording();
+    rec.signalHandler = (signal) => {
+      console.info('[OsnBackend] recording signal', signal);
+      // Pull lastFile() on stop signals so getLastRecording works.
+      if (
+        (signal as unknown as { signal?: string }).signal === 'stop' ||
+        (signal as unknown as { signal?: string }).signal === 'wrote'
+      ) {
+        try {
+          const p = rec.lastFile();
+          if (p) this.lastRecordingPath = p;
+        } catch {
+          // ignore
+        }
+      }
+    };
+    rec.start();
     this.recording = true;
   }
 
@@ -859,20 +891,25 @@ export default class OsnBackend implements IRecorderBackend {
       console.info('[OsnBackend] stopRecording — not running, ignoring');
       return;
     }
-    const osn = this.getOsn();
     console.info('[OsnBackend] stopRecording');
-    osn.NodeObs.OBS_service_stopRecording();
+    const rec = this.getRecording();
+    rec.stop();
+    try {
+      const p = rec.lastFile();
+      if (p) this.lastRecordingPath = p;
+    } catch {
+      // ignore
+    }
     this.recording = false;
   }
 
   forceStopRecording(): void {
-    const osn = this.osn;
     if (this.recording) {
       try {
-        osn?.NodeObs.OBS_service_stopRecording();
+        this.getRecording().stop(true);
       } catch (err) {
         console.error(
-          '[OsnBackend] forceStopRecording — stopRecording threw',
+          '[OsnBackend] forceStopRecording — recording.stop threw',
           err,
         );
       }
@@ -880,10 +917,10 @@ export default class OsnBackend implements IRecorderBackend {
     }
     if (this.replayBuffering) {
       try {
-        osn?.NodeObs.OBS_service_stopReplayBuffer(true);
+        this.getReplayBuffer().stop(true);
       } catch (err) {
         console.error(
-          '[OsnBackend] forceStopRecording — stopReplayBuffer threw',
+          '[OsnBackend] forceStopRecording — replayBuffer.stop threw',
           err,
         );
       }
