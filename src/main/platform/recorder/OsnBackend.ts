@@ -124,6 +124,19 @@ function synthesiseCoreAudioProperties(): ObsProperty[] {
   ];
 }
 
+function encoderToOsnId(encoder: string): string {
+  // Map our pseudo-IDs to the real OSN encoder IDs used by
+  // VideoEncoderFactory.create(). x264 / VT use distinct identifiers.
+  switch (encoder) {
+    case 'VT_H264':
+      return 'com.apple.videotoolbox.videoencoder.ave.avc';
+    case 'VT_HEVC':
+      return 'com.apple.videotoolbox.videoencoder.ave.hevc';
+    default:
+      return encoder; // obs_x264, h264_texture_amf, etc.
+  }
+}
+
 function encoderToSimpleName(encoder: string): string {
   // Map our ESupportedEncoders values + raw OSN IDs to the OSN
   // Simple-mode RecEncoder values. VT_H264 / VT_HEVC enum entries land
@@ -178,6 +191,20 @@ export default class OsnBackend implements IRecorderBackend {
   private recording = false;
   private replayBuffering = false;
   private lastRecordingPath = '';
+
+  // ISimpleRecording.start() rejects with "Invalid video encoder" unless we
+  // explicitly create + assign IVideoEncoder. OBS_settings_saveSettings
+  // alone doesn't bind an IVideoEncoder to the legacySettings recording.
+  private lastEncoderRawId: string | undefined;
+  private lastEncoderSettings: ObsData = {};
+  private cachedRecordingEncoder:
+    | import('obs-studio-node').IVideoEncoder
+    | undefined;
+  private cachedRecordingAudioEncoder:
+    | import('obs-studio-node').IAudioEncoder
+    | undefined;
+  private lastRecOutputPath: string | undefined;
+  private lastRecContainer: string | undefined;
 
   public readonly capabilities: RecorderCapabilities = {
     captureModes: [CaptureModeCapability.WINDOW, CaptureModeCapability.MONITOR],
@@ -563,6 +590,8 @@ export default class OsnBackend implements IRecorderBackend {
     ]);
 
     console.info('[OsnBackend] setRecordingCfg', { outputPath, container });
+    this.lastRecOutputPath = outputPath;
+    this.lastRecContainer = container;
   }
   setVideoEncoder(encoder: string, settings: ObsData): void {
     const osn = this.getOsn();
@@ -612,6 +641,18 @@ export default class OsnBackend implements IRecorderBackend {
     osn.NodeObs.OBS_settings_saveSettings('Output', [
       { nameSubCategory: 'Recording', parameters: params },
     ]);
+
+    // Cache for ensureRecordingEncoder() — invalidate any previous encoder.
+    this.lastEncoderRawId = encoderToOsnId(encoder);
+    this.lastEncoderSettings = settings;
+    if (this.cachedRecordingEncoder) {
+      try {
+        this.cachedRecordingEncoder.release();
+      } catch {
+        // ignore — encoder may already be released or in-use
+      }
+      this.cachedRecordingEncoder = undefined;
+    }
   }
   listVideoEncoders(): string[] {
     // Capability-driven Settings UI reads from `capabilities.encoders`,
@@ -845,13 +886,72 @@ export default class OsnBackend implements IRecorderBackend {
     return osn.SimpleRecordingFactory.legacySettings;
   }
 
+  /**
+   * Lazily build an IVideoEncoder for the recording/replay-buffer outputs.
+   * SimpleRecording.start() rejects with "Invalid video encoder" when
+   * legacySettings.videoEncoder is unset; OBS_settings_saveSettings
+   * configures the simple-mode RecEncoder string but doesn't materialise
+   * the IVideoEncoder object.
+   */
+  private ensureRecordingEncoder(): import('obs-studio-node').IVideoEncoder {
+    if (this.cachedRecordingEncoder) return this.cachedRecordingEncoder;
+    if (!this.lastEncoderRawId) {
+      throw new Error(
+        '[OsnBackend] ensureRecordingEncoder called before setVideoEncoder',
+      );
+    }
+    const osn = this.getOsn();
+    const enc = osn.VideoEncoderFactory.create(
+      this.lastEncoderRawId,
+      'wcr-recording-encoder',
+      this.lastEncoderSettings as Record<string, unknown>,
+    );
+    console.info('[OsnBackend] created IVideoEncoder', {
+      id: this.lastEncoderRawId,
+      settings: this.lastEncoderSettings,
+    });
+    this.cachedRecordingEncoder = enc;
+    return enc;
+  }
+
+  /**
+   * ISimpleRecording.audioEncoder must be set before Start; obs64 SIGABRTs
+   * inside ISimpleRecording::Start otherwise.
+   */
+  private ensureRecordingAudioEncoder(): import('obs-studio-node').IAudioEncoder {
+    if (this.cachedRecordingAudioEncoder) return this.cachedRecordingAudioEncoder;
+    const osn = this.getOsn();
+    const enc = osn.AudioEncoderFactory.create('ffmpeg_aac', 'wcr-rec-audio');
+    console.info('[OsnBackend] created IAudioEncoder', { id: 'ffmpeg_aac' });
+    this.cachedRecordingAudioEncoder = enc;
+    return enc;
+  }
+
   startBuffer(): void {
     if (this.replayBuffering) {
       console.info('[OsnBackend] startBuffer — already running, ignoring');
       return;
     }
+    // Diagnostic bypass: SimpleReplayBuffer.start() returns "Failed to make
+    // IPC call" on macOS with no obs64-side error logged. When
+    // WCR_OSN_BUFFER_BYPASS=1, fall back to SimpleRecording.start() to
+    // confirm the recording IPC path works end-to-end.
+    if (process.env.WCR_OSN_BUFFER_BYPASS === '1') {
+      console.info(
+        '[OsnBackend] startBuffer — BYPASS active, delegating to startRecording',
+      );
+      this.startRecording(0);
+      // forceStop will attempt rb.stop() on this flag — wrapped in try/catch
+      // so the bogus IPC error is harmless for the diagnostic.
+      this.replayBuffering = true;
+      return;
+    }
     console.info('[OsnBackend] startBuffer (SimpleReplayBuffer)');
     const rb = this.getReplayBuffer();
+    if (rb.recording) {
+      rb.recording.videoEncoder = this.ensureRecordingEncoder();
+      rb.recording.audioEncoder = this.ensureRecordingAudioEncoder();
+    }
     rb.signalHandler = (signal) => {
       console.info('[OsnBackend] replay-buffer signal', signal);
     };
@@ -867,6 +967,13 @@ export default class OsnBackend implements IRecorderBackend {
     console.info('[OsnBackend] startRecording', { offsetSeconds });
     void offsetSeconds;
     const rec = this.getRecording();
+    rec.videoEncoder = this.ensureRecordingEncoder();
+    rec.audioEncoder = this.ensureRecordingAudioEncoder();
+    if (this.lastRecOutputPath) rec.path = this.lastRecOutputPath;
+    if (this.lastRecContainer) {
+      rec.format = this
+        .lastRecContainer as import('obs-studio-node').ERecordingFormat;
+    }
     rec.signalHandler = (signal) => {
       console.info('[OsnBackend] recording signal', signal);
       // Pull lastFile() on stop signals so getLastRecording works.
