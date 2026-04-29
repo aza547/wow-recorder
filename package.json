@@ -88,7 +88,7 @@
       "gatekeeperAssess": false,
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
-      "identity": "Developer ID Application: Yuri Piratello (Y36BG56F47)",
+      "identity": "Yuri Piratello (Y36BG56F47)",
       "type": "distribution",
       "signIgnore": ["\\.pak$", "\\.bin$", "\\.dat$"],
       "extendInfo": {
