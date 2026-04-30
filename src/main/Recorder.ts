@@ -56,7 +56,7 @@ import type {
 import { getRecorderBackend } from 'main/platform';
 import type { IRecorderBackend } from 'main/platform/recorder/IRecorderBackend';
 import { getNativeWindowHandle, send } from './main';
-import { ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import Poller from 'utils/Poller';
 import AsyncQueue from 'utils/AsyncQueue';
 import assert from 'assert';
@@ -1095,9 +1095,12 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Initializing OBS');
     const cb = this.handleSignal.bind(this);
 
+    // Avoid pointing at a path inside Contents/Resources/app — writing
+    // there breaks codesign's seal and Gatekeeper blocks the next
+    // launch. Use the per-user logs dir for packaged builds.
     let logPath = devMode
       ? path.resolve(__dirname, './logs')
-      : path.resolve(__dirname, '../../dist/main/logs');
+      : path.join(app.getPath('logs'), 'noobs');
 
     let noobsPath = devMode
       ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')

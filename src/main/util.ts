@@ -60,7 +60,14 @@ const setupApplicationLogging = () => {
   const log = require('electron-log');
   const date = new Date().toISOString().slice(0, 10);
   const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
-  const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath));
+  // In packaged builds, __dirname sits inside Contents/Resources/app —
+  // writing logs there mutates the .app and breaks codesign's seal,
+  // so Gatekeeper kills the next launch with "sealed resource is
+  // missing or invalid". Use the per-user logs dir instead.
+  const baseDir = app.isPackaged
+    ? app.getPath('logs')
+    : __dirname;
+  const logPath = fixPathWhenPackaged(path.join(baseDir, logRelativePath));
   log.transports.file.resolvePath = () => logPath;
   Object.assign(console, log.functions);
   return path.dirname(logPath);
