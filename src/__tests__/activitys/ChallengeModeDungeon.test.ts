@@ -1,9 +1,19 @@
+jest.mock(
+  'config/ConfigService',
+  () => ({
+    __esModule: true,
+    default: {
+      getInstance: () => ({
+        get: () => 'English',
+      }),
+    },
+  }),
+  { virtual: true },
+);
+
 import { Flavour, PlayerDeathType } from '../../main/types';
 import ChallengeModeDungeon from '../../activitys/ChallengeModeDungeon';
 import Combatant from '../../main/Combatant';
-import TestConfigService from '../../utils/TestConfigService';
-
-const cfg = new TestConfigService();
 
 const getPlayerDeath = (deathDate: Date, rel: number, isFriendly: boolean) => {
   const playerDeath: PlayerDeathType = {
@@ -38,8 +48,7 @@ test('Basic Challenge Mode', () => {
     1822,
     353,
     10,
-    [159, 10, 152, 9], // Peril included
-    cfg,
+    [159, 10, 152, 9],
     Flavour.Retail,
   );
 
@@ -90,8 +99,7 @@ test('Hard Depleted Challenge Mode', () => {
     1822,
     353,
     10,
-    [159, 10, 152, 9], // Peril included
-    cfg,
+    [159, 10, 152, 9],
     Flavour.Retail,
   );
 
@@ -142,8 +150,7 @@ test('Peril Timed Challenge Mode', () => {
     1822,
     353,
     10,
-    [159, 10, 152, 9], // Peril included so we get +90 on the timer
-    cfg,
+    [159, 10, 152, 9],
     Flavour.Retail,
   );
 
@@ -182,8 +189,7 @@ test('Peril Depleted Challenge Mode', () => {
     1822,
     353,
     10,
-    [159, 10, 152, 9], // Peril included so we get +90 on the timer
-    cfg,
+    [159, 10, 152, 9],
     Flavour.Retail,
   );
 
@@ -214,6 +220,44 @@ test('Peril Depleted Challenge Mode', () => {
   expect(dungeon.duration).toBe(expectedDuration);
   expect(dungeon.deaths.length).toBe(3);
   expect(dungeon.CMDuration).toBe(34 * 60 + 45);
+
+  expect(dungeon.result).toBe(true);
+  expect(dungeon.upgradeLevel).toBe(0);
+});
+
+test('Retail Challenge Mode Allows Timer Grace', () => {
+  const startDate = new Date('2022-12-25T12:00:00');
+  const endDate = getRelativeDate(startDate, 34 * 60 + 0.999);
+
+  const dungeon = new ChallengeModeDungeon(
+    startDate,
+    2875,
+    558,
+    20,
+    [],
+    Flavour.Retail,
+  );
+
+  dungeon.endChallengeMode(endDate, 34 * 60 + 0.999, true);
+
+  expect(dungeon.result).toBe(true);
+  expect(dungeon.upgradeLevel).toBe(1);
+});
+
+test('Retail Challenge Mode Depletes At One Second Over Timer', () => {
+  const startDate = new Date('2022-12-25T12:00:00');
+  const endDate = getRelativeDate(startDate, 34 * 60 + 1);
+
+  const dungeon = new ChallengeModeDungeon(
+    startDate,
+    2875,
+    558,
+    20,
+    [],
+    Flavour.Retail,
+  );
+
+  dungeon.endChallengeMode(endDate, 34 * 60 + 1, true);
 
   expect(dungeon.result).toBe(true);
   expect(dungeon.upgradeLevel).toBe(0);
