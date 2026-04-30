@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { ChildProcess, spawn } from 'child_process';
-import { app, screen } from 'electron';
+import { app, BrowserWindow, screen } from 'electron';
 import type {
   BackendInitOptions,
   IRecorderBackend,
@@ -205,6 +205,35 @@ export default class OsnBackend implements IRecorderBackend {
     | undefined;
   private lastRecOutputPath: string | undefined;
   private lastRecContainer: string | undefined;
+
+  private previewKey = 'wcr-preview';
+  private previewHwnd: Buffer | undefined;
+  private previewActive = false;
+  // Streamlabs Desktop's preview pattern (see github.com/streamlabs/desktop
+  // app/services/video.ts): on macOS, OSN's CAOpenGLLayer renders below
+  // Electron's WebContents layer when attached to the main BrowserWindow,
+  // so they use `node-window-rendering` to spin up a sibling Cocoa
+  // NSWindow positioned over the preview region and pipe the OBS render
+  // target into it via an IOSurface.
+  private nwr: typeof import('node-window-rendering') | undefined;
+  private previewParent: BrowserWindow | undefined;
+  private previewIOSurface = false;
+  private cachedPreviewLocalX: number | undefined;
+  private cachedPreviewLocalY: number | undefined;
+  private surfaceWidth = 0;
+  private surfaceHeight = 0;
+  private rebuildTimer: NodeJS.Timeout | undefined;
+
+  // SLOBS pattern (settings-v2/video.ts): an explicit IVideo context is
+  // required for OBS_content_createDisplay's 4th arg AND for binding to
+  // recording outputs. Without it, createDisplay renders black and
+  // ISimpleRecording::Start NULL-derefs at +0x1c. The legacy
+  // OBS_settings_saveSettings('Video', ...) call configures the global
+  // video info but doesn't materialise the JS-side IVideo handle.
+  private videoContext: import('obs-studio-node').IVideo | undefined;
+  private videoFps = 30;
+  private videoWidth = 1920;
+  private videoHeight = 1080;
 
   public readonly capabilities: RecorderCapabilities = {
     captureModes: [CaptureModeCapability.WINDOW, CaptureModeCapability.MONITOR],
@@ -444,9 +473,79 @@ export default class OsnBackend implements IRecorderBackend {
     this.obs64 = undefined;
   }
 
-  initPreview(_hwnd: Buffer): void {
-    // Preview rendering deferred to a later task — placeholder while
-    // Phase 2 focuses on recording.
+  initPreview(hwnd: Buffer): void {
+    this.previewHwnd = hwnd;
+    this.previewParent = BrowserWindow.getAllWindows().find(
+      (w) => !w.isDestroyed() && w.getNativeWindowHandle().equals(hwnd),
+    );
+    try {
+      // Packaged on Mac: nwr lives at Contents/Resources/node-window-rendering
+      // (electron-builder extraResources). In dev it's resolved from
+      // release/app/node_modules. Bypass webpack's static require analysis
+      // via __non_webpack_require__ since the path is runtime-only.
+      const nwrPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'node-window-rendering')
+        : 'node-window-rendering';
+      // eval('require') bypasses webpack's static analysis so the path
+      // resolves against Node's real require at runtime.
+      // eslint-disable-next-line no-eval
+      const nodeRequire = eval('require') as NodeRequire;
+      this.nwr = nodeRequire(nwrPath);
+    } catch (err) {
+      console.error(
+        '[OsnBackend] node-window-rendering require failed — preview disabled',
+        err,
+      );
+    }
+    console.info('[OsnBackend] initPreview cached hwnd, nwr loaded:', !!this.nwr);
+  }
+
+  /**
+   * (Re)create the IOSurface + nwr child window for the current preview
+   * size. Called from showPreview and on every size change — IOSurface is
+   * sized at creation time, so resize means destroy + recreate.
+   */
+  private rebuildPreviewSurface(): void {
+    if (!this.nwr || !this.previewHwnd) return;
+    const osn = this.getOsn();
+    if (this.previewIOSurface) {
+      try {
+        this.nwr.destroyWindow(this.previewKey);
+      } catch (err) {
+        console.warn('[OsnBackend] nwr.destroyWindow threw', err);
+      }
+      try {
+        this.nwr.destroyIOSurface(this.previewKey);
+      } catch (err) {
+        console.warn('[OsnBackend] nwr.destroyIOSurface threw', err);
+      }
+      this.previewIOSurface = false;
+    }
+    let surfaceId: number | undefined;
+    try {
+      console.info('[OsnBackend] rebuild: createIOSurface');
+      surfaceId = osn.NodeObs.OBS_content_createIOSurface(this.previewKey);
+      console.info('[OsnBackend] rebuild: createIOSurface returned', surfaceId);
+    } catch (err) {
+      console.error('[OsnBackend] OBS_content_createIOSurface failed', err);
+      return;
+    }
+    if (typeof surfaceId !== 'number') {
+      console.error('[OsnBackend] createIOSurface did not return a number:', surfaceId);
+      return;
+    }
+    try {
+      console.info('[OsnBackend] rebuild: nwr.createWindow');
+      this.nwr.createWindow(this.previewKey, this.previewHwnd);
+      console.info('[OsnBackend] rebuild: nwr.connectIOSurface', surfaceId);
+      this.nwr.connectIOSurface(this.previewKey, surfaceId);
+      this.previewIOSurface = true;
+      this.surfaceWidth = this.cachedPreviewDimensions.previewWidth;
+      this.surfaceHeight = this.cachedPreviewDimensions.previewHeight;
+      console.info('[OsnBackend] preview IOSurface attached, id', surfaceId);
+    } catch (err) {
+      console.error('[OsnBackend] nwr createWindow/connectIOSurface failed', err);
+    }
   }
 
   shutdown(): void {
@@ -541,6 +640,11 @@ export default class OsnBackend implements IRecorderBackend {
     console.info('[OsnBackend] resetVideoContext', { fps, width, height });
     osn.NodeObs.OBS_settings_saveSettings('Video', video);
 
+    this.videoFps = fps;
+    this.videoWidth = width;
+    this.videoHeight = height;
+    this.ensureVideoContext();
+
     this.cachedPreviewDimensions = {
       canvasWidth: width,
       canvasHeight: height,
@@ -549,13 +653,196 @@ export default class OsnBackend implements IRecorderBackend {
       previewHeight: height,
     };
   }
+
+  /**
+   * SLOBS-style IVideo context establishment. Creates the IVideo via
+   * VideoFactory.create() once, then writes IVideoInfo into both the new
+   * context AND the global Video.legacySettings so OBS sees consistent
+   * config across the modern + legacy paths.
+   */
+  private ensureVideoContext(): import('obs-studio-node').IVideo | undefined {
+    const osn = this.getOsn();
+    const VideoFactory = osn.VideoFactory as
+      | { create?: () => import('obs-studio-node').IVideo }
+      | undefined;
+    if (!this.videoContext) {
+      try {
+        if (typeof VideoFactory?.create !== 'function') {
+          console.warn('[OsnBackend] VideoFactory.create unavailable');
+          return undefined;
+        }
+        this.videoContext = VideoFactory.create();
+      } catch (err) {
+        console.error('[OsnBackend] VideoFactory.create threw', err);
+        return undefined;
+      }
+    }
+    // SLOBS pattern: read legacySettings from the freshly-created IVideo
+    // (OBS_settings_saveSettings('Video') configured those), then mirror
+    // into video + global Video. If legacySettings is missing fields,
+    // backfill from our cached resetVideoContext call.
+    let legacy: Record<string, unknown> = {};
+    try {
+      const ls = (
+        this.videoContext as unknown as {
+          legacySettings?: Record<string, unknown>;
+        }
+      ).legacySettings;
+      if (ls && typeof ls === 'object') legacy = { ...ls };
+    } catch (err) {
+      console.warn('[OsnBackend] read legacySettings threw', err);
+    }
+    const info = {
+      fpsNum: (legacy.fpsNum as number) ?? this.videoFps,
+      fpsDen: (legacy.fpsDen as number) ?? 1,
+      baseWidth: (legacy.baseWidth as number) ?? this.videoWidth,
+      baseHeight: (legacy.baseHeight as number) ?? this.videoHeight,
+      outputWidth: (legacy.outputWidth as number) ?? this.videoWidth,
+      outputHeight: (legacy.outputHeight as number) ?? this.videoHeight,
+      outputFormat: (legacy.outputFormat as number) ?? 2,
+      colorspace: (legacy.colorspace as number) ?? 2,
+      range: (legacy.range as number) ?? 1,
+      scaleType: (legacy.scaleType as number) ?? 3,
+      fpsType: (legacy.fpsType as number) ?? 0,
+    } as unknown as import('obs-studio-node').IVideoInfo;
+    console.info('[OsnBackend] videoContext info', info);
+    try {
+      this.videoContext.video = info;
+      this.videoContext.legacySettings = info;
+    } catch (err) {
+      console.warn('[OsnBackend] videoContext info assignment threw', err);
+    }
+    try {
+      const Video = osn.Video as unknown as {
+        video?: import('obs-studio-node').IVideoInfo;
+        legacySettings?: import('obs-studio-node').IVideoInfo;
+      };
+      Video.video = info;
+      Video.legacySettings = info;
+    } catch (err) {
+      console.warn('[OsnBackend] osn.Video info assignment threw', err);
+    }
+    return this.videoContext;
+  }
   getPreviewInfo() {
     return this.cachedPreviewDimensions;
   }
-  configurePreview(_x: number, _y: number, _w: number, _h: number): void {}
-  showPreview(): void {}
-  hidePreview(): void {}
-  disablePreview(): void {}
+  configurePreview(x: number, y: number, w: number, h: number): void {
+    // Renderer multiplies by devicePixelRatio for Windows HWND. nwr's
+    // moveWindow + OSN render target both work in point space on Mac, so
+    // undo the scale.
+    const sf = screen.getPrimaryDisplay().scaleFactor || 1;
+    const px = Math.round(x / sf);
+    const pw = Math.max(1, Math.round(w / sf));
+    const ph = Math.max(1, Math.round(h / sf));
+    // Cocoa subview origin is bottom-left; renderer coords are top-left.
+    // Flip y against the parent contentView height. SLOBS does this
+    // renderer-side via `window.innerHeight - rect.bottom`.
+    const parentContentH = this.previewParent?.getContentBounds().height ?? 0;
+    const topPy = Math.round(y / sf);
+    const py = parentContentH > 0
+      ? Math.max(0, parentContentH - topPy - ph)
+      : topPy;
+
+    const sizeChanged = pw !== this.surfaceWidth || ph !== this.surfaceHeight;
+
+    this.cachedPreviewLocalX = px;
+    this.cachedPreviewLocalY = py;
+    this.cachedPreviewDimensions.previewWidth = pw;
+    this.cachedPreviewDimensions.previewHeight = ph;
+
+    if (!this.previewActive) return;
+    if (sizeChanged) {
+      const osn = this.getOsn();
+      try {
+        osn.NodeObs.OBS_content_resizeDisplay(this.previewKey, pw, ph);
+      } catch (err) {
+        console.warn('[OsnBackend] resizeDisplay threw', err);
+      }
+      // Debounce IOSurface rebuild — ResizeObserver in renderer fires on
+      // every layout shift, and rebuilding involves stopping/starting a
+      // render thread + creating GL resources. 100ms after the last
+      // size change is enough to settle.
+      if (this.rebuildTimer) clearTimeout(this.rebuildTimer);
+      this.rebuildTimer = setTimeout(() => {
+        this.rebuildTimer = undefined;
+        if (this.previewActive) this.rebuildPreviewSurface();
+      }, 100);
+    }
+    try {
+      this.nwr?.moveWindow(this.previewKey, px, py);
+    } catch (err) {
+      console.warn('[OsnBackend] nwr.moveWindow threw', err);
+    }
+  }
+  showPreview(): void {
+    if (this.previewActive) return;
+    if (!this.previewHwnd || !this.nwr) {
+      console.warn(
+        '[OsnBackend] showPreview — hwnd or nwr missing, preview disabled',
+      );
+      return;
+    }
+    const osn = this.getOsn();
+    const w = Math.max(1, this.cachedPreviewDimensions.previewWidth);
+    const h = Math.max(1, this.cachedPreviewDimensions.previewHeight);
+    try {
+      console.info('[OsnBackend] showPreview step 1: createDisplay');
+      const ctx = this.ensureVideoContext();
+      // OSN signature: (hwnd, key, mode, renderAtBottom, IVideo). The
+      // IVideo MUST land at info[4]; passing it at info[3] makes the
+      // client read it as renderAtBottom and the display gets no canvas.
+      osn.NodeObs.OBS_content_createDisplay(
+        this.previewHwnd,
+        this.previewKey,
+        0,
+        false,
+        ctx,
+      );
+      console.info('[OsnBackend] showPreview step 2: resizeDisplay', { w, h });
+      osn.NodeObs.OBS_content_resizeDisplay(this.previewKey, w, h);
+      console.info('[OsnBackend] showPreview step 3: setShouldDrawUI');
+      osn.NodeObs.OBS_content_setShouldDrawUI(this.previewKey, false);
+      this.previewActive = true;
+      console.info('[OsnBackend] showPreview step 4: rebuildPreviewSurface');
+      this.rebuildPreviewSurface();
+      const px = this.cachedPreviewLocalX ?? 0;
+      const py = this.cachedPreviewLocalY ?? 0;
+      console.info('[OsnBackend] showPreview step 5: moveWindow', { x: px, y: py });
+      this.nwr.moveWindow(this.previewKey, px, py);
+      console.info('[OsnBackend] preview shown', { x: px, y: py, w, h });
+    } catch (err) {
+      console.error('[OsnBackend] showPreview failed', err);
+    }
+  }
+  hidePreview(): void {
+    if (!this.previewActive) return;
+    const osn = this.getOsn();
+    if (this.nwr && this.previewIOSurface) {
+      try {
+        this.nwr.destroyWindow(this.previewKey);
+      } catch (err) {
+        console.warn('[OsnBackend] nwr.destroyWindow threw', err);
+      }
+      try {
+        this.nwr.destroyIOSurface(this.previewKey);
+      } catch (err) {
+        console.warn('[OsnBackend] nwr.destroyIOSurface threw', err);
+      }
+      this.previewIOSurface = false;
+    }
+    try {
+      osn.NodeObs.OBS_content_destroyDisplay(this.previewKey);
+    } catch (err) {
+      console.warn('[OsnBackend] hidePreview destroyDisplay threw', err);
+    }
+    this.previewActive = false;
+    this.surfaceWidth = 0;
+    this.surfaceHeight = 0;
+  }
+  disablePreview(): void {
+    this.hidePreview();
+  }
   setRecordingCfg(outputPath: string, container: string): void {
     const osn = this.getOsn();
 
@@ -949,6 +1236,8 @@ export default class OsnBackend implements IRecorderBackend {
     console.info('[OsnBackend] startBuffer (SimpleReplayBuffer)');
     const rb = this.getReplayBuffer();
     if (rb.recording) {
+      const ctx = this.ensureVideoContext();
+      if (ctx) rb.recording.video = ctx;
       rb.recording.videoEncoder = this.ensureRecordingEncoder();
       rb.recording.audioEncoder = this.ensureRecordingAudioEncoder();
     }
@@ -967,6 +1256,8 @@ export default class OsnBackend implements IRecorderBackend {
     console.info('[OsnBackend] startRecording', { offsetSeconds });
     void offsetSeconds;
     const rec = this.getRecording();
+    const ctx = this.ensureVideoContext();
+    if (ctx) rec.video = ctx;
     rec.videoEncoder = this.ensureRecordingEncoder();
     rec.audioEncoder = this.ensureRecordingAudioEncoder();
     if (this.lastRecOutputPath) rec.path = this.lastRecOutputPath;

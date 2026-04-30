@@ -23,6 +23,10 @@ const baseExternals = [
     if (!isMac && dep === 'obs-studio-node') return false;
     return true;
   }),
+  // node-window-rendering is a Mac-only native addon (Streamlabs OSN
+  // preview helper). Vendored under release/app/node_modules; treat as
+  // external so webpack never tries to inline its .node binary.
+  ...(isMac ? ['node-window-rendering'] : []),
 ];
 
 const configuration: webpack.Configuration = {

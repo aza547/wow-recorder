@@ -105,7 +105,11 @@
       },
       "asar": false,
       "extraResources": [
-        "./assets/**"
+        "./assets/**",
+        {
+          "from": "vendor/node-window-rendering",
+          "to": "node-window-rendering"
+        }
       ]
     },
     "win": {
