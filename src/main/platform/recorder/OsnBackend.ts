@@ -223,6 +223,7 @@ export default class OsnBackend implements IRecorderBackend {
   private surfaceWidth = 0;
   private surfaceHeight = 0;
   private rebuildTimer: NodeJS.Timeout | undefined;
+  private signalCallback: import('./IRecorderBackend').SignalCallback | undefined;
 
   // SLOBS pattern (settings-v2/video.ts): an explicit IVideo context is
   // required for OBS_content_createDisplay's 4th arg AND for binding to
@@ -358,6 +359,7 @@ export default class OsnBackend implements IRecorderBackend {
 
     // Subscribe to OSN output signals and forward to caller's callback.
     const { subscribeOsnSignals } = require('./osn/signalWiring');
+    this.signalCallback = options.signalCallback;
     subscribeOsnSignals(osn, options.signalCallback, (path: string) => {
       this.lastRecordingPath = path;
       console.info('[OsnBackend] last recording path =', path);
@@ -1230,16 +1232,50 @@ export default class OsnBackend implements IRecorderBackend {
       return;
     }
     console.info('[OsnBackend] startBuffer (SimpleReplayBuffer)');
+    const osn = this.getOsn();
     const rb = this.getReplayBuffer();
-    if (rb.recording) {
-      const ctx = this.ensureVideoContext();
-      if (ctx) rb.recording.video = ctx;
-      rb.recording.quality = 1; // HighQuality — see startRecording note
-      rb.recording.videoEncoder = this.ensureRecordingEncoder();
-      rb.recording.audioEncoder = this.ensureRecordingAudioEncoder();
+    // SimpleReplayBuffer.Start dereferences `replayBuffer->recording`;
+    // GetLegacySettings doesn't populate it, so we must explicitly
+    // assign a SimpleRecording. Use the legacySettings singleton so
+    // OBS_settings_saveSettings('Output', 'Recording') flows through.
+    const inner = osn.SimpleRecordingFactory.legacySettings;
+    const ctx = this.ensureVideoContext();
+    if (ctx) inner.video = ctx;
+    inner.quality = 1; // HighQuality — see startRecording note
+    inner.videoEncoder = this.ensureRecordingEncoder();
+    inner.audioEncoder = this.ensureRecordingAudioEncoder();
+    if (this.lastRecOutputPath) inner.path = this.lastRecOutputPath;
+    if (this.lastRecContainer) {
+      inner.format = this
+        .lastRecContainer as import('obs-studio-node').ERecordingFormat;
     }
+    rb.recording = inner;
+    if (this.lastRecOutputPath) rb.path = this.lastRecOutputPath;
+    if (this.lastRecContainer) {
+      rb.format = this
+        .lastRecContainer as import('obs-studio-node').ERecordingFormat;
+    }
+    rb.fileFormat = '%CCYY-%MM-%DD %hh-%mm-%ss';
+    rb.duration = 30; // 30s rolling buffer
+    rb.usesStream = false; // use recording encoders (not streaming)
     rb.signalHandler = (signal) => {
       console.info('[OsnBackend] replay-buffer signal', signal);
+      // Forward to the global callback so Recorder.handleSignal's
+      // startQueue.shift() sees the 'start' event. Per-output signals
+      // don't flow through OBS_service_connectOutputSignals.
+      const s = signal as unknown as {
+        type?: string;
+        signal?: string;
+        code?: number;
+        error?: string;
+      };
+      this.signalCallback?.({
+        type: s.type ?? 'replay-buffer',
+        id: s.signal ?? '',
+        signal: s.signal,
+        code: s.code ?? 0,
+        error: s.error ?? '',
+      } as unknown as import('./types').Signal);
     };
     rb.start();
     this.replayBuffering = true;
@@ -1270,11 +1306,14 @@ export default class OsnBackend implements IRecorderBackend {
     }
     rec.signalHandler = (signal) => {
       console.info('[OsnBackend] recording signal', signal);
+      const s = signal as unknown as {
+        type?: string;
+        signal?: string;
+        code?: number;
+        error?: string;
+      };
       // Pull lastFile() on stop signals so getLastRecording works.
-      if (
-        (signal as unknown as { signal?: string }).signal === 'stop' ||
-        (signal as unknown as { signal?: string }).signal === 'wrote'
-      ) {
+      if (s.signal === 'stop' || s.signal === 'wrote') {
         try {
           const p = rec.lastFile();
           if (p) this.lastRecordingPath = p;
@@ -1282,6 +1321,14 @@ export default class OsnBackend implements IRecorderBackend {
           // ignore
         }
       }
+      // Forward to global callback so Recorder.handleSignal sees it.
+      this.signalCallback?.({
+        type: s.type ?? 'recording',
+        id: s.signal ?? '',
+        signal: s.signal,
+        code: s.code ?? 0,
+        error: s.error ?? '',
+      } as unknown as import('./types').Signal);
     };
     rec.start();
     this.recording = true;

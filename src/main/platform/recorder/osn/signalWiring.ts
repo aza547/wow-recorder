@@ -20,10 +20,18 @@ export function subscribeOsnSignals(
   onLastRecordingPath: (filePath: string) => void,
 ): void {
   osn.NodeObs.OBS_service_connectOutputSignals((signal: OsnSignal) => {
-    // Forward the signal — the shape matches noobs's Signal closely
-    // enough that Recorder.ts's switch on `signal.signal` works.
+    // Recorder.handleSignal switches on `signal.id` (noobs shape), but
+    // OSN sends `{type, signal, code, error}`. Remap so `id` carries the
+    // signal name ('start'/'stop'/'wrote'/etc) Recorder expects.
+    const remapped = {
+      type: signal.type,
+      id: signal.signal,
+      signal: signal.signal,
+      code: signal.code,
+      error: signal.error,
+    };
     try {
-      callback(signal as unknown as Signal);
+      callback(remapped as unknown as Signal);
     } catch (err) {
       console.error('[OsnBackend] signal callback threw', err);
     }
