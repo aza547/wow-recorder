@@ -1166,9 +1166,22 @@ export default class OsnBackend implements IRecorderBackend {
     return osn.SimpleReplayBufferFactory.legacySettings;
   }
 
+  private dedicatedRecording:
+    | import('obs-studio-node').ISimpleRecording
+    | undefined;
+
   private getRecording(): import('obs-studio-node').ISimpleRecording {
     const osn = this.getOsn();
-    return osn.SimpleRecordingFactory.legacySettings;
+    // Use a dedicated SimpleRecording instance separate from the
+    // replay buffer's inner recording (which is the legacySettings
+    // singleton, assigned to rb.recording in startBuffer). Sharing the
+    // singleton between the two outputs left OBS unable to finalise
+    // the recording's mkv — ffmpeg later refused the partial file with
+    // "Invalid data found when processing input".
+    if (!this.dedicatedRecording) {
+      this.dedicatedRecording = osn.SimpleRecordingFactory.create();
+    }
+    return this.dedicatedRecording;
   }
 
   /**
@@ -1214,7 +1227,19 @@ export default class OsnBackend implements IRecorderBackend {
 
   startBuffer(): void {
     if (this.replayBuffering) {
-      console.info('[OsnBackend] startBuffer — already running, ignoring');
+      console.info('[OsnBackend] startBuffer — already running, synthesising start signal');
+      // Replay buffer never actually stops between activities (stopRecording
+      // only finalises a save). Recorder.startObsBuffer waits on a fresh
+      // 'start' signal — emit one synthetically so the state machine
+      // advances back to recording (Ready in the UI) instead of being
+      // stuck on Waiting.
+      this.signalCallback?.({
+        type: 'replay-buffer',
+        id: 'start',
+        signal: 'start',
+        code: 0,
+        error: '',
+      } as unknown as import('./types').Signal);
       return;
     }
     // Diagnostic bypass: SimpleReplayBuffer.start() returns "Failed to make
@@ -1341,14 +1366,63 @@ export default class OsnBackend implements IRecorderBackend {
     }
     console.info('[OsnBackend] stopRecording');
     const rec = this.getRecording();
-    rec.stop();
+    // rec.stop() can throw "Invalid recording output" when the
+    // replay buffer's inner recording is the same legacy singleton
+    // (rb.recording = SimpleRecordingFactory.legacySettings) — OBS
+    // already finalised the output file and treats a second stop as
+    // an error. The .mkv is on disk regardless, so capture the path
+    // and swallow the redundant-stop error.
+    try {
+      rec.stop();
+    } catch (err) {
+      console.warn(
+        '[OsnBackend] rec.stop threw (likely redundant stop on already-finalised output)',
+        err,
+      );
+    }
     try {
       const p = rec.lastFile();
       if (p) this.lastRecordingPath = p;
     } catch {
       // ignore
     }
+    // rec.lastFile() can return empty when rec.stop() threw — fall back
+    // to scanning the recording directory for the newest .mkv.
+    if (!this.lastRecordingPath && this.lastRecOutputPath) {
+      try {
+        const dir = this.lastRecOutputPath;
+        const files = fs
+          .readdirSync(dir)
+          .filter((f) => f.endsWith('.mkv'))
+          .map((f) => ({
+            name: f,
+            mtime: fs.statSync(path.join(dir, f)).mtimeMs,
+          }))
+          .sort((a, b) => b.mtime - a.mtime);
+        if (files.length > 0) {
+          this.lastRecordingPath = path.join(dir, files[0].name);
+          console.info(
+            '[OsnBackend] lastFile fallback:',
+            this.lastRecordingPath,
+          );
+        }
+      } catch (err) {
+        console.warn('[OsnBackend] lastFile dir-scan threw', err);
+      }
+    }
     this.recording = false;
+    // Synthesise a 'wrote' signal so Recorder.stopObsRecording's
+    // stopQueue.shift() resolves promptly. Recorder.handleSignal
+    // listens for `EOBSOutputSignal.Deactivate` ('deactivate') to push
+    // onto stopQueue. Some replay-buffer save flows skip the global
+    // output-signal channel, so emit it ourselves.
+    this.signalCallback?.({
+      type: 'recording',
+      id: 'deactivate',
+      signal: 'deactivate',
+      code: 0,
+      error: '',
+    } as unknown as import('./types').Signal);
   }
 
   forceStopRecording(): void {
