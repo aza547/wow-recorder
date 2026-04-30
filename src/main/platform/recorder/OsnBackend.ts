@@ -1234,6 +1234,7 @@ export default class OsnBackend implements IRecorderBackend {
     if (rb.recording) {
       const ctx = this.ensureVideoContext();
       if (ctx) rb.recording.video = ctx;
+      rb.recording.quality = 1; // HighQuality — see startRecording note
       rb.recording.videoEncoder = this.ensureRecordingEncoder();
       rb.recording.audioEncoder = this.ensureRecordingAudioEncoder();
     }
@@ -1254,6 +1255,12 @@ export default class OsnBackend implements IRecorderBackend {
     const rec = this.getRecording();
     const ctx = this.ensureVideoContext();
     if (ctx) rec.video = ctx;
+    // ERecordingQuality.HighQuality = 1. SLOBS' SimpleRecording::Start
+    // only calls obs_encoder_set_video_mix for the video encoder when
+    // quality is HighQuality / HigherQuality (via UpdateRecordingSettings_crf).
+    // Default (Stream=0) skips the binding and the encoder fails with
+    // "encoder has no media set" at output start.
+    rec.quality = 1;
     rec.videoEncoder = this.ensureRecordingEncoder();
     rec.audioEncoder = this.ensureRecordingAudioEncoder();
     if (this.lastRecOutputPath) rec.path = this.lastRecOutputPath;
