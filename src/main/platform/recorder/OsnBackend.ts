@@ -759,15 +759,11 @@ export default class OsnBackend implements IRecorderBackend {
       } catch (err) {
         console.warn('[OsnBackend] resizeDisplay threw', err);
       }
-      // Debounce IOSurface rebuild — ResizeObserver in renderer fires on
-      // every layout shift, and rebuilding involves stopping/starting a
-      // render thread + creating GL resources. 100ms after the last
-      // size change is enough to settle.
-      if (this.rebuildTimer) clearTimeout(this.rebuildTimer);
-      this.rebuildTimer = setTimeout(() => {
-        this.rebuildTimer = undefined;
-        if (this.previewActive) this.rebuildPreviewSurface();
-      }, 100);
+      // Don't rebuild the IOSurface here — repeated rebuilds during a
+      // resize burst break the OBS render path and the preview goes
+      // black. The initial IOSurface holds whatever resolution we
+      // first sized it at; OpenGL stretches it to the new view frame.
+      // A real rebuild only happens on hide/show.
     }
     try {
       this.nwr?.moveWindow(this.previewKey, px, py);
