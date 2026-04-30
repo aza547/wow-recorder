@@ -99,11 +99,6 @@ export default class ChallengeModeDungeon extends Activity {
       return 0;
     }
 
-    if (this.affixes.includes(152)) {
-      // Challenger's Peril
-      this.CMDuration -= 90;
-    }
-
     const durationForResult = this.CMDuration;
 
     for (let i = this.timings.length - 1; i >= 0; i--) {

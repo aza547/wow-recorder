@@ -133,7 +133,7 @@ test('Hard Depleted Challenge Mode', () => {
   expect(dungeon.upgradeLevel).toBe(0);
 });
 
-test('Peril Timed Challenge Mode', () => {
+test('Peril Does Not Extend Timer', () => {
   const startDate = new Date('2022-12-25T12:00:00');
   const endDate = getRelativeDate(startDate, 34 * 60); // Over the base time of 33 mins
 
@@ -169,7 +169,7 @@ test('Peril Timed Challenge Mode', () => {
   expect(dungeon.CMDuration).toBe(34 * 60);
 
   expect(dungeon.result).toBe(true);
-  expect(dungeon.upgradeLevel).toBe(1);
+  expect(dungeon.upgradeLevel).toBe(0);
 });
 
 test('Peril Depleted Challenge Mode', () => {
