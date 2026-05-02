@@ -22,7 +22,38 @@ const ENTITLEMENTS = path.resolve(
 function resolveIdentity() {
   if (process.env.WCR_SIGN_IDENTITY) return process.env.WCR_SIGN_IDENTITY;
   const pkg = require('../package.json');
-  return pkg?.build?.mac?.identity || '-';
+  const configured = pkg?.build?.mac?.identity || '-';
+
+  // package.json keeps the short team-suffixed form ("Yuri Piratello
+  // (Y36BG56F47)") because electron-builder rejects the
+  // "Developer ID Application:" prefix. That short name is ambiguous on
+  // machines that also carry an "Apple Distribution:" cert with the same
+  // team, so codesign refuses to pick one. Resolve to the unambiguous
+  // SHA-1 hash of the Developer ID Application cert here.
+  if (configured === '-') return '-';
+  try {
+    const out = execFileSync(
+      'security',
+      ['find-identity', '-v', '-p', 'codesigning'],
+      { encoding: 'utf8' },
+    );
+    const teamMatch = configured.match(/\(([A-Z0-9]{10})\)/);
+    if (!teamMatch) return configured;
+    const team = teamMatch[1];
+    const lines = out.split('\n');
+    const pick = (filter) =>
+      lines
+        .map((l) => l.match(/([A-F0-9]{40}) "([^"]+)"/))
+        .filter((m) => m && m[2].includes(team) && filter(m[2]));
+    const devId = pick((n) => n.startsWith('Developer ID Application:'));
+    if (devId.length === 1) return devId[0][1]; // SHA-1 hash → unambiguous
+    const any = pick(() => true);
+    if (any.length === 1) return any[0][1];
+    return configured;
+  } catch (err) {
+    console.warn('[sign-osn] identity resolution fell back:', err.message);
+    return configured;
+  }
 }
 
 function sign(target, identity, withEntitlements) {
