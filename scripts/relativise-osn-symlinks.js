@@ -186,6 +186,59 @@ function dropOsnApp(appPath) {
   console.log('[relativise-osn] dropped OSN.app duplicate');
 }
 
+/**
+ * OSN's npm package ships `obs_studio_client.node` as a relative
+ * symlink → `obs_studio_client.<version>.node`. electron-builder's
+ * file copier dereferences symlinks during `dir` packaging in some
+ * versions, so the bundled tree ends up with only the versioned file
+ * and `module.js`'s `require('./obs_studio_client.node')` blows up at
+ * runtime.
+ *
+ * Look for a `obs_studio_client.<version>.node` next to a missing
+ * `obs_studio_client.node` and recreate the symlink.
+ */
+function ensureClientNodeSymlink(appPath) {
+  const osnRoot = path.join(
+    appPath,
+    'Contents',
+    'Resources',
+    'app',
+    'node_modules',
+    'obs-studio-node',
+  );
+  if (!fs.existsSync(osnRoot)) return;
+  const wanted = path.join(osnRoot, 'obs_studio_client.node');
+  try {
+    fs.lstatSync(wanted);
+    console.log('[relativise-osn] obs_studio_client.node already present');
+    return;
+  } catch {
+    // missing — try to recreate
+  }
+  const versioned = fs
+    .readdirSync(osnRoot)
+    .filter(
+      (n) =>
+        n.startsWith('obs_studio_client.') &&
+        n.endsWith('.node') &&
+        n !== 'obs_studio_client.node',
+    );
+  if (versioned.length !== 1) {
+    console.warn(
+      '[relativise-osn] cannot recreate obs_studio_client.node — found',
+      versioned.length,
+      'candidates:',
+      versioned,
+    );
+    return;
+  }
+  fs.symlinkSync(versioned[0], wanted);
+  console.log(
+    '[relativise-osn] recreated obs_studio_client.node →',
+    versioned[0],
+  );
+}
+
 module.exports = async function (context) {
   const appPath = path.join(
     context.appOutDir,
@@ -199,4 +252,5 @@ module.exports = async function (context) {
   dropOsnApp(appPath);
   relativise(appPath);
   fixFrameworkLayout(appPath);
+  ensureClientNodeSymlink(appPath);
 };
