@@ -10,9 +10,50 @@
 
 ---
 
-## Status (2026-04-30)
+## Resolution (2026-05-01) — Phase B shipped via `createSourcePreviewDisplay`
 
-**Blocker discovered:** the vendored `obs-studio-node` (0.26.x, in `release/app/node_modules/obs-studio-node`) does **not** expose `OBS_content_setOutlineColor` to JavaScript even though the native binary contains the symbol.
+**Editor selection + drag + resize landed on `feat/macos-osn-backend` and is included in `v7.7.0-beta.1`.** Phase A (binding patch for `OBS_content_setOutlineColor`) turned out to be unnecessary — switching the preview display constructor unlocked the UI draw path without recompiling OSN.
+
+### What actually worked
+
+`OBS_content_createDisplay(key, hwnd, ...)` creates a *generic* preview that does not bind a specific scene/source, and libobs's `DrawSelectedSource` call returns early (canvas-match short-circuit). No selection rectangle is ever drawn, regardless of `setOutlineColor` / `setShouldDrawUI`.
+
+`OBS_content_createSourcePreviewDisplay(key, hwnd, sourceName, ...)` (where `sourceName` is the scene name) binds the display to a source. With this binding `DrawSelectedSource` runs, `setShouldDrawUI(true)` enables UI overlay, and libobs paints the green selection rectangle + transform handles itself — using its own internal default outline color, no JS-side `setOutlineColor` needed.
+
+Code: `OsnBackend.showPreview()` now calls:
+```ts
+osn.NodeObs.OBS_content_createSourcePreviewDisplay(
+  this.previewKey, hwnd, this.sceneName, ...
+);
+osn.NodeObs.OBS_content_setShouldDrawUI(this.previewKey, true);
+```
+
+### Phase B implementation summary
+
+Shipped in `feat/macos-osn-backend`:
+
+- `src/main/EditorService.ts` — singleton; `viewToCanvas()` letterbox-aware coord math; `handleMouseDown/Move/Up` state machine with corner hit-test (selected first, then top-down body); `commitEditorPosition()` hook persists to ConfigService.
+- `src/main/Recorder.ts` — wires `EditorService.setBackend(this.backend)` post-init; commit listener maps source name → SceneItem and calls `saveSourcePosition`. IPC handlers for `editor:mouseDown/Move/Up`.
+- `src/main/preload.ts` + `src/renderer/preload.d.ts` — IPC bridge.
+- `src/renderer/RecorderPreview.tsx` — Mac branch renders transparent overlay div forwarding mouse events via `ipc.editorMouseDown(toEditorEv(e))`. `toEditorEv` includes `buttons: e.buttons` for ghost-drag detection (button stuck after `mouseup` outside window). DOM orange boxes removed on Mac.
+- Y-flip on Mac for window-relative coords (`window.innerHeight - rect.bottom`).
+
+### Phase A status
+
+**Not implemented, not needed.** Keeping the diagnosis below for archival — if a future feature requires `setOutlineColor` (custom selection color, multi-color outline for selected vs hovered, etc.) the binding patch is still the right path.
+
+### Phase C status
+
+**Superseded by the actual Phase B ship.** The DOM-overlay coord audit work (`zoomFactor=1`, CSS-px sf math) was useful as a stepping stone, but the boxes themselves are gone on Mac — OBS draws the selection rectangle now.
+
+### Known follow-ups (not blocking beta 1)
+
+- Selection state survives `showPreview` recreate via `EditorService.reset()` invalidating cached selection, since libobs clears `sceneitem.selected` flags when the display is rebuilt. Working as intended; documented at `Recorder.showPreview`.
+- No multi-select. No rotation handles. Crop UI still uses sliders. All deferred — see "Out of scope (Mac MVP)" below.
+
+### Original blocker (kept for context)
+
+The vendored `obs-studio-node` (0.26.x, in `release/app/node_modules/obs-studio-node`) does **not** expose `OBS_content_setOutlineColor` to JavaScript even though the native binary contains the symbol.
 
 ```
 $ strings obs_studio_client.node | grep OBS_content_set
@@ -34,17 +75,19 @@ Probe verified at runtime: setting `sceneItem.selected = true` + `OBS_content_se
 
 `OBS_content_setOutlineColor is not a function` confirmed in logs (2026-04-30 17:57:49 run).
 
-### What this means for the plan
+### What this means for the plan (HISTORICAL — superseded by Resolution above)
 
 Option 1 as originally written **cannot ship without first patching the JS bindings** in the obs-studio-node Mac fork to expose `setOutlineColor` (and ideally `setOutlineWidth`, `setResizeOuterColors`, `setResizeInnerColors` if they exist). Until that patch lands, libobs draws nothing visible even when `setShouldDrawUI(true)`.
 
-### Updated plan structure
+> **2026-05-01 update:** This conclusion was wrong. `setShouldDrawUI(true)` *does* paint when the display is created via `createSourcePreviewDisplay(sceneName)` instead of the source-less `createDisplay`. libobs uses its own default outline color in that path. See Resolution section above. The Phase A binding patch was never required.
 
-- **Phase A (NEW, prerequisite):** Patch obs-studio-node bindings to expose the missing display setters, rebuild against the Electron ABI, re-vendor.
-- **Phase B (was the original plan):** EditorService + IPC + DOM event-capture overlay — runs unchanged once Phase A lands.
-- **Phase C (interim fallback if Phase A blocked):** Stick with DOM overlay boxes, audit and fix coord math (`zoomFactor=1` on Mac, sf computed from CSS-px, etc.). Already partially in place. Defer Phase B until OSN can be patched.
+### Original phased structure (HISTORICAL)
 
-The remaining Tasks 1–12 below are Phase B and assume Phase A is done.
+- **Phase A (NEW, prerequisite):** Patch obs-studio-node bindings to expose the missing display setters, rebuild against the Electron ABI, re-vendor. → **Not done. Not needed.**
+- **Phase B (was the original plan):** EditorService + IPC + DOM event-capture overlay — runs unchanged once Phase A lands. → **Done via `createSourcePreviewDisplay` route, no Phase A dependency.**
+- **Phase C (interim fallback if Phase A blocked):** Stick with DOM overlay boxes, audit and fix coord math. → **Superseded.**
+
+The remaining Tasks 1–12 below describe the Phase B intent and were used as the implementation guide. Treat as design notes, not action items.
 
 ---
 
