@@ -33,6 +33,11 @@ const MAP: Record<string, ResolvedSource> = {
   // Audio — map Windows WASAPI source types to macOS CoreAudio.
   // Recorder.ts only knows the wasapi_* names from its noobs heritage;
   // we redirect them on mac.
+  // CoreAudio defaults stay empty: setting `device_id: 'default'` at
+  // create time forces libobs into a synchronous CoreAudio probe
+  // (TCC scope dialog + device enumeration) that can hang the OSN
+  // helper for tens of seconds. Recorder.configureAudioSources sets
+  // `device_id` in setSourceSettings after property fetch instead.
   wasapi_input_capture: {
     sourceId: 'coreaudio_input_capture',
     defaults: {},
@@ -42,10 +47,20 @@ const MAP: Record<string, ResolvedSource> = {
     defaults: {},
   },
   wasapi_process_output_capture: {
-    // No mac equivalent (per-process audio). Fall back to whole-system
-    // output capture; user loses per-app audio isolation but recording
-    // still produces audio.
+    // Mac: SCK-based source creation hangs the OSN sync IPC during
+    // ScreenCaptureKit init (observed: app freeze on Add Application
+    // / Add Desktop Audio button click). Disabled until we land
+    // either an async create path or a different audio capture
+    // strategy. Falls back to default-output capture so the source
+    // doesn't error; users wanting real desktop/per-app audio
+    // install BlackHole + Audio MIDI Multi-Output and pick BlackHole
+    // as a Microphone input (matches SLOBS Mac docs).
     sourceId: 'coreaudio_output_capture',
+    defaults: {},
+  },
+  sck_audio_capture: {
+    // Direct alias kept for future use once SCK init is stable.
+    sourceId: 'sck_audio_capture',
     defaults: {},
   },
   coreaudio_input_capture: {

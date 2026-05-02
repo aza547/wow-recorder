@@ -262,6 +262,24 @@ const createWindow = async () => {
     window?.webContents.send('window-focus-status', false);
   });
 
+  // Mac: nwr's OpenGL/CGL surface doesn't auto-track parent NSView
+  // moves on screen — when user drags the BrowserWindow, the preview
+  // visual stays at the original screen coords until we re-issue
+  // `nwr.moveWindow`. Send `redrawPreview` to the renderer so it
+  // re-fires `configurePreview` with the latest div rect; main then
+  // re-anchors the GL surface.
+  if (isMac) {
+    let moveTimer: NodeJS.Timeout | undefined;
+    const onMove = () => {
+      if (moveTimer) clearTimeout(moveTimer);
+      moveTimer = setTimeout(() => window?.webContents.send('redrawPreview'), 50);
+    };
+    window.on('move', onMove);
+    window.on('moved', onMove);
+    window.on('resize', onMove);
+    window.on('resized', onMove);
+  }
+
   window.on('closed', () => {
     window = null;
   });

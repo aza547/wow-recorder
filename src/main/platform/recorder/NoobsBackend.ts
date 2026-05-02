@@ -124,6 +124,15 @@ export default class NoobsBackend implements IRecorderBackend {
     noobs.SetSourceVolume(id, volume);
   }
 
+  // Editor selection — only used by Mac OBS-drawn UI path.
+  setSceneItemSelected(_id: string, _selected: boolean): void {}
+
+  clearSceneItemSelection(): void {}
+
+  listSceneItems(): string[] {
+    return [];
+  }
+
   // Audio
   setVolmeterEnabled(enabled: boolean): void {
     noobs.SetVolmeterEnabled(enabled);

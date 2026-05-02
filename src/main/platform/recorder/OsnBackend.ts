@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
-import { ChildProcess, spawn } from 'child_process';
-import { app, BrowserWindow, screen } from 'electron';
+import { ChildProcess, execFileSync, spawn } from 'child_process';
+import { app, screen } from 'electron';
 import type {
   BackendInitOptions,
   IRecorderBackend,
@@ -80,6 +80,32 @@ function adaptOsnProperty(p: import('obs-studio-node').IProperty): ObsProperty {
  * iterates these via `properties.find(p => p.name === 'monitor_id')`
  * and `'window'` so we expose both names.
  */
+/**
+ * Cached desktopCapturer window list. Populated async by
+ * `refreshMacWindowList()` since `getSources` is async but
+ * `getSourceProperties` is sync. List entries: { name, value }
+ * where value is the CGWindowID-bearing source id.
+ */
+let cachedMacWindows: { name: string; value: string }[] = [];
+
+export async function refreshMacWindowList(): Promise<void> {
+  if (process.platform !== 'darwin') return;
+  try {
+    const { desktopCapturer } = await import('electron');
+    const sources = await desktopCapturer.getSources({
+      types: ['window'],
+      thumbnailSize: { width: 0, height: 0 },
+      fetchWindowIcons: false,
+    });
+    cachedMacWindows = sources
+      .filter((s) => s.name && !s.name.startsWith('Warcraft Recorder'))
+      .map((s) => ({ name: s.name, value: s.id }));
+    console.info('[OsnBackend] mac window list refreshed:', cachedMacWindows.length);
+  } catch (err) {
+    console.warn('[OsnBackend] refreshMacWindowList threw', err);
+  }
+}
+
 function synthesiseScreenCaptureProperties(): ObsProperty[] {
   const displays = screen.getAllDisplays();
   const monitorItems = displays.map((d, idx) => ({
@@ -87,9 +113,6 @@ function synthesiseScreenCaptureProperties(): ObsProperty[] {
     value: String(d.id),
   }));
 
-  // Window list cannot be enumerated cheaply from Electron — return
-  // an empty list. Window-capture mode will fail until we wire a real
-  // CGWindowList probe (follow-up). Monitor-capture works.
   return [
     {
       name: 'monitor_id',
@@ -101,7 +124,7 @@ function synthesiseScreenCaptureProperties(): ObsProperty[] {
       name: 'window',
       description: 'Window',
       type: 'list',
-      items: [],
+      items: cachedMacWindows,
     } as unknown as ObsProperty,
   ];
 }
@@ -120,6 +143,36 @@ function synthesiseCoreAudioProperties(): ObsProperty[] {
       description: 'Device',
       type: 'list',
       items: [{ name: 'Default', value: 'default' }],
+    } as unknown as ObsProperty,
+  ];
+}
+
+/**
+ * Minimal property list for `sck_audio_capture`. The real OBS getter
+ * blocks on SCK initialization on macOS — we don't need the values
+ * for `application`/`window` here since the user picks them via the
+ * renderer's app/window picker (or "Add Desktop Audio" presets
+ * type=0). Recorder.configureAudioSources reads `device_id` for
+ * non-PROCESS sources and skips device lookup for PROCESS, so
+ * exposing a pseudo `device_id` keeps any future code paths happy.
+ */
+function synthesiseSckAudioProperties(): ObsProperty[] {
+  return [
+    {
+      name: 'type',
+      description: 'Capture Type',
+      type: 'list',
+      items: [
+        { name: 'Desktop Audio', value: 0 },
+        { name: 'Window', value: 1 },
+        { name: 'Application', value: 2 },
+      ],
+    } as unknown as ObsProperty,
+    {
+      name: 'device_id',
+      description: 'Device',
+      type: 'list',
+      items: [{ name: 'Desktop Audio', value: 'desktop' }],
     } as unknown as ObsProperty,
   ];
 }
@@ -184,8 +237,12 @@ export default class OsnBackend implements IRecorderBackend {
   };
 
   private scene: import('obs-studio-node').IScene | undefined;
+  private sceneName = 'wcr-scene';
   private sceneItems = new Map<string, import('obs-studio-node').ISceneItem>();
   private inputs = new Map<string, import('obs-studio-node').IInput>();
+  private volmeters = new Map<string, import('obs-studio-node').IVolmeter>();
+  private volmetersWanted = false;
+  private cachedSourceProperties = new Map<string, ObsProperty[]>();
   private inputSourceIds = new Map<string, string>();
 
   private recording = false;
@@ -216,7 +273,6 @@ export default class OsnBackend implements IRecorderBackend {
   // NSWindow positioned over the preview region and pipe the OBS render
   // target into it via an IOSurface.
   private nwr: typeof import('node-window-rendering') | undefined;
-  private previewParent: BrowserWindow | undefined;
   private previewIOSurface = false;
   private cachedPreviewLocalX: number | undefined;
   private cachedPreviewLocalY: number | undefined;
@@ -235,6 +291,7 @@ export default class OsnBackend implements IRecorderBackend {
   private videoFps = 30;
   private videoWidth = 1920;
   private videoHeight = 1080;
+  private didResetVideoContextOnce = false;
 
   public readonly capabilities: RecorderCapabilities = {
     captureModes: [CaptureModeCapability.WINDOW, CaptureModeCapability.MONITOR],
@@ -280,7 +337,7 @@ export default class OsnBackend implements IRecorderBackend {
   private ensureScene(): import('obs-studio-node').IScene {
     if (this.scene) return this.scene;
     const osn = this.getOsn();
-    this.scene = osn.SceneFactory.create('wcr-scene');
+    this.scene = osn.SceneFactory.create(this.sceneName);
     osn.Global.setOutputSource(0, this.scene);
     return this.scene;
   }
@@ -314,6 +371,23 @@ export default class OsnBackend implements IRecorderBackend {
       userData: userDataPath,
       pipe: pipeName,
     });
+
+    // Kill any orphan obs64 processes from prior runs that crashed
+    // without their parent reaping them. Multiple concurrent obs64
+    // instances contend for ScreenCaptureKit + CoreAudio handles,
+    // which deadlocks the new helper's `mac_screen_capture` source
+    // init (observed: 2026-05-01 hang where 3 orphan obs64s stalled
+    // SCK). pkill is best-effort; failures are non-fatal.
+    if (process.platform === 'darwin') {
+      try {
+        execFileSync('pkill', ['-9', '-f', 'obs-studio-node/bin/obs64'], {
+          stdio: 'ignore',
+        });
+        console.info('[OsnBackend] pkilled orphan obs64 processes');
+      } catch {
+        // pkill exits 1 if no matches — ignore.
+      }
+    }
 
     // Override the IPC server path to our patched dev binary. module.js
     // already called setServerPath at require-time pointing at OSN.app's
@@ -477,9 +551,6 @@ export default class OsnBackend implements IRecorderBackend {
 
   initPreview(hwnd: Buffer): void {
     this.previewHwnd = hwnd;
-    this.previewParent = BrowserWindow.getAllWindows().find(
-      (w) => !w.isDestroyed() && w.getNativeWindowHandle().equals(hwnd),
-    );
     try {
       // Packaged on Mac: nwr lives at Contents/Resources/node-window-rendering
       // (electron-builder extraResources). In dev it's resolved from
@@ -538,6 +609,12 @@ export default class OsnBackend implements IRecorderBackend {
     }
     try {
       console.info('[OsnBackend] rebuild: nwr.createWindow');
+      // SLOBS pattern: NSView added on top of WebContents in subview
+      // order. View's hitTest: returns nil so mouse events fall through
+      // to DOM. OBS draws selection/transform UI itself via
+      // setShouldDrawUI(true) — no DOM overlay handles needed.
+      // (Requires OBS_content_setOutlineColor JS binding patched in,
+      // see Phase A in 2026-04-30-mac-editor-service.md.)
       this.nwr.createWindow(this.previewKey, this.previewHwnd);
       console.info('[OsnBackend] rebuild: nwr.connectIOSurface', surfaceId);
       this.nwr.connectIOSurface(this.previewKey, surfaceId);
@@ -640,6 +717,25 @@ export default class OsnBackend implements IRecorderBackend {
     ];
 
     console.info('[OsnBackend] resetVideoContext', { fps, width, height });
+
+    // SLOBS-style canvas rebuild: encoders + the dedicated recording
+    // hold refs to the current IVideo. Release them before writing
+    // the new IVideoInfo so the next start() picks up fresh state
+    // bound to the new canvas dims. Caller is responsible for having
+    // already stopped the recording / replay buffer.
+    //
+    // First call (initialisation) skips teardown: addSourceToScene
+    // for the chat overlay calls ensureVideoContext early, so the
+    // simple `videoContext !== undefined` heuristic would fire on
+    // init and clobber the SimpleReplayBuffer singleton's `recording`
+    // before it's been set up — observed cause of SIGKILL during
+    // configureVideoSources at startup.
+    const isReconfigure = this.didResetVideoContextOnce;
+    if (isReconfigure) {
+      this.releaseEncodersAndRecording();
+    }
+    this.didResetVideoContextOnce = true;
+
     osn.NodeObs.OBS_settings_saveSettings('Video', video);
 
     this.videoFps = fps;
@@ -647,13 +743,28 @@ export default class OsnBackend implements IRecorderBackend {
     this.videoHeight = height;
     this.ensureVideoContext();
 
-    this.cachedPreviewDimensions = {
-      canvasWidth: width,
-      canvasHeight: height,
-      // Preview dims = canvas dims for now (renderer preview rect TBD).
-      previewWidth: width,
-      previewHeight: height,
-    };
+    // Re-bind scene items to the (possibly-new) IVideo handle — their
+    // canvas-match check in DrawSelectedSource needs the bound canvas
+    // to equal the display's canvas, otherwise the green selection
+    // outline silently no-ops.
+    if (isReconfigure) {
+      this.rebindSceneItemsToVideoContext();
+    }
+
+    // Update canvas dims; preserve preview rect from the most recent
+    // configurePreview call. Clobbering previewWidth/Height to canvas
+    // here would force sf=1.0 in EditorService until the renderer's
+    // ResizeObserver fires another configurePreview, breaking hit-test
+    // accuracy mid-resolution-change.
+    this.cachedPreviewDimensions.canvasWidth = width;
+    this.cachedPreviewDimensions.canvasHeight = height;
+    if (
+      !this.cachedPreviewDimensions.previewWidth ||
+      !this.cachedPreviewDimensions.previewHeight
+    ) {
+      this.cachedPreviewDimensions.previewWidth = width;
+      this.cachedPreviewDimensions.previewHeight = height;
+    }
   }
 
   /**
@@ -694,13 +805,20 @@ export default class OsnBackend implements IRecorderBackend {
     } catch (err) {
       console.warn('[OsnBackend] read legacySettings threw', err);
     }
+    // Our cached width/height (from the most recent resetVideoContext)
+    // win over stale `legacy` from a previously-created IVideo. OBS's
+    // saveSettings('Video', baseRes) does not always propagate back to
+    // the legacySettings of an existing IVideo, leaving the canvas at
+    // 1920x1080 defaults while sceneItem.position math expects whatever
+    // the user configured. Using `this.videoWidth` as the primary
+    // source-of-truth avoids that drift.
     const info = {
-      fpsNum: (legacy.fpsNum as number) ?? this.videoFps,
-      fpsDen: (legacy.fpsDen as number) ?? 1,
-      baseWidth: (legacy.baseWidth as number) ?? this.videoWidth,
-      baseHeight: (legacy.baseHeight as number) ?? this.videoHeight,
-      outputWidth: (legacy.outputWidth as number) ?? this.videoWidth,
-      outputHeight: (legacy.outputHeight as number) ?? this.videoHeight,
+      fpsNum: this.videoFps,
+      fpsDen: 1,
+      baseWidth: this.videoWidth,
+      baseHeight: this.videoHeight,
+      outputWidth: this.videoWidth,
+      outputHeight: this.videoHeight,
       outputFormat: (legacy.outputFormat as number) ?? 2,
       colorspace: (legacy.colorspace as number) ?? 2,
       range: (legacy.range as number) ?? 1,
@@ -730,21 +848,15 @@ export default class OsnBackend implements IRecorderBackend {
     return this.cachedPreviewDimensions;
   }
   configurePreview(x: number, y: number, w: number, h: number): void {
-    // Renderer multiplies by devicePixelRatio for Windows HWND. nwr's
-    // moveWindow + OSN render target both work in point space on Mac, so
-    // undo the scale.
-    const sf = screen.getPrimaryDisplay().scaleFactor || 1;
-    const px = Math.round(x / sf);
-    const pw = Math.max(1, Math.round(w / sf));
-    const ph = Math.max(1, Math.round(h / sf));
-    // Cocoa subview origin is bottom-left; renderer coords are top-left.
-    // Flip y against the parent contentView height. SLOBS does this
-    // renderer-side via `window.innerHeight - rect.bottom`.
-    const parentContentH = this.previewParent?.getContentBounds().height ?? 0;
-    const topPy = Math.round(y / sf);
-    const py = parentContentH > 0
-      ? Math.max(0, parentContentH - topPy - ph)
-      : topPy;
+    // SLOBS pattern: renderer sends already-flipped point coords on Mac
+    // (rect.left, window.innerHeight - rect.bottom, rect.width, rect.height).
+    // nwr.moveWindow + IOSurface render target both work in point space
+    // with bottom-left origin, so pass through directly.
+    const px = Math.round(x);
+    const py = Math.round(y);
+    const pw = Math.max(1, Math.round(w));
+    const ph = Math.max(1, Math.round(h));
+    console.info('[OsnBackend] configurePreview coords', { px, py, pw, ph });
 
     const sizeChanged = pw !== this.surfaceWidth || ph !== this.surfaceHeight;
 
@@ -761,11 +873,26 @@ export default class OsnBackend implements IRecorderBackend {
       } catch (err) {
         console.warn('[OsnBackend] resizeDisplay threw', err);
       }
-      // Don't rebuild the IOSurface here — repeated rebuilds during a
-      // resize burst break the OBS render path and the preview goes
-      // black. The initial IOSurface holds whatever resolution we
-      // first sized it at; OpenGL stretches it to the new view frame.
-      // A real rebuild only happens on hide/show.
+      // The IOSurface is sized at creation time; nwr's NSView frame
+      // tracks IOSurface dims, not the OBS display viewport. Rebuilding
+      // mid-burst breaks the OBS render path (preview goes black), so
+      // debounce the rebuild for 250ms — once the resize stream
+      // settles, recreate the IOSurface at the final size so the
+      // NSView frame matches the user's new preview dimensions.
+      if (this.rebuildTimer) clearTimeout(this.rebuildTimer);
+      this.rebuildTimer = setTimeout(() => {
+        this.rebuildTimer = undefined;
+        if (!this.previewActive) return;
+        try {
+          this.rebuildPreviewSurface();
+          // After rebuild, re-anchor at the latest cached origin.
+          const finalX = this.cachedPreviewLocalX ?? 0;
+          const finalY = this.cachedPreviewLocalY ?? 0;
+          this.nwr?.moveWindow(this.previewKey, finalX, finalY);
+        } catch (err) {
+          console.warn('[OsnBackend] debounced IOSurface rebuild threw', err);
+        }
+      }, 250);
     }
     try {
       this.nwr?.moveWindow(this.previewKey, px, py);
@@ -787,20 +914,30 @@ export default class OsnBackend implements IRecorderBackend {
     try {
       console.info('[OsnBackend] showPreview step 1: createDisplay');
       const ctx = this.ensureVideoContext();
-      // OSN signature: (hwnd, key, mode, renderAtBottom, IVideo). The
-      // IVideo MUST land at info[4]; passing it at info[3] makes the
-      // client read it as renderAtBottom and the display gets no canvas.
-      osn.NodeObs.OBS_content_createDisplay(
+      // Use SourcePreviewDisplay with our scene as the bound source so
+      // libobs `GetSourceForUIEffects` returns the scene, enabling
+      // `DrawSelectedSource` enumeration. The plain `createDisplay`
+      // path falls through to channel-0 transition lookup, which fails
+      // when channel 0 holds a scene directly (no transition wrapper),
+      // silently skipping all UI drawing. Signature:
+      //   (hwnd, sourceName, key, renderAtBottom, IVideo)
+      this.ensureScene();
+      osn.NodeObs.OBS_content_createSourcePreviewDisplay(
         this.previewHwnd,
+        this.sceneName,
         this.previewKey,
-        0,
         false,
         ctx,
       );
       console.info('[OsnBackend] showPreview step 2: resizeDisplay', { w, h });
       osn.NodeObs.OBS_content_resizeDisplay(this.previewKey, w, h);
       console.info('[OsnBackend] showPreview step 3: setShouldDrawUI');
-      osn.NodeObs.OBS_content_setShouldDrawUI(this.previewKey, false);
+      // SLOBS pattern: OBS draws selection rectangle + transform handles
+      // itself. Default outline color in libobs is 0xFFA8E61A (green) so
+      // no setOutlineColor needed. Required: scene items must be bound
+      // to the same IVideo canvas as the display (see addSourceToScene)
+      // — otherwise libobs `DrawSelectedSource` early-exits silently.
+      osn.NodeObs.OBS_content_setShouldDrawUI(this.previewKey, true);
       this.previewActive = true;
       console.info('[OsnBackend] showPreview step 4: rebuildPreviewSurface');
       this.rebuildPreviewSurface();
@@ -953,32 +1090,60 @@ export default class OsnBackend implements IRecorderBackend {
     this.inputs.set(id, input);
     this.inputSourceIds.set(id, sourceId);
     console.info('[OsnBackend] createSource', { id, type, sourceId });
+    // Audio settings panel may have already enabled volmeters before
+    // this source existed; attach now so the meter bar reacts on
+    // first device select instead of needing a settings reopen.
+    this.attachVolmeter(id);
     return id;
   }
 
   deleteSource(id: string): void {
     const input = this.inputs.get(id);
-    if (!input) return;
+    const vm = this.volmeters.get(id);
+    if (vm) {
+      try {
+        vm.detach();
+      } catch {
+        /* ignore */
+      }
+      try {
+        vm.destroy();
+      } catch {
+        /* ignore */
+      }
+      this.volmeters.delete(id);
+    }
+    // Always clear the maps — even if input was already gone or
+    // release/remove throws, our state must not hold stale refs that
+    // the next createSource cycle could collide with.
+    this.inputs.delete(id);
+    this.inputSourceIds.delete(id);
+    this.cachedSourceProperties.delete(id);
     const item = this.sceneItems.get(id);
     if (item) {
       try {
         item.remove();
-      } catch (e) {
-        console.warn('[OsnBackend] sceneItem.remove threw', e);
+      } catch {
+        // Item may have been auto-removed when its source died.
       }
       this.sceneItems.delete(id);
     }
+    if (!input) return;
+    let releaseFailed = false;
     try {
       input.release();
-    } catch (e) {
-      console.warn('[OsnBackend] input.release threw', e);
+    } catch {
+      // Source ref already invalid (auto-released by OBS or removed
+      // out from under us). No point trying remove() if release
+      // failed — same underlying ref, will throw the same way.
+      releaseFailed = true;
     }
+    if (releaseFailed) return;
     try {
       input.remove();
-    } catch (e) {
-      console.warn('[OsnBackend] input.remove threw', e);
+    } catch {
+      // Best-effort.
     }
-    this.inputs.delete(id);
   }
 
   addSourceToScene(name: string): void {
@@ -992,6 +1157,18 @@ export default class OsnBackend implements IRecorderBackend {
     }
     const scene = this.ensureScene();
     const item = scene.add(input);
+    // Bind item to our IVideo context so the display's canvas-match
+    // check in libobs `DrawSelectedSource` passes; without this the
+    // selection outline (and overflow gizmos) silently no-op even with
+    // setShouldDrawUI(true). SLOBS does the same in scene-item.ts.
+    const ctx = this.ensureVideoContext();
+    if (ctx) {
+      try {
+        item.video = ctx;
+      } catch (err) {
+        console.warn('[OsnBackend] sceneItem.video assignment threw', err);
+      }
+    }
     this.sceneItems.set(name, item);
   }
 
@@ -1037,6 +1214,41 @@ export default class OsnBackend implements IRecorderBackend {
       );
       return [];
     }
+    // Short-circuit for sources whose libobs property fetch blocks on
+    // macOS:
+    //   - coreaudio_output_capture: no public output-device list API.
+    //   - sck_audio_capture: SCK init can hang during enumeration.
+    // Both return synthesised lists so Recorder.configureAudioSources
+    // can proceed without blocking the OSN sync IPC.
+    const sourceId = this.inputSourceIds.get(id) ?? '';
+    if (sourceId === 'coreaudio_output_capture') {
+      console.info(
+        '[OsnBackend] getSourceProperties (synth coreaudio_output)',
+        id,
+      );
+      return synthesiseCoreAudioProperties();
+    }
+    if (sourceId === 'sck_audio_capture') {
+      console.info('[OsnBackend] getSourceProperties (synth sck_audio)', id);
+      return synthesiseSckAudioProperties();
+    }
+
+    // Cache OSN sync IPC results per source. Repeat property fetches
+    // for the same input (e.g. configureAudioSources then UI dropdown)
+    // can hang on the second call when libobs's CoreAudio/SCK enum
+    // is mid-flight. Using the cached snapshot from the first call
+    // avoids the freeze; refresh happens via deleteSource invalidating
+    // the cache entry.
+    //
+    // Exception: mac_screen_capture sources need fresh enumeration
+    // on every call because attachCaptureSource polls for the WoW
+    // window — caching would freeze the list and block matching once
+    // WoW launches after the first poll.
+    const skipCache = sourceId === 'mac_screen_capture';
+    if (!skipCache) {
+      const cached = this.cachedSourceProperties.get(id);
+      if (cached) return cached;
+    }
     const props = input.properties;
     // OSN's `input.properties` getter returns null for `screen_capture`
     // on macOS regardless of source readiness — the IPC reply just
@@ -1072,12 +1284,47 @@ export default class OsnBackend implements IRecorderBackend {
       out.push(adaptOsnProperty(p));
       p = p.next() ?? undefined;
     }
+    // CoreAudio device-list fallback no longer needed here: the
+    // coreaudio_*_capture short-circuit above returns synthesised
+    // props before reaching this walk. Block kept guarded for safety
+    // in case future code paths land non-coreaudio sources here that
+    // still need empty-list patching — currently a no-op.
+    const sourceIdAfter = this.inputSourceIds.get(id) ?? '';
+    if (
+      sourceIdAfter === 'coreaudio_input_capture' ||
+      sourceIdAfter === 'coreaudio_output_capture'
+    ) {
+      const deviceProp = out.find((o) => o.name === 'device_id') as
+        | (ObsProperty & { items?: { name: string; value: string }[] })
+        | undefined;
+      if (deviceProp && (!deviceProp.items || deviceProp.items.length === 0)) {
+        deviceProp.items = [{ name: 'Default', value: 'default' }];
+      }
+    }
     console.info(
       '[OsnBackend] getSourceProperties',
       id,
       '→',
       out.map((o) => `${o.name}:${o.type}`).join(', '),
     );
+    // Diagnostic: dump window list entries when this is the
+    // mac_screen_capture source so we can see how SCK names WoW.
+    const windowProp = out.find((o) => o.name === 'window') as
+      | (ObsProperty & { items?: { name: string; value: unknown }[] })
+      | undefined;
+    if (windowProp?.items?.length) {
+      // Brief: just count + WoW match status. Full dump removed to
+      // avoid spamming logs during attachCaptureSource's 5s polling.
+      const wowMatch = windowProp.items.find((it) =>
+        /^\[Wow(?:Classic)?\]|^\[World of Warcraft/.test(String(it.name)),
+      );
+      console.info(
+        '[OsnBackend] window items count:',
+        windowProp.items.length,
+        wowMatch ? `wow=${String(wowMatch.name)}` : 'wow=none',
+      );
+    }
+    if (!skipCache) this.cachedSourceProperties.set(id, out);
     return out;
   }
   setSourceVolume(id: string, volume: number): void {
@@ -1130,10 +1377,66 @@ export default class OsnBackend implements IRecorderBackend {
     };
   }
 
-  setVolmeterEnabled(_enabled: boolean): void {
-    // Volmeter wiring (osn.VolmeterFactory.create + attach) is renderer-only
-    // (drives the audio meter UI). Deferred from Phase 2 — Phase 1 record-only
-    // flows don't need it.
+  setSceneItemSelected(id: string, selected: boolean): void {
+    const item = this.sceneItems.get(id);
+    if (item) item.selected = selected;
+  }
+
+  clearSceneItemSelection(): void {
+    this.sceneItems.forEach((it) => {
+      try {
+        it.selected = false;
+      } catch {
+        /* item may have been removed mid-flight */
+      }
+    });
+  }
+
+  listSceneItems(): string[] {
+    if (!this.scene) return [];
+    return this.scene.getItems().map((it) => it.source.name);
+  }
+
+  setVolmeterEnabled(enabled: boolean): void {
+    this.volmetersWanted = enabled;
+    if (enabled) {
+      // Attach volmeter to every CURRENT input. New inputs created
+      // after this call get attached lazily in createSource.
+      this.inputs.forEach((_input, id) => this.attachVolmeter(id));
+    } else {
+      this.volmeters.forEach((vm) => {
+        try {
+          vm.detach();
+        } catch {
+          /* ignore */
+        }
+        try {
+          vm.destroy();
+        } catch {
+          /* ignore */
+        }
+      });
+      this.volmeters.clear();
+    }
+  }
+
+  private attachVolmeter(id: string): void {
+    if (!this.volmetersWanted) return;
+    if (this.volmeters.has(id)) return;
+    const input = this.inputs.get(id);
+    if (!input) return;
+    try {
+      const osn = this.getOsn();
+      const vm = osn.VolmeterFactory.create(1); // EFaderType.IEC
+      vm.attach(input);
+      this.volmeters.set(id, vm);
+    } catch (err) {
+      console.warn(
+        '[OsnBackend] VolmeterFactory.create/attach threw for',
+        id,
+        err,
+      );
+    }
   }
 
   setForceMono(_enabled: boolean): void {
@@ -1182,6 +1485,78 @@ export default class OsnBackend implements IRecorderBackend {
       this.dedicatedRecording = osn.SimpleRecordingFactory.create();
     }
     return this.dedicatedRecording;
+  }
+
+  /**
+   * Release everything that holds a reference to the current IVideo
+   * context. Called before resetVideoContext when the canvas
+   * resolution changes — encoders + the dedicated recording instance
+   * are bound to the IVideo at create time, so they must be torn
+   * down before the IVideo is replaced. SLOBS pattern: drop refs,
+   * recreate after new context is up. Recreate happens lazily on
+   * the next ensureRecordingEncoder / startBuffer / startRecording.
+   */
+  private releaseEncodersAndRecording(): void {
+    if (this.cachedRecordingEncoder) {
+      try {
+        this.cachedRecordingEncoder.release();
+      } catch (err) {
+        console.warn('[OsnBackend] cachedRecordingEncoder.release threw', err);
+      }
+      this.cachedRecordingEncoder = undefined;
+    }
+    if (this.cachedRecordingAudioEncoder) {
+      try {
+        this.cachedRecordingAudioEncoder.release();
+      } catch (err) {
+        console.warn(
+          '[OsnBackend] cachedRecordingAudioEncoder.release threw',
+          err,
+        );
+      }
+      this.cachedRecordingAudioEncoder = undefined;
+    }
+    if (this.dedicatedRecording) {
+      try {
+        this.dedicatedRecording.release?.();
+      } catch (err) {
+        console.warn('[OsnBackend] dedicatedRecording.release threw', err);
+      }
+      this.dedicatedRecording = undefined;
+    }
+    // Drop the replay buffer's inner recording binding. The buffer
+    // itself is a singleton (SimpleReplayBufferFactory.legacySettings)
+    // and gets re-bound in startBuffer.
+    try {
+      const osn = this.getOsn();
+      const rb = osn.SimpleReplayBufferFactory.legacySettings;
+      // Cast: ISimpleReplayBuffer.recording is settable but typed
+      // strictly. null is safe — startBuffer reassigns before .start().
+      (rb as unknown as { recording: unknown }).recording = null;
+    } catch (err) {
+      console.warn('[OsnBackend] rb.recording = null threw', err);
+    }
+  }
+
+  /**
+   * Re-bind every scene item's `.video` to the current IVideo so the
+   * libobs DrawSelectedSource canvas-match check passes after a
+   * resetVideoContext (which replaces the IVideo handle).
+   */
+  private rebindSceneItemsToVideoContext(): void {
+    const ctx = this.ensureVideoContext();
+    if (!ctx) return;
+    this.sceneItems.forEach((item, name) => {
+      try {
+        item.video = ctx;
+      } catch (err) {
+        console.warn(
+          '[OsnBackend] rebind sceneItem.video threw for',
+          name,
+          err,
+        );
+      }
+    });
   }
 
   /**
@@ -1426,6 +1801,7 @@ export default class OsnBackend implements IRecorderBackend {
   }
 
   forceStopRecording(): void {
+    let didAnything = false;
     if (this.recording) {
       try {
         this.getRecording().stop(true);
@@ -1436,6 +1812,7 @@ export default class OsnBackend implements IRecorderBackend {
         );
       }
       this.recording = false;
+      didAnything = true;
     }
     if (this.replayBuffering) {
       try {
@@ -1447,6 +1824,22 @@ export default class OsnBackend implements IRecorderBackend {
         );
       }
       this.replayBuffering = false;
+      didAnything = true;
+    }
+    if (didAnything) {
+      // Synthesise a 'deactivate' signal so Recorder.forceStopOBS's
+      // stopQueue.shift() unblocks even when libobs aborts the stop
+      // mid-flight ("Invalid replay buffer output" etc.). Without this
+      // the bomb timer rejects the forceStop, Manager.reconfigureBase
+      // never runs configureBase, and the canvas drifts out of sync
+      // with the user's resolution change.
+      this.signalCallback?.({
+        type: 'recording',
+        id: 'deactivate',
+        signal: 'deactivate',
+        code: 0,
+        error: '',
+      } as unknown as import('./types').Signal);
     }
   }
 

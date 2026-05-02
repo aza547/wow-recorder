@@ -6,6 +6,7 @@ import type {
 } from './platform/recorder/types';
 import { AudioSourceType, RendererVideo, SceneItem } from './types';
 import { TChatMessageWithId } from 'types/api';
+import type { EditorMouseEvent } from './EditorService';
 
 export type Channels =
   | 'window'
@@ -43,6 +44,9 @@ export type Channels =
   | 'showPreview'
   | 'hidePreview'
   | 'disablePreview'
+  | 'editor:mouseDown'
+  | 'editor:mouseMove'
+  | 'editor:mouseUp'
   | 'getSourcePosition'
   | 'setSourcePosition'
   | 'resetSourcePosition'
@@ -112,6 +116,18 @@ contextBridge.exposeInMainWorld('electron', {
 
     disablePreview() {
       ipcRenderer.send('disablePreview');
+    },
+
+    editorMouseDown(ev: EditorMouseEvent) {
+      ipcRenderer.send('editor:mouseDown', ev);
+    },
+
+    editorMouseMove(ev: EditorMouseEvent) {
+      ipcRenderer.send('editor:mouseMove', ev);
+    },
+
+    editorMouseUp(ev: EditorMouseEvent) {
+      ipcRenderer.send('editor:mouseUp', ev);
     },
 
     getSourcePosition(

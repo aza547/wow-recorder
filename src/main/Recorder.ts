@@ -55,6 +55,8 @@ import type {
 } from 'main/platform/recorder/types';
 import { getRecorderBackend } from 'main/platform';
 import type { IRecorderBackend } from 'main/platform/recorder/IRecorderBackend';
+import EditorService, { type EditorMouseEvent } from './EditorService';
+import { refreshMacWindowList } from './platform/recorder/OsnBackend';
 import { getNativeWindowHandle, send } from './main';
 import { app, ipcMain } from 'electron';
 import Poller from 'utils/Poller';
@@ -406,6 +408,21 @@ export default class Recorder extends EventEmitter {
     ipcMain.handle('getSensibleEncoderDefault', (): string => {
       return this.getSensibleEncoderDefault();
     });
+
+    // Mac scene editor: renderer's transparent overlay forwards mouse
+    // events; EditorService hit-tests scene items + drives the libobs
+    // green selection box. No-op when EditorService.backend is unset
+    // (Windows or pre-init).
+    const editor = EditorService.getInstance();
+    ipcMain.on('editor:mouseDown', (_e, ev: EditorMouseEvent) =>
+      editor.handleMouseDown(ev),
+    );
+    ipcMain.on('editor:mouseMove', (_e, ev: EditorMouseEvent) =>
+      editor.handleMouseMove(ev),
+    );
+    ipcMain.on('editor:mouseUp', (_e, ev: EditorMouseEvent) =>
+      editor.handleMouseUp(ev),
+    );
   }
 
   /**
@@ -743,7 +760,28 @@ export default class Recorder extends EventEmitter {
       console.info('[Recorder] Created audio source', name);
       const settings = this.backend.getSourceSettings(name);
 
-      if (src.type === AudioSourceType.PROCESS && src.device) {
+      // Mac PROCESS source: use SCK regardless of whether the user
+      // picked a specific app/window. Empty/sentinel `device` ==
+      // capture system desktop audio (SCK type=0). Bundle id =
+      // per-app capture. Window title = per-window. This matches the
+      // SLOBS "Capture Desktop Audio" semantics and works on macOS
+      // 13+ without third-party loopback drivers.
+      const isMacProcess =
+        process.platform === 'darwin' && src.type === AudioSourceType.PROCESS;
+
+      if (isMacProcess) {
+        const dev = src.device ? String(src.device) : '';
+        if (dev === '' || dev === 'desktop' || dev === 'default') {
+          settings['type'] = 0; // System desktop audio
+        } else if (dev.includes('.')) {
+          settings['type'] = 2;
+          settings['application'] = dev;
+        } else {
+          settings['type'] = 1;
+          settings['window'] = dev;
+        }
+        this.backend.setSourceSettings(name, settings);
+      } else if (src.type === AudioSourceType.PROCESS && src.device) {
         settings['window'] = src.device;
         settings['priority'] = 2; // Executable matching
         this.backend.setSourceSettings(name, settings);
@@ -901,6 +939,11 @@ export default class Recorder extends EventEmitter {
    */
   public showPreview() {
     console.info('[Recorder] Show preview');
+    // libobs recreates the preview display each call to showPreview;
+    // sceneitem.selected flags are cleared in the new display context.
+    // Drop the EditorService's cached selection so the next click
+    // re-selects against the current scene state.
+    EditorService.getInstance().reset();
     this.backend.showPreview();
   }
 
@@ -1129,6 +1172,25 @@ export default class Recorder extends EventEmitter {
 
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
+
+    // Mac: pre-populate the window list cache used by
+    // `synthesiseScreenCaptureProperties`. Async via desktopCapturer;
+    // fires-and-forgets since getSourceProperties is sync.
+    void refreshMacWindowList();
+
+    // Hook the scene editor up to this backend. Editor commits persist
+    // the new canvas-px position to ConfigService via Recorder.
+    const editor = EditorService.getInstance();
+    editor.setBackend(this.backend);
+    editor.onCommit(({ name, x, y, width, height }) => {
+      // Recover scaleX from the committed bbox: width here is already
+      // post-scale (sourceWidth * scaleX), so divide back out.
+      const pos = this.backend.getSourcePos(name);
+      const scaleX =
+        pos.width > 0 ? width / pos.width : pos.scaleX;
+      void height; // scaleY assumed equal to scaleX (uniform aspect lock).
+      this.commitEditorPosition(name, x, y, scaleX);
+    });
   }
 
   /**
@@ -1199,14 +1261,28 @@ export default class Recorder extends EventEmitter {
 
     const settings = this.backend.getSourceSettings(this.captureSource);
 
-    this.backend.setSourceSettings(this.captureSource, {
-      ...settings,
-      capture_mode: 'window',
-      force_sdr: forceSdr,
-      cursor: captureCursor, // For some reason is named differently here.
-      method: 2,
-      compatibility: true,
-    });
+    if (process.platform === 'darwin') {
+      // Mac: source resolves to `mac_screen_capture` with type=1
+      // (Window mode). Windows-specific keys (capture_mode, method,
+      // compatibility) don't apply; SCK uses `show_cursor` /
+      // `hide_obs`. The actual window id gets set in
+      // attachCaptureSource once the WoW window is enumerable.
+      this.backend.setSourceSettings(this.captureSource, {
+        ...settings,
+        type: 1,
+        show_cursor: captureCursor,
+        hide_obs: true,
+      });
+    } else {
+      this.backend.setSourceSettings(this.captureSource, {
+        ...settings,
+        capture_mode: 'window',
+        force_sdr: forceSdr,
+        cursor: captureCursor, // For some reason is named differently here.
+        method: 2,
+        compatibility: true,
+      });
+    }
 
     this.backend.addSourceToScene(this.captureSource);
 
@@ -1482,9 +1558,23 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Check if the name of the window matches one of the known WoW window names.
+   * Check if the name of the window matches one of the known WoW window
+   * names. Windows OBS prefixes window list entries with `[Wow.exe]: `,
+   * macOS SCK exposes the raw window/app title (e.g. "World of
+   * Warcraft" or "World of Warcraft Classic").
    */
   private static windowMatch(item: { name: string; value: string | number }) {
+    if (process.platform === 'darwin') {
+      // OSN's mac_screen_capture window:list formats names as
+      // `[<AppName>] <WindowTitle>`. Match by app-name prefix.
+      const n = item.name;
+      return (
+        n.startsWith('[World of Warcraft]') ||
+        n.startsWith('[World of Warcraft Classic]') ||
+        n.startsWith('[Wow]') ||
+        n.startsWith('[WowClassic]')
+      );
+    }
     return (
       item.name.startsWith('[Wow.exe]: ') ||
       item.name.startsWith('[WowT.exe]: ') ||
@@ -1742,6 +1832,22 @@ export default class Recorder extends EventEmitter {
   /**
    * Save a video source position in the config.
    */
+  /**
+   * Mac editor commit hook: map an OBS source name to its SceneItem and
+   * persist the new canvas-px position to ConfigService. Called from
+   * EditorService after the user releases the mouse.
+   */
+  public commitEditorPosition(
+    sourceName: string,
+    x: number,
+    y: number,
+    scaleX: number,
+  ): void {
+    const item =
+      sourceName === VideoSourceName.OVERLAY ? SceneItem.OVERLAY : SceneItem.GAME;
+    this.saveSourcePosition(item, x, y, scaleX);
+  }
+
   private saveSourcePosition(
     item: SceneItem,
     x: number,

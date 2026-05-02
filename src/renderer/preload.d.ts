@@ -48,6 +48,36 @@ declare global {
         ): void;
         showPreview(): void;
         hidePreview(): void;
+        editorMouseDown(ev: {
+          offsetX: number;
+          offsetY: number;
+          button: number;
+          buttons: number;
+          altKey: boolean;
+          shiftKey: boolean;
+          metaKey: boolean;
+          ctrlKey: boolean;
+        }): void;
+        editorMouseMove(ev: {
+          offsetX: number;
+          offsetY: number;
+          button: number;
+          buttons: number;
+          altKey: boolean;
+          shiftKey: boolean;
+          metaKey: boolean;
+          ctrlKey: boolean;
+        }): void;
+        editorMouseUp(ev: {
+          offsetX: number;
+          offsetY: number;
+          button: number;
+          buttons: number;
+          altKey: boolean;
+          shiftKey: boolean;
+          metaKey: boolean;
+          ctrlKey: boolean;
+        }): void;
         disablePreview(): void;
 
         getSourcePosition(
@@ -110,13 +140,15 @@ declare global {
       openSettingsFor: (key: PermissionKey) => void;
       refresh: () => Promise<PermissionsSnapshot>;
     };
-    platformInfo: {
-      platform: NodeJS.Platform;
-    };
     recorderCapabilities: {
       get: () => Promise<
         import('main/platform/recorder/IRecorderBackend').RecorderCapabilities
       >;
+    };
+  }
+  interface Window {
+    platformInfo: {
+      platform: NodeJS.Platform;
     };
   }
 }
