@@ -129,8 +129,21 @@ const getSortedFiles = async (
     // suspect something in getFileInfo isn't as async as it could be.
     // If that can be solved, then we can drop the await here and then
     // do an await Promises.all() on the following line.
-
-    mappedFileInfo.push(await getFileInfo(files[i]));
+    //
+    // Tolerate files that disappear between the readdir and the stat —
+    // the .temp dir is a known race target (VideoProcessQueue deletes
+    // mkvs while Recorder.cleanup runs `getSortedFiles` from the
+    // reconfigure path). Drop missing entries rather than throwing,
+    // since the caller wants a snapshot of what's actually on disk.
+    try {
+      mappedFileInfo.push(await getFileInfo(files[i]));
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code === 'ENOENT') {
+        continue;
+      }
+      throw err;
+    }
   }
 
   if (sortDirection === FileSortDirection.NewestFirst) {

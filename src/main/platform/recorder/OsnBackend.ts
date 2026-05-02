@@ -1800,39 +1800,68 @@ export default class OsnBackend implements IRecorderBackend {
     } as unknown as import('./types').Signal);
   }
 
+  /**
+   * Returns true when the SimpleReplayBuffer singleton's underlying
+   * recording binding is non-null. After a video-context reset (encoder
+   * change, resolution change, etc.) `releaseEncodersAndRecording` clears
+   * `legacySettings.recording` to null, which leaves the rb in a "no
+   * output" state where `getReplayBuffer().stop(true)` throws "Invalid
+   * replay buffer output". Detect that state explicitly so we can skip
+   * the stop call and treat it as already-stopped.
+   */
+  private replayBufferOutputValid(): boolean {
+    try {
+      const rb = this.getOsn().SimpleReplayBufferFactory.legacySettings;
+      return (rb as unknown as { recording: unknown }).recording != null;
+    } catch {
+      return false;
+    }
+  }
+
   forceStopRecording(): void {
     let didAnything = false;
+
     if (this.recording) {
+      didAnything = true;
       try {
         this.getRecording().stop(true);
       } catch (err) {
-        console.error(
-          '[OsnBackend] forceStopRecording — recording.stop threw',
+        console.warn(
+          '[OsnBackend] forceStopRecording — recording.stop threw, continuing',
           err,
         );
       }
       this.recording = false;
-      didAnything = true;
     }
+
     if (this.replayBuffering) {
-      try {
-        this.getReplayBuffer().stop(true);
-      } catch (err) {
-        console.error(
-          '[OsnBackend] forceStopRecording — replayBuffer.stop threw',
-          err,
+      didAnything = true;
+      if (this.replayBufferOutputValid()) {
+        try {
+          this.getReplayBuffer().stop(true);
+        } catch (err) {
+          // Race: libobs may have torn the output down between the
+          // validity check and the stop call. Log + carry on; the
+          // synthetic deactivate below still unblocks the state machine.
+          console.warn(
+            '[OsnBackend] forceStopRecording — replayBuffer.stop threw, continuing',
+            err,
+          );
+        }
+      } else {
+        console.info(
+          '[OsnBackend] forceStopRecording — replay buffer output already invalid, skipping stop',
         );
       }
       this.replayBuffering = false;
-      didAnything = true;
     }
+
     if (didAnything) {
-      // Synthesise a 'deactivate' signal so Recorder.forceStopOBS's
-      // stopQueue.shift() unblocks even when libobs aborts the stop
-      // mid-flight ("Invalid replay buffer output" etc.). Without this
-      // the bomb timer rejects the forceStop, Manager.reconfigureBase
-      // never runs configureBase, and the canvas drifts out of sync
-      // with the user's resolution change.
+      // Emit a synthetic 'deactivate' so Recorder.forceStopOBS's
+      // stopQueue.shift() unblocks. libobs's own deactivate signal is
+      // unreliable on Mac when the rb output was already invalid (no stop
+      // happened, no signal fired) — synthesising guarantees the bomb
+      // timer doesn't reject and Manager.reconfigureBase can proceed.
       this.signalCallback?.({
         type: 'recording',
         id: 'deactivate',
