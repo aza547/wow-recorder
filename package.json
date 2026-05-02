@@ -98,9 +98,7 @@
       "signIgnore": [
         "\\.pak$",
         "\\.bin$",
-        "\\.dat$",
-        "Chromium Embedded Framework\\.framework",
-        "obs-studio-node/"
+        "\\.dat$"
       ],
       "extendInfo": {
         "NSScreenCaptureUsageDescription": "Warcraft Recorder needs Screen Recording to capture your gameplay.",
