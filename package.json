@@ -81,7 +81,9 @@
       "category": "public.app-category.utilities",
       "icon": "assets/icon.icns",
       "target": [
-        { "target": "dir", "arch": ["arm64"] }
+        { "target": "dir", "arch": ["arm64"] },
+        { "target": "zip", "arch": ["arm64"] },
+        { "target": "dmg", "arch": ["arm64"] }
       ],
       "artifactName": "WarcraftRecorder-${version}-${arch}.${ext}",
       "hardenedRuntime": true,
@@ -132,7 +134,7 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "aza547",
+      "owner": "yuripiratello",
       "repo": "wow-recorder"
     },
     "afterPack": "scripts/relativise-osn-symlinks.js",
