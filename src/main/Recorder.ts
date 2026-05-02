@@ -610,6 +610,15 @@ export default class Recorder extends EventEmitter {
         settings.cqp = Recorder.getCqpFromQuality(encoder, quality);
         break;
 
+      case ESupportedEncoders.VT_H264:
+      case ESupportedEncoders.VT_HEVC:
+        // Apple VideoToolbox uses CRF rate control with `quality` 0-100
+        // (higher = better, opposite of x264 CRF). Map our quality presets
+        // to a sensible range.
+        settings.rate_control = 'CRF';
+        settings.quality = Recorder.getVtQualityFromQuality(quality);
+        break;
+
       default:
         console.error('[Recorder] Unrecognised encoder type', encoder);
         throw new Error('Unrecognised encoder type');
@@ -1515,6 +1524,26 @@ export default class Recorder extends EventEmitter {
       this.muteInputDevices();
       this.pttReleaseDelayTimer = undefined;
     }, delay);
+  }
+
+  /**
+   * Apple VideoToolbox CRF quality (0-100, higher is better). Mirrors the
+   * preset spread used for CQP/CRF on other encoders.
+   */
+  private static getVtQualityFromQuality(quality: string) {
+    switch (quality) {
+      case QualityPresets.ULTRA:
+        return 90;
+      case QualityPresets.HIGH:
+        return 75;
+      case QualityPresets.MODERATE:
+        return 60;
+      case QualityPresets.LOW:
+        return 45;
+      default:
+        console.error('[Recorder] Unrecognised quality', quality);
+        throw new Error('Unrecognised quality');
+    }
   }
 
   /**
