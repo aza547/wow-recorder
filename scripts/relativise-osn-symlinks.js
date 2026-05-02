@@ -190,27 +190,43 @@ function dropOsnApp(appPath) {
  * electron-builder's FileCopier dereferences symlinks during `dir`
  * packaging in some versions, so the bundled OSN tree loses the
  * unversioned name → versioned-binary symlinks that OSN's runtime
- * loaders expect (e.g. `obs_studio_client.node` →
- * `obs_studio_client.0.3.21.0.node`, `bin/libcurl.4.dylib` →
- * `libcurl.4.8.0.dylib` — the latter is what obs64 looks up via
- * `@rpath/libcurl.4.dylib` and dies with dyld "Library not loaded"
- * if the symlink isn't there).
+ * loaders expect:
  *
- * Walk the source OSN tree (the `release/app/node_modules/obs-studio-
- * node/` we ship from), enumerate every symlink, and for each one
- * that's missing in the bundled tree, recreate it with the same
- * target. We skip OSN.app since dropOsnApp deletes it. Skips the
- * Frameworks tree as well — fixFrameworkLayout handles those.
+ *   obs_studio_client.node    → obs_studio_client.<X.Y.Z.W>.node
+ *   bin/libcurl.4.dylib       → libcurl.4.8.0.dylib (looked up via
+ *                                @rpath/libcurl.4.dylib by obs64)
+ *
+ * Scan the bundled OSN tree for the versioned binaries and recreate
+ * the unversioned-name symlinks they need. This works on CI where
+ * `release/app/node_modules/obs-studio-node/` may not exist (electron-
+ * builder installs deps straight into the bundle, skipping the source
+ * tree) — we never look at the source, only at what's actually in the
+ * packaged app.
  */
+function recreateMissingSymlink(dir, linkName, targetName) {
+  const linkPath = path.join(dir, linkName);
+  const targetPath = path.join(dir, targetName);
+  try {
+    fs.lstatSync(linkPath);
+    return false; // already present
+  } catch {
+    // missing — fall through
+  }
+  if (!fs.existsSync(targetPath)) {
+    console.warn(
+      '[relativise-osn] target missing for',
+      linkName,
+      '→',
+      targetName,
+    );
+    return false;
+  }
+  fs.symlinkSync(targetName, linkPath);
+  console.log('[relativise-osn] recreated', linkName, '→', targetName);
+  return true;
+}
+
 function replayOsnSymlinks(appPath) {
-  const srcOsnRoot = path.resolve(
-    __dirname,
-    '..',
-    'release',
-    'app',
-    'node_modules',
-    'obs-studio-node',
-  );
   const dstOsnRoot = path.join(
     appPath,
     'Contents',
@@ -219,74 +235,69 @@ function replayOsnSymlinks(appPath) {
     'node_modules',
     'obs-studio-node',
   );
-  if (!fs.existsSync(srcOsnRoot) || !fs.existsSync(dstOsnRoot)) {
-    console.warn('[relativise-osn] cannot replay symlinks — root missing');
+  if (!fs.existsSync(dstOsnRoot)) {
+    console.warn('[relativise-osn] bundled OSN root missing');
     return;
   }
   let recreated = 0;
-  let alreadyPresent = 0;
-  let skipped = 0;
-  function walk(rel) {
-    const srcDir = path.join(srcOsnRoot, rel);
+
+  // 1. obs_studio_client.node → obs_studio_client.<version>.node
+  try {
+    const versioned = fs
+      .readdirSync(dstOsnRoot)
+      .filter(
+        (n) =>
+          /^obs_studio_client\.\d+\.\d+\.\d+\.\d+\.node$/.test(n) &&
+          n !== 'obs_studio_client.node',
+      );
+    if (versioned.length === 1) {
+      if (recreateMissingSymlink(dstOsnRoot, 'obs_studio_client.node', versioned[0])) {
+        recreated++;
+      }
+    } else {
+      console.warn(
+        '[relativise-osn] expected exactly one obs_studio_client.<v>.node, found:',
+        versioned,
+      );
+    }
+  } catch (err) {
+    console.warn('[relativise-osn] obs_studio_client.node scan failed', err.message);
+  }
+
+  // 2. Versioned dylibs: for any `<name>.<X>.<Y>.<Z>.dylib`, recreate
+  //    `<name>.<X>.dylib` symlink in the same directory if missing.
+  //    Catches bin/libcurl.4.dylib → libcurl.4.8.0.dylib and any
+  //    similar pattern in Frameworks/, bin/, etc.
+  function walk(dir) {
     let entries;
     try {
-      entries = fs.readdirSync(srcDir, { withFileTypes: true });
+      entries = fs.readdirSync(dir, { withFileTypes: true });
     } catch {
       return;
     }
+    const versionedDylibs = [];
     for (const entry of entries) {
-      const childRel = path.join(rel, entry.name);
-      // OSN.app gets deleted by dropOsnApp; framework symlinks are
-      // owned by fixFrameworkLayout. Skip both.
-      if (entry.name === 'OSN.app') continue;
-      if (entry.name.endsWith('.framework')) continue;
-      const srcChild = path.join(srcOsnRoot, childRel);
-      const dstChild = path.join(dstOsnRoot, childRel);
-      if (entry.isSymbolicLink()) {
-        let exists = true;
-        try {
-          fs.lstatSync(dstChild);
-        } catch {
-          exists = false;
-        }
-        if (exists) {
-          alreadyPresent++;
-          continue;
-        }
-        const target = fs.readlinkSync(srcChild);
-        if (path.isAbsolute(target)) {
-          // Absolute symlinks are handled by `relativise()` in the
-          // already-bundled tree. If we're here, the bundled copy
-          // doesn't exist at all — best-effort skip.
-          skipped++;
-          continue;
-        }
-        try {
-          fs.mkdirSync(path.dirname(dstChild), { recursive: true });
-          fs.symlinkSync(target, dstChild);
-          console.log(
-            '[relativise-osn] recreated symlink',
-            childRel,
-            '→',
-            target,
-          );
-          recreated++;
-        } catch (err) {
-          console.warn(
-            '[relativise-osn] failed to recreate',
-            childRel,
-            err.message,
-          );
-        }
+      if (entry.isSymbolicLink()) continue;
+      if (entry.isFile()) {
+        const m = entry.name.match(/^(.+)\.(\d+)\.\d+\.\d+\.dylib$/);
+        if (m) versionedDylibs.push({ full: entry.name, base: m[1], major: m[2] });
       } else if (entry.isDirectory()) {
-        walk(childRel);
+        if (entry.name.endsWith('.framework')) continue; // owned by fixFrameworkLayout
+        if (entry.name === 'OSN.app') continue; // dropped already
+        walk(path.join(dir, entry.name));
+      }
+    }
+    for (const { full, base, major } of versionedDylibs) {
+      const linkName = `${base}.${major}.dylib`;
+      if (linkName === full) continue;
+      if (recreateMissingSymlink(dir, linkName, full)) {
+        recreated++;
       }
     }
   }
-  walk('');
-  console.log(
-    `[relativise-osn] replayed symlinks: ${recreated} recreated, ${alreadyPresent} already present, ${skipped} skipped`,
-  );
+  walk(dstOsnRoot);
+
+  console.log(`[relativise-osn] replayed ${recreated} symlink(s)`);
 }
 
 module.exports = async function (context) {
