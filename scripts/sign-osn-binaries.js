@@ -57,14 +57,21 @@ function resolveIdentity() {
 }
 
 function sign(target, identity, withEntitlements) {
+  // Use a real secure timestamp by default — Apple notarization rejects
+  // signatures without one. Local dev builds can opt out with
+  // WCR_SKIP_TIMESTAMP=1 to avoid the network round-trip per file.
   const args = [
     '--force',
     '--sign',
     identity,
     '--options',
     'runtime',
-    '--timestamp=none',
   ];
+  if (process.env.WCR_SKIP_TIMESTAMP === '1') {
+    args.push('--timestamp=none');
+  } else {
+    args.push('--timestamp');
+  }
   if (withEntitlements) {
     args.push('--entitlements', ENTITLEMENTS);
   }

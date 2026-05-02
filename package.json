@@ -70,7 +70,10 @@
     "files": [
       "dist",
       "node_modules",
-      "package.json"
+      "package.json",
+      "!**/node_modules/deasync/bin/darwin-x64-*",
+      "!**/node_modules/deasync/bin/linux-*",
+      "!**/node_modules/deasync/bin/win32-*"
     ],
     "nsis": {
       "oneClick": true,
