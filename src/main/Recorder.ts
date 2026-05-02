@@ -529,6 +529,17 @@ export default class Recorder extends EventEmitter {
     const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
       config;
 
+    if (!this.obsInitialized) {
+      // Hit on macOS when Screen Recording permission was denied at boot
+      // and the user changes settings via the UI before the perm-poll has
+      // had a chance to init OSN. resetVideoContext on an uninitialised
+      // OsnBackend hangs the main process; bail loudly instead.
+      console.warn(
+        '[Recorder] configureBase called before OBS was initialised — skipping',
+      );
+      return;
+    }
+
     if (this.obsState !== ERecordingState.None) {
       console.error('[Recorder] OBS must be offline to reconfigure base');
       throw new Error('[Recorder] OBS must be offline to reconfigure base');

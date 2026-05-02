@@ -200,15 +200,45 @@ const createWindow = async () => {
   });
 
   // We need to do this AFTER creating the window as it's used by the preview.
+  // Init OSN + start the manager only when Screen Recording is granted.
+  // OSN's video context init blocks waiting for ScreenCaptureKit; without
+  // permission `Manager.startup()` → `Recorder.configureBase()` →
+  // `OsnBackend.resetVideoContext()` hangs the main process indefinitely.
+  // The PermissionsWizard renders in the renderer to walk the user through
+  // granting; once granted, the poll below picks it up and finishes init
+  // without requiring a manual relaunch.
   const perms = getPermissionsGate();
-  if (perms.canRecord()) {
+  const recordingReady = perms.canRecord();
+  if (recordingReady) {
     Recorder.getInstance().initializeObs();
+    await manager.startup();
   } else {
     console.warn(
       '[Main] Screen Recording permission missing — recorder disabled until granted',
     );
+    if (process.platform === 'darwin') {
+      const tccPoll = setInterval(async () => {
+        if (!perms.canRecord()) return;
+        clearInterval(tccPoll);
+        console.info(
+          '[Main] Screen Recording permission detected — initializing recorder',
+        );
+        try {
+          Recorder.getInstance().initializeObs();
+          await manager.startup();
+          window?.webContents.send(
+            'updateVersionDisplay',
+            `Warcraft Recorder v${appVersion}`,
+          );
+        } catch (err) {
+          console.error(
+            '[Main] Failed to init recorder after permission grant',
+            err,
+          );
+        }
+      }, 2000);
+    }
   }
-  await manager.startup();
 
   if (firstTimeSetup) {
     console.info('[Main] Run first time setup actions');
