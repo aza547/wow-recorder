@@ -247,7 +247,7 @@ export default class RetailLogHandler extends LogHandler {
 
     // The actual log duration of the dungeon, from which keystone upgrade
     // levels can be calculated. This includes player death penalty.
-    const CMDuration = Math.round(parseInt(line.arg(4), 10) / 1000);
+    const CMDuration = parseInt(line.arg(4), 10) / 1000;
 
     if (result) {
       const overrun = ConfigService.getInstance().get<number>('dungeonOverrun');
