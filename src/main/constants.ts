@@ -710,7 +710,7 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   560: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], // Maisara Caverns
   559: [30 * 60, 24 * 60, 18 * 60], // Nexus-Point Xenas
   557: [33 * 60 + 30, 26 * 60 + 48, 20 * 60 + 6], // Windrunner Spire
-  402: [30 * 60, 30 * 0.8, 30 * 0.6], // Algeth'ar Academy
+  402: [31 * 60, 24 * 60 + 48, 18 * 60 + 36], // Algeth'ar Academy
   556: [30 * 60, 24 * 60, 18 * 60], // Pit of Saron
   239: [34 * 60, 27 * 60 + 12, 20 * 60 + 24], // Seat of the Triumvirate
   161: [28 * 60, 22 * 60 + 36, 16 * 60 + 42], // Skyreach
