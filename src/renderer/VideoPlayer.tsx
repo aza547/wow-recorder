@@ -166,7 +166,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   // This exists to force a re-render on resizing of the window, so that
   // the coloring of the progress slider remains correct across a resize.
-  const [, setWidth] = useState<number>(0);
+  const [, refreshSlider] = useState<number>(0);
 
   // We show a progress spinner until the video is ready to play.
   const [spinner, setSpinner] = useState<boolean>(true);
@@ -1304,13 +1304,20 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   // otherwise resizing the window (and hence the progress bar) causes
   // all the makers to be offset until next render.
   useLayoutEffect(() => {
-    const updateWidth = () => {
-      setWidth(window.innerWidth);
+    const slider = progressSlider.current;
+    if (!slider) return;
+
+    const onResize = () => {
+      refreshSlider((v) => v + 1);
     };
 
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(slider);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [refreshSlider]);
 
   // Inform the main process of a volume or muted state change.
   useEffect(() => {
