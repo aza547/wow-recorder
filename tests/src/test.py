@@ -40,12 +40,29 @@ import classic.mop_challenge_mode
 # Import the era tests
 import era.raid
 
-# These variables are environment dependent, you may need to adjust them.
-RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs"
-CLASSIC_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_/Logs"
-ERA_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_era_/Logs"
-PTR_LOG_PATH = "C:/Program Files/World of Warcraft/_xptr_/Logs"
-STORAGE_PATH = "C:/Users/Alex/Videos/Warcraft Recorder"
+# Paths default to Windows install locations; override per-machine via env.
+RETAIL_LOG_PATH = os.environ.get(
+    "WCR_RETAIL_LOG_PATH",
+    "C:/Program Files/World of Warcraft/_retail_/Logs",
+)
+CLASSIC_LOG_PATH = os.environ.get(
+    "WCR_CLASSIC_LOG_PATH",
+    "C:/Program Files/World of Warcraft/_classic_/Logs",
+)
+ERA_LOG_PATH = os.environ.get(
+    "WCR_ERA_LOG_PATH",
+    "C:/Program Files/World of Warcraft/_classic_era_/Logs",
+)
+PTR_LOG_PATH = os.environ.get(
+    "WCR_PTR_LOG_PATH",
+    "C:/Program Files/World of Warcraft/_xptr_/Logs",
+)
+STORAGE_PATH = os.environ.get(
+    "WCR_STORAGE_PATH",
+    "C:/Users/Alex/Videos/Warcraft Recorder",
+)
+# Backend produces .mp4 on Windows (noobs) and .mkv on macOS (OSN).
+OUTPUT_EXT = os.environ.get("WCR_OUTPUT_EXT", "mp4")
 
 CWD = os.path.dirname(__file__)
 
@@ -109,12 +126,15 @@ def replace_date(line, flavour):
     event_position = line.find("  ")
     line_no_ts = line[event_position:]
 
+    # Windows uses %# for "no leading zero"; POSIX uses %-. Detect at runtime.
+    no_pad = "#" if os.name == "nt" else "-"
     if flavour == "retail":
         # Retail started using the year in TWW.
-        new_date_string = datetime.datetime.now().strftime("%#m/%#d/%Y %H:%M:%S.%f")[:-3]
+        fmt = f"%{no_pad}m/%{no_pad}d/%Y %H:%M:%S.%f"
     else:
         # Pre TWW we don't use the year.
-        new_date_string = datetime.datetime.now().strftime("%#m/%#d %H:%M:%S.%f")[:-3]
+        fmt = f"%{no_pad}m/%{no_pad}d %H:%M:%S.%f"
+    new_date_string = datetime.datetime.now().strftime(fmt)[:-3]
 
     return new_date_string + line_no_ts
 
@@ -137,20 +157,20 @@ def check_output_file(expected, index):
     :param expected: The expected substring to find.
     :param index: The index of the MP4 file to check, -1 for latest.
     """
-    files = glob(f"{STORAGE_PATH}/*.mp4")
-    
+    files = glob(f"{STORAGE_PATH}/*.{OUTPUT_EXT}")
+
     if not files:
-        print(f"FAILED: No MP4 files found in {STORAGE_PATH}")
+        print(f"FAILED: No {OUTPUT_EXT.upper()} files found in {STORAGE_PATH}")
         sys.exit(1)
 
     files.sort(key=os.path.getctime)
     actual = files[index]
-    
+
     if expected in actual:
-        print(f"  MP4 existed as expected: {actual}")
+        print(f"  {OUTPUT_EXT.upper()} existed as expected: {actual}")
     else:
-        print(f"FAILED: MP4 at index {index} did not contain {expected}, was {actual}")
-        sys.exit(1) 
+        print(f"FAILED: {OUTPUT_EXT.upper()} at index {index} did not contain {expected}, was {actual}")
+        sys.exit(1)
     
 
 def check_output(output):

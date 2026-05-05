@@ -39,6 +39,7 @@ import _ from 'lodash';
 import { playAudio } from './sounds';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import KillVideoProgress from './KillVideoProgress';
+import PermissionsWizard from './permissions/PermissionsWizard';
 
 const ipc = window.electron.ipcRenderer;
 const queryClient = new QueryClient();
@@ -480,6 +481,7 @@ const WarcraftRecorder = () => {
         <Toaster />
         <KillVideoProgress language={appState.language} />
         <QueryClientProvider client={queryClient}>
+          {window.platformInfo?.platform === 'darwin' && <PermissionsWizard />}
           <TooltipProvider>
             <RendererTitleBar />
             <div className="flex flex-row items-center h-full w-full font-sans">

@@ -65,17 +65,56 @@
   "build": {
     "productName": "WarcraftRecorder",
     "appId": "org.WarcraftRecorder",
+    "npmRebuild": false,
     "asar": true,
     "asarUnpack": "**\\**",
     "files": [
       "dist",
       "node_modules",
-      "package.json"
+      "package.json",
+      "!**/node_modules/deasync/bin/darwin-x64-*",
+      "!**/node_modules/deasync/bin/linux-*",
+      "!**/node_modules/deasync/bin/win32-*",
+      "!**/node_modules/obs-studio-node/**"
     ],
     "nsis": {
       "oneClick": true,
       "include": "installer.nsh",
       "deleteAppDataOnUninstall": true
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "assets/icon.icns",
+      "target": [
+        { "target": "dir", "arch": ["arm64"] },
+        { "target": "zip", "arch": ["arm64"] },
+        { "target": "dmg", "arch": ["arm64"] }
+      ],
+      "artifactName": "WarcraftRecorder-${version}-${arch}.${ext}",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist",
+      "identity": "Yuri Piratello (Y36BG56F47)",
+      "type": "distribution",
+      "signIgnore": [
+        "\\.pak$",
+        "\\.bin$",
+        "\\.dat$"
+      ],
+      "extendInfo": {
+        "NSScreenCaptureUsageDescription": "Warcraft Recorder needs Screen Recording to capture your gameplay.",
+        "NSMicrophoneUsageDescription": "Warcraft Recorder needs microphone access to record your voice.",
+        "NSCameraUsageDescription": "Warcraft Recorder does not use the camera; this entitlement is reserved for future webcam-overlay support.",
+        "LSUIElement": false
+      },
+      "asar": false,
+      "extraResources": [
+        {
+          "from": "vendor/node-window-rendering",
+          "to": "node-window-rendering"
+        }
+      ]
     },
     "win": {
       "signtoolOptions": {
@@ -97,14 +136,16 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "aza547",
+      "owner": "yuripiratello",
       "repo": "wow-recorder"
-    }
+    },
+    "afterPack": "scripts/relativise-osn-symlinks.js"
   },
   "jest": {
     "transform": {
-      "\\.(ts|tsx|js|jsx)$": "ts-jest"
-    }
+      "\\.(ts|tsx|js|jsx)$": ["ts-jest", { "isolatedModules": true }]
+    },
+    "moduleDirectories": ["node_modules", "src"]
   },
   "dependencies": {
     "@electron/notarize": "^3.0.0",

@@ -35,6 +35,7 @@ import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
+import { getPermissionsGate, getRecorderBackend } from './platform';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -130,7 +131,11 @@ const installExtensions = async () => {
  * Setup tray icon, menu and event listeners.
  */
 const setupTray = () => {
-  tray = new Tray(getAssetPath('./icon/small-icon.png'));
+  const isMac = process.platform === 'darwin';
+  const trayIconPath = isMac
+    ? getAssetPath('./icon/tray/Template.png')
+    : getAssetPath('./icon/small-icon.png');
+  tray = new Tray(trayIconPath);
 
   // This wont update without an app restart but whatever.
   const language = cfg.get<string>('language') as Language;
@@ -175,12 +180,16 @@ const createWindow = async () => {
     await installExtensions();
   }
 
+  const isMac = process.platform === 'darwin';
+
   window = new BrowserWindow({
     show: false,
     height: 1020 * 0.9,
     width: 1980 * 0.8,
     icon: getAssetPath('./icon/small-icon.png'),
-    frame: false,
+    frame: isMac, // native traffic-light chrome on macOS, borderless on Windows
+    titleBarStyle: isMac ? 'hiddenInset' : undefined,
+    trafficLightPosition: isMac ? { x: 12, y: 14 } : undefined,
     title: `Warcraft Recorder v${appVersion}`,
     webPreferences: {
       sandbox: true, // Good security practice.
@@ -191,8 +200,45 @@ const createWindow = async () => {
   });
 
   // We need to do this AFTER creating the window as it's used by the preview.
-  Recorder.getInstance().initializeObs();
-  await manager.startup();
+  // Init OSN + start the manager only when Screen Recording is granted.
+  // OSN's video context init blocks waiting for ScreenCaptureKit; without
+  // permission `Manager.startup()` → `Recorder.configureBase()` →
+  // `OsnBackend.resetVideoContext()` hangs the main process indefinitely.
+  // The PermissionsWizard renders in the renderer to walk the user through
+  // granting; once granted, the poll below picks it up and finishes init
+  // without requiring a manual relaunch.
+  const perms = getPermissionsGate();
+  const recordingReady = perms.canRecord();
+  if (recordingReady) {
+    Recorder.getInstance().initializeObs();
+    await manager.startup();
+  } else {
+    console.warn(
+      '[Main] Screen Recording permission missing — recorder disabled until granted',
+    );
+    if (process.platform === 'darwin') {
+      const tccPoll = setInterval(async () => {
+        if (!perms.canRecord()) return;
+        clearInterval(tccPoll);
+        console.info(
+          '[Main] Screen Recording permission detected — initializing recorder',
+        );
+        try {
+          Recorder.getInstance().initializeObs();
+          await manager.startup();
+          window?.webContents.send(
+            'updateVersionDisplay',
+            `Warcraft Recorder v${appVersion}`,
+          );
+        } catch (err) {
+          console.error(
+            '[Main] Failed to init recorder after permission grant',
+            err,
+          );
+        }
+      }, 2000);
+    }
+  }
 
   if (firstTimeSetup) {
     console.info('[Main] Run first time setup actions');
@@ -246,6 +292,24 @@ const createWindow = async () => {
     window?.webContents.send('window-focus-status', false);
   });
 
+  // Mac: nwr's OpenGL/CGL surface doesn't auto-track parent NSView
+  // moves on screen — when user drags the BrowserWindow, the preview
+  // visual stays at the original screen coords until we re-issue
+  // `nwr.moveWindow`. Send `redrawPreview` to the renderer so it
+  // re-fires `configurePreview` with the latest div rect; main then
+  // re-anchors the GL surface.
+  if (isMac) {
+    let moveTimer: NodeJS.Timeout | undefined;
+    const onMove = () => {
+      if (moveTimer) clearTimeout(moveTimer);
+      moveTimer = setTimeout(() => window?.webContents.send('redrawPreview'), 50);
+    };
+    window.on('move', onMove);
+    window.on('moved', onMove);
+    window.on('resize', onMove);
+    window.on('resized', onMove);
+  }
+
   window.on('closed', () => {
     window = null;
   });
@@ -259,7 +323,13 @@ const createWindow = async () => {
     return { action: 'deny' };
   });
 
-  uIOhook.start();
+  if (getPermissionsGate().canUseGlobalHotkeys()) {
+    uIOhook.start();
+  } else {
+    console.warn(
+      '[Main] Accessibility permission missing — global hotkeys disabled',
+    );
+  }
 
   // Runs the auto-updater, which checks GitHub for new releases
   // and will prompt the user if any are available.
@@ -458,6 +528,20 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
     videoPlayerSettings.volume = settings.volume;
   }
 });
+
+ipcMain.handle('permissions:snapshot', () => getPermissionsGate().snapshot());
+
+ipcMain.handle(
+  'recorder:capabilities',
+  () => getRecorderBackend().capabilities,
+);
+
+ipcMain.on(
+  'permissions:open-settings',
+  (_evt, key: 'screen' | 'microphone' | 'accessibility') => {
+    getPermissionsGate().openSettingsFor(key);
+  },
+);
 
 /**
  * Shutdown the app if all windows closed.

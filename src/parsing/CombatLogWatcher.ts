@@ -110,12 +110,44 @@ export default class CombatLogWatcher extends EventEmitter {
 
       this.queue.add(() => this.process(file));
     });
+
+    // macOS fs.watch (FSEvents) coalesces append modifications and
+    // often only emits `rename` events for create/delete. Without
+    // a poll the watcher misses CHALLENGE_MODE_START / ENCOUNTER_*
+    // lines once WoW starts writing to the log. Poll the directory
+    // every 2s for size changes — process() short-circuits when
+    // bytesToRead < 1, so this is cheap when nothing changed.
+    if (process.platform === 'darwin') {
+      this.macPollTimer = setInterval(() => this.macPollOnce(), 2000);
+    }
+  }
+
+  private macPollTimer: NodeJS.Timeout | undefined;
+
+  private async macPollOnce() {
+    try {
+      const logs = await getSortedFiles(this.logDir, 'WoWCombatLog.*.txt');
+      if (logs.length === 0) return;
+      const newest = logs[0];
+      const file = path.basename(newest.name);
+      if (file !== this.current) {
+        console.info('[CombatLogWatcher] (poll) New active log file', file);
+        this.current = file;
+      }
+      this.queue.add(() => this.process(file));
+    } catch (err) {
+      console.warn('[CombatLogWatcher] macPollOnce threw', err);
+    }
   }
 
   /**
    * Stop watching the directory.
    */
   public async unwatch() {
+    if (this.macPollTimer) {
+      clearInterval(this.macPollTimer);
+      this.macPollTimer = undefined;
+    }
     if (this.watcher) {
       await this.watcher.close();
     }

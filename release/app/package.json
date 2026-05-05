@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "version": "7.6.3",
+  "version": "7.7.0-beta.3",
   "description": "Warcraft Recorder",
   "main": "./dist/main/main.js",
   "author": {
@@ -13,8 +13,12 @@
   },
   "dependencies": {
     "atomic-queue": "^5.0.4",
-    "noobs": "^0.0.184",
+    "deasync": "^0.1.30",
     "uiohook-napi": "^1.5.2"
+  },
+  "optionalDependencies": {
+    "noobs": "file:/tmp/noobs-0.0.181.tgz",
+    "obs-studio-node": "https://s3-us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/osn-0.26.17-release-osx-arm64.tar.gz"
   },
   "license": "MIT"
 }
