@@ -56,7 +56,6 @@ import type {
 import { getRecorderBackend } from 'main/platform';
 import type { IRecorderBackend } from 'main/platform/recorder/IRecorderBackend';
 import EditorService, { type EditorMouseEvent } from './EditorService';
-import { refreshMacWindowList } from './platform/recorder/OsnBackend';
 import { getNativeWindowHandle, send } from './main';
 import { app, ipcMain } from 'electron';
 import Poller from 'utils/Poller';
@@ -1192,11 +1191,6 @@ export default class Recorder extends EventEmitter {
 
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
-
-    // Mac: pre-populate the window list cache used by
-    // `synthesiseScreenCaptureProperties`. Async via desktopCapturer;
-    // fires-and-forgets since getSourceProperties is sync.
-    void refreshMacWindowList();
 
     // Hook the scene editor up to this backend. Editor commits persist
     // the new canvas-px position to ConfigService via Recorder.

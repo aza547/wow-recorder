@@ -13,20 +13,17 @@ import {
 
 const isMac = process.platform === 'darwin';
 
-// On macOS, exclude `noobs` from externals so the NormalModuleReplacementPlugin
-// below can redirect `require('noobs')` to the runtime stub. Other platforms
-// still externalise it so webpack doesn't bundle the native module.
+// Both platforms now use `noobs` at runtime — Win against the
+// upstream noobs package, Mac against our fork's vendored libobs +
+// .plugin bundles. Treat noobs as external on both so webpack
+// doesn't try to bundle the native module. obs-studio-node is gone
+// from the codebase entirely (Phase 6).
 const baseExternals = [
   ...Object.keys(externals || {}),
   ...Object.keys(optionalExternals || {}).filter((dep) => {
-    if (isMac && dep === 'noobs') return false;
     if (!isMac && dep === 'obs-studio-node') return false;
     return true;
   }),
-  // node-window-rendering is a Mac-only native addon (Streamlabs OSN
-  // preview helper). Vendored under release/app/node_modules; treat as
-  // external so webpack never tries to inline its .node binary.
-  ...(isMac ? ['node-window-rendering'] : []),
 ];
 
 const configuration: webpack.Configuration = {
@@ -82,16 +79,11 @@ const configuration: webpack.Configuration = {
     new webpack.DefinePlugin({
       'process.env.FLUENTFFMPEG_COV': false,
     }),
-    // On macOS, redirect `require('noobs')` to a runtime stub so
-    // UMD external resolution at bundle load time doesn't fail.
-    // The platform factory never instantiates NoobsBackend on darwin.
+    // On Windows, redirect `require('obs-studio-node')` to a stub so
+    // the bundle still loads even though the package isn't there.
+    // (No longer needed for noobs — both platforms use it.)
     ...(isMac
-      ? [
-          new webpack.NormalModuleReplacementPlugin(
-            /^noobs$/,
-            path.resolve(__dirname, '../stubs/noobs-stub.js'),
-          ),
-        ]
+      ? []
       : [
           new webpack.NormalModuleReplacementPlugin(
             /^obs-studio-node$/,

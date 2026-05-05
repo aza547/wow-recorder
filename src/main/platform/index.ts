@@ -54,8 +54,8 @@ let permissionsGate: IPermissionsGate | undefined;
 export function getRecorderBackend(): IRecorderBackend {
   if (!recorderBackend) {
     if (isMac) {
-      const OsnBackend = require('./recorder/OsnBackend').default;
-      recorderBackend = new OsnBackend();
+      const MacNoobsBackend = require('./recorder/MacNoobsBackend').default;
+      recorderBackend = new MacNoobsBackend();
     } else {
       const NoobsBackend = require('./recorder/NoobsBackend').default;
       recorderBackend = new NoobsBackend();

@@ -65,6 +65,7 @@
   "build": {
     "productName": "WarcraftRecorder",
     "appId": "org.WarcraftRecorder",
+    "npmRebuild": false,
     "asar": true,
     "asarUnpack": "**\\**",
     "files": [
@@ -73,7 +74,8 @@
       "package.json",
       "!**/node_modules/deasync/bin/darwin-x64-*",
       "!**/node_modules/deasync/bin/linux-*",
-      "!**/node_modules/deasync/bin/win32-*"
+      "!**/node_modules/deasync/bin/win32-*",
+      "!**/node_modules/obs-studio-node/**"
     ],
     "nsis": {
       "oneClick": true,
