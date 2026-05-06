@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "version": "7.6.3",
+  "version": "7.6.4",
   "description": "Warcraft Recorder",
   "main": "./dist/main/main.js",
   "author": {
@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "atomic-queue": "^5.0.4",
-    "noobs": "^0.0.184",
+    "noobs": "^0.0.187",
     "uiohook-napi": "^1.5.2"
   },
   "license": "MIT"
