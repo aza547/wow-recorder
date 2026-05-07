@@ -1,10 +1,11 @@
-import { Menu, MenuItemConstructorOptions } from 'electron';
+import { app, Menu, MenuItemConstructorOptions } from 'electron';
 
 export default class MenuBuilder {
-  constructor() {}
-
   buildMenu(): Menu {
-    const template = this.buildDefaultTemplate();
+    const template =
+      process.platform === 'darwin'
+        ? this.buildMacTemplate()
+        : this.buildDefaultTemplate();
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
     return menu;
@@ -30,13 +31,6 @@ export default class MenuBuilder {
         enabled: true,
       },
       {
-        label: 'Zoom In Fix',
-        accelerator: 'CommandOrControl+=',
-        role: 'zoomIn',
-        visible: false,
-        enabled: true,
-      },
-      {
         label: 'Zoom Out',
         accelerator: 'CommandOrControl+-',
         role: 'zoomOut',
@@ -44,15 +38,69 @@ export default class MenuBuilder {
         enabled: true,
       },
       {
-        label: 'Zoom Out',
+        label: 'Reset Zoom',
         accelerator: 'CommandOrControl+0',
         role: 'resetZoom',
         visible: false,
         enabled: true,
       },
     ];
+
     return [
       { label: 'View', submenu: developSubmenu, visible: false, enabled: true },
+    ];
+  }
+
+  private buildMacTemplate(): MenuItemConstructorOptions[] {
+    return [
+      {
+        label: app.name,
+        submenu: [
+          { role: 'about' },
+          { type: 'separator' },
+          { role: 'services' },
+          { type: 'separator' },
+          { role: 'hide' },
+          { role: 'hideOthers' },
+          { role: 'unhide' },
+          { type: 'separator' },
+          { role: 'quit' },
+        ],
+      },
+      {
+        label: 'Edit',
+        submenu: [
+          { role: 'undo' },
+          { role: 'redo' },
+          { type: 'separator' },
+          { role: 'cut' },
+          { role: 'copy' },
+          { role: 'paste' },
+          { role: 'selectAll' },
+        ],
+      },
+      {
+        label: 'View',
+        submenu: [
+          { role: 'reload', accelerator: 'Cmd+R' },
+          { role: 'toggleDevTools', accelerator: 'Alt+Cmd+I' },
+          { type: 'separator' },
+          { role: 'resetZoom' },
+          { role: 'zoomIn' },
+          { role: 'zoomOut' },
+          { type: 'separator' },
+          { role: 'togglefullscreen' },
+        ],
+      },
+      {
+        label: 'Window',
+        submenu: [
+          { role: 'minimize' },
+          { role: 'close' },
+          { type: 'separator' },
+          { role: 'front' },
+        ],
+      },
     ];
   }
 }

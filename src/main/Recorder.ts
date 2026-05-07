@@ -47,14 +47,18 @@ import {
   getObsVideoConfig,
   getOverlayConfig,
 } from '../utils/configUtils';
-import noobs, {
+import type {
   ObsData,
   SceneItemPosition,
   Signal,
   SourceDimensions,
-} from 'noobs';
+} from 'main/platform/recorder/types';
+import { getRecorderBackend } from 'main/platform';
+import type { IRecorderBackend } from 'main/platform/recorder/IRecorderBackend';
+import { CaptureModeCapability } from 'main/platform/recorder/IRecorderBackend';
+import EditorService, { type EditorMouseEvent } from './EditorService';
 import { getNativeWindowHandle, send } from './main';
-import { ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import Poller from 'utils/Poller';
 import AsyncQueue from 'utils/AsyncQueue';
 import assert from 'assert';
@@ -92,6 +96,12 @@ export default class Recorder extends EventEmitter {
    * ConfigService instance.
    */
   private cfg = ConfigService.getInstance();
+
+  /**
+   * Platform recorder backend — Windows wraps `noobs`, macOS wraps
+   * `obs-studio-node` (added in a later phase).
+   */
+  private backend: IRecorderBackend = getRecorderBackend();
 
   /**
    * Timer for latching onto a window for either game capture or
@@ -237,7 +247,7 @@ export default class Recorder extends EventEmitter {
      */
     ipcMain.handle('audioSettingsOpen', () => {
       console.info('[Manager] Audio settings were opened');
-      noobs.SetVolmeterEnabled(true);
+      this.backend.setVolmeterEnabled(true);
 
       if (Poller.getInstance().isWowRunning()) {
         console.info('[Manager] Wont touch audio sources as WoW is running');
@@ -250,7 +260,7 @@ export default class Recorder extends EventEmitter {
 
     ipcMain.handle('audioSettingsClosed', () => {
       console.info('[Manager] Audio settings were closed');
-      noobs.SetVolmeterEnabled(false);
+      this.backend.setVolmeterEnabled(false);
 
       if (Poller.getInstance().isWowRunning()) {
         console.info('[Manager] Wont touch audio sources as WoW is running');
@@ -304,21 +314,21 @@ export default class Recorder extends EventEmitter {
       'createAudioSource',
       (event, id: string, type: AudioSourceType) => {
         console.info('[Manager] Creating audio source', id, 'of type', type);
-        const name = noobs.CreateSource(id, type);
+        const name = this.backend.createSource(id, type);
         console.info('[Manager] Created audio source', name);
-        noobs.AddSourceToScene(name);
+        this.backend.addSourceToScene(name);
         return name;
       },
     );
 
     ipcMain.handle('getAudioSourceProperties', (_event, id: string) => {
       console.info('[Manager] Getting audio source properties for', id);
-      return noobs.GetSourceProperties(id);
+      return this.backend.getSourceProperties(id);
     });
 
     ipcMain.on('deleteAudioSource', (_event, id: string) => {
       console.info('[Manager] Deleting audio source', id);
-      noobs.DeleteSource(id);
+      this.backend.deleteSource(id);
     });
 
     ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
@@ -328,9 +338,9 @@ export default class Recorder extends EventEmitter {
         'to',
         value,
       );
-      const settings = noobs.GetSourceSettings(id);
+      const settings = this.backend.getSourceSettings(id);
       settings['device_id'] = value;
-      noobs.SetSourceSettings(id, settings);
+      this.backend.setSourceSettings(id, settings);
     });
 
     ipcMain.on('setAudioSourceWindow', (_event, id: string, value: string) => {
@@ -340,10 +350,10 @@ export default class Recorder extends EventEmitter {
         'to',
         value,
       );
-      const settings = noobs.GetSourceSettings(id);
+      const settings = this.backend.getSourceSettings(id);
       settings['window'] = value;
       settings['priority'] = 2; // Executable matching
-      noobs.SetSourceSettings(id, settings);
+      this.backend.setSourceSettings(id, settings);
     });
 
     ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
@@ -353,17 +363,17 @@ export default class Recorder extends EventEmitter {
         'to',
         value,
       );
-      noobs.SetSourceVolume(id, value);
+      this.backend.setSourceVolume(id, value);
     });
 
     ipcMain.on('setForceMono', (_event, enabled: boolean) => {
       console.info('[Manager] Setting force mono to', enabled);
-      noobs.SetForceMono(enabled);
+      this.backend.setForceMono(enabled);
     });
 
     ipcMain.on('setAudioSuppression', (_event, enabled: boolean) => {
       console.info('[Manager] Setting audio suppression to', enabled);
-      noobs.SetAudioSuppression(enabled);
+      this.backend.setAudioSuppression(enabled);
     });
 
     ipcMain.on(
@@ -398,6 +408,21 @@ export default class Recorder extends EventEmitter {
     ipcMain.handle('getSensibleEncoderDefault', (): string => {
       return this.getSensibleEncoderDefault();
     });
+
+    // Mac scene editor: renderer's transparent overlay forwards mouse
+    // events; EditorService hit-tests scene items + drives the libobs
+    // green selection box. No-op when EditorService.backend is unset
+    // (Windows or pre-init).
+    const editor = EditorService.getInstance();
+    ipcMain.on('editor:mouseDown', (_e, ev: EditorMouseEvent) =>
+      editor.handleMouseDown(ev),
+    );
+    ipcMain.on('editor:mouseMove', (_e, ev: EditorMouseEvent) =>
+      editor.handleMouseMove(ev),
+    );
+    ipcMain.on('editor:mouseUp', (_e, ev: EditorMouseEvent) =>
+      editor.handleMouseUp(ev),
+    );
   }
 
   /**
@@ -504,6 +529,17 @@ export default class Recorder extends EventEmitter {
     const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
       config;
 
+    if (!this.obsInitialized) {
+      // Hit on macOS when Screen Recording permission was denied at boot
+      // and the user changes settings via the UI before the perm-poll has
+      // had a chance to init OSN. resetVideoContext on an uninitialised
+      // OsnBackend hangs the main process; bail loudly instead.
+      console.warn(
+        '[Recorder] configureBase called before OBS was initialised — skipping',
+      );
+      return;
+    }
+
     if (this.obsState !== ERecordingState.None) {
       console.error('[Recorder] OBS must be offline to reconfigure base');
       throw new Error('[Recorder] OBS must be offline to reconfigure base');
@@ -513,8 +549,8 @@ export default class Recorder extends EventEmitter {
     const { height, width } = obsResolutions[this.resolution];
     console.info('[Recorder] Configure OBS video context');
 
-    const canvas = noobs.GetPreviewInfo();
-    noobs.ResetVideoContext(obsFPS, width, height);
+    const canvas = this.backend.getPreviewInfo();
+    this.backend.resetVideoContext(obsFPS, width, height);
 
     const { canvasHeight, canvasWidth } = canvas;
     const changedResolution = canvasHeight !== height || canvasWidth !== width;
@@ -538,7 +574,7 @@ export default class Recorder extends EventEmitter {
     // recovered in that event but MKV can. We will remux to MP4 for browser
     // player compatibility in the VideoProcessQueue.
     console.info('[Recorder] Set recording directory', outputPath);
-    noobs.SetRecordingCfg(outputPath, 'mkv');
+    this.backend.setRecordingCfg(outputPath, 'mkv');
 
     // Configure the encoder. It's possible that a user has replaced their
     // GPU since we last ran, so double check the encoder is still valid.
@@ -553,7 +589,7 @@ export default class Recorder extends EventEmitter {
     }
 
     const settings = Recorder.getEncoderSettings(encoder, obsQuality);
-    noobs.SetVideoEncoder(encoder, settings);
+    this.backend.setVideoEncoder(encoder, settings);
   }
 
   private static getEncoderSettings(encoder: string, quality: string) {
@@ -585,6 +621,15 @@ export default class Recorder extends EventEmitter {
         settings.cqp = Recorder.getCqpFromQuality(encoder, quality);
         break;
 
+      case ESupportedEncoders.VT_H264:
+      case ESupportedEncoders.VT_HEVC:
+        // Apple VideoToolbox uses CRF rate control with `quality` 0-100
+        // (higher = better, opposite of x264 CRF). Map our quality presets
+        // to a sensible range.
+        settings.rate_control = 'CRF';
+        settings.quality = Recorder.getVtQualityFromQuality(quality);
+        break;
+
       default:
         console.error('[Recorder] Unrecognised encoder type', encoder);
         throw new Error('Unrecognised encoder type');
@@ -606,20 +651,39 @@ export default class Recorder extends EventEmitter {
         this.captureSource,
       );
 
-      noobs.RemoveSourceFromScene(this.captureSource);
-      noobs.DeleteSource(this.captureSource);
+      this.backend.removeSourceFromScene(this.captureSource);
+      this.backend.deleteSource(this.captureSource);
       this.captureSource = undefined;
       this.captureMode = CaptureMode.NONE;
     }
 
-    if (obsCaptureMode === 'monitor_capture') {
+    // Mac libobs has no game_capture (no DX/Vulkan hook). Fall back
+    // to window_capture so a stale config or accidental UI toggle
+    // doesn't crash native at obs_source_create.
+    let mode = obsCaptureMode;
+    const caps = this.backend.capabilities;
+    const has = (m: CaptureModeCapability) => caps.captureModes.includes(m);
+    if (mode === 'game_capture' && !has(CaptureModeCapability.GAME)) {
+      console.warn('[Recorder] game_capture unsupported on this backend, falling back to window_capture');
+      mode = 'window_capture';
+      this.cfg.set('obsCaptureMode', mode);
+    }
+    if (mode === 'monitor_capture' && !has(CaptureModeCapability.MONITOR)) {
+      mode = 'window_capture';
+      this.cfg.set('obsCaptureMode', mode);
+    }
+    if (mode === 'window_capture' && !has(CaptureModeCapability.WINDOW)) {
+      throw new Error('No supported capture modes');
+    }
+
+    if (mode === 'monitor_capture') {
       this.configureMonitorCaptureSource(config);
-    } else if (obsCaptureMode === 'game_capture') {
+    } else if (mode === 'game_capture') {
       this.configureGameCaptureSource(config);
-    } else if (obsCaptureMode === 'window_capture') {
+    } else if (mode === 'window_capture') {
       this.configureWindowCaptureSource(config);
     } else {
-      console.error('[Recorder] Unrecognised capture mode', obsCaptureMode);
+      console.error('[Recorder] Unrecognised capture mode', mode);
       throw new Error('Unrecognised capture mode');
     }
 
@@ -651,16 +715,16 @@ export default class Recorder extends EventEmitter {
       chatOverlayOwnImagePath,
     } = config;
 
-    const settings = noobs.GetSourceSettings(this.overlaySource);
+    const settings = this.backend.getSourceSettings(this.overlaySource);
 
-    noobs.SetSourceSettings(this.overlaySource, {
+    this.backend.setSourceSettings(this.overlaySource, {
       ...settings,
       file: chatOverlayOwnImagePath,
     });
 
-    noobs.AddSourceToScene(this.overlaySource);
+    this.backend.addSourceToScene(this.overlaySource);
 
-    noobs.SetSourcePos(this.overlaySource, {
+    this.backend.setSourcePos(this.overlaySource, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
@@ -686,16 +750,16 @@ export default class Recorder extends EventEmitter {
     const { chatOverlayXPosition, chatOverlayYPosition, chatOverlayScale } =
       config;
 
-    const settings = noobs.GetSourceSettings(this.overlaySource);
+    const settings = this.backend.getSourceSettings(this.overlaySource);
 
-    noobs.SetSourceSettings(this.overlaySource, {
+    this.backend.setSourceSettings(this.overlaySource, {
       ...settings,
       file: this.chatOverlayDefaultImage,
     });
 
-    noobs.AddSourceToScene(this.overlaySource);
+    this.backend.addSourceToScene(this.overlaySource);
 
-    noobs.SetSourcePos(this.overlaySource, {
+    this.backend.setSourcePos(this.overlaySource, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
@@ -722,8 +786,8 @@ export default class Recorder extends EventEmitter {
     uIOhook.off('mousedown', this.pushToTalkMouseListener);
     uIOhook.off('mouseup', this.pushToTalkMouseListener);
 
-    noobs.SetForceMono(config.obsForceMono);
-    noobs.SetAudioSuppression(config.obsAudioSuppression);
+    this.backend.setForceMono(config.obsForceMono);
+    this.backend.setAudioSuppression(config.obsAudioSuppression);
 
     config.audioSources.forEach((src) => {
       console.info('[Recorder] Create audio source', src.id);
@@ -731,16 +795,40 @@ export default class Recorder extends EventEmitter {
       // OBS may have renamed the source if there was a naming conflict,
       // log that for posterity. Use that name going forward even if it
       // doesn't match what we asked for.
-      const name = noobs.CreateSource(src.id, src.type);
+      const name = this.backend.createSource(src.id, src.type);
       console.info('[Recorder] Created audio source', name);
-      const settings = noobs.GetSourceSettings(name);
+      const settings = this.backend.getSourceSettings(name);
 
-      if (src.type === AudioSourceType.PROCESS && src.device) {
+      // Mac OUTPUT and PROCESS both map to sck_audio_capture (see
+      // MacNoobsBackend.mapSourceType). Use SCK system-audio (type=0)
+      // for OUTPUT and for PROCESS without a chosen target. Bundle id
+      // = per-app capture (type=2). Window title = per-window
+      // (type=1). Works on macOS 13+ without third-party loopback
+      // drivers. CoreAudio has no system loopback so the previous
+      // device_id lookup path returned empty + threw.
+      const isMacSckAudio =
+        process.platform === 'darwin' &&
+        (src.type === AudioSourceType.PROCESS ||
+          src.type === AudioSourceType.OUTPUT);
+
+      if (isMacSckAudio) {
+        const dev = src.device ? String(src.device) : '';
+        if (dev === '' || dev === 'desktop' || dev === 'default') {
+          settings['type'] = 0; // System desktop audio
+        } else if (dev.includes('.')) {
+          settings['type'] = 2;
+          settings['application'] = dev;
+        } else {
+          settings['type'] = 1;
+          settings['window'] = dev;
+        }
+        this.backend.setSourceSettings(name, settings);
+      } else if (src.type === AudioSourceType.PROCESS && src.device) {
         settings['window'] = src.device;
         settings['priority'] = 2; // Executable matching
-        noobs.SetSourceSettings(name, settings);
+        this.backend.setSourceSettings(name, settings);
       } else if (src.type !== AudioSourceType.PROCESS) {
-        const properties = noobs.GetSourceProperties(name);
+        const properties = this.backend.getSourceProperties(name);
         const available = properties.find((prop) => prop.name === 'device_id');
         assert(available && available.type === 'list'); // To help the compiler out.
 
@@ -778,14 +866,14 @@ export default class Recorder extends EventEmitter {
 
         // Finish configuring the source.
         settings['device_id'] = match.value;
-        noobs.SetSourceSettings(name, settings);
-        noobs.SetSourceVolume(name, src.volume);
+        this.backend.setSourceSettings(name, settings);
+        this.backend.setSourceVolume(name, src.volume);
       } else {
         // Can happen if a user adds an app source but never selects a window.
         console.warn('[Recorder] Unable to configure audio source', src);
       }
 
-      noobs.AddSourceToScene(name);
+      this.backend.addSourceToScene(name);
       this.audioSources.push(src);
     });
 
@@ -829,8 +917,8 @@ export default class Recorder extends EventEmitter {
 
     this.audioSources.forEach((src) => {
       console.info('[Recorder] Remove audio source', src.id);
-      noobs.RemoveSourceFromScene(src.id);
-      noobs.DeleteSource(src.id);
+      this.backend.removeSourceFromScene(src.id);
+      this.backend.deleteSource(src.id);
     });
 
     this.audioSources = [];
@@ -860,7 +948,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    noobs.Shutdown();
+    this.backend.shutdown();
     this.obsInitialized = false;
     console.info('[Recorder] OBS shut down successfully');
   }
@@ -875,7 +963,7 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    const encoders = noobs.ListVideoEncoders();
+    const encoders = this.backend.listVideoEncoders();
     console.info('[Recorder] Encoders:', encoders);
     return encoders;
   }
@@ -885,7 +973,7 @@ export default class Recorder extends EventEmitter {
    */
   public configurePreview(x: number, y: number, width: number, height: number) {
     console.info('[Recorder] Configure preview with', x, y, width, height);
-    noobs.ConfigurePreview(x, y, width, height);
+    this.backend.configurePreview(x, y, width, height);
   }
 
   /**
@@ -893,7 +981,12 @@ export default class Recorder extends EventEmitter {
    */
   public showPreview() {
     console.info('[Recorder] Show preview');
-    noobs.ShowPreview();
+    // libobs recreates the preview display each call to showPreview;
+    // sceneitem.selected flags are cleared in the new display context.
+    // Drop the EditorService's cached selection so the next click
+    // re-selects against the current scene state.
+    EditorService.getInstance().reset();
+    this.backend.showPreview();
   }
 
   /**
@@ -901,7 +994,7 @@ export default class Recorder extends EventEmitter {
    */
   public hidePreview() {
     console.info('[Recorder] Hide preview');
-    noobs.HidePreview();
+    this.backend.hidePreview();
   }
 
   /**
@@ -909,7 +1002,7 @@ export default class Recorder extends EventEmitter {
    */
   public disablePreview() {
     console.info('[Recorder] Disable preview');
-    noobs.DisablePreview();
+    this.backend.disablePreview();
   }
 
   /**
@@ -948,8 +1041,16 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
+    if (!this.backend.capabilities.supportsReplayBuffer) {
+      // No replay buffer on this backend (Mac/vanilla libobs).
+      // Skip the pre-roll buffer entirely; recording will start
+      // when an activity calls convertObsBuffer().
+      console.info('[Recorder] Buffering disabled, idle until activity');
+      return;
+    }
+
     this.startQueue.empty();
-    noobs.StartBuffer();
+    this.backend.startBuffer();
 
     await Promise.race([
       this.startQueue.shift(),
@@ -970,6 +1071,20 @@ export default class Recorder extends EventEmitter {
       throw new Error('OBS not initialized');
     }
 
+    if (!this.backend.capabilities.supportsReplayBuffer) {
+      // No buffer to convert. Start a fresh ffmpeg_muxer run from
+      // now; pre-roll `offset` is lost. Wait for the start signal
+      // so obsState transitions to Recording before we return.
+      this.startQueue.empty();
+      this.backend.startRecording(0);
+      await Promise.race([
+        this.startQueue.shift(),
+        getPromiseBomb(30, 'Failed to start recording'),
+      ]);
+      this.startQueue.empty();
+      return;
+    }
+
     if (this.obsState !== ERecordingState.Recording) {
       console.error('[Recorder] Buffer not started');
       throw new Error('Buffer not started');
@@ -977,7 +1092,7 @@ export default class Recorder extends EventEmitter {
 
     // The native code expects an integer.
     const rounded = Math.round(offset);
-    noobs.StartRecording(rounded);
+    this.backend.startRecording(rounded);
   }
 
   /**
@@ -998,7 +1113,7 @@ export default class Recorder extends EventEmitter {
     }
 
     this.stopQueue.empty();
-    noobs.StopRecording();
+    this.backend.stopRecording();
     const wrote = this.stopQueue.shift();
 
     try {
@@ -1011,7 +1126,7 @@ export default class Recorder extends EventEmitter {
         'Failed to stop OBS cleanly. This may lead to miscut videos and is typically a symptom of encoder overload.',
       );
 
-      noobs.ForceStopRecording();
+      this.backend.forceStopRecording();
 
       await Promise.race([
         wrote,
@@ -1023,7 +1138,7 @@ export default class Recorder extends EventEmitter {
 
     // Now that we record in MKV we can still attempt to save
     // a recording here even if we failed to stop cleanly.
-    this.lastFile = noobs.GetLastRecording();
+    this.lastFile = this.backend.getLastRecording();
   }
 
   /**
@@ -1045,7 +1160,7 @@ export default class Recorder extends EventEmitter {
     }
 
     this.stopQueue.empty();
-    noobs.ForceStopRecording();
+    this.backend.forceStopRecording();
 
     const wrote = this.stopQueue.shift();
 
@@ -1087,9 +1202,12 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Initializing OBS');
     const cb = this.handleSignal.bind(this);
 
+    // Avoid pointing at a path inside Contents/Resources/app — writing
+    // there breaks codesign's seal and Gatekeeper blocks the next
+    // launch. Use the per-user logs dir for packaged builds.
     let logPath = devMode
       ? path.resolve(__dirname, './logs')
-      : path.resolve(__dirname, '../../dist/main/logs');
+      : path.join(app.getPath('logs'), 'noobs');
 
     let noobsPath = devMode
       ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
@@ -1100,20 +1218,38 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Noobs path:', noobsPath);
     console.info('[Recorder] Log path:', logPath);
-    noobs.Init(noobsPath, logPath, cb);
-    noobs.SetBuffering(true);
+    this.backend.init({
+      noobsDistPath: noobsPath,
+      logPath,
+      signalCallback: cb,
+    });
+    this.backend.setBuffering(this.backend.capabilities.supportsReplayBuffer);
 
     const hwnd = getNativeWindowHandle();
-    noobs.InitPreview(hwnd);
-    noobs.SetDrawSourceOutline(true);
+    this.backend.initPreview(hwnd);
+    this.backend.setDrawSourceOutline(true);
 
-    this.overlaySource = noobs.CreateSource(
+    this.overlaySource = this.backend.createSource(
       VideoSourceName.OVERLAY,
       'image_source',
     );
 
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
+
+    // Hook the scene editor up to this backend. Editor commits persist
+    // the new canvas-px position to ConfigService via Recorder.
+    const editor = EditorService.getInstance();
+    editor.setBackend(this.backend);
+    editor.onCommit(({ name, x, y, width, height }) => {
+      // Recover scaleX from the committed bbox: width here is already
+      // post-scale (sourceWidth * scaleX), so divide back out.
+      const pos = this.backend.getSourcePos(name);
+      const scaleX =
+        pos.width > 0 ? width / pos.width : pos.scaleX;
+      void height; // scaleY assumed equal to scaleX (uniform aspect lock).
+      this.commitEditorPosition(name, x, y, scaleX);
+    });
   }
 
   /**
@@ -1177,25 +1313,39 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     this.captureMode = CaptureMode.WINDOW;
-    this.captureSource = noobs.CreateSource(
+    this.captureSource = this.backend.createSource(
       VideoSourceName.WINDOW,
       'window_capture',
     );
 
-    const settings = noobs.GetSourceSettings(this.captureSource);
+    const settings = this.backend.getSourceSettings(this.captureSource);
 
-    noobs.SetSourceSettings(this.captureSource, {
-      ...settings,
-      capture_mode: 'window',
-      force_sdr: forceSdr,
-      cursor: captureCursor, // For some reason is named differently here.
-      method: 2,
-      compatibility: true,
-    });
+    if (process.platform === 'darwin') {
+      // Mac: source resolves to `mac_screen_capture` with type=1
+      // (Window mode). Windows-specific keys (capture_mode, method,
+      // compatibility) don't apply; SCK uses `show_cursor` /
+      // `hide_obs`. The actual window id gets set in
+      // attachCaptureSource once the WoW window is enumerable.
+      this.backend.setSourceSettings(this.captureSource, {
+        ...settings,
+        type: 1,
+        show_cursor: captureCursor,
+        hide_obs: true,
+      });
+    } else {
+      this.backend.setSourceSettings(this.captureSource, {
+        ...settings,
+        capture_mode: 'window',
+        force_sdr: forceSdr,
+        cursor: captureCursor, // For some reason is named differently here.
+        method: 2,
+        compatibility: true,
+      });
+    }
 
-    noobs.AddSourceToScene(this.captureSource);
+    this.backend.addSourceToScene(this.captureSource);
 
-    noobs.SetSourcePos(this.captureSource, {
+    this.backend.setSourcePos(this.captureSource, {
       x: videoSourceXPosition,
       y: videoSourceYPosition,
       scaleX: videoSourceScale,
@@ -1222,12 +1372,12 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     this.captureMode = CaptureMode.GAME;
-    this.captureSource = noobs.CreateSource(
+    this.captureSource = this.backend.createSource(
       VideoSourceName.GAME,
       'game_capture',
     );
 
-    const defaults = noobs.GetSourceSettings(this.captureSource);
+    const defaults = this.backend.getSourceSettings(this.captureSource);
 
     const settings = {
       ...defaults,
@@ -1248,9 +1398,9 @@ export default class Recorder extends EventEmitter {
       cropBottom: 0,
     };
 
-    noobs.SetSourceSettings(this.captureSource, settings);
-    noobs.AddSourceToScene(this.captureSource);
-    noobs.SetSourcePos(this.captureSource, position);
+    this.backend.setSourceSettings(this.captureSource, settings);
+    this.backend.addSourceToScene(this.captureSource);
+    this.backend.setSourcePos(this.captureSource, position);
   }
 
   /**
@@ -1269,15 +1419,20 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     this.captureMode = CaptureMode.MONITOR;
-    this.captureSource = noobs.CreateSource(
+    this.captureSource = this.backend.createSource(
       VideoSourceName.MONITOR,
       'monitor_capture',
     );
 
-    const defaults = noobs.GetSourceSettings(this.captureSource);
-    const properties = noobs.GetSourceProperties(this.captureSource);
+    const defaults = this.backend.getSourceSettings(this.captureSource);
+    const properties = this.backend.getSourceProperties(this.captureSource);
 
-    const monitors = properties.find((p) => p.name === 'monitor_id');
+    // Win monitor_capture exposes `monitor_id` (string list).
+    // Mac screen_capture exposes `display` (int list, +
+    // `type`/`show_cursor` instead of `method`/`capture_cursor`).
+    const isMac = process.platform === 'darwin';
+    const monitorPropName = isMac ? 'display_uuid' : 'monitor_id';
+    const monitors = properties.find((p) => p.name === monitorPropName);
 
     if (!monitors) {
       console.error('[Recorder] No monitors found');
@@ -1311,13 +1466,21 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Selected monitor:', monitorId);
 
-    const settings = {
-      ...defaults,
-      method: 0,
-      monitor_id: monitorId.value,
-      force_sdr: forceSdr,
-      capture_cursor: captureCursor,
-    };
+    const settings = isMac
+      ? {
+          ...defaults,
+          // type=0 = display capture (vs window=1, app=2)
+          type: 0,
+          display_uuid: monitorId.value,
+          show_cursor: captureCursor,
+        }
+      : {
+          ...defaults,
+          method: 0,
+          monitor_id: monitorId.value,
+          force_sdr: forceSdr,
+          capture_cursor: captureCursor,
+        };
 
     const position: SceneItemPosition = {
       x: videoSourceXPosition,
@@ -1330,9 +1493,9 @@ export default class Recorder extends EventEmitter {
       cropBottom: 0,
     };
 
-    noobs.SetSourceSettings(this.captureSource, settings);
-    noobs.AddSourceToScene(this.captureSource);
-    noobs.SetSourcePos(this.captureSource, position);
+    this.backend.setSourceSettings(this.captureSource, settings);
+    this.backend.addSourceToScene(this.captureSource);
+    this.backend.setSourcePos(this.captureSource, position);
   }
 
   /**
@@ -1344,7 +1507,7 @@ export default class Recorder extends EventEmitter {
 
     if (this.overlaySource) {
       // Might be a no-op, we never actually delete this source.
-      noobs.RemoveSourceFromScene(this.overlaySource);
+      this.backend.removeSourceFromScene(this.overlaySource);
     }
 
     if (!chatOverlayEnabled) {
@@ -1371,7 +1534,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    noobs.SetMuteAudioInputs(true);
+    this.backend.setMuteAudioInputs(true);
 
     this.inputDevicesMuted = true;
     this.obsMicState = MicStatus.MUTED;
@@ -1386,7 +1549,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    noobs.SetMuteAudioInputs(false);
+    this.backend.setMuteAudioInputs(false);
 
     this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.LISTENING;
@@ -1424,6 +1587,26 @@ export default class Recorder extends EventEmitter {
       this.muteInputDevices();
       this.pttReleaseDelayTimer = undefined;
     }, delay);
+  }
+
+  /**
+   * Apple VideoToolbox CRF quality (0-100, higher is better). Mirrors the
+   * preset spread used for CQP/CRF on other encoders.
+   */
+  private static getVtQualityFromQuality(quality: string) {
+    switch (quality) {
+      case QualityPresets.ULTRA:
+        return 90;
+      case QualityPresets.HIGH:
+        return 75;
+      case QualityPresets.MODERATE:
+        return 60;
+      case QualityPresets.LOW:
+        return 45;
+      default:
+        console.error('[Recorder] Unrecognised quality', quality);
+        throw new Error('Unrecognised quality');
+    }
   }
 
   /**
@@ -1467,9 +1650,23 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Check if the name of the window matches one of the known WoW window names.
+   * Check if the name of the window matches one of the known WoW window
+   * names. Windows OBS prefixes window list entries with `[Wow.exe]: `,
+   * macOS SCK exposes the raw window/app title (e.g. "World of
+   * Warcraft" or "World of Warcraft Classic").
    */
   private static windowMatch(item: { name: string; value: string | number }) {
+    if (process.platform === 'darwin') {
+      // OSN's mac_screen_capture window:list formats names as
+      // `[<AppName>] <WindowTitle>`. Match by app-name prefix.
+      const n = item.name;
+      return (
+        n.startsWith('[World of Warcraft]') ||
+        n.startsWith('[World of Warcraft Classic]') ||
+        n.startsWith('[Wow]') ||
+        n.startsWith('[WowClassic]')
+      );
+    }
     return (
       item.name.startsWith('[Wow.exe]: ') ||
       item.name.startsWith('[WowT.exe]: ') ||
@@ -1499,7 +1696,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    const properties = noobs.GetSourceProperties(this.captureSource);
+    const properties = this.backend.getSourceProperties(this.captureSource);
     const windows = properties.find((item) => item.name === 'window');
 
     if (!windows) {
@@ -1517,9 +1714,9 @@ export default class Recorder extends EventEmitter {
 
     if (match) {
       console.info('[Recorder] Found matching window for game capture:', match);
-      const settings = noobs.GetSourceSettings(this.captureSource);
+      const settings = this.backend.getSourceSettings(this.captureSource);
       const updated = { ...settings, window: match.value };
-      noobs.SetSourceSettings(this.captureSource, updated);
+      this.backend.setSourceSettings(this.captureSource, updated);
       return;
     }
 
@@ -1552,7 +1749,7 @@ export default class Recorder extends EventEmitter {
     previewWidth: number;
     previewHeight: number;
   } {
-    return noobs.GetPreviewInfo();
+    return this.backend.getPreviewInfo();
   }
 
   /**
@@ -1577,7 +1774,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    const current = noobs.GetSourcePos(src);
+    const current = this.backend.getSourcePos(src);
 
     const position: SceneItemPosition & SourceDimensions = {
       x: current.x * sf,
@@ -1611,8 +1808,8 @@ export default class Recorder extends EventEmitter {
       cropBottom: number;
     },
   ) {
-    const previewInfo = noobs.GetPreviewInfo(); // Could be cached?
-    const current = noobs.GetSourcePos(src);
+    const previewInfo = this.backend.getPreviewInfo(); // Could be cached?
+    const current = this.backend.getSourcePos(src);
 
     // This is confusing because there are two forms of scaling at play
     // that we need to account for.
@@ -1641,7 +1838,7 @@ export default class Recorder extends EventEmitter {
       cropBottom: target.cropBottom / (sf * scale),
     };
 
-    noobs.SetSourcePos(src, updated);
+    this.backend.setSourcePos(src, updated);
 
     const item = src.startsWith('WCR Chat Overlay')
       ? SceneItem.OVERLAY
@@ -1700,8 +1897,8 @@ export default class Recorder extends EventEmitter {
     if (item === SceneItem.GAME) {
       console.info('[Recorder] Resetting game source so fit to window');
 
-      const { height, width } = noobs.GetSourcePos(src);
-      const { canvasHeight, canvasWidth } = noobs.GetPreviewInfo();
+      const { height, width } = this.backend.getSourcePos(src);
+      const { canvasHeight, canvasWidth } = this.backend.getPreviewInfo();
 
       const scaleX = canvasWidth / width;
       const scaleY = canvasHeight / height;
@@ -1720,13 +1917,29 @@ export default class Recorder extends EventEmitter {
     }
 
     // scaleX and scaleY are the same by this point as we maintain aspect ratio.
-    noobs.SetSourcePos(src, updated);
+    this.backend.setSourcePos(src, updated);
     this.saveSourcePosition(item, updated.x, updated.y, updated.scaleX);
   }
 
   /**
    * Save a video source position in the config.
    */
+  /**
+   * Mac editor commit hook: map an OBS source name to its SceneItem and
+   * persist the new canvas-px position to ConfigService. Called from
+   * EditorService after the user releases the mouse.
+   */
+  public commitEditorPosition(
+    sourceName: string,
+    x: number,
+    y: number,
+    scaleX: number,
+  ): void {
+    const item =
+      sourceName === VideoSourceName.OVERLAY ? SceneItem.OVERLAY : SceneItem.GAME;
+    this.saveSourcePosition(item, x, y, scaleX);
+  }
+
   private saveSourcePosition(
     item: SceneItem,
     x: number,
