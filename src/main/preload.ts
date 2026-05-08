@@ -1,7 +1,12 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
+import type {
+  ObsProperty,
+  SceneItemPosition,
+  SourceDimensions,
+} from './platform/recorder/types';
 import { AudioSourceType, RendererVideo, SceneItem } from './types';
 import { TChatMessageWithId } from 'types/api';
+import type { EditorMouseEvent } from './EditorService';
 
 export type Channels =
   | 'window'
@@ -39,6 +44,9 @@ export type Channels =
   | 'showPreview'
   | 'hidePreview'
   | 'disablePreview'
+  | 'editor:mouseDown'
+  | 'editor:mouseMove'
+  | 'editor:mouseUp'
   | 'getSourcePosition'
   | 'setSourcePosition'
   | 'resetSourcePosition'
@@ -108,6 +116,18 @@ contextBridge.exposeInMainWorld('electron', {
 
     disablePreview() {
       ipcRenderer.send('disablePreview');
+    },
+
+    editorMouseDown(ev: EditorMouseEvent) {
+      ipcRenderer.send('editor:mouseDown', ev);
+    },
+
+    editorMouseMove(ev: EditorMouseEvent) {
+      ipcRenderer.send('editor:mouseMove', ev);
+    },
+
+    editorMouseUp(ev: EditorMouseEvent) {
+      ipcRenderer.send('editor:mouseUp', ev);
     },
 
     getSourcePosition(
@@ -250,4 +270,19 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('clip', video, offset, duration);
     },
   },
+});
+
+contextBridge.exposeInMainWorld('permissions', {
+  snapshot: () => ipcRenderer.invoke('permissions:snapshot'),
+  openSettingsFor: (key: 'screen' | 'microphone' | 'accessibility') =>
+    ipcRenderer.send('permissions:open-settings', key),
+  refresh: () => ipcRenderer.invoke('permissions:snapshot'),
+});
+
+contextBridge.exposeInMainWorld('platformInfo', {
+  platform: process.platform,
+});
+
+contextBridge.exposeInMainWorld('recorderCapabilities', {
+  get: () => ipcRenderer.invoke('recorder:capabilities'),
 });

@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "version": "7.6.4",
+  "version": "7.7.0-beta.7",
   "description": "Warcraft Recorder",
   "main": "./dist/main/main.js",
   "author": {
@@ -12,8 +12,11 @@
     "postinstall": "npm run electron-rebuild && npm run link-modules"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
     "atomic-queue": "^5.0.4",
-    "noobs": "^0.0.187",
+    "deasync": "^0.1.30",
+    "noobs": "https://github.com/yuripiratello/noobs/releases/download/v0.0.182-mac.beta.5/noobs-darwin-arm64-0.0.182-mac.beta.5.tgz",
     "uiohook-napi": "^1.5.2"
   },
   "license": "MIT"
