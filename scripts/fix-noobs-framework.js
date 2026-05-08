@@ -73,9 +73,54 @@ function walk(dir) {
   return added;
 }
 
+/**
+ * obs-ffmpeg.plugin spawns its mux helper via
+ * `os_get_executable_path_ptr("obs-ffmpeg-mux")`, which on macOS
+ * resolves to `<host_executable_dir>/obs-ffmpeg-mux` — i.e.
+ * `Contents/MacOS/obs-ffmpeg-mux` for the host Electron app, NOT the
+ * `noobs/dist/Frameworks/` directory where the helper actually ships.
+ * Without a copy at that path, recording fails with
+ * "Failed to create process pipe" / "Unable to start the recording
+ * helper process".
+ *
+ * Copy the helper from the bundled noobs/dist/Frameworks/ into
+ * Contents/MacOS/ so the plugin finds it. Done in afterPack so
+ * electron-builder's deep-sign covers it.
+ */
+function placeFfmpegMuxHelper(appOutDir) {
+  // Find the .app
+  const appName = fs
+    .readdirSync(appOutDir)
+    .find((n) => n.endsWith('.app'));
+  if (!appName) return false;
+  const appPath = path.join(appOutDir, appName);
+  const macOsDir = path.join(appPath, 'Contents', 'MacOS');
+  const helperSrc = path.join(
+    appPath,
+    'Contents',
+    'Resources',
+    'app',
+    'node_modules',
+    'noobs',
+    'dist',
+    'Frameworks',
+    'obs-ffmpeg-mux',
+  );
+  const helperDst = path.join(macOsDir, 'obs-ffmpeg-mux');
+  if (!fs.existsSync(helperSrc)) {
+    console.warn(`[fix-noobs-framework] helper missing at ${helperSrc}`);
+    return false;
+  }
+  fs.copyFileSync(helperSrc, helperDst);
+  fs.chmodSync(helperDst, 0o755);
+  console.log(`[fix-noobs-framework] copied obs-ffmpeg-mux → ${helperDst}`);
+  return true;
+}
+
 exports.default = async function afterPack(context) {
   if (context.electronPlatformName !== 'darwin') return;
   const root = context.appOutDir;
   const added = walk(root);
   console.log(`[fix-noobs-framework] ${added} symlinks added under ${root}`);
+  placeFfmpegMuxHelper(root);
 };
