@@ -8,6 +8,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 752](https://github.com/aza547/wow-recorder/issues/752) - Fix the timeline marker alignment on fullscreening.
+- Update Algeth'ar Academy dungeon timer again.
+- Fixed an issue where the OBS logs could scribble over themselves.
+
+## [7.6.3] - 2026-04-13
+### Fixed
+- Fix the bulk download button.
+
+## [7.6.2] - 2026-04-12
+### Added
+- [Issue 695](https://github.com/aza547/wow-recorder/issues/695) - Warn users when Advanced Combat Logging is disabled in WoW settings.
+
+### Fixed
+- Fix a bug introduced in the last release where deleting videos manually didn't actually delete the file.
+- Update Algeth'ar Academy dungeon timer.
+
+## [7.6.1] - 2026-04-10
+### Changed
+- Restyled the tag dialog box to handle multiline descriptions and be scrollable.
+
+### Added
+- [Issue 805](https://github.com/aza547/wow-recorder/issues/805) - Automatically generate YouTube compatible timeline for multiview kill videos.
+
+### Fixed
+- Fix the viewpoints counter being cut off if the player name is too long.
+- Upload rendered kill videos if config specifies clip upload.
+- Fix an issue where the default storage path could interacted poorly with OneDrive.
+- Add some missing map IDs causing files to be named "Unknown Dungeon". 
+
+## [7.6.0] - 2026-03-14
+### Added
+- [Issue 777](https://github.com/aza547/wow-recorder/issues/777) - Update M+ timers for Midnight S1.
+- Cloud videos can now be directly clipped.
+- Adds the kill video creator feature.
+
 
 ## [7.5.2] - 2026-02-26
 ### Added

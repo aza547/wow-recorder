@@ -165,7 +165,11 @@ const DeleteDialog = ({
       .getSelectedRowModel()
       .rows.map((row) => row.original);
 
-    window.electron.ipcRenderer.sendMessage('deleteVideos', toDelete);
+    const toDeleteDisk = toDelete.filter((rv) => !rv.cloud);
+    const toDeleteCloud = toDelete.filter((rv) => rv.cloud);
+
+    window.electron.ipcRenderer.sendMessage('deleteVideosDisk', toDeleteDisk);
+    window.electron.ipcRenderer.sendMessage('deleteVideosCloud', toDeleteCloud);
 
     setVideoState((prev) => {
       return [...prev].filter((rv) => {

@@ -28,11 +28,19 @@ interface IProps {
   recorderStatus: RecStatus;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
+  previewEnabled: boolean;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
 const SceneEditor: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, appState, config, setConfig } = props;
-  const [previewEnabled, setPreviewEnabled] = useState(true);
+  const {
+    recorderStatus,
+    appState,
+    config,
+    setConfig,
+    previewEnabled,
+    setPreviewEnabled,
+  } = props;
   const [snapEnabled, setSnapEnabled] = useState(true);
 
   const renderResetGameButton = () => {

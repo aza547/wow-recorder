@@ -1,0 +1,607 @@
+import { KillVideoSegment } from 'main/types';
+import {
+  getPlayerClass,
+  getPlayerName,
+  getPlayerSpecID,
+  getWoWClassColor,
+  secToMmSs,
+} from './rendererutils';
+import React, {
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { specImages } from './images';
+import { Trash2, Volume2, VolumeX } from 'lucide-react';
+import { getLocalePhrase } from 'localisation/translations';
+import { Language, Phrase } from 'localisation/phrases';
+
+interface SourceTimelineProps {
+  segments: KillVideoSegment[];
+  setSegments: Dispatch<SetStateAction<KillVideoSegment[]>>;
+  children?: ReactNode;
+  language: Language;
+}
+
+/**
+ * A draggable + resizable timeline for arranging video sources.
+ *
+ * The timeline represents the total fight duration (the shortest source).
+ * Each segment is a slice of that fixed total — e.g. a 3 min fight with
+ * 3 viewpoints starts as 1 min each. Dragging edges redistributes time
+ * between neighbours while keeping the total constant.
+ *
+ * This was written in part by Copilot. Take it with a grain of salt.
+ *
+ * Features:
+ * - Rectangles colored by WoW class, sized proportionally to duration
+ * - Drag & drop to reorder viewpoints
+ * - Drag left/right edges to resize (min 10s per segment)
+ */
+const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
+  const { segments, setSegments, language } = props;
+
+  const videoDuration = segments.reduce(
+    (sum, seg) => sum + (seg.stop - seg.start),
+    0,
+  );
+
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
+  const [overBin, setOverBin] = useState(false);
+  const [playheadTime, setPlayheadTime] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const seekingRef = useRef(false);
+
+  const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const timelineWrapperRef = useRef<HTMLDivElement>(null);
+
+  const canRemove = segments.length > 2;
+
+  const activeSegment = useMemo(() => {
+    for (const seg of segments) {
+      if (playheadTime >= seg.start && playheadTime < seg.stop) return seg;
+    }
+    return segments[segments.length - 1];
+  }, [segments, playheadTime]);
+
+  const videoSrc = useMemo(() => {
+    const src = activeSegment.video.videoSource;
+    return src.startsWith('https://') ? src : `vod://wcr/${src}`;
+  }, [activeSegment]);
+
+  // Seek the preview video when the playhead is moved manually.
+  useEffect(() => {
+    const el = videoPreviewRef.current;
+    if (el && el.readyState >= 2 && seekingRef.current) {
+      el.currentTime = playheadTime;
+      seekingRef.current = false;
+    }
+  }, [playheadTime]);
+
+  // Seek the preview video when the source changes after load.
+  const handleVideoLoaded = useCallback(() => {
+    const el = videoPreviewRef.current;
+    if (el) {
+      el.currentTime = playheadTime;
+      if (playing) el.play();
+    }
+  }, [playheadTime, playing]);
+
+  // Sync playhead from video playback.
+  const handleTimeUpdate = useCallback(() => {
+    const el = videoPreviewRef.current;
+    if (el && !seekingRef.current) {
+      setPlayheadTime(el.currentTime);
+    }
+  }, []);
+
+  const togglePlayPause = useCallback(() => {
+    const el = videoPreviewRef.current;
+    if (!el) return;
+    if (el.paused) {
+      el.play();
+      setPlaying(true);
+    } else {
+      el.pause();
+      setPlaying(false);
+    }
+  }, []);
+
+  // True when cursor is over a valid insertion gap (not a no-op position).
+  const showDropIndicator =
+    dragIdx !== null &&
+    overIdx !== null &&
+    overIdx !== dragIdx &&
+    overIdx !== dragIdx + 1;
+
+  const resizeRef = useRef<{
+    segmentIdx: number;
+    edge: 'left' | 'right';
+    startX: number;
+    startDuration: number;
+    neighbourDuration: number;
+    totalWidth: number;
+    totalDuration: number;
+  } | null>(null);
+
+  const handleDragStart = (idx: number) => {
+    setDragIdx(idx);
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midX = rect.left + rect.width / 2;
+    setOverIdx(e.clientX < midX ? idx : idx + 1);
+  };
+
+  const normalizeSegments = (segs: KillVideoSegment[]) => {
+    let cursor = 0;
+
+    return segs.map((seg) => {
+      const duration = seg.stop - seg.start;
+      const next = { ...seg, start: cursor, stop: cursor + duration };
+      cursor += duration;
+      return next;
+    });
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+
+    if (
+      dragIdx === null ||
+      overIdx === null ||
+      overIdx === dragIdx ||
+      overIdx === dragIdx + 1
+    ) {
+      setDragIdx(null);
+      setOverIdx(null);
+      return;
+    }
+
+    const next = [...segments];
+    const [moved] = next.splice(dragIdx, 1);
+    const insertIdx = overIdx > dragIdx ? overIdx - 1 : overIdx;
+    next.splice(insertIdx, 0, moved);
+
+    setSegments(normalizeSegments(next));
+
+    setDragIdx(null);
+    setOverIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIdx(null);
+    setOverIdx(null);
+    setOverBin(false);
+  };
+
+  const handleBinDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragIdx !== null && canRemove) {
+      removeSegment(dragIdx);
+    }
+    setDragIdx(null);
+    setOverIdx(null);
+    setOverBin(false);
+  };
+
+  const removeSegment = (idx: number) => {
+    if (segments.length <= 2) return;
+
+    const removedDuration = segments[idx].stop - segments[idx].start;
+    const remaining = segments.filter((_, i) => i !== idx);
+    const extraEach = removedDuration / remaining.length;
+
+    let cursor = 0;
+    const updated = remaining.map((seg) => {
+      const newDuration = seg.stop - seg.start + extraEach;
+      const newSeg = { ...seg, start: cursor, stop: cursor + newDuration };
+      cursor += newDuration;
+      return newSeg;
+    });
+
+    setSegments(updated);
+  };
+
+  const handleEdgeMouseDown = (
+    e: React.MouseEvent,
+    segmentIdx: number,
+    edge: 'left' | 'right',
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const neighbourIdx = edge === 'left' ? segmentIdx - 1 : segmentIdx + 1;
+
+    if (neighbourIdx < 0 || neighbourIdx >= segments.length) return;
+
+    const container = (e.currentTarget as HTMLElement).closest(
+      '[data-timeline-container]',
+    );
+
+    if (!container) return;
+
+    resizeRef.current = {
+      segmentIdx,
+      edge,
+      startX: e.clientX,
+      startDuration: segments[segmentIdx].stop - segments[segmentIdx].start,
+      neighbourDuration:
+        segments[neighbourIdx].stop - segments[neighbourIdx].start,
+      totalWidth: container.getBoundingClientRect().width,
+      totalDuration: videoDuration,
+    };
+
+    const handleMouseMove = (me: MouseEvent) => {
+      if (!resizeRef.current) return;
+
+      const {
+        segmentIdx: sIdx,
+        edge: sEdge,
+        startX,
+        startDuration,
+        neighbourDuration,
+        totalWidth,
+        totalDuration: td,
+      } = resizeRef.current;
+
+      const dx = me.clientX - startX;
+      const durationDelta = (dx / totalWidth) * td;
+
+      let newDuration: number;
+      let newNeighbourDuration: number;
+
+      if (sEdge === 'right') {
+        // Dragging right edge: grow self, shrink right neighbour
+        newDuration = startDuration + durationDelta;
+        newNeighbourDuration = neighbourDuration - durationDelta;
+      } else {
+        // Dragging left edge: shrink self, grow left neighbour
+        newDuration = startDuration - durationDelta;
+        newNeighbourDuration = neighbourDuration + durationDelta;
+      }
+
+      const minSegmentDuration = 15;
+      const combined = startDuration + neighbourDuration;
+
+      newDuration = Math.max(
+        minSegmentDuration,
+        Math.min(newDuration, combined - minSegmentDuration),
+      );
+      newNeighbourDuration = combined - newDuration;
+
+      setSegments((prev) => {
+        const next = [...prev];
+
+        if (sEdge === 'right') {
+          const nIdx = sIdx + 1;
+          const boundary = prev[sIdx].start + newDuration;
+          next[sIdx] = { ...next[sIdx], stop: boundary };
+          next[nIdx] = { ...next[nIdx], start: boundary };
+        } else {
+          const nIdx = sIdx - 1;
+          const boundary = prev[nIdx].start + newNeighbourDuration;
+          next[nIdx] = { ...next[nIdx], stop: boundary };
+          next[sIdx] = { ...next[sIdx], start: boundary };
+        }
+
+        return next;
+      });
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      resizeRef.current = null;
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const updatePlayheadFromMouse = useCallback(
+    (clientX: number) => {
+      const wrapper = timelineWrapperRef.current;
+      if (!wrapper) return;
+      const rect = wrapper.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      setPlayheadTime(pct * videoDuration);
+    },
+    [videoDuration],
+  );
+
+  const handlePlayheadMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      seekingRef.current = true;
+      updatePlayheadFromMouse(e.clientX);
+
+      const handleMove = (me: MouseEvent) => {
+        seekingRef.current = true;
+        updatePlayheadFromMouse(me.clientX);
+      };
+
+      const handleUp = () => {
+        document.removeEventListener('mousemove', handleMove);
+        document.removeEventListener('mouseup', handleUp);
+      };
+
+      document.addEventListener('mousemove', handleMove);
+      document.addEventListener('mouseup', handleUp);
+    },
+    [updatePlayheadFromMouse],
+  );
+
+  // Build tick marks for the timeline ruler.
+  const { majorTicks, minorTicks } = useMemo(() => {
+    const major: number[] = [];
+    const minor: number[] = [];
+
+    // Pick a sensible major interval based on fight length.
+    let majorInterval = 30;
+    if (videoDuration > 600) majorInterval = 120;
+    else if (videoDuration > 300) majorInterval = 60;
+    else if (videoDuration > 120) majorInterval = 30;
+    else majorInterval = 15;
+
+    const minorInterval = majorInterval / 2;
+
+    for (let t = minorInterval; t < videoDuration; t += minorInterval) {
+      // Check if this is a major tick (within a small epsilon).
+      if (Math.abs(t % majorInterval) < 0.01) {
+        major.push(t);
+      } else {
+        minor.push(t);
+      }
+    }
+
+    return { majorTicks: major, minorTicks: minor };
+  }, [videoDuration]);
+
+  const playheadPct =
+    videoDuration > 0 ? (playheadTime / videoDuration) * 100 : 0;
+
+  return (
+    <div className="flex flex-col gap-0 w-full border-card">
+      {/* Video preview + settings side by side */}
+      <div className="flex flex-row gap-2 mb-2 items-start">
+        <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm group">
+          <video
+            ref={videoPreviewRef}
+            key={activeSegment.video.videoName}
+            src={videoSrc}
+            className="w-full h-full object-contain cursor-pointer"
+            onLoadedData={handleVideoLoaded}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={() => setPlaying(false)}
+            onClick={togglePlayPause}
+            muted={muted}
+          />
+          <button
+            type="button"
+            onClick={() => setMuted((m) => !m)}
+            className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/60 text-white/80 hover:text-white hover:bg-black/80 transition-opacity "
+          >
+            {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
+        </div>
+        {props.children && (
+          <div className="flex-shrink-0 p-2 border-l border-card h-full pl-2">
+            {props.children}
+          </div>
+        )}
+      </div>
+
+      {/* Timeline + playhead wrapper */}
+      <div
+        className="relative mx-2 border-b border-t border-card py-2"
+        ref={timelineWrapperRef}
+      >
+        <div
+          data-timeline-container
+          className="flex w-full h-20 overflow-hidden"
+        >
+          {showDropIndicator && overIdx === 0 && (
+            <div className="flex-shrink-0 w-1 h-full bg-white rounded-full" />
+          )}
+          {segments.map((seg, idx) => {
+            const widthPercent = ((seg.stop - seg.start) / videoDuration) * 100;
+            const isDragging = dragIdx === idx;
+
+            const playerClass = getPlayerClass(seg.video);
+            const bgColor =
+              playerClass === 'UNKNOWN'
+                ? 'gray'
+                : getWoWClassColor(playerClass);
+
+            return (
+              <React.Fragment key={seg.video.videoName}>
+                <div
+                  className={[
+                    'relative flex items-center justify-center select-none cursor-grab',
+                    'transition-opacity rounded-md',
+                    isDragging ? 'opacity-40' : 'opacity-100',
+                  ].join(' ')}
+                  style={{
+                    width: `${widthPercent}%`,
+                    backgroundColor: bgColor,
+                  }}
+                  draggable
+                  onDragStart={() => handleDragStart(idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                >
+                  <img
+                    src={
+                      specImages[
+                        getPlayerSpecID(seg.video) as keyof typeof specImages
+                      ]
+                    }
+                    alt="spec"
+                    className="absolute top-1 left-1 w-4 h-4 rounded-[15%] pointer-events-none"
+                    style={{
+                      border: '1px solid black',
+                      objectFit: 'cover',
+                    }}
+                  />
+
+                  <div className="absolute top-1 right-1 grid grid-cols-3 gap-[2px] pointer-events-none">
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-[3px] h-[3px] rounded-full bg-black/40"
+                      />
+                    ))}
+                  </div>
+
+                  <div className="text-black rounded-sm flex flex-col items-center pointer-events-none px-2 pt-2 overflow-hidden">
+                    <span className="text-[12px] font-bold truncate max-w-full">
+                      {getPlayerName(seg.video) || seg.video.videoName}
+                    </span>
+                    <span className="text-[10px]">
+                      {secToMmSs(seg.stop - seg.start)}
+                    </span>
+                  </div>
+                </div>
+
+                {idx < segments.length - 1 && (
+                  <div
+                    className={[
+                      'flex-shrink-0 w-3 h-full z-10 flex flex-col items-center justify-center gap-[3px] cursor-col-resize transition-colors rounded-md',
+                      showDropIndicator && overIdx === idx + 1
+                        ? 'bg-white/40'
+                        : '',
+                    ].join(' ')}
+                    onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'right')}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setOverIdx(idx + 1);
+                    }}
+                    onDrop={handleDrop}
+                  >
+                    {/* Vertical grip dots */}
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={[
+                          'w-[3px] h-[3px] rounded-full',
+                          showDropIndicator && overIdx === idx + 1
+                            ? 'bg-white'
+                            : 'bg-white/30',
+                        ].join(' ')}
+                      />
+                    ))}
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
+          {showDropIndicator && overIdx === segments.length && (
+            <div className="flex-shrink-0 w-1 h-full bg-white rounded-full" />
+          )}
+        </div>
+
+        {/* Playhead */}
+        <div
+          className="absolute top-0 w-0.5 bg-white z-20 cursor-ew-resize"
+          style={{
+            left: `${playheadPct}%`,
+            height: '100%',
+            transform: 'translateX(-50%)',
+          }}
+          onMouseDown={handlePlayheadMouseDown}
+        >
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white" />
+          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full text-[9px] text-white/90 px-1 whitespace-nowrap pointer-events-none">
+            {secToMmSs(playheadTime)}
+          </span>
+        </div>
+
+        {/* Clickable ruler area to jump playhead */}
+        <div
+          className="relative w-full h-6 mt-2 cursor-pointer"
+          onMouseDown={handlePlayheadMouseDown}
+        >
+          <div className="absolute top-0 left-0 right-0 h-px bg-card" />
+          <div className="absolute top-0 left-0 flex flex-col items-start">
+            <div className="w-px h-2 bg-card" />
+            <span className="text-[9px] text-card-foreground leading-none mt-0.5">
+              0:00
+            </span>
+          </div>
+
+          {minorTicks.map((t) => {
+            const pct = (t / videoDuration) * 100;
+            return (
+              <div
+                key={`minor-${t}`}
+                className="absolute top-0 w-px h-1 bg-card"
+                style={{ left: `${pct}%` }}
+              />
+            );
+          })}
+
+          {majorTicks.map((t) => {
+            const pct = (t / videoDuration) * 100;
+            return (
+              <div
+                key={t}
+                className="absolute top-0 flex flex-col items-center"
+                style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
+              >
+                <div className="w-px h-2 bg-card" />
+                <span className="text-[9px] text-card-foreground leading-none mt-0.5">
+                  {secToMmSs(t)}
+                </span>
+              </div>
+            );
+          })}
+
+          <div className="absolute top-0 right-0 flex flex-col items-end">
+            <div className="w-px h-2 bg-card" />
+            <span className="text-[9px] text-card-foreground leading-none mt-0.5">
+              {secToMmSs(videoDuration)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {canRemove && (
+        <div
+          className={[
+            'flex items-center justify-center gap-2 w-full h-8 mt-1 rounded-md border-2 border-dashed transition-colors',
+            overBin
+              ? 'border-red-500 bg-red-500/20 text-red-400'
+              : dragIdx !== null
+                ? 'border-card bg-muted/10 text-card-foreground'
+                : 'border-transparent bg-transparent text-transparent',
+          ].join(' ')}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setOverBin(true);
+          }}
+          onDragLeave={() => setOverBin(false)}
+          onDrop={handleBinDrop}
+        >
+          <Trash2 size={14} />
+          <span className="text-xs">
+            {getLocalePhrase(language, Phrase.KillVideoRemove)}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default KillVideoSourceTimeline;

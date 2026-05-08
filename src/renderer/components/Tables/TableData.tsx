@@ -26,6 +26,7 @@ import {
   populateLevelCell,
   populateActivityCell,
   populateAffixesCell,
+  populateCreatorCell,
 } from './Cells';
 import {
   EncounterHeader,
@@ -49,6 +50,7 @@ import {
   levelSort,
   detailSort,
   clipActivitySort,
+  creatorSort,
 } from './Sorting';
 import { getLocaleCategoryLabel } from 'localisation/translations';
 
@@ -117,6 +119,7 @@ const useTable = (
       },
       {
         id: 'Pull',
+        size: 100,
         accessorFn: (v) => getPullNumber(v, videoState),
         header: () => PullHeader(language),
       },
@@ -140,10 +143,19 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
         sortingFn: viewPointCountSort,
+      },
+      {
+        id: 'Creator',
+        size: 50,
+        accessorFn: (v) => v,
+        sortingFn: (a, b) => creatorSort(a, b),
+        header: DetailsHeader,
+        cell: (ctx) => populateCreatorCell(ctx, language),
       },
     ],
     [language, cloudStatus, videoState, setVideoState],
@@ -193,6 +205,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
@@ -260,6 +273,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
@@ -313,6 +327,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
@@ -368,6 +383,7 @@ const useTable = (
       },
       {
         id: 'Viewpoints',
+        size: 175,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),

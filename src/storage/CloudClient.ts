@@ -1274,7 +1274,7 @@ export default class CloudClient implements StorageClient {
       clipboard.writeText(shareable);
     });
 
-    ipcMain.on('deleteVideos', async (_event, args) => {
+    ipcMain.on('deleteVideosCloud', async (_event, args) => {
       const videos = args as RendererVideo[];
       const toDelete = videos.filter((v) => v.cloud).map((v) => v.videoName);
       if (toDelete.length < 1) return;
@@ -1282,7 +1282,7 @@ export default class CloudClient implements StorageClient {
     });
 
     // VideoButton event listeners.
-    ipcMain.on('videoButton', async (_event, args) => {
+    ipcMain.on('videoButtonCloud', async (_event, args) => {
       const ready = await this.ready();
       const action = args[0] as string;
 

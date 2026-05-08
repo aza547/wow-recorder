@@ -95,6 +95,23 @@ export const detailSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
   return 0;
 };
 
+export const creatorSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
+  const disabledA =
+    [a.original, ...a.original.multiPov].filter((rv) => !rv.cloud).length < 2;
+  const disabledB =
+    [b.original, ...b.original.multiPov].filter((rv) => !rv.cloud).length < 2;
+
+  if (disabledA && !disabledB) {
+    return 1;
+  }
+
+  if (!disabledA && disabledB) {
+    return -1;
+  }
+
+  return 0;
+};
+
 export const clipActivitySort = (
   a: Row<RendererVideo>,
   b: Row<RendererVideo>,

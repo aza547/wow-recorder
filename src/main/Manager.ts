@@ -1,13 +1,17 @@
+import fs, { FSWatcher } from 'fs';
 import { app, ipcMain, powerMonitor } from 'electron';
 import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
   buildClipMetadata,
+  checkAdvancedCombatLogging,
+  getConfigWtfPath,
   getMetadataForVideo,
   getOBSFormattedDate,
   isManualRecordHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
+  rendererVideoToMetadata,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -22,6 +26,10 @@ import {
   WowProcessEvent,
   BaseConfig,
   ActivityStatus,
+  AdvancedLoggingStatus,
+  KillVideoQueueItem,
+  RendererVideo,
+  KillVideoSegment,
 } from './types';
 import {
   getObsVideoConfig,
@@ -30,7 +38,7 @@ import {
   getBaseConfig,
   validateBaseConfig,
 } from '../utils/configUtils';
-import { ERecordingState } from './obsEnums';
+import { ERecordingState, QualityPresets } from './obsEnums';
 import {
   runClassicRecordingTest,
   runRetailRecordingTest,
@@ -107,6 +115,23 @@ export default class Manager {
   private appStartupTime = Date.now();
   
   /**
+   * File watchers for Config.wtf files, used to detect changes to
+   * the advanced combat logging setting.
+   */
+  private configWtfWatchers: FSWatcher[] = [];
+
+  /**
+   * Cached advanced logging status per flavour, pushed to the frontend.
+   */
+  private advancedLoggingStatus: AdvancedLoggingStatus = {
+    retail: true,
+    classic: true,
+    era: true,
+    retailPtr: true,
+    classicPtr: true,
+  };
+
+  /**
    * Constructor.
    */
   constructor() {
@@ -148,6 +173,8 @@ export default class Manager {
     if (success) {
       this.setConfigValid();
       this.poller.start();
+      await this.watchConfigWtfFiles();
+      await this.checkAdvancedLogging();
     }
 
     this.reconfiguring = false;
@@ -190,6 +217,9 @@ export default class Manager {
     // ...and for the disk client too.
     await DiskClient.getInstance().refreshStatus();
     await DiskClient.getInstance().refreshVideos();
+
+    await this.watchConfigWtfFiles();
+    await this.checkAdvancedLogging();
   }
 
   /**
@@ -292,6 +322,87 @@ export default class Manager {
 
     this.refreshMicStatus(this.recorder.obsMicState);
     this.redrawPreview();
+  }
+
+  /**
+   * Check Config.wtf for each configured WoW flavour and warn the user
+   * if advanced combat logging is not enabled.
+   */
+  public async checkAdvancedLogging() {
+    this.advancedLoggingStatus = {
+      retail:
+        !this.cfg.get<boolean>('recordRetail') ||
+        (await checkAdvancedCombatLogging(
+          this.cfg.get<string>('retailLogPath'),
+        )),
+      classic:
+        !this.cfg.get<boolean>('recordClassic') ||
+        (await checkAdvancedCombatLogging(
+          this.cfg.get<string>('classicLogPath'),
+        )),
+      era:
+        !this.cfg.get<boolean>('recordEra') ||
+        (await checkAdvancedCombatLogging(this.cfg.get<string>('eraLogPath'))),
+      retailPtr:
+        !this.cfg.get<boolean>('recordRetailPtr') ||
+        (await checkAdvancedCombatLogging(
+          this.cfg.get<string>('retailPtrLogPath'),
+        )),
+      classicPtr:
+        !this.cfg.get<boolean>('recordClassicPtr') ||
+        (await checkAdvancedCombatLogging(
+          this.cfg.get<string>('classicPtrLogPath'),
+        )),
+    };
+
+    this.pushAdvancedLoggingStatus();
+  }
+
+  /**
+   * Push the cached advanced logging status to the frontend.
+   */
+  public pushAdvancedLoggingStatus() {
+    send('updateAdvancedLoggingStatus', this.advancedLoggingStatus);
+  }
+
+  /**
+   * Watch Config.wtf files for changes so the advanced logging status
+   * updates reactively when the user toggles the setting in WoW.
+   */
+  private watchConfigWtfFiles() {
+    console.info('Close any existing Config.wtf file watchers');
+    this.configWtfWatchers.forEach((w) => w.close());
+    this.configWtfWatchers = [];
+
+    const logPaths = new Set<string>();
+
+    if (this.cfg.get<boolean>('recordRetail'))
+      logPaths.add(this.cfg.get<string>('retailLogPath'));
+    if (this.cfg.get<boolean>('recordClassic'))
+      logPaths.add(this.cfg.get<string>('classicLogPath'));
+    if (this.cfg.get<boolean>('recordEra'))
+      logPaths.add(this.cfg.get<string>('eraLogPath'));
+    if (this.cfg.get<boolean>('recordRetailPtr'))
+      logPaths.add(this.cfg.get<string>('retailPtrLogPath'));
+    if (this.cfg.get<boolean>('recordClassicPtr'))
+      logPaths.add(this.cfg.get<string>('classicPtrLogPath'));
+
+    console.info('Start watching Config.wtf files for', logPaths);
+
+    for (const logPath of logPaths) {
+      const configPath = getConfigWtfPath(logPath);
+
+      try {
+        const watcher = fs.watch(configPath, () => {
+          console.info('[Manager] Config.wtf changed:', configPath);
+          this.checkAdvancedLogging();
+        });
+
+        this.configWtfWatchers.push(watcher);
+      } catch (err) {
+        console.warn('[Manager] Failed to watch Config.wtf:', configPath, err);
+      }
+    }
   }
 
   /**
@@ -495,28 +606,82 @@ export default class Manager {
     });
 
     // Clipping listener.
-    ipcMain.on('clip', async (_event, args) => {
-      console.info('[Manager] Clip request received with args', args);
+    ipcMain.on(
+      'clip',
+      async (
+        _event,
+        video: RendererVideo,
+        offset: number,
+        duration: number,
+      ) => {
+        console.info(
+          '[Manager] Clip request received with args',
+          video.videoSource,
+          offset,
+          duration,
+        );
 
-      const source = args[0];
-      const offset = args[1];
-      const duration = args[2];
+        const sourceMetadata = rendererVideoToMetadata({ ...video });
+        const now = new Date();
+        const clipMetadata = buildClipMetadata(sourceMetadata, duration, now);
 
-      const sourceMetadata = await getMetadataForVideo(source);
-      const now = new Date();
-      const clipMetadata = buildClipMetadata(sourceMetadata, duration, now);
+        const clipQueueItem: VideoQueueItem = {
+          name: video.videoName,
+          source: video.videoSource,
+          suffix: `Clipped at ${getOBSFormattedDate(now)}`,
+          offset,
+          duration,
+          clip: true,
+          metadata: clipMetadata,
+        };
 
-      const clipQueueItem: VideoQueueItem = {
-        source,
-        suffix: `Clipped at ${getOBSFormattedDate(now)}`,
-        offset,
-        duration,
-        clip: true,
-        metadata: clipMetadata,
-      };
+        VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
+      },
+    );
 
-      VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
-    });
+    ipcMain.on(
+      'createKillVideo',
+      async (
+        _event,
+        width: number,
+        height: number,
+        fps: number,
+        segments: KillVideoSegment[],
+        audioTrackIndex: number,
+      ) => {
+        console.info(
+          '[Manager] Creating kill video with settings:',
+          `${width}x${height} at ${fps} fps`,
+        );
+
+        if (segments.length < 2) {
+          console.warn('[Manager] Too few videos for kill video');
+          return;
+        }
+
+        console.info(
+          '[Manager] Have segments for kill video',
+          segments.map((seg) => ({
+            videoName: seg.video.videoName,
+            videoSource: seg.video.videoSource,
+            cloud: seg.video.cloud,
+            start: seg.start,
+            stop: seg.stop,
+          })),
+        );
+
+        const item: KillVideoQueueItem = {
+          uuid: crypto.randomUUID(),
+          width,
+          height,
+          fps,
+          segments,
+          audioTrackIndex,
+        };
+
+        VideoProcessQueue.getInstance().queueCreateKillVideo(item);
+      },
+    );
 
     // Listens for a manual recording being started via the button. The
     // hotkey listener is handled separately.

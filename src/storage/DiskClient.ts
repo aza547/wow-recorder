@@ -220,14 +220,14 @@ export default class DiskClient implements StorageClient {
   }
 
   private setupListeners() {
-    ipcMain.on('deleteVideos', async (_event, args) => {
+    ipcMain.on('deleteVideosDisk', async (_event, args) => {
       const videos = args as RendererVideo[];
       const toDelete = videos.filter((v) => !v.cloud).map((v) => v.videoSource);
       if (toDelete.length < 1) return;
       this.deleteVideos(toDelete);
     });
 
-    ipcMain.on('videoButton', async (_event, args) => {
+    ipcMain.on('videoButtonDisk', async (_event, args) => {
       const action = args[0] as string;
 
       if (action === 'open') {

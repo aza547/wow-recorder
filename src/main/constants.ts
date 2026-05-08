@@ -360,16 +360,6 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * and retail at the same time. Eventually the older tiers should be removed.
  */
 const currentRetailEncounters = [
-  // TWW Season 3
-  3129, // Plexus Sentinel
-  3131, // Loom'ithar
-  3130, // Soulbinder Naazindhri
-  3132, // Forgeweaver Araz
-  3122, // The Soul Hunters
-  3133, // Fractillus
-  3134, // Nexus-King Salhadaar
-  3135, // Dimensius, the All-Devouring
-
   // Midnight - The Voidspire
   3176, // Imperator Averzian
   3177, // Vorsaius
@@ -544,6 +534,9 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   2859: 'The Blinding Vale',
   2874: 'Maisara Caverns',
   2915: 'Nexus-Point Xenas',
+  658: 'Pit of Saron',
+  1209: 'Skyreach',
+  1753: 'Seat of the Triumvirate',
 };
 
 /**
@@ -662,7 +655,6 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   399: [30 * 60, 24 * 60, 18 * 60],
   400: [40 * 60, 32 * 60, 24 * 60],
   401: [37 * 60 + 30, 30 * 60, 22 * 60 + 30],
-  402: [32 * 60, 25 * 60 + 36, 19 * 60 + 12],
   200: [38 * 60, 30 * 60 + 24, 22 * 60 + 48],
   210: [30 * 60, 24 * 60, 18 * 60],
   165: [33 * 60, 26 * 60 + 24, 19 * 60 + 48],
@@ -713,14 +705,15 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   542: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // "Eco-Dome Al'Dani"
 
   // Midnight S1
-  // TODO: Timers need to be updated. Currently using placeholders.
-  558: [30 * 60, 25 * 60, 20 * 60], // Magister's Terrace
-  560: [30 * 60, 25 * 60, 20 * 60], // Maisara Caverns
-  559: [30 * 60, 25 * 60, 20 * 60], // Nexus-Point Xenas
-  557: [30 * 60, 25 * 60, 20 * 60], // Windrunner Spire
-  556: [30 * 60, 25 * 60, 20 * 60], // Pit of Saron
-  239: [30 * 60, 25 * 60, 20 * 60], // Seat of the Triumvirate
-  161: [30 * 60, 25 * 60, 20 * 60], // Skyreach
+  // Timings from https://www.wowhead.com/guide/midnight/mythic-plus-season-1-overview.
+  558: [34 * 60, 27 * 60 + 12, 20 * 60 + 24], // Magister's Terrace
+  560: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], // Maisara Caverns
+  559: [30 * 60, 24 * 60, 18 * 60], // Nexus-Point Xenas
+  557: [33 * 60 + 30, 26 * 60 + 48, 20 * 60 + 6], // Windrunner Spire
+  402: [31 * 60, 24 * 60 + 48, 18 * 60 + 36], // Algeth'ar Academy
+  556: [30 * 60, 24 * 60, 18 * 60], // Pit of Saron
+  239: [34 * 60, 27 * 60 + 12, 20 * 60 + 24], // Seat of the Triumvirate
+  161: [28 * 60, 22 * 60 + 36, 16 * 60 + 42], // Skyreach
 };
 
 // Useful database for grabbing this stuff:

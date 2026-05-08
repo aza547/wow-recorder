@@ -17,6 +17,8 @@ import Activity from './Activity';
 import { app } from 'electron';
 
 export default class ChallengeModeDungeon extends Activity {
+  private static readonly TIMER_GRACE_SECONDS = 1;
+
   private _mapID: number;
 
   private _level: number;
@@ -97,15 +99,13 @@ export default class ChallengeModeDungeon extends Activity {
       return 0;
     }
 
-    if (this.affixes.includes(152)) {
-      // Challenger's Peril
-      this.CMDuration -= 90;
-    }
-
-    const durationForResult = Flavour.Classic ? this.CMDuration : this.duration;
+    const durationForResult = this.CMDuration;
 
     for (let i = this.timings.length - 1; i >= 0; i--) {
-      if (durationForResult <= this.timings[i]) {
+      if (
+        durationForResult <
+        this.timings[i] + ChallengeModeDungeon.TIMER_GRACE_SECONDS
+      ) {
         return i + 1;
       }
     }

@@ -363,10 +363,19 @@ const CategoryPage = (props: IProps) => {
       protect: boolean,
       videos: RendererVideo[],
     ) => {
-      window.electron.ipcRenderer.sendMessage('videoButton', [
+      const toProtectDisk = videos.filter((v) => !v.cloud);
+      const toProtectCloud = videos.filter((v) => v.cloud);
+
+      window.electron.ipcRenderer.sendMessage('videoButtonDisk', [
         'protect',
         protect,
-        videos,
+        toProtectDisk,
+      ]);
+
+      window.electron.ipcRenderer.sendMessage('videoButtonCloud', [
+        'protect',
+        protect,
+        toProtectCloud,
       ]);
 
       setVideoState((prev) => {
@@ -601,7 +610,7 @@ const CategoryPage = (props: IProps) => {
 
   const openSetupInstructions = () => {
     window.electron.ipcRenderer.sendMessage('openURL', [
-      'https://www.warcraftrecorder.com/about',
+      'https://www.warcraftrecorder.com/setup',
     ]);
   };
 
