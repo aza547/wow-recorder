@@ -113,7 +113,28 @@ function placeFfmpegMuxHelper(appOutDir) {
   }
   fs.copyFileSync(helperSrc, helperDst);
   fs.chmodSync(helperDst, 0o755);
-  console.log(`[fix-noobs-framework] copied obs-ffmpeg-mux → ${helperDst}`);
+
+  // The helper depends on libavcodec / libavformat / libavutil etc.
+  // via @rpath. Its baked rpath points at @executable_path/../Frameworks
+  // which, from Contents/MacOS/, lands in Electron's Frameworks
+  // directory — not noobs/dist/Frameworks where the libs actually
+  // live. Add the noobs path so dyld resolves siblings at runtime.
+  const noobsFrameworksRpath =
+    '@loader_path/../Resources/app/node_modules/noobs/dist/Frameworks';
+  try {
+    require('child_process').execFileSync(
+      'install_name_tool',
+      ['-add_rpath', noobsFrameworksRpath, helperDst],
+      { stdio: 'inherit' },
+    );
+    console.log(
+      `[fix-noobs-framework] copied obs-ffmpeg-mux → ${helperDst} (+rpath ${noobsFrameworksRpath})`,
+    );
+  } catch (err) {
+    console.warn(
+      `[fix-noobs-framework] install_name_tool failed on mux helper: ${err.message}`,
+    );
+  }
   return true;
 }
 
