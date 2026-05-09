@@ -9,6 +9,8 @@ BIN_PATH="$NOOBS_BIN:$PATH"
 # setup LD_LIBRARY_PATH to point to noobs for self-resolution
 LD_LIB_PATH="$NOOBS_BIN${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
+# Force avutil for VAAPI
+AVUTIL_PATH="$NOOBS_BIN/libavutil.so.60"
 # Force avcodec for aac_encode
 AVCODEC_PATH="$NOOBS_BIN/libavcodec.so.62"
 # Force avformat for graphics-ffmpeg in OBS to enable jpg/png
@@ -19,15 +21,14 @@ LIBOBS_PATH="$NOOBS_BIN/libobs.so.30"
 LIBX264_PATH="$NOOBS_BIN/libx264.so.165"
 
 # Optional: sanity checks so it fails loudly instead of silently not preloading
-for so in "$AVCODEC_PATH" "$LIBX264_PATH"; do
+for so in "$AVUTIL_PATH" "$AVCODEC_PATH" "$LIBX264_PATH"; do
   [[ -r "$so" ]] || { echo "missing: $so" >&2; exit 1; }
 done
 
 # force our vended ffmpeg and x264 binaries
 # the kids in the electron sandbox are fighting
 # load order matters
-LD_PRELOAD="$AVCODEC_PATH $AVFORMAT_PATH $LIBOBS_PATH $LIBX264_PATH" \
+LD_PRELOAD="$AVUTIL_PATH $AVCODEC_PATH $AVFORMAT_PATH $LIBOBS_PATH $LIBX264_PATH" \
   LD_LIBRARY_PATH="$LD_LIB_PATH" \
   PATH="$BIN_PATH" \
   exec npm run start
-
