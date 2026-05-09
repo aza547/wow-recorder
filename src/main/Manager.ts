@@ -1,4 +1,5 @@
 import fs, { FSWatcher } from 'fs';
+import { setTimeout as sleep } from 'timers/promises';
 import { app, ipcMain, powerMonitor } from 'electron';
 import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import EraLogHandler from '../parsing/EraLogHandler';
@@ -87,7 +88,7 @@ export default class Manager {
   private reconfiguring = false;
 
   /**
-   * Timer for debouncing the redrawn. Because of the redraw delay, interacting with 
+   * Timer for debouncing the redrawn. Because of the redraw delay, interacting with
    * controls that trigger redraws multiple times very quickly can trigger undefined behavior.
    */
   private redrawPreviewTimer: ReturnType<typeof setTimeout> | null = null;
@@ -105,7 +106,7 @@ export default class Manager {
    * it starts a recording mid changing it, so set this to true while doing so.
    */
   private manualHotKeyDisabled = false;
-  
+
   /**
    * Record the time the application started up.
    * Linux only for now. Unfortunately Pipewire has some quirks when you
@@ -113,7 +114,7 @@ export default class Manager {
    * with the same restore token.
    */
   private appStartupTime = Date.now();
-  
+
   /**
    * File watchers for Config.wtf files, used to detect changes to
    * the advanced combat logging setting.
@@ -455,6 +456,9 @@ export default class Manager {
       // this can cause issues in pipewire if it happens too quickly
       const now = Date.now();
       if (now - this.appStartupTime > 10_000) {
+        // Wait for the DE to map a window for wow. Without this, pipewire
+        // rejects the restore token and triggers the portal.
+        await sleep(10_000);
         const videoConfig = getObsVideoConfig(this.cfg);
         await this.recorder.configureVideoSources(videoConfig);
       }
@@ -593,7 +597,7 @@ export default class Manager {
       if (key === 'startUp') {
         const isStartUp = value === true;
         console.info('[Main] OS level set start-up behaviour:', isStartUp);
-        
+
         setAutostart(isStartUp);
       }
     });
