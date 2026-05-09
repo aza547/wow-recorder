@@ -654,7 +654,8 @@ const encoderFilter = (enc: string, highRes: boolean) => {
       encoder === ESupportedEncoders.OBS_X264 ||
       encoder === ESupportedEncoders.AMD_AV1 ||
       encoder === ESupportedEncoders.NVENC_AV1 ||
-      encoder === ESupportedEncoders.QSV_AV1
+      encoder === ESupportedEncoders.QSV_AV1 ||
+      encoder === ESupportedEncoders.VAAPI_AV1
     );
   }
 
@@ -694,6 +695,10 @@ const getFriendlyEncoderName = (enc: ESupportedEncoders) => {
       return 'Intel H.264';
     case ESupportedEncoders.QSV_AV1:
       return 'Intel AV1';
+    case ESupportedEncoders.VAAPI_H264:
+      return 'VAAPI H.264';
+    case ESupportedEncoders.VAAPI_AV1:
+      return 'VAAPI AV1';
     default:
       throw new Error('Unknown Encoder');
   }

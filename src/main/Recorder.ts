@@ -535,7 +535,6 @@ export default class Recorder extends EventEmitter {
    * user to have setup their config for, which is why it's split out.
    */
   public async configureBase(config: BaseConfig, startup: boolean) {
-
     const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
       config;
 
@@ -618,6 +617,14 @@ export default class Recorder extends EventEmitter {
       case ESupportedEncoders.QSV_AV1:
         settings.rate_control = 'CQP';
         settings.cqp = Recorder.getCqpFromQuality(encoder, quality);
+        break;
+
+      case ESupportedEncoders.VAAPI_H264:
+      case ESupportedEncoders.VAAPI_AV1:
+        // OBS VAAPI encoder names this property "qp" not "cqp"
+        // https://github.com/obsproject/obs-studio/blob/1ecea568172979547da9b701a14655ab6f6611a2/plugins/obs-ffmpeg/obs-ffmpeg-vaapi.c#L250
+        settings.rate_control = 'CQP';
+        settings.qp = Recorder.getCqpFromQuality(encoder, quality);
         break;
 
       default:
@@ -810,7 +817,7 @@ export default class Recorder extends EventEmitter {
           settings['window'] = src.device;
           settings['priority'] = 2; // Executable matching
         }
-        
+
         noobs.SetSourceSettings(name, settings);
       } else if (src.type !== AudioSourceType.PROCESS) {
         const properties = noobs.GetSourceProperties(name);
@@ -1163,9 +1170,9 @@ export default class Recorder extends EventEmitter {
     // writable log path inside of the package
     let logPath = devMode
       ? path.resolve(__dirname, './logs')
-      
-      : app.isPackaged 
-        ? path.join(app.getPath('userData'), 'logs') 
+
+      : app.isPackaged
+        ? path.join(app.getPath('userData'), 'logs')
         : path.resolve(__dirname, '../../dist/main/logs');
 
     console.info('LOG_PATH', logPath);
@@ -1184,9 +1191,9 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Noobs path:', noobsPath);
     console.info('[Recorder] Log path', logPath);
-    
+
     noobs.Init(noobsPath, logPath, cb);
-    console.info('noobs.Init completed successfully'); 
+    console.info('noobs.Init completed successfully');
     noobs.SetBuffering(true);
 
     const hwnd = getNativeWindowHandle();
@@ -1224,7 +1231,10 @@ export default class Recorder extends EventEmitter {
       send('redrawPreview');
       send('initCropSliders');
 
-      if (this.captureMode === CaptureMode.PIPEWIRE && signal.id === this.captureSource) {
+      if (
+        this.captureMode === CaptureMode.PIPEWIRE &&
+        signal.id === this.captureSource
+      ) {
         this.savePipewireRestoreToken();
       }
       return;
@@ -1363,7 +1373,7 @@ export default class Recorder extends EventEmitter {
       console.warn('[Recorder] No restore token available to save');
     }
     return settings;
-  } 
+  }
 
   /**
    * Creates a PipeWire screen capture source (Linux).
@@ -1379,7 +1389,7 @@ export default class Recorder extends EventEmitter {
       pipewireRestoreToken,
     } = config;
 
-    console.info('[Recorder] Applying PipeWire settings with restore token:', 
+    console.info('[Recorder] Applying PipeWire settings with restore token:',
     pipewireRestoreToken ? 'present' : 'none');
 
     // if there's a pipewire token present, use it
@@ -1596,7 +1606,8 @@ export default class Recorder extends EventEmitter {
   private static getCqpFromQuality(encoder: string, quality: string) {
     if (
       encoder === ESupportedEncoders.NVENC_AV1 ||
-      encoder === ESupportedEncoders.AMD_AV1
+      encoder === ESupportedEncoders.AMD_AV1 ||
+      encoder === ESupportedEncoders.VAAPI_AV1
     ) {
       // AV1 typically needs lower CQP values for similar quality
       switch (quality) {
@@ -1935,6 +1946,8 @@ export default class Recorder extends EventEmitter {
     }
 
     if (encoders.includes(ESupportedEncoders.NVENC_H264)) {
+      // NVENC works on both Windows and Linux when the NVIDIA driver and
+      // NVENC runtime are present.
       return ESupportedEncoders.NVENC_H264;
     }
 
@@ -1942,9 +1955,18 @@ export default class Recorder extends EventEmitter {
       return ESupportedEncoders.QSV_H264;
     }
 
+    if (encoders.includes(ESupportedEncoders.VAAPI_H264)) {
+      // Linux hardware path on AMD / Intel iGPU+dGPU via Mesa or
+      // intel-media-driver. NVENC takes precedence above; on Nvidia/Linux
+      // libva is decode-only so VAAPI_H264 is not exposed here anyway.
+      return ESupportedEncoders.VAAPI_H264;
+    }
+
     if (encoders.includes(ESupportedEncoders.AMD_H264)) {
       // Deliberatly after other hardware encoders as sometimes the
-      // AMD iGPU can provide this and it's not usable.
+      // AMD iGPU can provide this and it's not usable. Windows-only path;
+      // OBS does not ship the AMF plugin on Linux, AMD users get hardware
+      // encode via the VAAPI branch above.
       return ESupportedEncoders.AMD_H264;
     }
 
