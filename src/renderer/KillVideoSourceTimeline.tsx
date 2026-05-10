@@ -20,12 +20,14 @@ import { specImages } from './images';
 import { Trash2, Volume2, VolumeX } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { Language, Phrase } from 'localisation/phrases';
+import { useLinuxTranscodedSources } from './useLinuxTranscodedSources';
 
 interface SourceTimelineProps {
   segments: KillVideoSegment[];
   setSegments: Dispatch<SetStateAction<KillVideoSegment[]>>;
   children?: ReactNode;
   language: Language;
+  isLinux: boolean;
 }
 
 /**
@@ -44,7 +46,7 @@ interface SourceTimelineProps {
  * - Drag left/right edges to resize (min 10s per segment)
  */
 const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
-  const { segments, setSegments, language } = props;
+  const { segments, setSegments, language, isLinux } = props;
 
   const videoDuration = segments.reduce(
     (sum, seg) => sum + (seg.stop - seg.start),
@@ -71,10 +73,27 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     return segments[segments.length - 1];
   }, [segments, playheadTime]);
 
+  // Windows path for video sources
   const videoSrc = useMemo(() => {
     const src = activeSegment.video.videoSource;
     return src.startsWith('https://') ? src : `vod://wcr/${src}`;
   }, [activeSegment]);
+
+  // On Linux, HEVC/H265 clips need transcoding to H.264 before Chromium can play
+  // them.
+  const linuxTranscode = useLinuxTranscodedSources(
+    isLinux
+      ? [
+          {
+            source: activeSegment.video.videoSource,
+            cacheKey: activeSegment.video.uniqueId,
+          },
+        ]
+      : [],
+  );
+  const linuxVideoSrc = linuxTranscode.srcs[0] ?? '';
+  const linuxPreparing = isLinux && linuxTranscode.srcs[0] === null;
+  const linuxPrepareProgress = linuxTranscode.progress?.percent ?? null;
 
   // Seek the preview video when the playhead is moved manually.
   useEffect(() => {
@@ -376,17 +395,57 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
       {/* Video preview + settings side by side */}
       <div className="flex flex-row gap-2 mb-2 items-start">
         <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm group">
-          <video
-            ref={videoPreviewRef}
-            key={activeSegment.video.videoName}
-            src={videoSrc}
-            className="w-full h-full object-contain cursor-pointer"
-            onLoadedData={handleVideoLoaded}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={() => setPlaying(false)}
-            onClick={togglePlayPause}
-            muted={muted}
-          />
+          {isLinux ? (
+            linuxVideoSrc && (
+              <video
+                ref={videoPreviewRef}
+                key={linuxVideoSrc}
+                src={linuxVideoSrc}
+                className="w-full h-full object-contain cursor-pointer"
+                onLoadedData={handleVideoLoaded}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={() => setPlaying(false)}
+                onClick={togglePlayPause}
+                muted={muted}
+              />
+            )
+          ) : (
+            <video
+              ref={videoPreviewRef}
+              key={activeSegment.video.videoName}
+              src={videoSrc}
+              className="w-full h-full object-contain cursor-pointer"
+              onLoadedData={handleVideoLoaded}
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={() => setPlaying(false)}
+              onClick={togglePlayPause}
+              muted={muted}
+            />
+          )}
+          {isLinux && linuxPreparing && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 text-white text-sm">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-white/30 border-t-white" />
+              <div>
+                {linuxPrepareProgress !== null ? (
+                  <>
+                    {getLocalePhrase(
+                      language,
+                      Phrase.TranscodingVideoForPlayback,
+                    )}
+                    &hellip; {Math.floor(linuxPrepareProgress)}%
+                  </>
+                ) : (
+                  <>
+                    {getLocalePhrase(
+                      language,
+                      Phrase.PreparingVideoForPlayback,
+                    )}
+                    &hellip;
+                  </>
+                )}
+              </div>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => setMuted((m) => !m)}

@@ -31,12 +31,13 @@ const ipc = window.electron.ipcRenderer;
 interface IProps {
   sources: RendererVideo[];
   language: Language;
+  isLinux: boolean;
   children: ReactNode;
 }
 
 const KillVideoDialog = (props: IProps) => {
   const [open, setOpen] = useState(false);
-  const { children, language, sources } = props;
+  const { children, language, sources, isLinux } = props;
 
   // Our select component only accepts strings annoyingly.
   const [fps, setFps] = useState('60');
@@ -251,6 +252,7 @@ const KillVideoDialog = (props: IProps) => {
           segments={segments}
           setSegments={setSegments}
           language={language}
+          isLinux={isLinux}
         >
           <div className="flex flex-col gap-4">
             {getFpsSelect()}

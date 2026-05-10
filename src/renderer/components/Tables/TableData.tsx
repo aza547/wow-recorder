@@ -155,10 +155,10 @@ const useTable = (
         accessorFn: (v) => v,
         sortingFn: (a, b) => creatorSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateCreatorCell(ctx, language),
+        cell: (ctx) => populateCreatorCell(ctx, language, appState.isLinux),
       },
     ],
-    [language, cloudStatus, videoState, setVideoState],
+    [language, cloudStatus, videoState, setVideoState, appState.isLinux],
   );
 
   /**

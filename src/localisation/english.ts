@@ -525,6 +525,8 @@ const ENGLISH: Translations = {
   [Phrase.Render]: 'Render',
   [Phrase.Preparing]: 'Preparing',
   [Phrase.ScenePreviewWowNotRunning]: 'Start World of Warcraft to position the capture window.',
+  [Phrase.PreparingVideoForPlayback]: 'Preparing video',
+  [Phrase.TranscodingVideoForPlayback]: 'Transcoding video for playback',
 };
 
 export default ENGLISH;

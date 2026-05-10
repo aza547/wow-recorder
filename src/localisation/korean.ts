@@ -521,6 +521,8 @@ const KOREAN: Translations = {
   [Phrase.Reset]: '초기화',
   [Phrase.Render]: '렌더링',
   [Phrase.Preparing]: '준비 중',
+  [Phrase.PreparingVideoForPlayback]: '영상 준비 중',
+  [Phrase.TranscodingVideoForPlayback]: '재생을 위한 비디오 트랜스코딩',
 };
 
 export default KOREAN;

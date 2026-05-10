@@ -521,6 +521,8 @@ const GERMAN: Translations = {
   [Phrase.Reset]: 'Zurücksetzen',
   [Phrase.Render]: 'Rendern',
   [Phrase.Preparing]: 'Vorbereitung',
+  [Phrase.PreparingVideoForPlayback]: 'Video vorbereiten',
+  [Phrase.TranscodingVideoForPlayback]: 'Video zur Wiedergabe transkodieren',
 };
 
 export default GERMAN;

@@ -62,6 +62,7 @@ import CloudOffIcon from '@mui/icons-material/CloudOff';
 import Separator from './components/Separator/Separator';
 import { toast } from './components/Toast/useToast';
 import { Phrase } from 'localisation/phrases';
+import { useLinuxTranscodedSources } from './useLinuxTranscodedSources';
 
 interface IProps {
   videos: RendererVideo[];
@@ -190,10 +191,20 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const diskVideo = nameMatches.find((v) => !v.cloud);
   const clippable = !multiPlayerMode;
 
-  // Deliberatly don't update the source when the timestamp changes. That's
-  // just the initial playhead position. We only care to change sources when
-  // the videos we are meant to be playing changes.
+  // Windows path for video sources
   const srcs = videos.map((rv) => useRef<string>(rv.videoSource + timestamp));
+
+  // On Linux, HEVC/H265 clips need transcoding to H.264 before Chromium can play
+  // them.
+  const { isLinux } = appState;
+  const linuxTranscode = useLinuxTranscodedSources(
+    isLinux
+      ? videos.map((v) => ({
+          source: v.videoSource + timestamp,
+          cacheKey: v.uniqueId,
+        }))
+      : [],
+  );
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
@@ -724,6 +735,44 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         width="100%"
         key={src.current}
         url={safe}
+        style={style}
+        playing={playing}
+        volume={volume}
+        muted={primary ? muted : true}
+        playbackRate={playbackRate}
+        progressInterval={progressInterval}
+        onProgress={primary ? onProgress : undefined}
+        onClick={togglePlaying}
+        onDoubleClick={toggleFullscreen}
+        onPlay={primary ? () => setPlaying(true) : undefined}
+        onPause={primary ? () => setPlaying(false) : undefined}
+        onReady={onReady}
+        onError={onError}
+      />
+    );
+  };
+
+  /**
+   * Linux-only render variant withou vod:// wrapping
+   * since the video player path has already been processed.
+   */
+  const renderLinuxPlayer = (src: string, index: number) => {
+    const primary = index === 0;
+    const player = players[index];
+
+    if (!player) {
+      // Protect against stupid programmer errors.
+      throw new Error('No player reference');
+    }
+
+    return (
+      <ReactPlayer
+        id="react-player"
+        ref={player}
+        height="100%"
+        width="100%"
+        key={src}
+        url={src}
         style={style}
         playing={playing}
         volume={volume}
@@ -1375,13 +1424,73 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     );
   };
 
+  /**
+   * Overlay shown while playback is being is probing/transcoding the source
+   * for playback. Linux/HVEC/H265 only.
+   */
+  const renderPrepareOverlay = () => {
+    if (linuxTranscode.allReady) return null;
+    const percent = linuxTranscode.progress?.percent;
+    const isTranscoding = linuxTranscode.progress !== null;
+    return (
+      <Backdrop
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 2,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          flexDirection: 'column',
+          gap: '12px',
+          color: 'white',
+        }}
+        open
+      >
+        <CircularProgress
+          color="inherit"
+          variant={
+            isTranscoding && typeof percent === 'number'
+              ? 'determinate'
+              : 'indeterminate'
+          }
+          value={typeof percent === 'number' ? percent : undefined}
+        />
+        <Box sx={{ fontSize: '14px', textAlign: 'center' }}>
+          {isTranscoding ? (
+            <>
+              {getLocalePhrase(language, Phrase.TranscodingVideoForPlayback)}
+              &hellip;
+              {typeof percent === 'number' && <> {Math.floor(percent)}%</>}
+            </>
+          ) : (
+            <>
+              {getLocalePhrase(language, Phrase.PreparingVideoForPlayback)}
+              &hellip;
+            </>
+          )}
+        </Box>
+      </Backdrop>
+    );
+  };
+
   return (
     <div id="player-and-controls" className="w-full h-full">
       <div style={{ height: 'calc(100% - 40px)' }}>
         <div className="w-full h-full relative">
-          <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
+          <div className={playerDivClass}>
+            {isLinux
+              ? linuxTranscode.allReady &&
+                linuxTranscode.srcs.map((s, i) =>
+                  renderLinuxPlayer(s as string, i),
+                )
+              : srcs.map(renderPlayer)}
+          </div>
           {isDrawingEnabled && renderDrawingOverlay()}
-          {renderLoadingSpinner()}
+          {/* Prevent a double spinner on linux for h265 transcoding videos */}
+          {(!isLinux || linuxTranscode.allReady) && renderLoadingSpinner()}
+          {isLinux && renderPrepareOverlay()}
         </div>
       </div>
 

@@ -53,7 +53,9 @@ export type Channels =
   | 'getSensibleEncoderDefault'
   | 'getPlatform'
   | 'refreshCloudGuilds'
-  | 'reselectPipewireSource';
+  | 'reselectPipewireSource'
+  | 'videoPrepareForPlayback'
+  | 'videoCancelTranscode';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

@@ -521,6 +521,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Reset]: '重置',
   [Phrase.Render]: '渲染',
   [Phrase.Preparing]: '准备中',
+  [Phrase.PreparingVideoForPlayback]: '准备视频',
+  [Phrase.TranscodingVideoForPlayback]: '转码视频以供播放',
 };
 
 export default CHINESE_SIMPLIFIED;

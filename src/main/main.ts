@@ -36,6 +36,7 @@ import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
 import { ensureAutostartPath, isLinux } from './platform';
+import PlaybackTranscoder from './PlaybackTranscoder';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -361,7 +362,12 @@ ipcMain.handle('selectImage', async () => {
 
   const result = await dialog.showOpenDialog(window, {
     properties: ['openFile'],
-    filters: [{ name: 'Images', extensions: ['gif', 'png', ...(isLinux ? ['jpg'] : [])] }],
+    filters: [
+      {
+        name: 'Images',
+        extensions: ['gif', 'png', ...(isLinux ? ['jpg'] : [])],
+      },
+    ],
   });
 
   if (result.canceled) {
@@ -450,6 +456,49 @@ ipcMain.on('postChatMessage', (event, correlator, message) => {
 ipcMain.on('deleteChatMessage', (event, id) => {
   const client = CloudClient.getInstance();
   client.deleteChatMessage(id);
+});
+
+/**
+ * Resolve a playable source for the renderer. On Linux, HEVC sources are
+ * transcoded to H.264 in a disk cache and a vod:// URL to the cache file is
+ * returned. On other platforms, this is a no-op that wraps the original source in vod://
+ * or returns the https:// URL verbatim.
+ *
+ * In-progress transcodes status is published on the
+ * 'videoTranscodeProgress' channel.
+ */
+ipcMain.handle('videoPrepareForPlayback', async (_event, args) => {
+  if (!Array.isArray(args) || typeof args[0] !== 'string') {
+    console.error('[Main] videoPrepareForPlayback bad args:', args);
+    return { playableSource: '', error: 'bad args' };
+  }
+  const source = args[0] as string;
+  const cacheKey = (typeof args[1] === 'string' ? args[1] : source) as string;
+  try {
+    return await PlaybackTranscoder.getInstance().prepareForPlayback(
+      source,
+      cacheKey,
+    );
+  } catch (err) {
+    console.error('[Main] videoPrepareForPlayback failed:', err);
+    // Fall back to a best-effort source rather than crashing
+    const fallback = source.startsWith('https://')
+      ? source
+      : `vod://wcr/${source}`;
+    return {
+      playableSource: fallback,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+});
+
+/**
+ * Cancel an in progress playback transcode. Used when a
+ * video selection is chaganged mid-transcode.
+ */
+ipcMain.on('videoCancelTranscode', (_event, args) => {
+  if (!Array.isArray(args) || typeof args[0] !== 'string') return;
+  PlaybackTranscoder.getInstance().cancel(args[0]);
 });
 
 /**
