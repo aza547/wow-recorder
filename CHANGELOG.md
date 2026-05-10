@@ -8,9 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [7.7.0] - 2026-05-10
+### Added
+- Enable H265 encoders for AMD and Nvidia.
+
+### Fixed
 - [Issue 752](https://github.com/aza547/wow-recorder/issues/752) - Fix the timeline marker alignment on fullscreening.
 - Update Algeth'ar Academy dungeon timer again.
 - Fixed an issue where the OBS logs could scribble over themselves.
+- Improve handling of boss HP percentage on wipes, specifically for Belo'ren and Alleria.
 
 ## [7.6.3] - 2026-04-13
 ### Fixed

@@ -47,8 +47,6 @@ export default abstract class LogHandler {
 
   public static overrunning = false;
 
-  private static minBossHp = 100 * 10 ** 6;
-
   public combatLogWatcher: CombatLogWatcher;
 
   protected player: Combatant | undefined;
@@ -440,6 +438,11 @@ export default abstract class LogHandler {
     return LogHandler.activity.category === VideoCategory.Manual;
   }
 
+  protected isRaid() {
+    if (!LogHandler.activity) return false;
+    return LogHandler.activity.category === VideoCategory.Raids;
+  }
+
   protected processCombatant(
     srcGUID: string,
     srcNameRealm: string,
@@ -496,38 +499,12 @@ export default abstract class LogHandler {
   }
 
   protected handleSpellDamage(line: LogLine) {
-    if (
-      !LogHandler.activity ||
-      LogHandler.activity.category !== VideoCategory.Raids
-    ) {
-      // We only care about this event for working out boss HP, which we
-      // only do in raids.
-      return;
-    }
-
-    const max = parseInt(line.arg(15), 10);
-
-    if (
-      LogHandler.activity.flavour === Flavour.Retail &&
-      max < LogHandler.minBossHp
-    ) {
-      // Assume that if the HP is less than 100 million then it's not a boss.
-      // That avoids us marking bosses as 0% when they haven't been touched
-      // yet, i.e. short pulls on Gallywix before the shield is broken and we are
-      // yet to see SPELL_DAMAGE events (and instead get SPELL_ABSORBED). Only do
-      // this for retail as classic will have lower HP bosses and I can't be
-      // bothered worrying about it there.
+    if (!this.isRaid()) {
       return;
     }
 
     const raid = LogHandler.activity as RaidEncounter;
-    const current = parseInt(line.arg(14), 10);
-
-    // We don't check the unit here, the RaidEncounter class has logic
-    // to discard an update that lowers the max HP. That's a strategy to
-    // avoid having to maintain a list of boss unit names. It's a reasonable
-    // assumption usually that the boss has the most HP of all the units.
-    raid.updateHp(current, max);
+    raid.updateBossHp(line);
   }
 
   /**

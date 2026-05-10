@@ -610,8 +610,10 @@ export default class Recorder extends EventEmitter {
         break;
 
       case ESupportedEncoders.AMD_H264:
+      case ESupportedEncoders.AMD_H265:
       case ESupportedEncoders.AMD_AV1:
       case ESupportedEncoders.NVENC_H264:
+      case ESupportedEncoders.NVENC_H265:
       case ESupportedEncoders.NVENC_AV1:
       case ESupportedEncoders.QSV_H264:
       case ESupportedEncoders.QSV_AV1:
