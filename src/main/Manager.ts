@@ -379,7 +379,6 @@ export default class Manager {
 
       try {
         const watcher = fs.watch(configPath, () => {
-          console.info('[Manager] Config.wtf changed:', configPath);
           this.checkAdvancedLogging();
         });
 
