@@ -108,14 +108,6 @@ export default class Manager {
   private manualHotKeyDisabled = false;
 
   /**
-   * Record the time the application started up.
-   * Linux only for now. Unfortunately Pipewire has some quirks when you
-   * too quickly try to grab a capture and can result in duplicate pipewire sessions
-   * with the same restore token.
-   */
-  private appStartupTime = Date.now();
-
-  /**
    * File watchers for Config.wtf files, used to detect changes to
    * the advanced combat logging setting.
    */
@@ -452,16 +444,13 @@ export default class Manager {
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
     if (isLinux) {
-      // do not configure on a wow trigger shortly after the app has started up
-      // this can cause issues in pipewire if it happens too quickly
-      const now = Date.now();
-      if (now - this.appStartupTime > 10_000) {
-        // Wait for the DE to map a window for wow. Without this, pipewire
-        // rejects the restore token and triggers the portal.
-        await sleep(10_000);
-        const videoConfig = getObsVideoConfig(this.cfg);
-        await this.recorder.configureVideoSources(videoConfig);
-      }
+      // Wait for the DE to map a window for wow. Without this, pipewire
+      // rejects the restore token and triggers the portal. This applies
+      // both when wow was already running at app launch and when the user
+      // starts wow after the app is already running.
+      await sleep(10_000);
+      const videoConfig = getObsVideoConfig(this.cfg);
+      await this.recorder.configureVideoSources(videoConfig);
     } else {
       this.recorder.attachCaptureSource();
     }
@@ -559,6 +548,15 @@ export default class Manager {
    * Configure video settings in OBS. This can all be changed live.
    */
   private async configureObsVideo() {
+    const isWowRunning = this.poller.isWowRunning();
+
+    // on linux, the wow window needs to exist, otherwise we'll trigger the pipewire portal
+    // due to the window assocaited with the restore token not existing
+    if (isLinux && !isWowRunning) {
+      console.info("[Manager] Won't configure video sources, WoW not running");
+      return;
+    }
+
     const config = getObsVideoConfig(this.cfg);
     await this.recorder.configureVideoSources(config);
   }

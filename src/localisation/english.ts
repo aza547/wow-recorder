@@ -524,6 +524,7 @@ const ENGLISH: Translations = {
   [Phrase.Reset]: 'Reset',
   [Phrase.Render]: 'Render',
   [Phrase.Preparing]: 'Preparing',
+  [Phrase.ScenePreviewWowNotRunning]: 'Start World of Warcraft to position the capture window.',
 };
 
 export default ENGLISH;

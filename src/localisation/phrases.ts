@@ -521,6 +521,7 @@ enum Phrase {
   KillVideoDescription,
   KillVideoRemove,
   Preparing,
+  ScenePreviewWowNotRunning,
 }
 
 enum Language {
