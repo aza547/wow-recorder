@@ -683,10 +683,14 @@ const getFriendlyEncoderName = (enc: ESupportedEncoders) => {
       return 'OBS H.264';
     case ESupportedEncoders.NVENC_H264:
       return 'NVIDIA H.264';
+    case ESupportedEncoders.NVENC_H265:
+      return 'NVIDIA H.265';
     case ESupportedEncoders.NVENC_AV1:
       return 'NVIDIA AV1';
     case ESupportedEncoders.AMD_H264:
       return 'AMD H.264';
+    case ESupportedEncoders.AMD_H265:
+      return 'AMD H.265';
     case ESupportedEncoders.AMD_AV1:
       return 'AMD AV1';
     case ESupportedEncoders.QSV_H264:

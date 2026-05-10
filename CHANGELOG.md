@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Enable H265 encoders for AMD and Nvidia.
+
 ### Fixed
 - [Issue 752](https://github.com/aza547/wow-recorder/issues/752) - Fix the timeline marker alignment on fullscreening.
 - Update Algeth'ar Academy dungeon timer again.

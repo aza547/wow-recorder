@@ -15,8 +15,10 @@ export const enum EOBSOutputSignal {
 export enum ESupportedEncoders {
   OBS_X264 = 'obs_x264',
   AMD_H264 = 'h264_texture_amf',
+  AMD_H265 = 'h265_texture_amf',
   AMD_AV1 = 'av1_texture_amf',
   NVENC_H264 = 'obs_nvenc_h264_tex',
+  NVENC_H265 = 'obs_nvenc_hevc_tex',
   NVENC_AV1 = 'obs_nvenc_av1_tex',
   QSV_H264 = 'obs_qsv11_soft_v2',
   QSV_AV1 = 'obs_qsv11_av1',
