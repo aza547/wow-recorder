@@ -7,6 +7,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
 import { Phrase } from 'localisation/phrases';
 import { app } from 'electron';
+import LogLine from 'parsing/LogLine';
 
 /**
  * Class representing a raid encounter.
@@ -22,6 +23,12 @@ export default class RaidEncounter extends Activity {
 
   private maxHp = 1;
 
+  private bossUnitName = '';
+
+  private bossUnitActive = true;
+
+  private static minRetailBossHp = 100 * 10 ** 6;
+
   constructor(
     startDate: Date,
     encounterID: number,
@@ -34,6 +41,15 @@ export default class RaidEncounter extends Activity {
     this._encounterID = encounterID;
     this._encounterName = encounterName;
     this.overrun = 3; // Even for wipes it's nice to have some overrun.
+
+    if (this.encounterID === 3182) {
+      // Belo'ren starts in normal phase.
+      this.bossUnitName = "Belo'ren";
+      this.bossUnitActive = false;
+    } else if (this.encounterID === 3181) {
+      // Ignores all the adds in P1.
+      this.bossUnitName = 'Alleria Windrunner';
+    }
   }
 
   get difficultyID() {
@@ -168,19 +184,75 @@ export default class RaidEncounter extends Activity {
 
   /**
    * Update the max and current HP of the boss. Used to calculate the
-   * HP percentage at the end of the fight.
-   *
-   * The log handler doesn't have a way to tell if the unit is the boss or
-   * not (atleast, not without hardcoding boss names), so we let the handler
-   * call this this on any unit, but ignore any units with less than the max HP
-   * of the boss.
-   *
-   * It's a fairly safe bet that the boss will always have the most HP in an
-   * encounter. Can't think of any fights where this isn't true.
+   * boss HP percent at the end of the fight.
    */
-  public updateHp(current: number, max: number): void {
-    if (max < this.maxHp) return;
+  public updateBossHp(spellDamageEvent: LogLine): void {
+    if (!this.bossUnitActive) {
+      // Boss is explicitly flagged as inactive (e.g. Belo'ren not in egg phase).
+      return;
+    }
+
+    if (this.bossUnitName) {
+      const unitName = spellDamageEvent.arg(6);
+
+      if (unitName !== this.bossUnitName) {
+        // We know the boss unit and it's not it.
+        return;
+      }
+
+      this.maxHp = parseInt(spellDamageEvent.arg(15), 10);
+      this.currentHp = parseInt(spellDamageEvent.arg(14), 10);
+      return;
+    }
+
+    // We don't know the boss unit name so fall back to assuming the
+    // unit with the highest max HP is the boss, which is true for 90%
+    // of encounters.
+    const max = parseInt(spellDamageEvent.arg(15), 10);
+
+    if (
+      this.flavour === Flavour.Retail &&
+      max < RaidEncounter.minRetailBossHp
+    ) {
+      // Assume that if the HP is less than 100 million then it's not a boss.
+      // That avoids us marking bosses as 0% when they haven't been touched
+      // yet, i.e. short pulls on Gallywix before the shield is broken and we are
+      // yet to see SPELL_DAMAGE events (and instead get SPELL_ABSORBED). Only do
+      // this for retail as classic will have lower HP bosses and I can't be
+      // bothered worrying about it there.
+      return;
+    }
+
+    if (max < this.maxHp) {
+      // This unit has less max HP than the highest HP unit.
+      return;
+    }
+
     this.maxHp = max;
-    this.currentHp = current;
+    this.currentHp = parseInt(spellDamageEvent.arg(14), 10);
+  }
+
+  /**
+   * Basically exists for Belo'ren and future similar bosses where the unit
+   * is the same but there is an egg phase where damage actually counts.
+   */
+  public updateBossStatus(line: LogLine): void {
+    const event = line.arg(0);
+
+    if (typeof event !== 'string') {
+      // Obviously should never happen.
+      console.error('Invalid log line event:', event);
+      return;
+    }
+
+    const srcName = line.arg(2);
+    const spellName = line.arg(10);
+
+    if (srcName === "Belo'ren" && spellName === 'Rebirth') {
+      // When Belo'ren casts Rebirth he enters the egg phase and
+      // we should count damage.
+      this.bossUnitActive = event === 'SPELL_CAST_START';
+      return;
+    }
   }
 }

@@ -26,6 +26,7 @@ import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
 import { isUnitSelf } from './logutils';
 import ConfigService from 'config/ConfigService';
+import RaidEncounter from 'activitys/RaidEncounter';
 
 /**
  * RetailLogHandler class.
@@ -48,6 +49,7 @@ export default class RetailLogHandler extends LogHandler {
       .on('CHALLENGE_MODE_START', (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeStartLine(line)); })
       .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeEndLine(line)); })
       .on('COMBATANT_INFO',       (line: LogLine) => { this.logProcessQueue.add(async () => this.handleCombatantInfoLine(line)); })
+      .on('SPELL_CAST_START',     (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellCastStart(line)); })
       .on('SPELL_CAST_SUCCESS',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellCastSuccess(line)); })
       .on('SPELL_DAMAGE',         (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellDamage(line)); });
     /* eslint-enable prettier/prettier */
@@ -519,14 +521,26 @@ export default class RetailLogHandler extends LogHandler {
     this.processCombatant(srcGUID, srcNameRealm, srcFlags, allowNew);
   }
 
+  private handleSpellCastStart(line: LogLine) {
+    if (this.isRaid()) {
+      const raid = LogHandler.activity as RaidEncounter;
+      raid.updateBossStatus(line);
+    }
+  }
+
   private handleSpellCastSuccess(line: LogLine) {
     if (!LogHandler.activity || this.isManual()) {
       // Deliberately don't log anything here as we can hit this a lot
       return;
     }
 
+    if (this.isRaid()) {
+      const raid = LogHandler.activity as RaidEncounter;
+      raid.updateBossStatus(line);
+    }
+
     const srcGUID = line.arg(1);
-    const srcNameRealm = line.arg(2);
+    const srcName = line.arg(2);
     const srcFlags = parseInt(line.arg(3), 16);
 
     // The isUnitSelf() check is important here as for M+ we won't see
@@ -538,7 +552,7 @@ export default class RetailLogHandler extends LogHandler {
 
     const combatant = this.processCombatant(
       srcGUID,
-      srcNameRealm,
+      srcName,
       srcFlags,
       allowNew,
     );
