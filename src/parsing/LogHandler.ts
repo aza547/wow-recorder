@@ -19,7 +19,6 @@ import {
   isUnitPlayer,
   isUnitSelf,
 } from './logutils';
-
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
 import { allowRecordCategory } from '../utils/configUtils';
@@ -30,6 +29,7 @@ import Poller from 'utils/Poller';
 import { emitErrorReport } from 'main/util';
 import AsyncQueue from 'utils/AsyncQueue';
 import path from 'path';
+import { ESupportedEncoders } from 'main/obsEnums';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -271,6 +271,7 @@ export default abstract class LogHandler {
     LogHandler.overrunning = false;
     const recorder = Recorder.getInstance();
     const poller = Poller.getInstance();
+    const cfg = ConfigService.getInstance();
 
     let videoFile;
 
@@ -317,9 +318,7 @@ export default abstract class LogHandler {
       const suffix = lastActivity.getFileName();
 
       if (lastActivity.category === VideoCategory.Raids) {
-        const minDuration = ConfigService.getInstance().get<number>(
-          'minEncounterDuration',
-        );
+        const minDuration = cfg.get<number>('minEncounterDuration');
         const notLongEnough = duration < minDuration;
 
         if (notLongEnough) {
@@ -327,6 +326,10 @@ export default abstract class LogHandler {
           return;
         }
       }
+
+      // Add the encoder field. Just do this directly from the config, as the
+      // encoder can't be changed mid recording.`
+      metadata.encoder = cfg.get<string>('obsRecEncoder') as ESupportedEncoders;
 
       // This looks redundant as we also pass videoFile but this allows us to
       // share logic with clipping of remote videos where there is no file path.
