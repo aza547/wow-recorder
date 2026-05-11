@@ -505,6 +505,7 @@ enum Phrase {
   StartManualRecordingTooltip,
   StopManualRecordingTooltip,
   RecordedAt,
+  EncodedWith,
   AdvancedCombatLoggingDisabledWarning,
   KillVideoCreatorTooltip,
   KillVideoCreatorTooltipNotEnoughLocal,

@@ -698,7 +698,26 @@ const getFriendlyEncoderName = (enc: ESupportedEncoders) => {
     case ESupportedEncoders.QSV_AV1:
       return 'Intel AV1';
     default:
-      throw new Error('Unknown Encoder');
+      throw new Error('Unknown Encoder: ' + enc);
+  }
+};
+
+const getFriendlyCodecName = (enc: string) => {
+  switch (enc) {
+    case ESupportedEncoders.OBS_X264:
+    case ESupportedEncoders.NVENC_H264:
+    case ESupportedEncoders.AMD_H264:
+    case ESupportedEncoders.QSV_H264:
+      return 'H264';
+    case ESupportedEncoders.NVENC_H265:
+    case ESupportedEncoders.AMD_H265:
+      return 'H265';
+    case ESupportedEncoders.NVENC_AV1:
+    case ESupportedEncoders.AMD_AV1:
+    case ESupportedEncoders.QSV_AV1:
+      return 'AV1';
+    default:
+      throw new Error('Unknown Encoder2: ' + enc);
   }
 };
 
@@ -1198,4 +1217,5 @@ export {
   videoMatch,
   videoMatchName,
   translateQuality,
+  getFriendlyCodecName,
 };
