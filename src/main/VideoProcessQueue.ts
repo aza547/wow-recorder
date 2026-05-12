@@ -30,6 +30,7 @@ import axios from 'axios';
 import DiskClient from 'storage/DiskClient';
 import Recorder from './Recorder';
 import { isLinux } from './platform';
+import { promises as fspromise } from 'fs';
 
 const atomicQueue = require('atomic-queue');
 const devMode = process.env.NODE_ENV === 'development';
@@ -267,6 +268,12 @@ export default class VideoProcessQueue {
       // covers the cases where we're cutting a section off the end of
       // the video due to a timeout.
       const videoPath = await this.cutVideo(data, outputDir);
+
+      // Add the size of the newly cut video. We can't do this earlier
+      // as the size will change when we cut/remux.
+      const stat = await fspromise.stat(videoPath);
+      data.metadata.size = stat.size;
+
       await writeMetadataFile(videoPath, data.metadata);
 
       const readyToUpload = await CloudClient.getInstance().ready();

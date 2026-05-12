@@ -380,7 +380,7 @@ export default class Manager {
     if (this.cfg.get<boolean>('recordClassicPtr'))
       logPaths.add(this.cfg.get<string>('classicPtrLogPath'));
 
-    console.info('Start watching Config.wtf files for', logPaths);
+    console.info('Start watching Config.wtf files for', [...logPaths]);
 
     for (const logPath of logPaths) {
       const configPath = getConfigWtfPath(logPath);

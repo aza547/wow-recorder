@@ -509,6 +509,7 @@ const ENGLISH: Translations = {
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
   [Phrase.ReselectPipewireSourceButtonText]: 'Reselect Capture Source',
+  [Phrase.EncodedWith]: 'Encoded with',
   [Phrase.AdvancedCombatLoggingDisabledWarning]: 'Advanced Combat Logging is not enabled. Enable it in-game and restart WoW.',
   [Phrase.KillVideoCreatorTooltip]: 'Create a multiview video.',
   [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'This feature can only operate on local recordings. Use the download button first.',

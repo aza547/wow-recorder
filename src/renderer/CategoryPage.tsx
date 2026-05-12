@@ -25,6 +25,7 @@ import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
 import {
+  getFriendlyCodecName,
   getVideoCategoryFilter,
   getVideoStorageFilter,
   povDiskFirstNameSort,
@@ -186,7 +187,10 @@ const CategoryPage = (props: IProps) => {
     playerHeight.current = height;
   };
 
-  const renderDrawerOpen = (appVersion: string | undefined) => {
+  const renderDrawerOpen = (
+    appVersion: string | undefined,
+    encoder: string | undefined,
+  ) => {
     // Only the first row in the selection is relevant for the drawer display.
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedRow = selectedRows[0];
@@ -201,6 +205,24 @@ const CategoryPage = (props: IProps) => {
       (rv) => rv.cloud && rv.uniqueHash && rv.start,
     );
 
+    const renderTextDescr = () => {
+      return (
+        <div className="flex items-center justify-start w-full h-[40px] pt-2 mx-2 text-sm font-bold text-foreground">
+          {appVersion && (
+            <>
+              {getLocalePhrase(language, Phrase.RecordedAt)} v{appVersion}.{' '}
+            </>
+          )}
+          {encoder && (
+            <>
+              {getLocalePhrase(language, Phrase.EncodedWith)}{' '}
+              {getFriendlyCodecName(encoder)}.
+            </>
+          )}
+        </div>
+      );
+    };
+
     return (
       <div className="max-w-[500px] min-w-[500px] h-full bg-background-higher flex flex-col mx-2 gap-y-2">
         <div className="flex items-start">
@@ -214,11 +236,7 @@ const CategoryPage = (props: IProps) => {
           >
             <ArrowRightToLine size={18} />
           </Button>
-          {appVersion && (
-            <div className="flex items-center justify-start w-full h-[40px] pt-2 mx-2 text-sm font-bold text-foreground">
-              {getLocalePhrase(language, Phrase.RecordedAt)} v{appVersion}
-            </div>
-          )}
+          {renderTextDescr()}
         </div>
         <div className="flex items-center justify-center w-full">
           <ViewpointSelection
@@ -265,6 +283,9 @@ const CategoryPage = (props: IProps) => {
     const selectedVideoAppVersion =
       videosToPlay.length > 1 ? undefined : videosToPlay[0].appVersion;
 
+    const selectedVideoEncoder =
+      videosToPlay.length > 1 ? undefined : videosToPlay[0].encoder;
+
     return (
       <Resizable
         ref={resizableRef}
@@ -303,7 +324,8 @@ const CategoryPage = (props: IProps) => {
             setAppState={setAppState}
           />
 
-          {chatOpen && renderDrawerOpen(selectedVideoAppVersion)}
+          {chatOpen &&
+            renderDrawerOpen(selectedVideoAppVersion, selectedVideoEncoder)}
           {!chatOpen && renderDrawerClosed()}
         </div>
       </Resizable>

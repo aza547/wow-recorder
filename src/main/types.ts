@@ -4,7 +4,7 @@ import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import { Tag } from 'react-tag-autocomplete';
 import { DateValueType } from 'react-tailwindcss-datepicker';
-import { QualityPresets } from './obsEnums';
+import { ESupportedEncoders } from './obsEnums';
 
 /**
  * Application recording status.
@@ -222,6 +222,8 @@ type Metadata = {
   uniqueHash?: string; // used for cloud video grouping
   bossPercent?: number;
   appVersion?: string;
+  encoder?: ESupportedEncoders; // encoder used to record
+  size?: number; // size of video in bytes
 };
 
 /**

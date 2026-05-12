@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [7.7.0] - 2026-05-10
 ### Added
 - Enable H265 encoders for AMD and Nvidia.
+- Add video encoder and size in bytes to metadata.
 
 ### Fixed
 - [Issue 752](https://github.com/aza547/wow-recorder/issues/752) - Fix the timeline marker alignment on fullscreening.
