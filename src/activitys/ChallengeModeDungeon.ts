@@ -15,6 +15,7 @@ import {
 } from '../main/keystone';
 import Activity from './Activity';
 import { app } from 'electron';
+import CloudClient from 'storage/CloudClient';
 
 export default class ChallengeModeDungeon extends Activity {
   private static readonly TIMER_GRACE_SECONDS = 1;
@@ -45,7 +46,8 @@ export default class ChallengeModeDungeon extends Activity {
     this._level = level;
     this.affixes = affixes;
 
-    this._timings = dungeonTimersByMapId[mapID];
+    this._timings = dungeonTimersByMapId[this.mapID];
+    this.getKeystoneTimers();
 
     if (flavor === Flavour.Classic) {
       console.info('[ChallengeModeDungeon] Using Classic timers for', mapID);
@@ -53,6 +55,28 @@ export default class ChallengeModeDungeon extends Activity {
     }
 
     this.overrun = 0;
+  }
+
+  private async getKeystoneTimers() {
+    try {
+      const timings = await CloudClient.getInstance().getKeystoneTimers(
+        this.mapID,
+      );
+      this._timings = [timings[3], timings[2], timings[1]];
+
+      console.info(
+        '[ChallengeModeDungeon] Got keystone timings',
+        this._timings,
+        'from remote server for map',
+        this.mapID,
+      );
+    } catch {
+      console.error(
+        '[ChallengeModeDungeon] Failed to get up-to-date keystone timings for map',
+        this._mapID,
+        'using local fallback',
+      );
+    }
   }
 
   get endDate() {

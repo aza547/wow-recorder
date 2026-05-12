@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- API now provides up to date keystone timers live when computing keystone result, with hardcoded timers as a fallback.
 ### Fixed
 
 ## [7.7.0] - 2026-05-12
