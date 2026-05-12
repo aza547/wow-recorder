@@ -4,6 +4,7 @@ import {
   getPlayerName,
   getPlayerSpecID,
   getWoWClassColor,
+  isHevcEncoder,
   secToMmSs,
 } from './rendererutils';
 import React, {
@@ -87,6 +88,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           {
             source: activeSegment.video.videoSource,
             cacheKey: activeSegment.video.uniqueId,
+            isHevc: isHevcEncoder(activeSegment.video.encoder),
           },
         ]
       : [],

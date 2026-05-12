@@ -15,8 +15,9 @@ import { send } from './main';
  * decoder in <video>, so without this any HEVC recording (NVENC_H265) would
  * be unplayable.
  *
- * All other non-HEVC codeds are returned unchanged. Non-Linux platforms return
- * immediately with no-op.
+ * The renderer decides whether a video is HEVC from `RendererVideo.encoder`
+ * (set on every recording via `metadata.encoder`) and passes that as the
+ * `isHevc` flag.
  *
  * The transcode runs once per cache key; the result is cached on disk in
  * `<userData>/playback-cache/<key>.mp4`. Concurrent requests for the same key
@@ -44,9 +45,6 @@ const devMode = process.env.NODE_ENV === 'development';
 const ffmpegRel = isLinux
   ? 'node_modules/noobs/dist/bin/linux/ffmpeg'
   : 'node_modules/noobs/dist/bin/win64/ffmpeg.exe';
-const ffprobeRel = isLinux
-  ? 'node_modules/noobs/dist/bin/linux/ffprobe'
-  : 'node_modules/noobs/dist/bin/win64/ffprobe.exe';
 
 const resolveBin = (rel: string) => {
   const abs = devMode
@@ -55,10 +53,9 @@ const resolveBin = (rel: string) => {
   return fixPathWhenPackaged(abs);
 };
 
-// Set ffprobe path; ffmpeg path is already set by VideoProcessQueue but we
-// set it again defensively in case this module is exercised before that one.
+// Set ffmpeg path; this is already set by VideoProcessQueue but we set it
+// again defensively in case this module is exercised before that one.
 ffmpeg.setFfmpegPath(resolveBin(ffmpegRel));
-ffmpeg.setFfprobePath(resolveBin(ffprobeRel));
 
 export interface PrepareResult {
   /** URL/path the renderer should pass to the player. */
@@ -97,7 +94,6 @@ export default class PlaybackTranscoder {
    */
   private lru = new Map<string, number>();
   private inFlight = new Map<string, InFlight>();
-  private codecProbeCache = new Map<string, string>();
   private maxCacheBytes = DEFAULT_MAX_CACHE_BYTES;
 
   private constructor() {
@@ -124,10 +120,14 @@ export default class PlaybackTranscoder {
    *
    * @param source    local file path or https:// URL
    * @param cacheKey  stable identifier for the video, typically RendererVideo.uniqueId
+   * @param isHevc    whether the video is HEVC, derived by the renderer from
+   *                  `RendererVideo.encoder`. Non-HEVC sources bypass the
+   *                  transcoder.
    */
   public async prepareForPlayback(
     source: string,
     cacheKey: string,
+    isHevc: boolean,
   ): Promise<PrepareResult> {
     // Preserve any #t= seek-resume fragment.
     const [cleanSource, fragment] = splitFragment(source);
@@ -138,8 +138,9 @@ export default class PlaybackTranscoder {
       return { playableSource: finalizeUrl(cleanSource, fragment) };
     }
 
-    const codec = await this.probeCodec(cleanSource);
-    if (codec !== 'hevc') {
+    // Non-HEVC sources (including old recordings whose metadata predates the
+    // encoder field) play natively in Chromium and need no transcode.
+    if (!isHevc) {
       return { playableSource: finalizeUrl(cleanSource, fragment) };
     }
 
@@ -158,13 +159,7 @@ export default class PlaybackTranscoder {
       return { playableSource: finalizeUrl(cachePath, fragment) };
     }
 
-    const job = this.startTranscode(
-      cleanSource,
-      cacheKey,
-      cachePath,
-      fragment,
-      codec,
-    );
+    const job = this.startTranscode(cleanSource, cacheKey, cachePath, fragment);
     this.inFlight.set(cacheKey, job);
     try {
       return await job.promise;
@@ -182,70 +177,6 @@ export default class PlaybackTranscoder {
     console.info('[PlaybackTranscoder] Cancelling:', cacheKey);
     job.cancel();
     this.inFlight.delete(cacheKey);
-  }
-
-  // TODO: if the codec is added to metadata, this whole thing can go
-  private async probeCodec(source: string): Promise<string> {
-    const cached = this.codecProbeCache.get(source);
-    if (cached) return cached;
-
-    // The bundled ffmpeg is built without HTTPS protocol support for simplicity.
-    // For https:// sources we fetch enough bytes to cover the moov atom,
-    // which is at the front thanks to +faststart at upload. Drop it into a small tmp file,
-    // and probe that file.
-    let probeTarget = source;
-    let tmpToDelete: string | null = null;
-
-    if (source.startsWith('https://')) {
-      try {
-        const resp = await axios.get<ArrayBuffer>(source, {
-          responseType: 'arraybuffer',
-          // 512 KB ought to be enough for any moov.
-          headers: { Range: 'bytes=0-524287' },
-          maxRedirects: 5,
-          timeout: 30000,
-          validateStatus: (s) => s >= 200 && s < 300,
-        });
-        tmpToDelete = path.join(
-          this.cacheDir,
-          `probe-${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`,
-        );
-        await fspromise.writeFile(tmpToDelete, Buffer.from(resp.data));
-        probeTarget = tmpToDelete;
-      } catch (e) {
-        console.warn(
-          '[PlaybackTranscoder] HTTPS probe fetch failed:',
-          source,
-          (e as Error).message,
-        );
-        this.codecProbeCache.set(source, 'unknown');
-        return 'unknown';
-      }
-    }
-
-    try {
-      return await new Promise<string>((resolve) => {
-        ffmpeg.ffprobe(probeTarget, (err, data) => {
-          if (err) {
-            console.warn(
-              '[PlaybackTranscoder] ffprobe failed:',
-              source,
-              err.message,
-            );
-            resolve('unknown');
-            return;
-          }
-          const v = data.streams.find((s) => s.codec_type === 'video');
-          const codec = (v?.codec_name ?? 'unknown').toLowerCase();
-          this.codecProbeCache.set(source, codec);
-          resolve(codec);
-        });
-      });
-    } finally {
-      if (tmpToDelete) {
-        fspromise.unlink(tmpToDelete).catch(() => {});
-      }
-    }
   }
 
   private getCachePath(key: string): string {
@@ -327,7 +258,6 @@ export default class PlaybackTranscoder {
     cacheKey: string,
     cachePath: string,
     fragment: string,
-    originalCodec: string,
   ): InFlight {
     const tmpPath = `${cachePath}.tmp`;
     let cancelled = false;
@@ -337,12 +267,7 @@ export default class PlaybackTranscoder {
     let inputStream: Readable | null = null;
 
     const promise = new Promise<PrepareResult>((resolve, reject) => {
-      console.info(
-        '[PlaybackTranscoder] Start transcode:',
-        cacheKey,
-        'codec=',
-        originalCodec,
-      );
+      console.info('[PlaybackTranscoder] Start transcode (hevc):', cacheKey);
       sendProgress({ key: cacheKey, state: 'start', percent: 0 });
 
       // For HTTPS sources we have to fetch via node and pipe the response body to
@@ -496,8 +421,8 @@ export default class PlaybackTranscoder {
     for (const e of entries) {
       // Skip the lru json file itself and any in-flight json cache tmp files.
       if (e.startsWith(LRU_CACHE_JSON)) continue;
-      // Skip in-flight transcode outputs and probe scratch files
-      if (e.endsWith('.tmp') || e.startsWith('probe-')) continue;
+      // Skip in-flight transcode outputs.
+      if (e.endsWith('.tmp')) continue;
       const p = path.join(this.cacheDir, e);
       try {
         const st = await fspromise.stat(p);

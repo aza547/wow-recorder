@@ -5,12 +5,17 @@ import { useEffect, useState } from 'react';
  * transcoder (see src/main/PlaybackTranscoder.ts). It is no-op on non linux plaforms
  * due to callers passing an empty array of items.
  *
+ * Callers tell us whether each item is HEVC via metadata. Items that aren't
+ * HEVC bypass the transcoder in main and return the source unchanged.
+ *
  * The effect re-runs whenever the joined cache keys change.
  */
 
 export interface TranscodedItem {
   source: string;
   cacheKey: string;
+  // NVENC_H265 / AMD_H265. Non-HEVC or unknown items skip the transcode entirely.
+  isHevc: boolean;
 }
 
 export interface TranscodedSources {
@@ -83,9 +88,9 @@ export function useLinuxTranscodedSources(
     };
     const unsubscribeProgress = ipc.on('videoTranscodeProgress', onProgress);
 
-    items.forEach(({ source, cacheKey }, i) => {
+    items.forEach(({ source, cacheKey, isHevc }, i) => {
       ipc
-        .invoke('videoPrepareForPlayback', [source, cacheKey])
+        .invoke('videoPrepareForPlayback', [source, cacheKey, isHevc])
         .then((result: { playableSource: string }) => {
           if (cancelled) return;
           setSrcs((prev) => {

@@ -42,6 +42,7 @@ import {
   getOwnDeathMarkers,
   getRoundMarkers,
   isClip,
+  isHevcEncoder,
   isMythicPlusUtil,
   isSoloShuffleUtil,
   secToMmSs,
@@ -202,6 +203,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       ? videos.map((v) => ({
           source: v.videoSource + timestamp,
           cacheKey: v.uniqueId,
+          isHevc: isHevcEncoder(v.encoder),
         }))
       : [],
   );

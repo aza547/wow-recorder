@@ -464,6 +464,11 @@ ipcMain.on('deleteChatMessage', (event, id) => {
  * returned. On other platforms, this is a no-op that wraps the original source in vod://
  * or returns the https:// URL verbatim.
  *
+ * The renderer is the source of truth for whether the video is HEVC, derived
+ * from `RendererVideo.encoder` via `isHevcEncoder`. Old videos predating the
+ * encoder metadata field are passed in as `isHevc=false` and will skip the
+ * transcode.
+ *
  * In-progress transcodes status is published on the
  * 'videoTranscodeProgress' channel.
  */
@@ -474,10 +479,12 @@ ipcMain.handle('videoPrepareForPlayback', async (_event, args) => {
   }
   const source = args[0] as string;
   const cacheKey = (typeof args[1] === 'string' ? args[1] : source) as string;
+  const isHevc = args[2] === true;
   try {
     return await PlaybackTranscoder.getInstance().prepareForPlayback(
       source,
       cacheKey,
+      isHevc,
     );
   } catch (err) {
     console.error('[Main] videoPrepareForPlayback failed:', err);

@@ -737,6 +737,14 @@ const mapStringToEncoder = (enc: string): Encoder => {
   return { name, value, type };
 };
 
+/**
+ * Whether the given encoder produces HEVC (H.265) output. Used by the
+ * Linux playback path to decide if a video needs transcoding to H.264
+ * before Chromium can play it.
+ */
+const isHevcEncoder = (enc?: string): boolean =>
+  enc === ESupportedEncoders.NVENC_H265 || enc === ESupportedEncoders.AMD_H265;
+
 const pathSelect = async (): Promise<string> => {
   const ipc = window.electron.ipcRenderer;
   const path = await ipc.invoke('selectPath', []);
@@ -1105,10 +1113,12 @@ const getAudioSourceChoices = async (src: AudioSource) => {
 
   let devices;
   if (src.type === AudioSourceType.PROCESS) {
-    devices = properties.find((prop) => prop.name === 'window' || prop.name === 'TargetName');
+    devices = properties.find(
+      (prop) => prop.name === 'window' || prop.name === 'TargetName',
+    );
   } else {
     devices = properties.find((prop) => prop.name === 'device_id');
-  };
+  }
 
   if (!devices || devices.type !== 'list') {
     return [];
@@ -1116,7 +1126,7 @@ const getAudioSourceChoices = async (src: AudioSource) => {
 
   // [linux] pipewire audio sources can sometimes return empty names.
   // filter out anything falsy -- we wouldn't want to capture any of those anyway
-  return devices.items.filter(item => item.value);
+  return devices.items.filter((item) => item.value);
 };
 
 const getKeyPressEventString = (
@@ -1231,4 +1241,5 @@ export {
   videoMatchName,
   translateQuality,
   getFriendlyCodecName,
+  isHevcEncoder,
 };
