@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update Algeth'ar Academy dungeon timer again.
 - Fixed an issue where the OBS logs could scribble over themselves.
 - Improve handling of boss HP percentage on wipes, specifically for Belo'ren and Alleria.
+- Make the viewpoints column slightly wider.
+- Fix a double delete of the pre-muxed MKV in the .temp folder causing annoying errors in the logs.
 
 ## [7.6.3] - 2026-04-13
 ### Fixed
