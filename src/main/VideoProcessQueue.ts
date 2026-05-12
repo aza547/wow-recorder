@@ -19,7 +19,6 @@ import {
   getFileInfo,
   fixPathWhenPackaged,
   logAxiosError,
-  tryUnlink,
   buildKillVideoMetadata,
   getOBSFormattedDate,
 } from './util';
@@ -539,23 +538,6 @@ export default class VideoProcessQueue {
     send('updateSaveStatus', SaveStatus.NotSaving);
     DiskClient.getInstance().refreshStatus();
     DiskClient.getInstance().refreshVideos();
-
-    // Delete the source file if it's not a clip. Clips source files should be retained.
-    if (!item.clip) {
-      console.info('[VideoProcessQueue] Deleting source file', item.source);
-      let success = await tryUnlink(item.source);
-
-      if (!success) {
-        // Wait a couple of seconds and try again.
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        success = await tryUnlink(item.source);
-      }
-
-      if (!success) {
-        // Not much else to do than log it.
-        console.warn('[VideoProcessQueue] Failed to delete src', item.source);
-      }
-    }
   }
 
   /**
@@ -653,7 +635,7 @@ export default class VideoProcessQueue {
 
     // Run the size monitor.
     const sizeMonitor = new DiskSizeMonitor();
-    sizeMonitor.run();
+    await sizeMonitor.run();
 
     // Tidy the recording dir.
     const cfg = ConfigService.getInstance();
