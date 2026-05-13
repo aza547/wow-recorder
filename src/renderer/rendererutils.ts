@@ -641,10 +641,15 @@ const isHighRes = (res: string) => {
   return false;
 };
 
-const encoderFilter = (enc: string, highRes: boolean) => {
+const encoderFilter = (enc: string, highRes: boolean, isLinux: boolean) => {
   const encoder = enc as ESupportedEncoders;
 
   if (!Object.values(ESupportedEncoders).includes(encoder)) {
+    return false;
+  }
+
+  // H.265 is not offered as a recording encoder on Linux.
+  if (isLinux && isHevcEncoder(encoder)) {
     return false;
   }
 

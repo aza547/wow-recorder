@@ -426,6 +426,15 @@ export default class Recorder extends EventEmitter {
         (encoder) => encoder !== 'none',
       );
 
+      if (isLinux) {
+        // H.265 is not offered as a recording encoder on Linux.
+        return obsEncoders.filter(
+          (e) =>
+            e !== ESupportedEncoders.NVENC_H265 &&
+            e !== ESupportedEncoders.AMD_H265,
+        );
+      }
+
       return obsEncoders;
     });
 
@@ -1172,7 +1181,6 @@ export default class Recorder extends EventEmitter {
     // writable log path inside of the package
     let logPath = devMode
       ? path.resolve(__dirname, './logs')
-
       : app.isPackaged
         ? path.join(app.getPath('userData'), 'logs')
         : path.resolve(__dirname, '../../dist/main/logs');
@@ -1392,14 +1400,14 @@ export default class Recorder extends EventEmitter {
     } = config;
 
     console.info('[Recorder] Applying PipeWire settings with restore token:',
-    pipewireRestoreToken ? 'present' : 'none');
+      pipewireRestoreToken ? 'present' : 'none');
 
     // if there's a pipewire token present, use it
     const initialSettings = {
       // https://github.com/obsproject/obs-studio/blob/c11253bb088bd501b12998fb37fdcd6bf4743c35/plugins/linux-pipewire/screencast-portal.c#L518-L519
       ShowCursor: captureCursor,
-      RestoreToken: pipewireRestoreToken
-    }
+      RestoreToken: pipewireRestoreToken,
+    };
 
     this.captureMode = CaptureMode.PIPEWIRE;
     this.captureSource = noobs.CreateSource(

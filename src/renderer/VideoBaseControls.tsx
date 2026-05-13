@@ -70,7 +70,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       const allEncoders = await ipc.invoke('getEncoders', []);
 
       const availableEncoders = allEncoders
-        .filter((s: string) => encoderFilter(s, highRes))
+        .filter((s: string) => encoderFilter(s, highRes, appState.isLinux))
         .map(mapStringToEncoder)
         .sort((a: Encoder, b: Encoder) => a.type < b.type);
 
@@ -100,6 +100,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     config.obsQuality,
     config.obsRecEncoder,
     highRes,
+    appState.isLinux,
   ]);
 
   const isComponentDisabled = () => {
