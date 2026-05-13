@@ -10,7 +10,13 @@ import {
 } from 'main/types';
 import path from 'path';
 import { z } from 'zod';
-import { Affiliation, ChatMessageWithId, TAffiliation } from 'types/api';
+import {
+  Affiliation,
+  ChatMessageWithId,
+  KeystoneTimerResponse,
+  TAffiliation,
+  TKeystoneTimerResponse,
+} from 'types/api';
 import WebSocket, { RawData } from 'ws';
 import {
   cloudSignedMetadataToRendererVideo,
@@ -1543,5 +1549,27 @@ export default class CloudClient implements StorageClient {
     });
 
     console.info('[CloudClient] Successfully deleted chat message with id', id);
+  }
+
+  public async getKeystoneTimers(
+    mapId: number,
+  ): Promise<TKeystoneTimerResponse> {
+    console.info('[CloudClient] Get keystone timers for', mapId);
+    const url = `${CloudClient.api}/keystone/timer/${mapId}`;
+
+    const rsp = await axios.get(url, {
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    const { data } = rsp;
+    const parsed = KeystoneTimerResponse.parse(data);
+
+    console.info(
+      '[CloudClient] Successfully got keystone timers for',
+      mapId,
+      parsed,
+    );
+
+    return parsed;
   }
 }

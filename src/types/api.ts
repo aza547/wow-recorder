@@ -21,3 +21,11 @@ export const ChatMessageWithId = z.object({
 });
 
 export type TChatMessageWithId = z.infer<typeof ChatMessageWithId>;
+
+export const KeystoneTimerResponse = z.object({
+  1: z.number(),
+  2: z.number(),
+  3: z.number(),
+});
+
+export type TKeystoneTimerResponse = z.infer<typeof KeystoneTimerResponse>;

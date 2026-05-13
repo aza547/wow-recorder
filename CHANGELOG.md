@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- API now provides up to date keystone timers live when computing keystone result, with hardcoded timers as a fallback.
 ### Fixed
 
-## [7.7.0] - 2026-05-10
+## [7.7.0] - 2026-05-12
 ### Added
 - Enable H265 encoders for AMD and Nvidia.
 - Add video encoder and size in bytes to metadata.
@@ -19,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update Algeth'ar Academy dungeon timer again.
 - Fixed an issue where the OBS logs could scribble over themselves.
 - Improve handling of boss HP percentage on wipes, specifically for Belo'ren and Alleria.
+- Make the viewpoints column slightly wider.
+- Fix a double delete of the pre-muxed MKV in the .temp folder causing annoying errors in the logs.
 
 ## [7.6.3] - 2026-04-13
 ### Fixed
