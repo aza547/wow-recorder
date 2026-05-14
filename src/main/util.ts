@@ -897,6 +897,7 @@ const takeOwnershipStorageDir = async (dir: string) => {
     .filter((file) => !file.endsWith('.json'))
     .filter((file) => !file.endsWith('.png'))
     .filter((file) => file !== '.temp')
+    .filter((file) => file !== '.playback-cache')
     .filter((file) => file !== 'managed.txt')
     .filter((file) => file !== 'desktop.ini');
 

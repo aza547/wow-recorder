@@ -1,6 +1,5 @@
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
-import { app } from 'electron';
 import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
 import { Readable } from 'stream';
@@ -21,16 +20,17 @@ import ConfigService from '../config/ConfigService';
  * `isHevc` flag.
  *
  * The transcode runs once per cache key; the result is cached on disk in
- * `<userData>/playback-cache/<key>.mp4`. Concurrent requests for the same key
- * dedupe to a single in-flight ffmpeg job. The cache is LRU-evicted to
- * `DEFAULT_MAX_CACHE_BYTES`.
+ * `<storagePath>/.playback-cache/<key>.mp4`. Concurrent requests for the same
+ * key dedupe to a single in-flight ffmpeg job. The cache is LRU-evicted to
+ * `DEFAULT_MAX_CACHE_BYTES`. The dir is resolved from config on each access so
+ * a runtime storagePath change is handled (old cache orphaned).
  */
 
 // Channel used to push progress events back to the renderer.
 export const TRANSCODE_PROGRESS_CHANNEL = 'videoTranscodeProgress';
 
-// Cache directory name under app.getPath('userData')
-const CACHE_DIR_NAME = 'playback-cache';
+// Cache directory name under storagePath. Whitelisted by takeOwnershipStorageDir.
+const CACHE_DIR_NAME = '.playback-cache';
 
 // LRU file name under the cache dir. Stores a JSON map of
 // `{ <cache-file-basename>: lastUsedMs }` so LRU recency survives restarts
@@ -85,8 +85,9 @@ export default class PlaybackTranscoder {
     return this.instance;
   }
 
-  private cacheDir: string;
-  private lruFile: string;
+  // Last-seen cache dir, for detecting storagePath changes.
+  private lastKnownDir: string | null = null;
+
   /**
    * In-memory mirror of the LRU json: cache-file basename -> lastUsedMs.
    * Authoritative recency signal for `enforceCacheCap`. Falls back to the
@@ -114,16 +115,31 @@ export default class PlaybackTranscoder {
     return FALLBACK_MAX_CACHE_BYTES;
   }
 
-  private constructor() {
-    this.cacheDir = path.join(app.getPath('userData'), CACHE_DIR_NAME);
-    this.lruFile = path.join(this.cacheDir, LRU_CACHE_JSON);
-    try {
-      fs.mkdirSync(this.cacheDir, { recursive: true });
-    } catch (e) {
-      console.warn('[PlaybackTranscoder] Failed to create cache dir', e);
+  private constructor() {}
+
+  // On storagePath change (or first call) ensure the dir exists and reload LRU.
+  private getCacheDir(): string {
+    const storagePath = ConfigService.getInstance().get<string>('storagePath');
+    const dir = path.join(storagePath, CACHE_DIR_NAME);
+
+    if (dir !== this.lastKnownDir) {
+      try {
+        fs.mkdirSync(dir, { recursive: true });
+      } catch (e) {
+        console.warn('[PlaybackTranscoder] Failed to create cache dir', e);
+      }
+      // Set before loadLru so the recursive getLruFile call short-circuits.
+      this.lastKnownDir = dir;
+      this.lru.clear();
+      this.loadLru();
+      console.info('[PlaybackTranscoder] Cache dir:', dir);
     }
-    this.loadLru();
-    console.info('[PlaybackTranscoder] Cache dir:', this.cacheDir);
+
+    return dir;
+  }
+
+  private getLruFile(): string {
+    return path.join(this.getCacheDir(), LRU_CACHE_JSON);
   }
 
   /**
@@ -218,7 +234,7 @@ export default class PlaybackTranscoder {
     // Strip anything that's not safe for a filename. Keep the slice short
     // enough to avoid hitting PATH_MAX edge cases on weird filesystems.
     const safe = key.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);
-    return path.join(this.cacheDir, `${safe}.mp4`);
+    return path.join(this.getCacheDir(), `${safe}.mp4`);
   }
 
   private async cacheExists(p: string): Promise<boolean> {
@@ -238,14 +254,12 @@ export default class PlaybackTranscoder {
   }
 
   /**
-   * Load the LRU json into. Sync because it runs once from the
-   * constructor and the file is tiny. A missing or corrupt json file is fine —
-   * we start with an empty map and `enforceCacheCap` will fall back to atime
-   * for any cache files lacking an entry.
+   * Load the LRU json. Sync — file is tiny and this only runs from
+   * `getCacheDir`. Fallback to atime on missing.
    */
   private loadLru() {
     try {
-      const raw = fs.readFileSync(this.lruFile, 'utf-8');
+      const raw = fs.readFileSync(this.getLruFile(), 'utf-8');
       const obj = JSON.parse(raw) as Record<string, unknown>;
       for (const [k, v] of Object.entries(obj)) {
         if (typeof v === 'number' && Number.isFinite(v)) this.lru.set(k, v);
@@ -256,7 +270,7 @@ export default class PlaybackTranscoder {
         'entries',
       );
     } catch {
-      // Missing or corrupt — start empty.
+      // Missing or corrupt, start empty.
     }
   }
 
@@ -267,12 +281,13 @@ export default class PlaybackTranscoder {
   private async saveLru() {
     const obj: Record<string, number> = {};
     for (const [k, v] of this.lru) obj[k] = v;
-    const tmp = `${this.lruFile}.${process.pid}.${Math.random()
+    const lruFile = this.getLruFile();
+    const tmp = `${lruFile}.${process.pid}.${Math.random()
       .toString(36)
       .slice(2)}.tmp`;
     try {
       await fspromise.writeFile(tmp, JSON.stringify(obj));
-      await fspromise.rename(tmp, this.lruFile);
+      await fspromise.rename(tmp, lruFile);
     } catch (e) {
       console.warn('[PlaybackTranscoder] saveLru failed:', e);
       fspromise.unlink(tmp).catch(() => {});
@@ -438,9 +453,10 @@ export default class PlaybackTranscoder {
   }
 
   private async enforceCacheCap(): Promise<void> {
+    const cacheDir = this.getCacheDir();
     let entries: string[];
     try {
-      entries = await fspromise.readdir(this.cacheDir);
+      entries = await fspromise.readdir(cacheDir);
     } catch (err) {
       console.warn('[PlaybackTranscoder] readdir failed:', err);
       return;
@@ -458,7 +474,7 @@ export default class PlaybackTranscoder {
       if (e.startsWith(LRU_CACHE_JSON)) continue;
       // Skip in-flight transcode outputs.
       if (e.endsWith('.tmp')) continue;
-      const p = path.join(this.cacheDir, e);
+      const p = path.join(cacheDir, e);
       try {
         const st = await fspromise.stat(p);
         if (!st.isFile()) continue;
