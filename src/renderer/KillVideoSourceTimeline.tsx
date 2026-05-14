@@ -29,6 +29,10 @@ interface SourceTimelineProps {
   children?: ReactNode;
   language: Language;
   isLinux: boolean;
+  /** Linux only. True when the user has H.265 playback transcoding enabled. */
+  hevcTranscodeEnabled: boolean;
+  /** Open the Settings page. Called when the user clicks the enable button. */
+  onOpenSettings: () => void;
 }
 
 /**
@@ -47,7 +51,14 @@ interface SourceTimelineProps {
  * - Drag left/right edges to resize (min 10s per segment)
  */
 const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
-  const { segments, setSegments, language, isLinux } = props;
+  const {
+    segments,
+    setSegments,
+    language,
+    isLinux,
+    hevcTranscodeEnabled,
+    onOpenSettings,
+  } = props;
 
   const videoDuration = segments.reduce(
     (sum, seg) => sum + (seg.stop - seg.start),
@@ -80,21 +91,23 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     return src.startsWith('https://') ? src : `vod://wcr/${src}`;
   }, [activeSegment]);
 
-  // On Linux, HEVC/H265 clips need transcoding to H.264 before Chromium can play
-  // them.
+  // Engage the transcoder hook only when HEVC playback transcoding is on.
+  const activeIsHevc = isHevcEncoder(activeSegment.video.encoder);
+  const useTranscoder = isLinux && hevcTranscodeEnabled;
+  const linuxUnsupported = isLinux && !hevcTranscodeEnabled && activeIsHevc;
   const linuxTranscode = useLinuxTranscodedSources(
-    isLinux
+    useTranscoder
       ? [
           {
             source: activeSegment.video.videoSource,
             cacheKey: activeSegment.video.uniqueId,
-            isHevc: isHevcEncoder(activeSegment.video.encoder),
+            isHevc: activeIsHevc,
           },
         ]
       : [],
   );
   const linuxVideoSrc = linuxTranscode.srcs[0] ?? '';
-  const linuxPreparing = isLinux && linuxTranscode.srcs[0] === null;
+  const linuxPreparing = useTranscoder && linuxTranscode.srcs[0] === null;
   const linuxPrepareProgress = linuxTranscode.progress?.percent ?? null;
 
   // Seek the preview video when the playhead is moved manually.
@@ -397,7 +410,23 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
       {/* Video preview + settings side by side */}
       <div className="flex flex-row gap-2 mb-2 items-start">
         <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm group">
-          {isLinux ? (
+          {linuxUnsupported ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background-higher text-foreground p-6 text-center">
+              <div className="font-semibold text-base">
+                {getLocalePhrase(language, Phrase.HevcUnsupportedTitle)}
+              </div>
+              <div className="text-sm max-w-md">
+                {getLocalePhrase(language, Phrase.HevcUnsupportedBody)}
+              </div>
+              <button
+                type="button"
+                onClick={onOpenSettings}
+                className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm hover:bg-primary/90"
+              >
+                {getLocalePhrase(language, Phrase.HevcUnsupportedEnableButton)}
+              </button>
+            </div>
+          ) : useTranscoder ? (
             linuxVideoSrc && (
               <video
                 ref={videoPreviewRef}
@@ -424,7 +453,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
               muted={muted}
             />
           )}
-          {isLinux && linuxPreparing && (
+          {linuxPreparing && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 text-white text-sm">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-white/30 border-t-white" />
               <div>

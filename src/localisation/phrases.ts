@@ -525,6 +525,13 @@ enum Phrase {
   ScenePreviewWowNotRunning,
   PreparingVideoForPlayback,
   TranscodingVideoForPlayback,
+  HevcTranscodeEnabledLabel,
+  HevcTranscodeEnabledDescription,
+  HevcTranscodeCacheSizeGbLabel,
+  HevcTranscodeCacheSizeGbDescription,
+  HevcUnsupportedTitle,
+  HevcUnsupportedBody,
+  HevcUnsupportedEnableButton,
 }
 
 enum Language {

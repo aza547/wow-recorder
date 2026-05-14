@@ -99,6 +99,8 @@ export type ConfigurationSchema = {
   firstTimeSetup: boolean;
   chatUserNameAgreed: string;
   validateLogPaths: boolean;
+  hevcTranscodeEnabled: boolean;
+  hevcTranscodeCacheSizeGb: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -619,5 +621,16 @@ export const configSchema = {
     description: Phrase.ValidateLogPathsDescription,
     type: 'boolean',
     default: true,
+  },
+  hevcTranscodeEnabled: {
+    description: Phrase.HevcTranscodeEnabledDescription,
+    type: 'boolean',
+    default: true,
+  },
+  hevcTranscodeCacheSizeGb: {
+    description: Phrase.HevcTranscodeCacheSizeGbDescription,
+    type: 'integer',
+    default: 10,
+    minimum: 1,
   },
 };

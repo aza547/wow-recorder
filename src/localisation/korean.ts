@@ -524,6 +524,13 @@ const KOREAN: Translations = {
   [Phrase.Preparing]: '준비 중',
   [Phrase.PreparingVideoForPlayback]: '영상 준비 중',
   [Phrase.TranscodingVideoForPlayback]: '재생을 위한 비디오 트랜스코딩',
+  [Phrase.HevcTranscodeEnabledLabel]: 'H.265 재생 트랜스코딩',
+  [Phrase.HevcTranscodeEnabledDescription]: '재생을 위해 H.265 녹화를 H.264로 변환합니다. CPU 집약적일 수 있습니다.',
+  [Phrase.HevcTranscodeCacheSizeGbLabel]: '트랜스코드 캐시 크기(GB)',
+  [Phrase.HevcTranscodeCacheSizeGbDescription]: 'H.265 재생 트랜스코드 캐시의 최대 크기(GB)입니다. 캐시가 이 제한을 초과하면 가장 오랫동안 재생되지 않은 비디오가 먼저 제거됩니다.',
+  [Phrase.HevcUnsupportedTitle]: 'H.265 비디오를 재생할 수 없습니다',
+  [Phrase.HevcUnsupportedBody]: '내장 비디오 플레이어는 Linux에서 H.265를 재생할 수 없습니다. 설정에서 H.265 재생 트랜스코딩을 활성화하여 재생용 녹화를 변환하거나 VLC와 같은 외부 플레이어에서 파일을 엽니다.',
+  [Phrase.HevcUnsupportedEnableButton]: 'H.265 트랜스코딩 활성화',
 };
 
 export default KOREAN;

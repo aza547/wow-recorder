@@ -7,6 +7,7 @@ import { Readable } from 'stream';
 import { isLinux } from './platform';
 import { fixPathWhenPackaged } from './util';
 import { send } from './main';
+import ConfigService from '../config/ConfigService';
 
 /**
  * PlaybackTranscoder is a Linux-only utility that converts HEVC (H265) mp4 sources
@@ -37,8 +38,8 @@ const CACHE_DIR_NAME = 'playback-cache';
 // mounts on Linux make unreliable).
 const LRU_CACHE_JSON = 'lru.json';
 
-// LRU cap. 10 GiB.
-const DEFAULT_MAX_CACHE_BYTES = 10 * (1 << 30);
+// Fallback if hevcTranscodeCacheSizeGb is missing/invalid. 10 GiB.
+const FALLBACK_MAX_CACHE_BYTES = 10 * (1 << 30);
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -94,7 +95,24 @@ export default class PlaybackTranscoder {
    */
   private lru = new Map<string, number>();
   private inFlight = new Map<string, InFlight>();
-  private maxCacheBytes = DEFAULT_MAX_CACHE_BYTES;
+
+  // Read cap from config on each call so edits take effect on next eviction.
+  private getMaxCacheBytes(): number {
+    try {
+      const gb = ConfigService.getInstance().get<number>(
+        'hevcTranscodeCacheSizeGb',
+      );
+      if (typeof gb === 'number' && Number.isFinite(gb) && gb >= 1) {
+        return Math.floor(gb) * (1 << 30);
+      }
+    } catch (e) {
+      console.warn(
+        '[PlaybackTranscoder] Failed to read hevcTranscodeCacheSizeGb, using fallback',
+        e,
+      );
+    }
+    return FALLBACK_MAX_CACHE_BYTES;
+  }
 
   private constructor() {
     this.cacheDir = path.join(app.getPath('userData'), CACHE_DIR_NAME);
@@ -177,6 +195,23 @@ export default class PlaybackTranscoder {
     console.info('[PlaybackTranscoder] Cancelling:', cacheKey);
     job.cancel();
     this.inFlight.delete(cacheKey);
+  }
+
+  // Cancel all in-flight transcodes. Called when the user disables HEVC.
+  public cancelAll() {
+    if (this.inFlight.size === 0) return;
+    console.info(
+      '[PlaybackTranscoder] Cancelling all in-flight transcodes:',
+      this.inFlight.size,
+    );
+    for (const [, job] of this.inFlight) {
+      try {
+        job.cancel();
+      } catch (e) {
+        console.warn('[PlaybackTranscoder] cancelAll: job cancel failed', e);
+      }
+    }
+    this.inFlight.clear();
   }
 
   private getCachePath(key: string): string {
@@ -447,11 +482,12 @@ export default class PlaybackTranscoder {
     }
 
     let total = stats.reduce((a, b) => a + b.size, 0);
-    if (total > this.maxCacheBytes) {
+    const maxCacheBytes = this.getMaxCacheBytes();
+    if (total > maxCacheBytes) {
       // Oldest lastUsed first.
       stats.sort((a, b) => a.lastUsed - b.lastUsed);
       for (const e of stats) {
-        if (total <= this.maxCacheBytes) break;
+        if (total <= maxCacheBytes) break;
         try {
           await fspromise.unlink(e.p);
           if (this.lru.delete(e.basename)) lruDirty = true;

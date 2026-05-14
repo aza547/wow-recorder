@@ -1,6 +1,7 @@
 import {
   AppState,
   DeathMarkers,
+  Pages,
   RendererVideo,
   SliderMark,
   StorageFilter,
@@ -192,14 +193,20 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const diskVideo = nameMatches.find((v) => !v.cloud);
   const clippable = !multiPlayerMode;
 
-  // Windows path for video sources
+  // Video source path when transcoding is disabled (Windows, Linux+Disabled)
   const srcs = videos.map((rv) => useRef<string>(rv.videoSource + timestamp));
 
-  // On Linux, HEVC/H265 clips need transcoding to H.264 before Chromium can play
-  // them.
   const { isLinux } = appState;
+  const useTranscoder = isLinux && config.hevcTranscodeEnabled;
+
+  // Cells that will mount a <video>. Disabled-HEVC cells never emit onReady.
+  const playableCount =
+    !useTranscoder && isLinux
+      ? videos.filter((v) => !isHevcEncoder(v.encoder)).length
+      : videos.length;
+
   const linuxTranscode = useLinuxTranscodedSources(
-    isLinux
+    useTranscoder
       ? videos.map((v) => ({
           source: v.videoSource + timestamp,
           cacheKey: v.uniqueId,
@@ -628,7 +635,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const onReady = () => {
     numReady.current++;
 
-    if (numReady.current < videos.length) {
+    // Disabled-HEVC cells never emit onReady
+    if (numReady.current < playableCount) {
       // Don't react until all the players have emitted a ready event.
       return;
     }
@@ -1426,6 +1434,30 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     );
   };
 
+  // In-cell "cannot play" for HEVC on Linux when transcoding is disabled.
+  const renderHevcUnsupportedCell = (i: number) => {
+    return (
+      <div
+        key={`hevc-unsupported-${i}`}
+        className="flex flex-col items-center justify-center w-full h-full bg-background-higher text-foreground p-6 text-center gap-3"
+      >
+        <Box sx={{ fontWeight: 600, fontSize: '16px' }}>
+          {getLocalePhrase(language, Phrase.HevcUnsupportedTitle)}
+        </Box>
+        <Box sx={{ fontSize: '14px', maxWidth: '40rem' }}>
+          {getLocalePhrase(language, Phrase.HevcUnsupportedBody)}
+        </Box>
+        <Button
+          onClick={() => {
+            setAppState((prev) => ({ ...prev, page: Pages.Settings }));
+          }}
+        >
+          {getLocalePhrase(language, Phrase.HevcUnsupportedEnableButton)}
+        </Button>
+      </div>
+    );
+  };
+
   /**
    * Overlay shown while playback is being is probing/transcoding the source
    * for playback. Linux/HVEC/H265 only.
@@ -1482,17 +1514,23 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       <div style={{ height: 'calc(100% - 40px)' }}>
         <div className="w-full h-full relative">
           <div className={playerDivClass}>
-            {isLinux
+            {useTranscoder
               ? linuxTranscode.allReady &&
                 linuxTranscode.srcs.map((s, i) =>
                   renderLinuxPlayer(s as string, i),
                 )
-              : srcs.map(renderPlayer)}
+              : videos.map((v, i) =>
+                  isLinux && isHevcEncoder(v.encoder)
+                    ? renderHevcUnsupportedCell(i)
+                    : renderPlayer(srcs[i], i),
+                )}
           </div>
           {isDrawingEnabled && renderDrawingOverlay()}
-          {/* Prevent a double spinner on linux for h265 transcoding videos */}
-          {(!isLinux || linuxTranscode.allReady) && renderLoadingSpinner()}
-          {isLinux && renderPrepareOverlay()}
+          {/* Avoid double spinner during transcode. Skip when no <video> mounts. */}
+          {(!useTranscoder || linuxTranscode.allReady) &&
+            playableCount > 0 &&
+            renderLoadingSpinner()}
+          {useTranscoder && renderPrepareOverlay()}
         </div>
       </div>
 

@@ -1,13 +1,17 @@
 import * as React from 'react';
-import { ConfigurationSchema } from 'config/configSchema';
+import { ConfigurationSchema, configSchema } from 'config/configSchema';
 import { AppState } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
+import { Info } from 'lucide-react';
 import { setConfigValues } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
 import { Dispatch, SetStateAction } from 'react';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { Input } from './components/Input/Input';
 import { Phrase } from 'localisation/phrases';
+
+const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   appState: AppState;
@@ -33,6 +37,8 @@ const WindowsSettings = (props: IProps) => {
       minimizeToTray: config.minimizeToTray,
       hideEmptyCategories: config.hideEmptyCategories,
       hardwareAcceleration: config.hardwareAcceleration,
+      hevcTranscodeEnabled: config.hevcTranscodeEnabled,
+      hevcTranscodeCacheSizeGb: config.hevcTranscodeCacheSizeGb,
     });
   }, [
     config.minimizeOnQuit,
@@ -41,6 +47,8 @@ const WindowsSettings = (props: IProps) => {
     config.startUp,
     config.hideEmptyCategories,
     config.hardwareAcceleration,
+    config.hevcTranscodeEnabled,
+    config.hevcTranscodeCacheSizeGb,
   ]);
 
   const getSwitch = (
@@ -130,8 +138,98 @@ const WindowsSettings = (props: IProps) => {
     });
   };
 
+  const setHevcTranscodeEnabled = (checked: boolean) => {
+    if (!checked) {
+      // Kill any in-flight ffmpeg jobs the user just opted out of.
+      ipc.sendMessage('hevcTranscodeCancelAll', []);
+    }
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        hevcTranscodeEnabled: checked,
+      };
+    });
+  };
+
+  const setHevcTranscodeCacheSizeGb = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const hevcTranscodeCacheSizeGb = parseInt(event.target.value, 10);
+    if (Number.isNaN(hevcTranscodeCacheSizeGb) || hevcTranscodeCacheSizeGb < 0)
+      return;
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        hevcTranscodeCacheSizeGb,
+      };
+    });
+  };
+
+  // Linux-only: Chromium on Windows decodes HEVC natively with HW accel.
+  const renderHevcTranscodeControls = () => {
+    if (!appState.isLinux) return null;
+    return (
+      <>
+        <div className="flex flex-col">
+          <Label htmlFor="hevcTranscodeEnabled" className="flex items-center">
+            {getLocalePhrase(
+              appState.language,
+              Phrase.HevcTranscodeEnabledLabel,
+            )}
+            <Tooltip
+              content={getLocalePhrase(
+                appState.language,
+                Phrase.HevcTranscodeEnabledDescription,
+              )}
+              side="top"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex h-10 items-center">
+            {getSwitch('hevcTranscodeEnabled', setHevcTranscodeEnabled)}
+          </div>
+        </div>
+        {config.hevcTranscodeEnabled && (
+          <div className="flex flex-col w-40">
+            <Label
+              htmlFor="hevcTranscodeCacheSizeGb"
+              className="flex items-center"
+            >
+              {getLocalePhrase(
+                appState.language,
+                Phrase.HevcTranscodeCacheSizeGbLabel,
+              )}
+              <Tooltip
+                content={getLocalePhrase(
+                  appState.language,
+                  Phrase.HevcTranscodeCacheSizeGbDescription,
+                )}
+                side="top"
+              >
+                <Info size={20} className="inline-flex ml-2" />
+              </Tooltip>
+            </Label>
+            <Input
+              name="hevcTranscodeCacheSizeGb"
+              value={config.hevcTranscodeCacheSizeGb}
+              onChange={setHevcTranscodeCacheSizeGb}
+              spellCheck={false}
+              type="numeric"
+            />
+            {config.hevcTranscodeCacheSizeGb < 1 && (
+              <span className="text-error text-xs font-semibold mt-1">
+                {getLocalePhrase(appState.language, Phrase.OneOrGreater)}
+              </span>
+            )}
+          </div>
+        )}
+      </>
+    );
+  };
+
   return (
-    <div className="flex flex-row flex-wrap gap-x-8">
+    <div className="flex flex-row flex-wrap gap-x-8 gap-y-4">
       {getSwitchForm('startUp', Phrase.RunOnStartupLabel, setRunOnStartup)}
       {getSwitchForm(
         'startMinimized',
@@ -154,6 +252,7 @@ const WindowsSettings = (props: IProps) => {
         setHardwareAcceleration,
         Phrase.HardwareAccelerationDescription,
       )}
+      {renderHevcTranscodeControls()}
     </div>
   );
 };

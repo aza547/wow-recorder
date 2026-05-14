@@ -508,6 +508,11 @@ ipcMain.on('videoCancelTranscode', (_event, args) => {
   PlaybackTranscoder.getInstance().cancel(args[0]);
 });
 
+// Cancel all in-flight playback transcodes. Fires when HEVC transcoding is toggled off.
+ipcMain.on('hevcTranscodeCancelAll', () => {
+  PlaybackTranscoder.getInstance().cancelAll();
+});
+
 /**
  * Set/get global video player settings.
  */

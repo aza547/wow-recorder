@@ -32,12 +32,28 @@ interface IProps {
   sources: RendererVideo[];
   language: Language;
   isLinux: boolean;
+  /** Linux only. True when the user has H.265 playback transcoding enabled. */
+  hevcTranscodeEnabled: boolean;
+  /** Open the Settings page. Called when the unsupported-HEVC button is clicked. */
+  onOpenSettings: () => void;
   children: ReactNode;
 }
 
 const KillVideoDialog = (props: IProps) => {
   const [open, setOpen] = useState(false);
-  const { children, language, sources, isLinux } = props;
+  const {
+    children,
+    language,
+    sources,
+    isLinux,
+    hevcTranscodeEnabled,
+    onOpenSettings,
+  } = props;
+
+  const handleOpenSettings = () => {
+    setOpen(false);
+    onOpenSettings();
+  };
 
   // Our select component only accepts strings annoyingly.
   const [fps, setFps] = useState('60');
@@ -253,6 +269,8 @@ const KillVideoDialog = (props: IProps) => {
           setSegments={setSegments}
           language={language}
           isLinux={isLinux}
+          hevcTranscodeEnabled={hevcTranscodeEnabled}
+          onOpenSettings={handleOpenSettings}
         >
           <div className="flex flex-col gap-4">
             {getFpsSelect()}

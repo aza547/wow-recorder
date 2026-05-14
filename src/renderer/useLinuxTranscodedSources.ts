@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Hook that owns the renderer-side logic for the Linux-only HEVC (H265) playback
- * transcoder (see src/main/PlaybackTranscoder.ts). It is no-op on non linux plaforms
- * due to callers passing an empty array of items.
- *
- * Callers tell us whether each item is HEVC via metadata. Items that aren't
- * HEVC bypass the transcoder in main and return the source unchanged.
- *
- * The effect re-runs whenever the joined cache keys change.
+ * Renderer-side driver for the Linux HEVC playback transcoder
+ * (src/main/PlaybackTranscoder.ts). Call only when HEVC playback
+ * transcoding is enabled.
  */
 
 export interface TranscodedItem {
@@ -21,7 +16,7 @@ export interface TranscodedItem {
 export interface TranscodedSources {
   // Resolved playable URL per input item
   srcs: (string | null)[];
-  // True if every entry in `srcs` is non-null. Always true on Windows.
+  // True if every entry in `srcs` is non-null.
   allReady: boolean;
   // Most recent progress event for any in-flight transcode in this set.
   progress: { percent: number; timemark?: string } | null;

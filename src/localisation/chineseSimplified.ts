@@ -524,6 +524,13 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Preparing]: '准备中',
   [Phrase.PreparingVideoForPlayback]: '准备视频',
   [Phrase.TranscodingVideoForPlayback]: '转码视频以供播放',
+  [Phrase.HevcTranscodeEnabledLabel]: 'H.265播放转码',
+  [Phrase.HevcTranscodeEnabledDescription]: '将 H.265 录制内容转换为 H.264 进行播放。可能是 CPU 密集型的。',
+  [Phrase.HevcTranscodeCacheSizeGbLabel]: '转码缓存大小 (GB)',
+  [Phrase.HevcTranscodeCacheSizeGbDescription]: 'H.265 播放转码缓存的最大大小（以 GB 为单位）。当缓存超过此限制时，最长时间未播放的视频将首先被删除。',
+  [Phrase.HevcUnsupportedTitle]: 'H.265视频无法播放',
+  [Phrase.HevcUnsupportedBody]: '内置视频播放器无法在 Linux 上播放 H.265。在“设置”中启用 H.265 播放转码以转换录制内容进行播放，或在 VLC 等外部播放器中打开文件。',
+  [Phrase.HevcUnsupportedEnableButton]: '启用 H.265 转码',
 };
 
 export default CHINESE_SIMPLIFIED;

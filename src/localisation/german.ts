@@ -524,6 +524,13 @@ const GERMAN: Translations = {
   [Phrase.Preparing]: 'Vorbereitung',
   [Phrase.PreparingVideoForPlayback]: 'Video vorbereiten',
   [Phrase.TranscodingVideoForPlayback]: 'Video zur Wiedergabe transkodieren',
+  [Phrase.HevcTranscodeEnabledLabel]: 'H.265-Wiedergabetranskodierung',
+  [Phrase.HevcTranscodeEnabledDescription]: 'Konvertiert H.265-Aufnahmen zur Wiedergabe in H.264. Kann CPU-intensiv sein.',
+  [Phrase.HevcTranscodeCacheSizeGbLabel]: 'Transcode-Cache-Größe (GB)',
+  [Phrase.HevcTranscodeCacheSizeGbDescription]: 'Maximale Größe des H.265-Wiedergabe-Transcode-Caches in Gigabyte. Videos, die am längsten nicht abgespielt wurden, werden zuerst entfernt, wenn der Cache dieses Limit überschreitet.',
+  [Phrase.HevcUnsupportedTitle]: 'H.265-Video kann nicht abgespielt werden',
+  [Phrase.HevcUnsupportedBody]: 'Der integrierte Videoplayer kann H.265 unter Linux nicht abspielen. Aktivieren Sie die H.265-Wiedergabetranskodierung in den Einstellungen, um Aufnahmen für die Wiedergabe zu konvertieren, oder öffnen Sie die Datei in einem externen Player wie VLC.',
+  [Phrase.HevcUnsupportedEnableButton]: 'Aktivieren Sie die H.265-Transkodierung',
 };
 
 export default GERMAN;

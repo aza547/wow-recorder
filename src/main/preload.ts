@@ -55,7 +55,8 @@ export type Channels =
   | 'refreshCloudGuilds'
   | 'reselectPipewireSource'
   | 'videoPrepareForPlayback'
-  | 'videoCancelTranscode';
+  | 'videoCancelTranscode'
+  | 'hevcTranscodeCancelAll';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

@@ -117,6 +117,8 @@ export const getSettings = (): ConfigurationSchema => {
     firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     chatUserNameAgreed: getConfigValue<string>('chatUserNameAgreed'),
     validateLogPaths: getConfigValue<boolean>('validateLogPaths'),
+    hevcTranscodeEnabled: getConfigValue<boolean>('hevcTranscodeEnabled'),
+    hevcTranscodeCacheSizeGb: getConfigValue<number>('hevcTranscodeCacheSizeGb'),
     /* eslint-enable prettier/prettier */
   };
 

@@ -528,6 +528,13 @@ const ENGLISH: Translations = {
   [Phrase.ScenePreviewWowNotRunning]: 'Start World of Warcraft to position the capture window.',
   [Phrase.PreparingVideoForPlayback]: 'Preparing video',
   [Phrase.TranscodingVideoForPlayback]: 'Transcoding video for playback',
+  [Phrase.HevcTranscodeEnabledLabel]: 'H.265 Playback Transcoding',
+  [Phrase.HevcTranscodeEnabledDescription]: 'Converts H.265 recordings to H.264 for playback. Can be CPU intensive.',
+  [Phrase.HevcTranscodeCacheSizeGbLabel]: 'Transcode cache size (GB)',
+  [Phrase.HevcTranscodeCacheSizeGbDescription]: 'Maximum size of the H.265 playback transcode cache, in gigabytes. Videos that have not been played for the longest time are removed first when the cache exceeds this limit.',
+  [Phrase.HevcUnsupportedTitle]: 'H.265 video cannot be played',
+  [Phrase.HevcUnsupportedBody]: 'The built-in video player cannot play H.265 on Linux. Enable H.265 playback transcoding in Settings to convert recordings for playback, or open the file in an external player such as VLC.',
+  [Phrase.HevcUnsupportedEnableButton]: 'Enable H.265 Transcoding',
 };
 
 export default ENGLISH;
