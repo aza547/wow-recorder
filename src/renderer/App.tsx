@@ -13,7 +13,6 @@ import {
   StorageFilter,
   ActivityStatus,
   AdvancedLoggingStatus,
-  KillVideoStatus,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language } from 'localisation/translations';
@@ -71,11 +70,6 @@ const WarcraftRecorder = () => {
   const [savingStatus, setSavingStatus] = useState<SaveStatus>(
     SaveStatus.NotSaving,
   );
-
-  const [killVideoStatus, setKillVideoStatus] = useState<KillVideoStatus>({
-    inProgress: false,
-    perc: 0,
-  });
 
   const [updateAvailable, setUpdateAvailable] = useState(false);
 

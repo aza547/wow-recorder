@@ -75,11 +75,19 @@ if (firstTimeSetup) {
 
 // It's a common problem that hardware acceleration causes rendering issues.
 // Unclear why this happens and surely not an application bug but we can
-// make it easy for users to disable it if they want to.
-if (!cfg.get<boolean>('hardwareAcceleration')) {
+// make it easy for users to disable it if they want to. This is applied on launch
+// and while the config can be changed the setting is immutable for the remainder
+// of the processes lifetime.
+const hardwareAccelerationAtStartup = cfg.get<boolean>('hardwareAcceleration');
+
+if (!hardwareAccelerationAtStartup) {
   console.info('[Main] Disabling hardware acceleration');
   app.disableHardwareAcceleration();
 }
+
+ipcMain.handle('getHardwareAcceleration', () => {
+  return hardwareAccelerationAtStartup;
+});
 
 // Register the vod:// protocol as privileged. Required to securely play
 // videos from disk.

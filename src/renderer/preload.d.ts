@@ -92,6 +92,7 @@ declare global {
         ): void;
 
         clipVideo(video: RendererVideo, offset: number, duration: number): void;
+        getHardwareAcceleration(): boolean;
       };
     };
   }

@@ -531,6 +531,10 @@ const KOREAN: Translations = {
   [Phrase.HevcUnsupportedTitle]: 'H.265 비디오를 재생할 수 없습니다',
   [Phrase.HevcUnsupportedBody]: '내장 비디오 플레이어는 Linux에서 H.265를 재생할 수 없습니다. 설정에서 H.265 재생 트랜스코딩을 활성화하여 재생용 녹화를 변환하거나 VLC와 같은 외부 플레이어에서 파일을 엽니다.',
   [Phrase.HevcUnsupportedEnableButton]: 'H.265 트랜스코딩 활성화',
+  [Phrase.CodecDescriptionH264]: 'H264/AVC는 가장 널리 지원되는 비디오 코덱이며 거의 모든 최신 기기와 호환됩니다. 어떤 인코더를 사용해야 할지 잘 모르겠다면 이 옵션을 사용하는 것을 권장합니다.',
+  [Phrase.CodecDescriptionH265]: 'H265/HEVC는 독점 코덱으로, 동일한 화질에서 H264보다 훨씬 작은 파일 크기를 제공할 수 있지만 기기 및 소프트웨어 호환성은 더 제한적입니다.',
+  [Phrase.CodecDescriptionAV1]: 'AV1은 로열티 프리 비디오 코덱으로, H265보다 더 뛰어난 압축 효율을 제공할 수 있지만 기기 지원은 다를 수 있습니다.',
+  [Phrase.CodecNeedsHardwareRendering]: '선택한 인코더는 재생을 위해 하드웨어 렌더링이 필요합니다. 애플리케이션 설정에서 이를 활성화한 후 앱을 다시 시작하거나 다른 인코더를 선택하세요.',
 };
 
 export default KOREAN;

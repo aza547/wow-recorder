@@ -164,6 +164,8 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
                 recorderStatus={recorderStatus}
                 appState={appState}
                 setPreviewEnabled={setPreviewEnabled}
+                config={config}
+                setConfig={setConfig}
               />
             </div>
           </TabsContent>

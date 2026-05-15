@@ -429,7 +429,7 @@ const ENGLISH: Translations = {
   [Phrase.HideEmptyCategoriesLabel]: "Hide Empty Categories",
   [Phrase.HideEmptyCategoriesDescription]: "Hides categories in the side menu that have no videos in them.",
   [Phrase.HardwareAccelerationLabel]: "Hardware Rendering",
-  [Phrase.HardwareAccelerationDescription]: "Enable hardware accelerated rendering of the application. This is recommended for users using AV1 encoding, but may cause issues on some systems. Requires a restart of the application to take effect.",
+  [Phrase.HardwareAccelerationDescription]: "Enable hardware accelerated rendering of the application. This is recommended for users using H265 or AV1 encoding, but may cause issues on some systems. Requires a restart of the application to take effect.",
   [Phrase.RecordCurrentRaidsOnlyLabel]: "Current Tier Only",
   [Phrase.RecordCurrentRaidsOnlyDescription]: "Only record raid encounters from the current tier, this only applies to retail raid encounters.",
   [Phrase.UploadCurrentRaidsOnlyLabel]: "Current Tier Only",
@@ -535,6 +535,10 @@ const ENGLISH: Translations = {
   [Phrase.HevcUnsupportedTitle]: 'H.265 video cannot be played',
   [Phrase.HevcUnsupportedBody]: 'The built-in video player cannot play H.265 on Linux. Enable H.265 playback transcoding in Settings to convert recordings for playback, or open the file in an external player such as VLC.',
   [Phrase.HevcUnsupportedEnableButton]: 'Enable H.265 Transcoding',
+  [Phrase.CodecDescriptionH264]: 'H264 (AVC) is the most widely supported video codec and is compatible with nearly all modern devices. If you are unsure which encoder to use, you should use this one.',
+  [Phrase.CodecDescriptionH265]: 'H265 (HEVC) is a proprietary codec that can provide significantly smaller file sizes than H264 at similar quality, but has more limited playback compatibility.',
+  [Phrase.CodecDescriptionAV1]: 'AV1 is a royalty-free codec that can provide even better compression efficiency than H265, but like H265 has more limited playback compatibility.',
+  [Phrase.CodecNeedsHardwareRendering]: 'Selected encoder requires hardware rendering for playback. Enable it in the Application settings and restart the app, or select a different encoder.',
 };
 
 export default ENGLISH;

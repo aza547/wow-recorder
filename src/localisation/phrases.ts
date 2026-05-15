@@ -532,6 +532,10 @@ enum Phrase {
   HevcUnsupportedTitle,
   HevcUnsupportedBody,
   HevcUnsupportedEnableButton,
+  CodecDescriptionH264,
+  CodecDescriptionH265,
+  CodecDescriptionAV1,
+  CodecNeedsHardwareRendering,
 }
 
 enum Language {
