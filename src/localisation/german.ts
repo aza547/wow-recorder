@@ -522,6 +522,11 @@ const GERMAN: Translations = {
   [Phrase.Reset]: 'Zurücksetzen',
   [Phrase.Render]: 'Rendern',
   [Phrase.Preparing]: 'Vorbereitung',
+  [Phrase.CodecDescriptionH264]:'H264/AVC ist der am weitesten unterstützte Videocodec und mit nahezu allen modernen Geräten kompatibel. Wenn du unsicher bist, welchen Encoder du verwenden sollst, solltest du diesen wählen.',
+  [Phrase.CodecDescriptionH265]:'H265/HEVC ist ein proprietärer Codec, der bei vergleichbarer Qualität deutlich kleinere Dateigrößen als H264 ermöglichen kann, jedoch eine eingeschränktere Geräte- und Softwarekompatibilität besitzt.',
+  [Phrase.CodecDescriptionAV1]:'AV1 ist ein lizenzfreier Codec, der eine noch bessere Komprimierungseffizienz als H265 bieten kann. Die Geräteunterstützung kann jedoch variieren.',
+  [Phrase.CodecNeedsHardwareRendering]: 'Der ausgewählte Encoder benötigt Hardwarebeschleunigung für die Wiedergabe. Aktiviere diese in den Anwendungseinstellungen und starte die App neu oder wähle einen anderen Encoder.',
+
 };
 
 export default GERMAN;

@@ -72,11 +72,6 @@ const WarcraftRecorder = () => {
     SaveStatus.NotSaving,
   );
 
-  const [killVideoStatus, setKillVideoStatus] = useState<KillVideoStatus>({
-    inProgress: false,
-    perc: 0,
-  });
-
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
   const [appState, setAppState] = useState<AppState>({

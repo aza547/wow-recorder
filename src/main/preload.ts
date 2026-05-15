@@ -249,5 +249,9 @@ contextBridge.exposeInMainWorld('electron', {
     clipVideo(video: RendererVideo, offset: number, duration: number) {
       ipcRenderer.send('clip', video, offset, duration);
     },
+
+    getHardwareAcceleration() {
+      return ipcRenderer.invoke('getHardwareAcceleration');
+    },
   },
 });

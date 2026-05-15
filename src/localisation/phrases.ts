@@ -519,6 +519,10 @@ enum Phrase {
   KillVideoDescription,
   KillVideoRemove,
   Preparing,
+  CodecDescriptionH264,
+  CodecDescriptionH265,
+  CodecDescriptionAV1,
+  CodecNeedsHardwareRendering,
 }
 
 enum Language {

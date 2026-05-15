@@ -522,6 +522,10 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Reset]: '重置',
   [Phrase.Render]: '渲染',
   [Phrase.Preparing]: '准备中',
+  [Phrase.CodecDescriptionH264]:'H264/AVC 是目前兼容性最广的视频编码格式，几乎支持所有现代设备。如果你不确定该使用哪种编码器，推荐使用它。',
+  [Phrase.CodecDescriptionH265]:'H265/HEVC 是一种专有编码格式，在相同画质下通常可以比 H264 提供更小的文件体积，但设备和软件兼容性相对较差。',
+  [Phrase.CodecDescriptionAV1]:'AV1 是一种免版税的视频编码格式，相比 H265 可以提供更高的压缩效率，但设备支持情况可能有所不同。',
+  [Phrase.CodecNeedsHardwareRendering]: '所选编码器需要硬件渲染才能播放。请在应用设置中启用硬件渲染并重新启动应用，或选择其他编码器。',
 };
 
 export default CHINESE_SIMPLIFIED;

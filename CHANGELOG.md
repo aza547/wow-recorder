@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - API now provides up to date keystone timers live when computing keystone result, with hardcoded timers as a fallback.
+- Add more description to the video encoder field.
+- Add a warning when using H265/AV1 without hardware rendering.
+
 ### Fixed
 
 ## [7.7.0] - 2026-05-12
