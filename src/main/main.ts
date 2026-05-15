@@ -76,15 +76,15 @@ if (firstTimeSetup) {
 // make it easy for users to disable it if they want to. This is applied on launch
 // and while the config can be changed the setting is immutable for the remainder
 // of the processes lifetime.
-const hardwareAcceleration = cfg.get<boolean>('hardwareAcceleration');
+const hardwareAccelerationAtStartup = cfg.get<boolean>('hardwareAcceleration');
 
-if (!hardwareAcceleration) {
+if (!hardwareAccelerationAtStartup) {
   console.info('[Main] Disabling hardware acceleration');
   app.disableHardwareAcceleration();
 }
 
 ipcMain.handle('getHardwareAcceleration', () => {
-  return hardwareAcceleration;
+  return hardwareAccelerationAtStartup;
 });
 
 // Register the vod:// protocol as privileged. Required to securely play
