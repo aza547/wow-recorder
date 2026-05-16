@@ -209,7 +209,7 @@ const Status = ({
           {getLocalePhrase(language, Phrase.StatusDescriptionWatchingLogs)}
           {': '}
         </p>
-        <ul className="text-xs text-popover-foreground/60 list-disc pl-4 whitespace-nowrap">
+        <ul className="text-xs text-popover-foreground/60 list-disc pl-4">
           {config.recordRetail && (
             <li>
               <span className="font-bold">
@@ -412,7 +412,7 @@ const Status = ({
           </div>
         </div>
         {!!statusDescription && (
-          <HoverCardContent className="w-[400px]  mx-4">
+          <HoverCardContent className="w-[500px]  mx-4">
             {statusDescription}
           </HoverCardContent>
         )}
