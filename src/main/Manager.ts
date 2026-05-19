@@ -1,4 +1,5 @@
 import fs, { FSWatcher } from 'fs';
+import { setTimeout as sleep } from 'timers/promises';
 import { app, ipcMain, powerMonitor } from 'electron';
 import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import EraLogHandler from '../parsing/EraLogHandler';
@@ -48,6 +49,7 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
+import { isLinux, setAutostart } from './platform';
 
 /**
  * Manager class.
@@ -84,6 +86,12 @@ export default class Manager {
    * If we are in the middle of a reconfigure or not.
    */
   private reconfiguring = false;
+
+  /**
+   * Timer for debouncing the redrawn. Because of the redraw delay, interacting with
+   * controls that trigger redraws multiple times very quickly can trigger undefined behavior.
+   */
+  private redrawPreviewTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * If the audio settings are open or not. We want the audio devices to
@@ -412,11 +420,19 @@ export default class Manager {
    * Trigger the frontend to redraw the preview if it's open.
    */
   private redrawPreview() {
+    // cancel any pending redraws to debounce
+    if (this.redrawPreviewTimer) {
+      clearTimeout(this.redrawPreviewTimer);
+    }
+
     // Really don't understand the need for the timeout here but it sometimes
     // gets stale data otherwise. A caching thing in libobs maybe? Noobs will
     // send a source signal to the recorder if the size of sources change, but
     // for other changes we need to manually trigger a redraw.
-    setTimeout(() => send('redrawPreview'), 100);
+    this.redrawPreviewTimer = setTimeout(() => {
+      send('redrawPreview');
+      this.redrawPreviewTimer = null;
+    }, 100);
   }
 
   /**
@@ -426,7 +442,17 @@ export default class Manager {
    */
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
-    this.recorder.attachCaptureSource();
+    if (isLinux) {
+      // Wait for the DE to map a window for wow. Without this, pipewire
+      // rejects the restore token and triggers the portal. This applies
+      // both when wow was already running at app launch and when the user
+      // starts wow after the app is already running.
+      await sleep(10_000);
+      const videoConfig = getObsVideoConfig(this.cfg);
+      await this.recorder.configureVideoSources(videoConfig);
+    } else {
+      this.recorder.attachCaptureSource();
+    }
 
     const audioConfig = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(audioConfig);
@@ -520,9 +546,18 @@ export default class Manager {
   /**
    * Configure video settings in OBS. This can all be changed live.
    */
-  private configureObsVideo() {
+  private async configureObsVideo() {
+    const isWowRunning = this.poller.isWowRunning();
+
+    // on linux, the wow window needs to exist, otherwise we'll trigger the pipewire portal
+    // due to the window assocaited with the restore token not existing
+    if (isLinux && !isWowRunning) {
+      console.info("[Manager] Won't configure video sources, WoW not running");
+      return;
+    }
+
     const config = getObsVideoConfig(this.cfg);
-    this.recorder.configureVideoSources(config);
+    await this.recorder.configureVideoSources(config);
   }
 
   /**
@@ -553,16 +588,14 @@ export default class Manager {
    * Setup event listeneres the app relies on.
    */
   private setupListeners() {
-    // Config change listener we use to tweak the app settings in Windows if
+    // Config change listener we use to tweak the app settings in the OS env if
     // the user enables/disables run on start-up.
     this.cfg.on('change', (key: string, value: unknown) => {
       if (key === 'startUp') {
         const isStartUp = value === true;
         console.info('[Main] OS level set start-up behaviour:', isStartUp);
 
-        app.setLoginItemSettings({
-          openAtLogin: isStartUp,
-        });
+        setAutostart(isStartUp);
       }
     });
 

@@ -211,6 +211,7 @@ const getObsVideoConfig = (cfg: ConfigService): ObsVideoConfig => {
     obsCaptureMode: cfg.get<string>('obsCaptureMode'),
     monitorIndex: cfg.get<number>('monitorIndex'),
     captureCursor: cfg.get<boolean>('captureCursor'),
+    pipewireRestoreToken: cfg.get<string | null>('pipewireRestoreToken'),
     forceSdr: cfg.get<boolean>('forceSdr'),
     videoSourceScale: cfg.get<number>('videoSourceScale'),
     videoSourceXPosition: cfg.get<number>('videoSourceXPosition'),
