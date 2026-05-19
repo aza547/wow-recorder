@@ -453,6 +453,14 @@ export default class VideoProcessQueue {
         fn.input(src);
       });
 
+    item.musicTracks.forEach((track) => {
+      console.info(
+        '[VideoProcessQueue] Adding music track to ffmpeg:',
+        track.path,
+      );
+      fn.input(track.path);
+    });
+
     try {
       console.time(`[VideoProcessQueue] Create ${item.uuid} kill video`);
 
@@ -852,10 +860,18 @@ export default class VideoProcessQueue {
    * Prepare and return the audio map for a kill video.
    */
   private static prepareKillVideoAudioMap(item: KillVideoQueueItem) {
-    const map =
-      item.audioTrackIndex === -1
-        ? '-map [a]'
-        : `-map ${item.audioTrackIndex}:a`;
+    const hasMusic = item.musicTracks.length > 0;
+
+    let map: string;
+
+    if (hasMusic) {
+      // Music tracks are concatenated by the complex filter into [music].
+      map = '-map [music]';
+    } else if (item.audioTrackIndex === -1) {
+      map = '-map [a]';
+    } else {
+      map = `-map ${item.audioTrackIndex}:a`;
+    }
 
     console.info('[VideoProcessQueue] Audio map filter:', map);
     return map;
@@ -868,6 +884,7 @@ export default class VideoProcessQueue {
    */
   private static prepareKillVideoComplexFilter(item: KillVideoQueueItem) {
     let filter = '';
+    const hasMusic = item.musicTracks.length > 0;
 
     item.segments.forEach((pov, idx) => {
       const segmentDuration = pov.stop - pov.start;
@@ -888,15 +905,68 @@ export default class VideoProcessQueue {
         `fps=${item.fps},scale=${scale},pad=${pad},` +
         `fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
 
-      if (item.audioTrackIndex === -1) {
-        // Audio
+      if (!hasMusic && item.audioTrackIndex === -1) {
+        // Audio from segments (only when no music and splice all mode).
         filter +=
           `[${idx}:a]atrim=${trim},asetpts=PTS-STARTPTS,` +
           `afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
       }
     });
 
-    if (item.audioTrackIndex === -1) {
+    if (hasMusic) {
+      // Music tracks: inputs start after the video segment inputs.
+      // Tracks may have gaps; we insert silence for any gaps.
+      const musicStartIdx = item.segments.length;
+      const totalVideoDuration = item.segments.reduce(
+        (sum, s) => sum + (s.stop - s.start),
+        0,
+      );
+
+      // Sort tracks by start time and build an ordered list of
+      // audio pieces (silence gaps + music tracks) to concat.
+      const sorted = [...item.musicTracks]
+        .map((t, i) => ({ ...t, inputIdx: i }))
+        .sort((a, b) => a.start - b.start);
+
+      const pieces: string[] = [];
+      let cursor = 0;
+      let silenceCount = 0;
+
+      for (const track of sorted) {
+        // Insert silence for the gap before this track.
+        if (track.start > cursor + 0.01) {
+          const gapDuration = track.start - cursor;
+          const silLabel = `sil${silenceCount++}`;
+          filter += `aevalsrc=0:d=${gapDuration}[${silLabel}];`;
+          pieces.push(`[${silLabel}]`);
+        }
+
+        const trackDuration = track.stop - track.start;
+        filter +=
+          `[${musicStartIdx + track.inputIdx}:a]atrim=start=0:end=${trackDuration},` +
+          `asetpts=PTS-STARTPTS[m${track.inputIdx}];`;
+        pieces.push(`[m${track.inputIdx}]`);
+        cursor = track.stop;
+      }
+
+      // Silence after the last track to fill to video duration.
+      if (cursor < totalVideoDuration - 0.01) {
+        const gapDuration = totalVideoDuration - cursor;
+        const silLabel = `sil${silenceCount++}`;
+        filter += `aevalsrc=0:d=${gapDuration}[${silLabel}];`;
+        pieces.push(`[${silLabel}]`);
+      }
+
+      if (pieces.length === 1) {
+        filter += `${pieces[0]}anull[music];`;
+      } else {
+        filter += `${pieces.join('')}concat=n=${pieces.length}:v=0:a=1[music];`;
+      }
+
+      // Video-only concat.
+      const videoInputs = item.segments.map((_, i) => `[v${i}]`).join('');
+      filter += `${videoInputs}concat=n=${item.segments.length}:v=1:a=0[v]`;
+    } else if (item.audioTrackIndex === -1) {
       const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
       filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a]`;
     } else {

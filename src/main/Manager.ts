@@ -28,6 +28,7 @@ import {
   ActivityStatus,
   AdvancedLoggingStatus,
   KillVideoQueueItem,
+  KillVideoMusicTrack,
   RendererVideo,
   KillVideoSegment,
 } from './types';
@@ -616,6 +617,7 @@ export default class Manager {
         fps: number,
         segments: KillVideoSegment[],
         audioTrackIndex: number,
+        musicTracks: KillVideoMusicTrack[],
       ) => {
         console.info(
           '[Manager] Creating kill video with settings:',
@@ -645,6 +647,7 @@ export default class Manager {
           fps,
           segments,
           audioTrackIndex,
+          musicTracks: musicTracks || [],
         };
 
         VideoProcessQueue.getInstance().queueCreateKillVideo(item);
