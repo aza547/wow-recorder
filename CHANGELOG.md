@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API now provides up to date keystone timers live when computing keystone result, with hardcoded timers as a fallback.
 - Add more description to the video encoder field.
 - Add a warning when using H265/AV1 without hardware rendering.
+- Enable the "followRedirects" flag on the guild websocket.
 
 ### Fixed
 

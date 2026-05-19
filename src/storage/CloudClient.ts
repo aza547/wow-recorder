@@ -818,7 +818,7 @@ export default class CloudClient implements StorageClient {
     const guild = encodeURIComponent(this.guild);
     const url = `${CloudClient.poll}?guild=${guild}`;
     const headers = { Authorization: this.authHeader };
-    this.ws = new WebSocket(url, { headers });
+    this.ws = new WebSocket(url, { headers, followRedirects: true });
 
     this.ws.on('open', () => {
       console.info('[CloudClient] WebSocket connection established');
