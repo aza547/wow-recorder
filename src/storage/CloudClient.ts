@@ -120,11 +120,6 @@ export default class CloudClient implements StorageClient {
   private affiliations: TAffiliation[] = [];
 
   /**
-   * The last modified time of the shared storage.
-   */
-  private bucketLastMod = 0;
-
-  /**
    * The auth header for the WCR API, which uses basic HTTP auth using the cloud
    * user and password.
    */
@@ -562,12 +557,8 @@ export default class CloudClient implements StorageClient {
       return;
     }
 
-    await this.pollInit();
     this.startPolling();
-
-    //
     this.refreshStatus();
-    this.refreshVideos();
   }
 
   /**
@@ -600,8 +591,6 @@ export default class CloudClient implements StorageClient {
       'to video database.',
     );
 
-    // Update the mtime to avoid multiple refreshes.
-    this.bucketLastMod = Date.now();
     this.refreshStatus();
 
     // Always run the housekeeper after an upload so that there
@@ -765,22 +754,6 @@ export default class CloudClient implements StorageClient {
   }
 
   /**
-   * Initialize the bucketLastMod time by reading it from the mtime object in
-   * R2. If the mtime object doesn't exist, we will create it.
-   */
-  public async pollInit() {
-    console.info('[CloudClient] Initialize cloud polling');
-
-    try {
-      const mtime = await this.getMtime();
-      this.bucketLastMod = mtime;
-    } catch (error) {
-      console.error('[CloudClient] Error getting mtime', String(error));
-      throw new Error('Error getting mtime from R2');
-    }
-  }
-
-  /**
    * Start listening for updates using WebSocket.
    */
   public startPolling() {
@@ -790,8 +763,7 @@ export default class CloudClient implements StorageClient {
   }
 
   /**
-   * Stop listening for updates using WebSocket. Should only be called before
-   * on destroying this class as there is no way to restart the timers.
+   * Stop listening for updates using WebSocket.
    */
   public stopPolling() {
     console.info('[CloudClient] Stop WebSocket polling');
@@ -823,10 +795,11 @@ export default class CloudClient implements StorageClient {
     this.ws.on('open', () => {
       console.info('[CloudClient] WebSocket connection established');
 
-      // Once the websocket is open we do a single manual check for
-      // updates to make sure we are up to date. After this we can
-      // rely on the websocket to notify us of changes.
-      this.checkForUpdate();
+      // Once the websocket is open we do a single pull of all the data. After
+      // this we can rely on the websocket to notify us of changes. We will
+      // come through this again if the websocket has to reconnect so we can
+      // be sure we won't have missed updates meanwhile.
+      this.pullCloudData();
 
       // Any open chat windows must be refreshed in case we missed
       // messages while the websocket was disconnected.
@@ -940,51 +913,12 @@ export default class CloudClient implements StorageClient {
   }
 
   /**
-   * Get the mtime object from R2, this keeps track of the most recent
-   * modification time to any R2 data.
+   * Pull the entire guild state from the WCR API and refresh the frontend.
    */
-  private async getMtime(): Promise<number> {
-    const headers = { Authorization: this.authHeader };
-    const guild = encodeURIComponent(this.guild);
-    const url = `${CloudClient.api}/guild/${guild}/mtime`;
-
-    const response = await axios.get(url, {
-      headers,
-      validateStatus: (s) => this.validateResponseStatus(s),
-    });
-
-    const { data } = response;
-    const { mtime } = data;
-    return mtime;
-  }
-
-  /**
-   * Check if the guild mtime value matches what we think it is, if it doesn't
-   * we need to trigger a UI refresh. This should only be called on startup and
-   * in the event of a Websocket reconnecting, beyond that we rely on the Websocket
-   * messages to keep the client in sync.
-   */
-  private async checkForUpdate() {
-    console.info('[CloudClient] Checking guild for updates');
+  private async pullCloudData() {
+    console.info('[CloudClient] Refresh cloud data');
 
     try {
-      const mtime = await this.getMtime();
-
-      if (mtime <= this.bucketLastMod) {
-        console.info(
-          '[CloudClient] No changes detected',
-          mtime,
-          this.bucketLastMod,
-        );
-        return;
-      }
-
-      console.info(
-        '[CloudClient] Cloud data changed:',
-        mtime,
-        this.bucketLastMod,
-      );
-
       // Trigger videos to be refreshed. No need to await this.
       this.refreshVideos();
 
@@ -994,11 +928,11 @@ export default class CloudClient implements StorageClient {
       this.usage = await usagePromise;
       this.limit = await limitPromise;
       this.refreshStatus();
-
-      // Update the last modified time now we have refreshed.
-      this.bucketLastMod = mtime;
     } catch (error) {
-      console.error('[CloudClient] Failed to check for update', String(error));
+      console.error(
+        '[CloudClient] Failed to refresh cloud data',
+        String(error),
+      );
     }
   }
 
@@ -1420,12 +1354,6 @@ export default class CloudClient implements StorageClient {
       console.info('[CloudClient] Guild limit message received', value);
       this.limit = parseInt(value, 10);
       this.refreshStatus();
-      return;
-    }
-
-    if (key === GuildMessages.MTIME) {
-      console.info('[CloudClient] Guild mtime message received', value);
-      this.bucketLastMod = parseInt(value, 10);
       return;
     }
 
