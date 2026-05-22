@@ -788,7 +788,7 @@ export default class Recorder extends EventEmitter {
       }
 
       noobs.AddSourceToScene(name);
-      this.audioSources.push(src);
+      this.audioSources.push({ ...src, id: name });
     });
 
     const mics = this.audioSources.filter(
