@@ -52,13 +52,14 @@ import noobs, {
   SceneItemPosition,
   Signal,
   SourceDimensions,
-} from 'noobs';
+} from './noobsRuntime';
 import { getNativeWindowHandle, send } from './main';
 import { ipcMain } from 'electron';
 import Poller from 'utils/Poller';
 import AsyncQueue from 'utils/AsyncQueue';
 import assert from 'assert';
 import { isHighRes } from 'renderer/rendererutils';
+import { getNoobsDistPath } from './noobsRuntimePath';
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -1093,12 +1094,9 @@ export default class Recorder extends EventEmitter {
       ? path.resolve(__dirname, './logs')
       : path.resolve(__dirname, '../../dist/main/logs');
 
-    let noobsPath = devMode
-      ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
-      : path.resolve(__dirname, '../../node_modules/noobs/dist');
+    const noobsPath = getNoobsDistPath(__dirname, devMode);
 
     logPath = fixPathWhenPackaged(logPath);
-    noobsPath = fixPathWhenPackaged(noobsPath);
 
     console.info('[Recorder] Noobs path:', noobsPath);
     console.info('[Recorder] Log path:', logPath);
