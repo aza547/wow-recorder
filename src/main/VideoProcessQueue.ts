@@ -478,6 +478,11 @@ export default class VideoProcessQueue {
         const item: UploadQueueItem = { path: videoPath };
         this.queueUpload(item);
       }
+    } catch (error) {
+      console.error(
+        '[VideoProcessQueue] Error processing kill video:',
+        String(error),
+      );
     } finally {
       done();
     }
@@ -855,7 +860,7 @@ export default class VideoProcessQueue {
     const map =
       item.audioTrackIndex === -1
         ? '-map [a]'
-        : `-map ${item.audioTrackIndex}:a`;
+        : `-map ${item.audioTrackIndex}:a?`;
 
     console.info('[VideoProcessQueue] Audio map filter:', map);
     return map;
@@ -874,7 +879,7 @@ export default class VideoProcessQueue {
       const fadeDuration = 1;
       const fadeOutStart = Math.max(0, segmentDuration - fadeDuration);
 
-      const scale = `${item.width}:-2`;
+      const scale = `${item.width}:${item.height}:force_original_aspect_ratio=decrease`;
       const pad = `${item.width}:${item.height}:(ow-iw)/2:(oh-ih)/2`;
 
       const fadeIn = `t=in:st=0:d=${fadeDuration}`;
