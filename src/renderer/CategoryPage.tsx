@@ -36,7 +36,12 @@ import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 import DeleteDialog from './DeleteDialog';
 import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
 import VideoFilter from './VideoFilter';
-import { Resizable, ResizeCallback } from 're-resizable';
+import {
+  Enable,
+  Resizable,
+  ResizeCallback,
+  ResizeStartCallback,
+} from 're-resizable';
 import { Direction } from 're-resizable/lib/resizer';
 import VideoPlayer, { VideoPlayerRef } from './VideoPlayer';
 import Label from './components/Label/Label';
@@ -50,6 +55,20 @@ import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
 import VideoChat from './VideoChat';
 import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
+
+const playerResizeHandles: Enable = {
+  top: false,
+  right: false,
+  bottom: true,
+  left: false,
+  topRight: false,
+  bottomRight: false,
+  bottomLeft: false,
+  topLeft: false,
+};
+
+const onPlayerResizeStart: ResizeStartCallback = (_event, direction) =>
+  direction === 'bottom';
 
 interface IProps {
   category: VideoCategory;
@@ -293,8 +312,9 @@ const CategoryPage = (props: IProps) => {
           height: `${playerHeight.current}px`,
           width: '100%',
         }}
-        enable={{ bottom: true }}
+        enable={playerResizeHandles}
         bounds="parent"
+        onResizeStart={onPlayerResizeStart}
         onResize={onResize}
         minHeight={chatOpen ? 500 : undefined}
         handleStyles={{

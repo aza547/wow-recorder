@@ -104,7 +104,13 @@
   "jest": {
     "transform": {
       "\\.(ts|tsx|js|jsx)$": "ts-jest"
-    }
+    },
+    "modulePaths": [
+      "<rootDir>/src"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/release/app"
+    ]
   },
   "dependencies": {
     "@electron/notarize": "^3.0.0",
