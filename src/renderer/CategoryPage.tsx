@@ -293,7 +293,16 @@ const CategoryPage = (props: IProps) => {
           height: `${playerHeight.current}px`,
           width: '100%',
         }}
-        enable={{ bottom: true }}
+        enable={{
+          top: false,
+          right: false,
+          bottom: true,
+          left: false,
+          topRight: false,
+          bottomRight: false,
+          bottomLeft: false,
+          topLeft: false,
+        }}
         bounds="parent"
         onResize={onResize}
         minHeight={chatOpen ? 500 : undefined}
