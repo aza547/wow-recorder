@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [7.7.2] - 2026-05-24
+### Fixed
 - [Issue 799](https://github.com/aza547/wow-recorder/issues/799) - Fix audio sources sometimes not being removed and become duplicated.
 
 ## [7.7.1] - 2026-05-19
