@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Improve the disk space check error message to accurately reflect the space requirement when accounting for stored videos.
 
 ## [7.7.2] - 2026-05-24
 ### Fixed
