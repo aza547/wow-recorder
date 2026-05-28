@@ -26,6 +26,7 @@ import {
   takeOwnershipBufferDir,
   takeOwnershipStorageDir,
 } from 'main/util';
+import { isExFatPath } from '../main/filesystem';
 
 const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
   if (category === VideoCategory.Clips) {
@@ -260,6 +261,21 @@ const getLocaleError = (phrase: Phrase) => {
   return getLocalePhrase(lang, phrase);
 };
 
+const validateLogPathFilesystem = async (logPath: string) => {
+  const isExFat = await isExFatPath(logPath);
+
+  if (!isExFat) {
+    return;
+  }
+
+  console.error(
+    '[Util] Unsupported exFAT filesystem for WoW log path',
+    logPath,
+  );
+  const error = getLocaleError(Phrase.UnsupportedWowFilesystem);
+  throw new Error(error);
+};
+
 const validateBaseConfig = async (config: BaseConfig) => {
   const {
     storagePath,
@@ -358,6 +374,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidRetailLogPath);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(retailLogPath);
   }
 
   if (recordRetailPtr) {
@@ -375,6 +393,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidRetailPtrLogPathText);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(retailPtrLogPath);
   }
 
   if (recordClassic) {
@@ -392,6 +412,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidClassicLogPath);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(classicLogPath);
   }
 
   if (recordClassicPtr) {
@@ -408,6 +430,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidClassicPtrLogPath);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(classicPtrLogPath);
   }
 
   if (recordEra) {
@@ -425,6 +449,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidEraLogPath);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(eraLogPath);
   }
 };
 

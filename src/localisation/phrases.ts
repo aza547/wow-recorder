@@ -331,6 +331,7 @@ enum Phrase {
   InvalidClassicLogPath,
   InvalidClassicPtrLogPath,
   InvalidEraLogPath,
+  UnsupportedWowFilesystem,
   SelectAnOutputDevice,
   SelectAnInputDevice,
   ClickToSelectAll,
