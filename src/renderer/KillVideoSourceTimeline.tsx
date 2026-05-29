@@ -1,4 +1,4 @@
-import { KillVideoSegment } from 'main/types';
+import { KillVideoMusicTrack, KillVideoSegment } from 'main/types';
 import {
   getPlayerClass,
   getPlayerName,
@@ -17,13 +17,57 @@ import React, {
   useState,
 } from 'react';
 import { specImages } from './images';
-import { Trash2, Volume2, VolumeX } from 'lucide-react';
+import { Copy, Film, Music, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { Language, Phrase } from 'localisation/phrases';
+
+const ipc = window.electron.ipcRenderer;
+
+/**
+ * Renders a waveform as an SVG path.
+ */
+const WaveformSVG = ({ peaks }: { peaks: number[] }) => {
+  if (peaks.length === 0) return null;
+
+  const w = peaks.length;
+  const h = 40;
+  const mid = h / 2;
+
+  // Build a mirrored waveform path.
+  let d = `M0,${mid}`;
+  peaks.forEach((p, i) => {
+    const x = (i / (w - 1)) * 100;
+    const amp = p * mid * 0.9;
+    d += ` L${x},${mid - amp}`;
+  });
+
+  // Go back along the bottom (mirror).
+  for (let i = peaks.length - 1; i >= 0; i--) {
+    const x = (i / (w - 1)) * 100;
+    const amp = peaks[i] * mid * 0.9;
+    d += ` L${x},${mid + amp}`;
+  }
+
+  d += ' Z';
+
+  return (
+    <svg
+      viewBox={`0 0 100 ${h}`}
+      preserveAspectRatio="none"
+      className="absolute inset-0 w-full h-full pointer-events-none"
+    >
+      <path d={d} fill="rgba(255,255,255,0.2)" />
+    </svg>
+  );
+};
 
 interface SourceTimelineProps {
   segments: KillVideoSegment[];
   setSegments: Dispatch<SetStateAction<KillVideoSegment[]>>;
+  musicTracks: KillVideoMusicTrack[];
+  setMusicTracks: Dispatch<SetStateAction<KillVideoMusicTrack[]>>;
+  singleAudio: boolean;
+  audioTrackPlayer: string;
   children?: ReactNode;
   language: Language;
 }
@@ -44,7 +88,15 @@ interface SourceTimelineProps {
  * - Drag left/right edges to resize (min 10s per segment)
  */
 const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
-  const { segments, setSegments, language } = props;
+  const {
+    segments,
+    setSegments,
+    musicTracks,
+    setMusicTracks,
+    singleAudio,
+    audioTrackPlayer,
+    language,
+  } = props;
 
   const videoDuration = segments.reduce(
     (sum, seg) => sum + (seg.stop - seg.start),
@@ -60,6 +112,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
   const seekingRef = useRef(false);
 
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const musicAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   const timelineWrapperRef = useRef<HTMLDivElement>(null);
 
   const canRemove = segments.length > 2;
@@ -90,7 +143,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     const el = videoPreviewRef.current;
     if (el) {
       el.currentTime = playheadTime;
-      if (playing) el.play();
+      if (playing) el.play().catch(() => {});
     }
   }, [playheadTime, playing]);
 
@@ -106,13 +159,131 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     const el = videoPreviewRef.current;
     if (!el) return;
     if (el.paused) {
-      el.play();
+      el.play().catch(() => {});
       setPlaying(true);
     } else {
       el.pause();
       setPlaying(false);
     }
   }, []);
+
+  // Fetch waveform data for music tracks that don't have it yet.
+  useEffect(() => {
+    const pendingTracks = musicTracks.filter((t) => !t.waveform);
+    if (pendingTracks.length === 0) return;
+
+    let cancelled = false;
+
+    const fetchWaveforms = async () => {
+      for (const track of pendingTracks) {
+        if (cancelled) return;
+        const peaks = await ipc.getWaveform(track.path, 200);
+
+        if (cancelled || peaks.length === 0) continue;
+
+        setMusicTracks((prev) =>
+          prev.map((t) => (t.id === track.id ? { ...t, waveform: peaks } : t)),
+        );
+      }
+    };
+
+    fetchWaveforms();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [musicTracks, setMusicTracks]);
+
+  // Fetch audio waveform data for video segments.
+  const [videoWaveforms, setVideoWaveforms] = useState<
+    Record<string, number[]>
+  >({});
+
+  useEffect(() => {
+    const sources = segments
+      .map((s) => s.video.videoSource)
+      .filter((src, i, arr) => arr.indexOf(src) === i)
+      .filter((src) => !src.startsWith('https://'));
+
+    // Only fetch sources we haven't already got.
+    const pending = sources.filter((src) => !videoWaveforms[src]);
+    if (pending.length === 0) return;
+
+    let cancelled = false;
+
+    const fetchWaveforms = async () => {
+      for (const src of pending) {
+        if (cancelled) return;
+        const peaks = await ipc.getWaveform(src, 200);
+        if (cancelled || peaks.length === 0) continue;
+        setVideoWaveforms((prev) => ({ ...prev, [src]: peaks }));
+      }
+    };
+
+    fetchWaveforms();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [segments]);
+
+  // Sync music audio playback with the video preview and playhead.
+  useEffect(() => {
+    const hasMusicTracks = musicTracks.length > 0;
+    if (!hasMusicTracks) return;
+
+    const refs = musicAudioRefs.current;
+
+    // Find which music track the playhead is currently in.
+    const activeTrack = musicTracks.find(
+      (t) => playheadTime >= t.start && playheadTime < t.stop,
+    );
+
+    refs.forEach((audioEl, trackId) => {
+      if (activeTrack && trackId === activeTrack.id) {
+        // This track is active — set the time offset within the track.
+        const offsetInTrack = playheadTime - activeTrack.start;
+
+        // Use the offset directly (1:1 mapping). The backend trims
+        // each track with atrim so the audio file plays from the start
+        // for the allocated duration.
+        const clampedOffset =
+          audioEl.duration > 0
+            ? Math.min(offsetInTrack, audioEl.duration)
+            : offsetInTrack;
+
+        if (
+          Math.abs(audioEl.currentTime - clampedOffset) > 0.5 ||
+          seekingRef.current
+        ) {
+          audioEl.currentTime = clampedOffset;
+        }
+
+        audioEl.muted = muted;
+
+        if (playing && audioEl.paused) {
+          audioEl.play().catch(() => {});
+        } else if (!playing && !audioEl.paused) {
+          audioEl.pause();
+        }
+      } else {
+        // Not the active track — pause it.
+        if (!audioEl.paused) audioEl.pause();
+      }
+    });
+  }, [playheadTime, playing, muted, musicTracks]);
+
+  // Manage audio elements for music tracks.
+  const setMusicAudioRef = useCallback(
+    (trackId: string, el: HTMLAudioElement | null) => {
+      if (el) {
+        musicAudioRefs.current.set(trackId, el);
+      } else {
+        musicAudioRefs.current.delete(trackId);
+      }
+    },
+    [],
+  );
 
   // True when cursor is over a valid insertion gap (not a no-op position).
   const showDropIndicator =
@@ -210,6 +381,305 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     });
 
     setSegments(updated);
+  };
+
+  const duplicateSegment = (idx: number) => {
+    const seg = segments[idx];
+    const originalDuration = seg.stop - seg.start;
+    const halfDuration = originalDuration / 2;
+
+    const duplicate: KillVideoSegment = {
+      id: crypto.randomUUID(),
+      video: seg.video,
+      start: 0,
+      stop: halfDuration,
+    };
+
+    const next = [...segments];
+    next[idx] = { ...seg, stop: seg.start + halfDuration };
+    next.splice(idx + 1, 0, duplicate);
+
+    setSegments(normalizeSegments(next));
+  };
+
+  const supportedAudioExtensions = ['.mp3', '.wav', '.ogg', '.flac', '.m4a'];
+
+  const [musicDragOver, setMusicDragOver] = useState(false);
+  const [musicDragIdx, setMusicDragIdx] = useState<number | null>(null);
+  const [musicOverBin, setMusicOverBin] = useState(false);
+  const musicTimelineRef = useRef<HTMLDivElement>(null);
+
+  const normalizeMusicTracks = (tracks: KillVideoMusicTrack[]) => {
+    if (tracks.length === 0) return tracks;
+
+    // Sort by start time and clamp to video duration.
+    return tracks
+      .map((t) => {
+        const duration = t.stop - t.start;
+        const start = Math.max(0, Math.min(t.start, videoDuration - 5));
+        const stop = Math.min(start + duration, videoDuration);
+        return { ...t, start, stop };
+      })
+      .sort((a, b) => a.start - b.start);
+  };
+
+  const getAudioFileDuration = (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.onloadedmetadata = () => {
+        resolve(audio.duration || 60);
+        URL.revokeObjectURL(audio.src);
+      };
+      audio.onerror = () => {
+        resolve(60); // Fallback to 60s if we can't read duration.
+        URL.revokeObjectURL(audio.src);
+      };
+      audio.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleMusicDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setMusicDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const audioFiles = files.filter((f) =>
+      supportedAudioExtensions.some((ext) =>
+        f.name.toLowerCase().endsWith(ext),
+      ),
+    );
+
+    if (audioFiles.length === 0) return;
+
+    const newTracks: KillVideoMusicTrack[] = [];
+
+    // Place new tracks after the last existing track (or at click position).
+    let cursor =
+      musicTracks.length > 0 ? Math.max(...musicTracks.map((t) => t.stop)) : 0;
+
+    // If dropped on the timeline, try to place at the drop position.
+    const container = musicTimelineRef.current;
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      const clickPct = (e.clientX - rect.left) / rect.width;
+      const clickTime = clickPct * videoDuration;
+      // Only use click position if it doesn't overlap existing tracks.
+      const overlaps = musicTracks.some(
+        (t) => clickTime >= t.start && clickTime < t.stop,
+      );
+      if (!overlaps) cursor = Math.max(0, clickTime);
+    }
+
+    for (const f of audioFiles) {
+      const duration = await getAudioFileDuration(f);
+      const start = Math.min(cursor, videoDuration);
+      const stop = Math.min(start + duration, videoDuration);
+      newTracks.push({
+        id: crypto.randomUUID(),
+        name: f.name,
+        path: ipc.getPathForFile(f),
+        start,
+        stop,
+      });
+      cursor = stop;
+    }
+
+    setMusicTracks((prev) => normalizeMusicTracks([...prev, ...newTracks]));
+  };
+
+  const removeMusicTrack = (idx: number) => {
+    setMusicTracks((prev) => {
+      if (prev.length <= 1) return [];
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  // --- Drag entire music track to slide-reposition ---
+  const musicSlideRef = useRef<{
+    trackIdx: number;
+    startX: number;
+    origStart: number;
+    origStop: number;
+    totalWidth: number;
+  } | null>(null);
+
+  const handleMusicSlideMouseDown = (e: React.MouseEvent, idx: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const container = musicTimelineRef.current;
+    if (!container) return;
+
+    setMusicDragIdx(idx);
+
+    musicSlideRef.current = {
+      trackIdx: idx,
+      startX: e.clientX,
+      origStart: musicTracks[idx].start,
+      origStop: musicTracks[idx].stop,
+      totalWidth: container.getBoundingClientRect().width,
+    };
+
+    const handleMouseMove = (me: MouseEvent) => {
+      if (!musicSlideRef.current) return;
+      const {
+        trackIdx: tIdx,
+        startX,
+        origStart,
+        origStop,
+        totalWidth,
+      } = musicSlideRef.current;
+      const dx = me.clientX - startX;
+      const timeDelta = (dx / totalWidth) * videoDuration;
+      const duration = origStop - origStart;
+
+      let newStart = origStart + timeDelta;
+      // Clamp to [0, videoDuration - duration].
+      newStart = Math.max(0, Math.min(newStart, videoDuration - duration));
+
+      // Prevent overlap with other tracks.
+      setMusicTracks((prev) => {
+        const others = prev.filter((_, i) => i !== tIdx);
+        for (const other of others) {
+          // If we'd overlap, snap to edge.
+          if (newStart < other.stop && newStart + duration > other.start) {
+            // Determine snap direction based on original position.
+            if (origStart < other.start) {
+              newStart = other.start - duration;
+            } else {
+              newStart = other.stop;
+            }
+          }
+        }
+        newStart = Math.max(0, Math.min(newStart, videoDuration - duration));
+        const next = [...prev];
+        next[tIdx] = {
+          ...next[tIdx],
+          start: newStart,
+          stop: newStart + duration,
+        };
+        return next;
+      });
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      musicSlideRef.current = null;
+      setMusicDragIdx(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  // --- HTML5 drag to bin for deletion ---
+  const handleMusicDragStart = (idx: number) => {
+    setMusicDragIdx(idx);
+  };
+
+  const handleMusicDragEnd = () => {
+    setMusicDragIdx(null);
+    setMusicOverBin(false);
+  };
+
+  const handleMusicBinDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (musicDragIdx !== null) {
+      removeMusicTrack(musicDragIdx);
+    }
+    setMusicDragIdx(null);
+    setMusicOverBin(false);
+  };
+
+  const musicResizeRef = useRef<{
+    trackIdx: number;
+    edge: 'left' | 'right';
+    startX: number;
+    origStart: number;
+    origStop: number;
+    totalWidth: number;
+  } | null>(null);
+
+  const handleMusicEdgeMouseDown = (
+    e: React.MouseEvent,
+    trackIdx: number,
+    edge: 'left' | 'right',
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const container = musicTimelineRef.current;
+    if (!container) return;
+
+    musicResizeRef.current = {
+      trackIdx,
+      edge,
+      startX: e.clientX,
+      origStart: musicTracks[trackIdx].start,
+      origStop: musicTracks[trackIdx].stop,
+      totalWidth: container.getBoundingClientRect().width,
+    };
+
+    const handleMouseMove = (me: MouseEvent) => {
+      if (!musicResizeRef.current) return;
+
+      const {
+        trackIdx: tIdx,
+        edge: tEdge,
+        startX,
+        origStart,
+        origStop,
+        totalWidth,
+      } = musicResizeRef.current;
+
+      const dx = me.clientX - startX;
+      const timeDelta = (dx / totalWidth) * videoDuration;
+      const minDuration = 5;
+
+      setMusicTracks((prev) => {
+        const next = [...prev];
+        const track = { ...next[tIdx] };
+        const others = prev.filter((_, i) => i !== tIdx);
+
+        if (tEdge === 'left') {
+          let newStart = origStart + timeDelta;
+          newStart = Math.max(0, Math.min(newStart, origStop - minDuration));
+          // Don't overlap with a track to the left.
+          for (const other of others) {
+            if (other.stop > newStart && other.start < newStart) {
+              newStart = other.stop;
+            }
+          }
+          track.start = newStart;
+        } else {
+          let newStop = origStop + timeDelta;
+          newStop = Math.max(
+            origStart + minDuration,
+            Math.min(newStop, videoDuration),
+          );
+          // Don't overlap with a track to the right.
+          for (const other of others) {
+            if (other.start < newStop && other.stop > newStop) {
+              newStop = other.start;
+            }
+          }
+          track.stop = newStop;
+        }
+
+        next[tIdx] = track;
+        return next;
+      });
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      musicResizeRef.current = null;
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleEdgeMouseDown = (
@@ -372,10 +842,10 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
     videoDuration > 0 ? (playheadTime / videoDuration) * 100 : 0;
 
   return (
-    <div className="flex flex-col gap-0 w-full border-card">
+    <div className="flex flex-col w-full">
       {/* Video preview + settings side by side */}
-      <div className="flex flex-row gap-2 mb-2 items-start">
-        <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg border border-black overflow-hidden shadow-sm group">
+      <div className="flex flex-row gap-3 items-start mb-3">
+        <div className="relative flex-1 min-w-0 aspect-video h-[350px] bg-black rounded-lg overflow-hidden shadow-lg group">
           <video
             ref={videoPreviewRef}
             key={activeSegment.video.videoName}
@@ -390,209 +860,402 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           <button
             type="button"
             onClick={() => setMuted((m) => !m)}
-            className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/60 text-white/80 hover:text-white hover:bg-black/80 transition-opacity "
+            className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/60 text-white/80 hover:text-white hover:bg-black/80 transition-opacity"
           >
-            {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
         </div>
         {props.children && (
-          <div className="flex-shrink-0 p-2 border-l border-card h-full pl-2">
+          <div className="flex-shrink-0 pl-3 border-l border-card self-stretch flex items-start">
             {props.children}
           </div>
         )}
       </div>
 
-      {/* Timeline + playhead wrapper */}
-      <div
-        className="relative mx-2 border-b border-t border-card py-2"
-        ref={timelineWrapperRef}
-      >
-        <div
-          data-timeline-container
-          className="flex w-full h-20 overflow-hidden"
-        >
-          {showDropIndicator && overIdx === 0 && (
-            <div className="flex-shrink-0 w-1 h-full bg-white rounded-full" />
-          )}
-          {segments.map((seg, idx) => {
-            const widthPercent = ((seg.stop - seg.start) / videoDuration) * 100;
-            const isDragging = dragIdx === idx;
+      {/* Hidden audio elements for music track playback */}
+      {musicTracks.map((track) => (
+        <audio
+          key={track.id}
+          ref={(el) => setMusicAudioRef(track.id, el)}
+          src={`vod://wcr/${track.path}`}
+          preload="auto"
+          className="hidden"
+        />
+      ))}
 
-            const playerClass = getPlayerClass(seg.video);
-            const bgColor =
-              playerClass === 'UNKNOWN'
-                ? 'gray'
-                : getWoWClassColor(playerClass);
+      {/* Playhead time display */}
+      <div className="flex justify-start ml-20 mb-1">
+        <span className="text-[10px] text-muted-foreground tabular-nums">
+          {secToMmSs(playheadTime)} / {secToMmSs(videoDuration)}
+        </span>
+      </div>
 
-            return (
-              <React.Fragment key={seg.video.videoName}>
-                <div
-                  className={[
-                    'relative flex items-center justify-center select-none cursor-grab',
-                    'transition-opacity rounded-md',
-                    isDragging ? 'opacity-40' : 'opacity-100',
-                  ].join(' ')}
-                  style={{
-                    width: `${widthPercent}%`,
-                    backgroundColor: bgColor,
-                  }}
-                  draggable
-                  onDragStart={() => handleDragStart(idx)}
-                  onDragOver={(e) => handleDragOver(e, idx)}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
-                >
-                  <img
-                    src={
-                      specImages[
-                        getPlayerSpecID(seg.video) as keyof typeof specImages
-                      ]
-                    }
-                    alt="spec"
-                    className="absolute top-1 left-1 w-4 h-4 rounded-[15%] pointer-events-none"
-                    style={{
-                      border: '1px solid black',
-                      objectFit: 'cover',
-                    }}
-                  />
-
-                  <div className="absolute top-1 right-1 grid grid-cols-3 gap-[2px] pointer-events-none">
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-[3px] h-[3px] rounded-full bg-black/40"
-                      />
-                    ))}
-                  </div>
-
-                  <div className="text-black rounded-sm flex flex-col items-center pointer-events-none px-2 pt-2 overflow-hidden">
-                    <span className="text-[12px] font-bold truncate max-w-full">
-                      {getPlayerName(seg.video) || seg.video.videoName}
-                    </span>
-                    <span className="text-[10px]">
-                      {secToMmSs(seg.stop - seg.start)}
-                    </span>
-                  </div>
-                </div>
-
-                {idx < segments.length - 1 && (
-                  <div
-                    className={[
-                      'flex-shrink-0 w-3 h-full z-10 flex flex-col items-center justify-center gap-[3px] cursor-col-resize transition-colors rounded-md',
-                      showDropIndicator && overIdx === idx + 1
-                        ? 'bg-white/40'
-                        : '',
-                    ].join(' ')}
-                    onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'right')}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setOverIdx(idx + 1);
-                    }}
-                    onDrop={handleDrop}
-                  >
-                    {/* Vertical grip dots */}
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={[
-                          'w-[3px] h-[3px] rounded-full',
-                          showDropIndicator && overIdx === idx + 1
-                            ? 'bg-white'
-                            : 'bg-white/30',
-                        ].join(' ')}
-                      />
-                    ))}
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
-          {showDropIndicator && overIdx === segments.length && (
-            <div className="flex-shrink-0 w-1 h-full bg-white rounded-full" />
-          )}
-        </div>
-
-        {/* Playhead */}
-        <div
-          className="absolute top-0 w-0.5 bg-white z-20 cursor-ew-resize"
-          style={{
-            left: `${playheadPct}%`,
-            height: '100%',
-            transform: 'translateX(-50%)',
-          }}
-          onMouseDown={handlePlayheadMouseDown}
-        >
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white" />
-          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full text-[9px] text-white/90 px-1 whitespace-nowrap pointer-events-none">
-            {secToMmSs(playheadTime)}
-          </span>
-        </div>
-
-        {/* Clickable ruler area to jump playhead */}
-        <div
-          className="relative w-full h-6 mt-2 cursor-pointer"
-          onMouseDown={handlePlayheadMouseDown}
-        >
-          <div className="absolute top-0 left-0 right-0 h-px bg-card" />
-          <div className="absolute top-0 left-0 flex flex-col items-start">
-            <div className="w-px h-2 bg-card" />
-            <span className="text-[9px] text-card-foreground leading-none mt-0.5">
-              0:00
+      {/* Timeline */}
+      <div className="flex rounded-lg border border-border/30 overflow-hidden bg-background/50">
+        {/* Track labels */}
+        <div className="flex flex-col shrink-0 w-20 bg-muted/30 border-r border-border/20">
+          <div className="flex flex-col">
+            <div className="h-14 flex items-center gap-1.5 px-2.5">
+              <Film size={12} className="shrink-0 text-muted-foreground" />
+              <span className="text-[11px] text-muted-foreground font-medium">
+                Video
+              </span>
+            </div>
+            <div className="h-8 flex items-center gap-1.5 px-2.5 border-t border-border/20">
+              <Volume2 size={12} className="shrink-0 text-emerald-500/70" />
+              <span className="text-[11px] text-muted-foreground font-medium">
+                Audio
+              </span>
+            </div>
+          </div>
+          <div className="h-8 flex items-center gap-1.5 px-2.5 border-t border-border/20">
+            <Music size={12} className="shrink-0 text-purple-400/70" />
+            <span className="text-[11px] text-muted-foreground font-medium">
+              Music
             </span>
           </div>
+          <div className="h-6" />
+        </div>
 
-          {minorTicks.map((t) => {
-            const pct = (t / videoDuration) * 100;
-            return (
-              <div
-                key={`minor-${t}`}
-                className="absolute top-0 w-px h-1 bg-card"
-                style={{ left: `${pct}%` }}
-              />
-            );
-          })}
+        {/* Timeline content */}
+        <div
+          className="flex-1 flex flex-col min-w-0 relative"
+          ref={timelineWrapperRef}
+        >
+          {/* Video + Audio rows (linked) */}
+          <div
+            data-timeline-container
+            className="relative flex border-t border-border/20"
+          >
+            {showDropIndicator && overIdx === 0 && (
+              <div className="flex-shrink-0 w-0.5 bg-white rounded-full" />
+            )}
+            {segments.map((seg, idx) => {
+              const widthPercent =
+                ((seg.stop - seg.start) / videoDuration) * 100;
+              const isDragging = dragIdx === idx;
 
-          {majorTicks.map((t) => {
-            const pct = (t / videoDuration) * 100;
-            return (
-              <div
-                key={t}
-                className="absolute top-0 flex flex-col items-center"
-                style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
-              >
-                <div className="w-px h-2 bg-card" />
-                <span className="text-[9px] text-card-foreground leading-none mt-0.5">
-                  {secToMmSs(t)}
+              const playerClass = getPlayerClass(seg.video);
+              const bgColor =
+                playerClass === 'UNKNOWN'
+                  ? '#4b5563'
+                  : getWoWClassColor(playerClass);
+
+              return (
+                <React.Fragment key={seg.id}>
+                  <div
+                    className={[
+                      'relative flex flex-col select-none cursor-grab group/seg',
+                      'transition-opacity',
+                      isDragging ? 'opacity-40' : 'opacity-100',
+                    ].join(' ')}
+                    style={{
+                      width: `${widthPercent}%`,
+                    }}
+                    draggable
+                    onDragStart={() => handleDragStart(idx)}
+                    onDragOver={(e) => handleDragOver(e, idx)}
+                    onDrop={handleDrop}
+                    onDragEnd={handleDragEnd}
+                  >
+                    {/* Video portion */}
+                    <div
+                      className="relative h-14 flex items-center justify-center"
+                      style={{
+                        backgroundColor: bgColor,
+                        borderRight:
+                          idx < segments.length - 1
+                            ? '1px solid rgba(255,255,255,0.08)'
+                            : 'none',
+                      }}
+                    >
+                      <img
+                        src={
+                          specImages[
+                            getPlayerSpecID(
+                              seg.video,
+                            ) as keyof typeof specImages
+                          ]
+                        }
+                        alt="spec"
+                        className="absolute top-1 left-1 w-4 h-4 rounded-[15%] pointer-events-none"
+                        style={{
+                          border: '1px solid rgba(0,0,0,0.4)',
+                          objectFit: 'cover',
+                        }}
+                      />
+
+                      <button
+                        type="button"
+                        title={getLocalePhrase(
+                          language,
+                          Phrase.KillVideoDuplicate,
+                        )}
+                        className="absolute bottom-1 right-1 p-0.5 rounded bg-black/40 text-white/70 hover:text-white hover:bg-black/60 opacity-0 group-hover/seg:opacity-100 transition-opacity z-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          duplicateSegment(idx);
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        <Copy size={12} />
+                      </button>
+
+                      <div className="text-black/90 flex flex-col items-center pointer-events-none px-2 pt-2 overflow-hidden">
+                        <span className="text-[11px] font-bold truncate max-w-full drop-shadow-[0_1px_0_rgba(255,255,255,0.2)]">
+                          {getPlayerName(seg.video) || seg.video.videoName}
+                        </span>
+                        <span className="text-[10px]">
+                          {secToMmSs(seg.stop - seg.start)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Audio portion */}
+                    <div
+                      className="relative h-8 flex items-center justify-center bg-emerald-800/40 border-t border-border/20 overflow-hidden"
+                      style={{
+                        borderRight:
+                          !singleAudio && idx < segments.length - 1
+                            ? '1px solid rgba(255,255,255,0.06)'
+                            : 'none',
+                      }}
+                    >
+                      {!singleAudio &&
+                        videoWaveforms[seg.video.videoSource] &&
+                        (() => {
+                          const allPeaks =
+                            videoWaveforms[seg.video.videoSource];
+                          const startPct = seg.start / videoDuration;
+                          const stopPct = seg.stop / videoDuration;
+                          const from = Math.floor(startPct * allPeaks.length);
+                          const to = Math.ceil(stopPct * allPeaks.length);
+                          return (
+                            <WaveformSVG peaks={allPeaks.slice(from, to)} />
+                          );
+                        })()}
+                      {!singleAudio && (
+                        <span className="text-[9px] text-emerald-200/50 truncate px-1 z-[1]">
+                          {getPlayerName(seg.video)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Resize handle spanning video row (and audio row when not single audio) */}
+                  {idx < segments.length - 1 && (
+                    <div
+                      className="absolute top-0 w-3 z-10 cursor-col-resize"
+                      style={{
+                        height: singleAudio ? '3.5rem' : '100%',
+                        left: `${segments.slice(0, idx + 1).reduce((sum, s) => sum + ((s.stop - s.start) / videoDuration) * 100, 0)}%`,
+                        transform: 'translateX(-50%)',
+                      }}
+                      onMouseDown={(e) => handleEdgeMouseDown(e, idx, 'right')}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setOverIdx(idx + 1);
+                      }}
+                      onDrop={handleDrop}
+                    />
+                  )}
+                </React.Fragment>
+              );
+            })}
+            {showDropIndicator && overIdx === segments.length && (
+              <div className="flex-shrink-0 w-0.5 bg-white rounded-full" />
+            )}
+
+            {/* Single audio mode: centered label spanning entire audio row */}
+            {singleAudio && (
+              <div className="absolute bottom-0 left-0 right-0 h-8 flex items-center justify-center pointer-events-none z-[1]">
+                {(() => {
+                  const src = segments.find(
+                    (s) => s.video.player?._name === audioTrackPlayer,
+                  )?.video.videoSource;
+                  return (
+                    src &&
+                    videoWaveforms[src] && (
+                      <WaveformSVG peaks={videoWaveforms[src]} />
+                    )
+                  );
+                })()}
+                <span className="text-[9px] text-emerald-200/50 truncate px-1">
+                  {audioTrackPlayer}
                 </span>
               </div>
-            );
-          })}
+            )}
+          </div>
 
-          <div className="absolute top-0 right-0 flex flex-col items-end">
-            <div className="w-px h-2 bg-card" />
-            <span className="text-[9px] text-card-foreground leading-none mt-0.5">
-              {secToMmSs(videoDuration)}
-            </span>
+          {/* Music tracks row / drop zone */}
+          <div
+            ref={musicTimelineRef}
+            data-timeline-container
+            className={[
+              'relative h-8 overflow-hidden border-t border-border/20 transition-colors',
+              musicDragOver ? 'bg-purple-500/10' : '',
+            ].join(' ')}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (musicDragIdx === null) setMusicDragOver(true);
+            }}
+            onDragLeave={() => setMusicDragOver(false)}
+            onDrop={(e) => {
+              handleMusicDrop(e);
+            }}
+          >
+            {musicTracks.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center gap-1.5 text-muted-foreground/40">
+                <Music size={12} />
+                <span className="text-[10px]">
+                  {getLocalePhrase(language, Phrase.KillVideoMusicDropHint)}
+                </span>
+              </div>
+            ) : (
+              <>
+                {/* Empty area still accepts drops */}
+                <div
+                  className="absolute inset-0"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (musicDragIdx === null) setMusicDragOver(true);
+                  }}
+                  onDragLeave={() => setMusicDragOver(false)}
+                  onDrop={(e) => handleMusicDrop(e)}
+                />
+                {musicTracks.map((track, idx) => {
+                  const leftPct = (track.start / videoDuration) * 100;
+                  const widthPct =
+                    ((track.stop - track.start) / videoDuration) * 100;
+                  const isDragging = musicDragIdx === idx;
+
+                  return (
+                    <div
+                      key={track.id}
+                      className={[
+                        'absolute top-0 h-full flex items-center justify-center select-none cursor-grab group/music',
+                        'transition-opacity bg-purple-700/50 overflow-hidden',
+                        isDragging ? 'opacity-40' : 'opacity-100',
+                      ].join(' ')}
+                      style={{
+                        left: `${leftPct}%`,
+                        width: `${widthPct}%`,
+                      }}
+                      onMouseDown={(e) => handleMusicSlideMouseDown(e, idx)}
+                      draggable
+                      onDragStart={() => handleMusicDragStart(idx)}
+                      onDragEnd={handleMusicDragEnd}
+                    >
+                      {/* Left resize handle */}
+                      <div
+                        className="absolute left-0 top-0 w-1.5 h-full cursor-col-resize z-10 hover:bg-white/20"
+                        onMouseDown={(e) =>
+                          handleMusicEdgeMouseDown(e, idx, 'left')
+                        }
+                      />
+                      {track.waveform && <WaveformSVG peaks={track.waveform} />}
+                      <div className="text-white/90 flex flex-col items-center pointer-events-none px-1 overflow-hidden z-[1]">
+                        <span className="text-[10px] font-medium truncate max-w-full">
+                          {track.name}
+                        </span>
+                      </div>
+                      {/* Right resize handle */}
+                      <div
+                        className="absolute right-0 top-0 w-1.5 h-full cursor-col-resize z-10 hover:bg-white/20"
+                        onMouseDown={(e) =>
+                          handleMusicEdgeMouseDown(e, idx, 'right')
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+
+          {/* Ruler */}
+          <div
+            className="relative h-6 cursor-pointer select-none bg-muted/10 border-t border-card"
+            onMouseDown={handlePlayheadMouseDown}
+          >
+            <div className="absolute top-0 left-0 flex flex-col items-start">
+              <div className="w-px h-2 bg-border" />
+              <span className="text-[9px] text-muted-foreground leading-none mt-0.5 ml-0.5">
+                0:00
+              </span>
+            </div>
+            {minorTicks.map((t) => {
+              const pct = (t / videoDuration) * 100;
+              return (
+                <div
+                  key={`minor-${t}`}
+                  className="absolute top-0 w-px h-1.5 bg-border/50"
+                  style={{ left: `${pct}%` }}
+                />
+              );
+            })}
+            {majorTicks.map((t) => {
+              const pct = (t / videoDuration) * 100;
+              return (
+                <div
+                  key={t}
+                  className="absolute top-0 flex flex-col items-center"
+                  style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
+                >
+                  <div className="w-px h-2 bg-border" />
+                  <span className="text-[9px] text-muted-foreground leading-none mt-0.5">
+                    {secToMmSs(t)}
+                  </span>
+                </div>
+              );
+            })}
+            <div className="absolute top-0 right-0 flex flex-col items-end">
+              <div className="w-px h-2 bg-border" />
+              <span className="text-[9px] text-muted-foreground leading-none mt-0.5 mr-0.5">
+                {secToMmSs(videoDuration)}
+              </span>
+            </div>
+          </div>
+
+          {/* Playhead */}
+          <div
+            className="absolute top-0 w-0.5 bg-white/90 z-20 pointer-events-auto cursor-ew-resize"
+            style={{
+              left: `${playheadPct}%`,
+              height: '100%',
+              transform: 'translateX(-50%)',
+            }}
+            onMouseDown={handlePlayheadMouseDown}
+          >
+            <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[6px] border-b-white" />
           </div>
         </div>
       </div>
 
-      {canRemove && (
+      {/* Trash bin — accepts both video segments and music tracks */}
+      {(canRemove || musicDragIdx !== null) && (
         <div
           className={[
-            'flex items-center justify-center gap-2 w-full h-8 mt-1 rounded-md border-2 border-dashed transition-colors',
-            overBin
-              ? 'border-red-500 bg-red-500/20 text-red-400'
-              : dragIdx !== null
-                ? 'border-card bg-muted/10 text-card-foreground'
+            'flex items-center justify-center gap-2 w-full h-8 mt-1.5 rounded-md border border-dashed transition-colors',
+            overBin || musicOverBin
+              ? 'border-red-500 bg-red-500/10 text-red-400'
+              : dragIdx !== null || musicDragIdx !== null
+                ? 'border-card bg-muted/10 text-muted-foreground'
                 : 'border-transparent bg-transparent text-transparent',
           ].join(' ')}
           onDragOver={(e) => {
             e.preventDefault();
-            setOverBin(true);
+            if (dragIdx !== null) setOverBin(true);
+            if (musicDragIdx !== null) setMusicOverBin(true);
           }}
-          onDragLeave={() => setOverBin(false)}
-          onDrop={handleBinDrop}
+          onDragLeave={() => {
+            setOverBin(false);
+            setMusicOverBin(false);
+          }}
+          onDrop={(e) => {
+            if (dragIdx !== null) handleBinDrop(e);
+            else if (musicDragIdx !== null) handleMusicBinDrop(e);
+          }}
         >
           <Trash2 size={14} />
           <span className="text-xs">
