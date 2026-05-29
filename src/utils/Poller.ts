@@ -128,13 +128,14 @@ export default class Poller extends EventEmitter {
     const { Retail, Classic } = parsed;
 
     const recordRetail = this.cfg.get<boolean>('recordRetail');
+    const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
     const recordClassic = this.cfg.get<boolean>('recordClassic');
+    const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
     const recordEra = this.cfg.get<boolean>('recordEra');
 
     const running =
-      (recordRetail && Retail) ||
-      (recordClassic && Classic) ||
-      (recordEra && Classic); // Era and Classic clients share a process name.
+      ((recordRetail || recordRetailPtr) && Retail) ||
+      ((recordClassic || recordClassicPtr || recordEra) && Classic);
 
     if (this.wowRunning === running) {
       // Nothing to emit.

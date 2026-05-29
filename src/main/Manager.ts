@@ -530,7 +530,7 @@ export default class Manager {
     }
 
     if (config.recordClassicPtr) {
-      this.classicLogHandler = new ClassicLogHandler(config.classicPtrLogPath);
+      this.classicPtrLogHandler = new ClassicLogHandler(config.classicPtrLogPath);
     }
 
     if (config.recordEra) {
