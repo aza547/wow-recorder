@@ -22,7 +22,7 @@ import {
   checkDisk,
   exists,
   getWowFlavour,
-  isExFatPath,
+  isNtfsPath,
   isFolderOwned,
   takeOwnershipBufferDir,
   takeOwnershipStorageDir,
@@ -261,36 +261,20 @@ const getLocaleError = (phrase: Phrase) => {
   return getLocalePhrase(lang, phrase);
 };
 
-const getFormattedLocaleError = (
-  phrase: Phrase,
-  replacements: Record<string, string>,
-) => {
-  let error = getLocaleError(phrase);
-
-  Object.entries(replacements).forEach(([key, value]) => {
-    error = error.replace(`{${key}}`, () => value);
-  });
-
-  return error;
-};
-
 const validateLogPathFilesystem = async (
   logPath: string,
   logPathLabel: Phrase,
 ) => {
-  const isExFat = await isExFatPath(logPath);
+  const isNtfs = await isNtfsPath(logPath);
 
-  if (!isExFat) {
+  if (isNtfs !== false) {
     return;
   }
 
-  console.error(
-    '[Util] Unsupported exFAT filesystem for WoW log path',
-    logPath,
-  );
-  const error = getFormattedLocaleError(Phrase.UnsupportedWowFilesystem, {
-    logPath: getLocaleError(logPathLabel),
-  });
+  console.error('[Util] Unsupported filesystem for WoW log path', logPath);
+  const error = `${getLocaleError(logPathLabel)}: ${getLocaleError(
+    Phrase.UnsupportedWowFilesystem,
+  )}`;
   throw new Error(error);
 };
 

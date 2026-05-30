@@ -323,7 +323,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.InvalidClassicLogPath]: '无效的怀旧服日志路径。',
   [Phrase.InvalidEraLogPath]: '无效的经典旧世服日志路径。',
   [Phrase.UnsupportedWowFilesystem]:
-    '{logPath} 位于 exFAT 驱动器上。exFAT 上的战斗日志更新可能不可靠。请将 WoW 移动到 NTFS 驱动器并更新此路径。',
+    '配置的 WoW 日志路径不在 NTFS 驱动器上。其他文件系统上的战斗日志更新可能不可靠。请将 WoW 移动到 NTFS 驱动器并更新此路径。',
   [Phrase.SelectAnOutputDevice]: '请选择一个输出设备',
   [Phrase.SelectAnInputDevice]: '请选择一个输入设备',
   [Phrase.ClickToSelectAll]: '单击以选择全部',

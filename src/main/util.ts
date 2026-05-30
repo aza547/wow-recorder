@@ -807,10 +807,10 @@ const getDriveFormat = async (
   });
 };
 
-const isExFatPath = async (targetPath: string): Promise<boolean> => {
+const isNtfsPath = async (targetPath: string): Promise<boolean | undefined> => {
   const driveFormat = await getDriveFormat(targetPath);
 
-  return driveFormat?.toLowerCase() === 'exfat';
+  return driveFormat ? driveFormat.toLowerCase() === 'ntfs' : undefined;
 };
 
 /**
@@ -1260,5 +1260,5 @@ export {
   checkAdvancedCombatLogging,
   getConfigWtfPath,
   getDriveFormat,
-  isExFatPath,
+  isNtfsPath,
 };
