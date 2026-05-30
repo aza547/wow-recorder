@@ -323,7 +323,7 @@ const KOREAN: Translations = {
   [Phrase.InvalidClassicLogPath]: '잘못된 클래식 로그 경로',
   [Phrase.InvalidEraLogPath]: '잘못된 시대 로그 경로',
   [Phrase.UnsupportedWowFilesystem]:
-    '설정된 WoW 로그 경로가 exFAT 드라이브에 있습니다. exFAT에서는 전투 로그 파일 업데이트가 안정적으로 감지되지 않을 수 있습니다. WoW를 NTFS 드라이브로 옮긴 후 로그 경로를 업데이트하세요.',
+    '{logPath}가 exFAT 드라이브에 있습니다. exFAT에서는 전투 로그 파일 업데이트가 안정적으로 감지되지 않을 수 있습니다. WoW를 NTFS 드라이브로 옮긴 후 이 경로를 업데이트하세요.',
   [Phrase.SelectAnOutputDevice]: '출력 장치 선택',
   [Phrase.SelectAnInputDevice]: '입력 장치 선택',
   [Phrase.ClickToSelectAll]: '모두 선택하려면 클릭',

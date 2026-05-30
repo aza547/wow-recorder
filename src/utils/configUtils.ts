@@ -22,11 +22,11 @@ import {
   checkDisk,
   exists,
   getWowFlavour,
+  isExFatPath,
   isFolderOwned,
   takeOwnershipBufferDir,
   takeOwnershipStorageDir,
 } from 'main/util';
-import { isExFatPath } from '../main/filesystem';
 
 const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
   if (category === VideoCategory.Clips) {
@@ -261,7 +261,23 @@ const getLocaleError = (phrase: Phrase) => {
   return getLocalePhrase(lang, phrase);
 };
 
-const validateLogPathFilesystem = async (logPath: string) => {
+const getFormattedLocaleError = (
+  phrase: Phrase,
+  replacements: Record<string, string>,
+) => {
+  let error = getLocaleError(phrase);
+
+  Object.entries(replacements).forEach(([key, value]) => {
+    error = error.replace(`{${key}}`, () => value);
+  });
+
+  return error;
+};
+
+const validateLogPathFilesystem = async (
+  logPath: string,
+  logPathLabel: Phrase,
+) => {
   const isExFat = await isExFatPath(logPath);
 
   if (!isExFat) {
@@ -272,7 +288,9 @@ const validateLogPathFilesystem = async (logPath: string) => {
     '[Util] Unsupported exFAT filesystem for WoW log path',
     logPath,
   );
-  const error = getLocaleError(Phrase.UnsupportedWowFilesystem);
+  const error = getFormattedLocaleError(Phrase.UnsupportedWowFilesystem, {
+    logPath: getLocaleError(logPathLabel),
+  });
   throw new Error(error);
 };
 
@@ -375,7 +393,7 @@ const validateBaseConfig = async (config: BaseConfig) => {
       throw new Error(error);
     }
 
-    await validateLogPathFilesystem(retailLogPath);
+    await validateLogPathFilesystem(retailLogPath, Phrase.RetailLogPathLabel);
   }
 
   if (recordRetailPtr) {
@@ -394,7 +412,10 @@ const validateBaseConfig = async (config: BaseConfig) => {
       throw new Error(error);
     }
 
-    await validateLogPathFilesystem(retailPtrLogPath);
+    await validateLogPathFilesystem(
+      retailPtrLogPath,
+      Phrase.RetailPtrLogPathLabel,
+    );
   }
 
   if (recordClassic) {
@@ -413,7 +434,7 @@ const validateBaseConfig = async (config: BaseConfig) => {
       throw new Error(error);
     }
 
-    await validateLogPathFilesystem(classicLogPath);
+    await validateLogPathFilesystem(classicLogPath, Phrase.ClassicLogPathLabel);
   }
 
   if (recordClassicPtr) {
@@ -431,7 +452,10 @@ const validateBaseConfig = async (config: BaseConfig) => {
       throw new Error(error);
     }
 
-    await validateLogPathFilesystem(classicPtrLogPath);
+    await validateLogPathFilesystem(
+      classicPtrLogPath,
+      Phrase.ClassicPtrLogPathLabel,
+    );
   }
 
   if (recordEra) {
@@ -450,7 +474,7 @@ const validateBaseConfig = async (config: BaseConfig) => {
       throw new Error(error);
     }
 
-    await validateLogPathFilesystem(eraLogPath);
+    await validateLogPathFilesystem(eraLogPath, Phrase.ClassicEraLogPathLabel);
   }
 };
 

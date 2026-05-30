@@ -65,7 +65,9 @@ const setupApplicationLogging = () => {
   return path.dirname(logPath);
 };
 
-const { exec } = require('child_process');
+const { exec, execFile } = require('child_process');
+
+const DRIVE_FORMAT_COMMAND = '[System.IO.DriveInfo]::new($args[0]).DriveFormat';
 
 const getResolvedHtmlPath = () => {
   if (process.env.NODE_ENV === 'development') {
@@ -751,6 +753,66 @@ const checkDisk = async (dir: string, req: number) => {
   }
 };
 
+const getWindowsRoot = (targetPath: string) => {
+  return path.win32.parse(path.win32.resolve(targetPath)).root;
+};
+
+const getDriveFormat = async (
+  targetPath: string,
+): Promise<string | undefined> => {
+  if (process.platform !== 'win32') {
+    return undefined;
+  }
+
+  const root = getWindowsRoot(targetPath);
+
+  return new Promise((resolve) => {
+    execFile(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-Command',
+        DRIVE_FORMAT_COMMAND,
+        root,
+      ],
+      { windowsHide: true },
+      (error, stdout, stderr) => {
+        if (error) {
+          console.warn('[Util] Failed to get drive format', targetPath);
+          console.warn(String(error));
+
+          if (stderr) {
+            console.warn(String(stderr).trim());
+          }
+
+          resolve(undefined);
+          return;
+        }
+
+        const driveFormat = String(stdout).trim();
+
+        if (!driveFormat) {
+          console.warn('[Util] Empty drive format returned', targetPath);
+          resolve(undefined);
+          return;
+        }
+
+        console.info('[Util] Drive format', targetPath, driveFormat);
+        resolve(driveFormat);
+      },
+    );
+  });
+};
+
+const isExFatPath = async (targetPath: string): Promise<boolean> => {
+  const driveFormat = await getDriveFormat(targetPath);
+
+  return driveFormat?.toLowerCase() === 'exfat';
+};
+
 /**
  * We use start as the preference here: the genuine start date of the activity.
  * It was only added for cloud support, so if it doesn't exist, fallback to
@@ -1197,4 +1259,6 @@ export {
   runFirstTimeSetupActionsNoObs,
   checkAdvancedCombatLogging,
   getConfigWtfPath,
+  getDriveFormat,
+  isExFatPath,
 };
