@@ -22,10 +22,10 @@ import {
   checkDisk,
   exists,
   getWowFlavour,
-  isNtfsPath,
   isFolderOwned,
   takeOwnershipBufferDir,
   takeOwnershipStorageDir,
+  getDriveFormat,
 } from 'main/util';
 
 const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
@@ -265,17 +265,31 @@ const validateLogPathFilesystem = async (
   logPath: string,
   logPathLabel: Phrase,
 ) => {
-  const isNtfs = await isNtfsPath(logPath);
+  const driveFormat = await getDriveFormat(logPath);
 
-  if (isNtfs) {
+  if (!driveFormat) {
+    // The above can return undefined. If it does just log it and move
+    // on. We don't want to block the whole setup if for example powershell
+    //  isn't available for some reason.
+    console.warn('[Util] Skipping NTFS filesystem check for', logPath);
     return;
   }
 
-  console.error('[Util] Unsupported filesystem for WoW log path', logPath);
-  const error = `${getLocaleError(logPathLabel)}: ${getLocaleError(
-    Phrase.UnsupportedWowFilesystem,
-  )}`;
-  throw new Error(error);
+  // NTFS is the only supported filesystem for reading the combat log from
+  // due to our reliance on the Node watch API for reading the combat log.
+  if (driveFormat.toLowerCase() !== 'ntfs') {
+    console.error(
+      '[Util] Unsupported filesystem for WoW log path',
+      driveFormat,
+      logPath,
+    );
+
+    const error = `${getLocaleError(logPathLabel)}: ${getLocaleError(
+      Phrase.UnsupportedWowFilesystem,
+    )}`;
+
+    throw new Error(error);
+  }
 };
 
 const validateBaseConfig = async (config: BaseConfig) => {

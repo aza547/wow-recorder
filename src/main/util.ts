@@ -33,14 +33,13 @@ import { send } from './main';
 import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
+import { exec, execFile } from 'child_process';
 import { specializationById, wowInstallSearchPaths } from './constants';
 import {
   getPlayerName,
   getPlayerSpecID,
   secToMmSs,
 } from 'renderer/rendererutils';
-
-const { exec, execFile } = require('child_process');
 
 /**
  * When packaged, we need to fix some paths
@@ -773,11 +772,10 @@ const getDriveFormat = async (
         '-ExecutionPolicy',
         'Bypass',
         '-Command',
-        '& { param([string]$DriveRoot) [System.IO.DriveInfo]::new($DriveRoot).DriveFormat }',
-        root,
+        `[System.IO.DriveInfo]::new("${root}").DriveFormat`,
       ],
       { windowsHide: true },
-      (error: Error | null, stdout: string, stderr: string) => {
+      (error, stdout, stderr) => {
         if (error) {
           console.warn(
             '[Util] Failed to get drive format',
@@ -798,21 +796,11 @@ const getDriveFormat = async (
           return;
         }
 
-        console.info('[Util] Drive format', targetPath, driveFormat);
+        console.info('[Util] Drive format', driveFormat, 'for', targetPath);
         resolve(driveFormat);
       },
     );
   });
-};
-
-const isNtfsPath = async (targetPath: string): Promise<boolean> => {
-  const driveFormat = await getDriveFormat(targetPath);
-
-  if (driveFormat && driveFormat.toLowerCase() === 'ntfs') {
-    return true;
-  }
-
-  return false;
 };
 
 /**
@@ -1262,5 +1250,4 @@ export {
   checkAdvancedCombatLogging,
   getConfigWtfPath,
   getDriveFormat,
-  isNtfsPath,
 };
