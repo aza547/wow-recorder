@@ -22,6 +22,7 @@ import {
   checkDisk,
   exists,
   getWowFlavour,
+  isNtfsPath,
   isFolderOwned,
   takeOwnershipBufferDir,
   takeOwnershipStorageDir,
@@ -260,6 +261,23 @@ const getLocaleError = (phrase: Phrase) => {
   return getLocalePhrase(lang, phrase);
 };
 
+const validateLogPathFilesystem = async (
+  logPath: string,
+  logPathLabel: Phrase,
+) => {
+  const isNtfs = await isNtfsPath(logPath);
+
+  if (isNtfs) {
+    return;
+  }
+
+  console.error('[Util] Unsupported filesystem for WoW log path', logPath);
+  const error = `${getLocaleError(logPathLabel)}: ${getLocaleError(
+    Phrase.UnsupportedWowFilesystem,
+  )}`;
+  throw new Error(error);
+};
+
 const validateBaseConfig = async (config: BaseConfig) => {
   const {
     storagePath,
@@ -358,6 +376,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidRetailLogPath);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(retailLogPath, Phrase.RetailLogPathLabel);
   }
 
   if (recordRetailPtr) {
@@ -375,6 +395,11 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidRetailPtrLogPathText);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(
+      retailPtrLogPath,
+      Phrase.RetailPtrLogPathLabel,
+    );
   }
 
   if (recordClassic) {
@@ -392,6 +417,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidClassicLogPath);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(classicLogPath, Phrase.ClassicLogPathLabel);
   }
 
   if (recordClassicPtr) {
@@ -408,6 +435,11 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidClassicPtrLogPath);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(
+      classicPtrLogPath,
+      Phrase.ClassicPtrLogPathLabel,
+    );
   }
 
   if (recordEra) {
@@ -425,6 +457,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
       const error = getLocaleError(Phrase.InvalidEraLogPath);
       throw new Error(error);
     }
+
+    await validateLogPathFilesystem(eraLogPath, Phrase.ClassicEraLogPathLabel);
   }
 };
 

@@ -40,6 +40,8 @@ import {
   secToMmSs,
 } from 'renderer/rendererutils';
 
+const { exec, execFile } = require('child_process');
+
 /**
  * When packaged, we need to fix some paths
  */
@@ -64,8 +66,6 @@ const setupApplicationLogging = () => {
   Object.assign(console, log.functions);
   return path.dirname(logPath);
 };
-
-const { exec } = require('child_process');
 
 const getResolvedHtmlPath = () => {
   if (process.env.NODE_ENV === 'development') {
@@ -751,6 +751,70 @@ const checkDisk = async (dir: string, req: number) => {
   }
 };
 
+const getWindowsRoot = (targetPath: string) => {
+  return path.win32.parse(path.win32.resolve(targetPath)).root;
+};
+
+const getDriveFormat = async (
+  targetPath: string,
+): Promise<string | undefined> => {
+  if (process.platform !== 'win32') {
+    return undefined;
+  }
+
+  const root = getWindowsRoot(targetPath);
+
+  return new Promise((resolve) => {
+    execFile(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-Command',
+        '& { param([string]$DriveRoot) [System.IO.DriveInfo]::new($DriveRoot).DriveFormat }',
+        root,
+      ],
+      { windowsHide: true },
+      (error: Error | null, stdout: string, stderr: string) => {
+        if (error) {
+          console.warn(
+            '[Util] Failed to get drive format',
+            targetPath,
+            String(error),
+            String(stderr).trim(),
+          );
+
+          resolve(undefined);
+          return;
+        }
+
+        const driveFormat = String(stdout).trim();
+
+        if (!driveFormat) {
+          console.warn('[Util] Empty drive format returned', targetPath);
+          resolve(undefined);
+          return;
+        }
+
+        console.info('[Util] Drive format', targetPath, driveFormat);
+        resolve(driveFormat);
+      },
+    );
+  });
+};
+
+const isNtfsPath = async (targetPath: string): Promise<boolean> => {
+  const driveFormat = await getDriveFormat(targetPath);
+
+  if (driveFormat && driveFormat.toLowerCase() === 'ntfs') {
+    return true;
+  }
+
+  return false;
+};
+
 /**
  * We use start as the preference here: the genuine start date of the activity.
  * It was only added for cloud support, so if it doesn't exist, fallback to
@@ -1197,4 +1261,6 @@ export {
   runFirstTimeSetupActionsNoObs,
   checkAdvancedCombatLogging,
   getConfigWtfPath,
+  getDriveFormat,
+  isNtfsPath,
 };

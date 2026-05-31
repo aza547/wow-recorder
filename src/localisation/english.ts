@@ -330,6 +330,8 @@ const ENGLISH: Translations = {
   [Phrase.InvalidClassicLogPath]: 'Invalid classic log path.',
   [Phrase.InvalidClassicPtrLogPath]: 'Invalid classic PTR log path.',
   [Phrase.InvalidEraLogPath]: 'Invalid classic era log path.',
+  [Phrase.UnsupportedWowFilesystem]:
+    'The configured WoW log path is not on an NTFS drive. Combat log updates can be unreliable on other filesystems. Move WoW to an NTFS drive and update this path.',
   [Phrase.SelectAnOutputDevice]: 'Select an output device',
   [Phrase.SelectAnInputDevice]: 'Select an input device',
   [Phrase.ClickToSelectAll]: 'Click to select all',
