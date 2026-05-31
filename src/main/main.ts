@@ -198,6 +198,9 @@ const createWindow = async () => {
     },
   });
 
+  // Prevent Windows from opening the native window menu on draggable regions.
+  window.on('system-context-menu', (event) => event.preventDefault());
+
   // We need to do this AFTER creating the window as it's used by the preview.
   Recorder.getInstance().initializeObs();
   await manager.startup();
