@@ -267,7 +267,7 @@ const validateLogPathFilesystem = async (
 ) => {
   const isNtfs = await isNtfsPath(logPath);
 
-  if (isNtfs !== false) {
+  if (isNtfs) {
     return;
   }
 

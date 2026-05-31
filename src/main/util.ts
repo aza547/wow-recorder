@@ -40,6 +40,8 @@ import {
   secToMmSs,
 } from 'renderer/rendererutils';
 
+const { exec, execFile } = require('child_process');
+
 /**
  * When packaged, we need to fix some paths
  */
@@ -64,10 +66,6 @@ const setupApplicationLogging = () => {
   Object.assign(console, log.functions);
   return path.dirname(logPath);
 };
-
-const { exec, execFile } = require('child_process');
-
-const DRIVE_FORMAT_COMMAND = '[System.IO.DriveInfo]::new($args[0]).DriveFormat';
 
 const getResolvedHtmlPath = () => {
   if (process.env.NODE_ENV === 'development') {
@@ -775,18 +773,18 @@ const getDriveFormat = async (
         '-ExecutionPolicy',
         'Bypass',
         '-Command',
-        DRIVE_FORMAT_COMMAND,
+        '[System.IO.DriveInfo]::new($args[0]).DriveFormat',
         root,
       ],
       { windowsHide: true },
-      (error, stdout, stderr) => {
+      (error: Error | null, stdout: string, stderr: string) => {
         if (error) {
-          console.warn('[Util] Failed to get drive format', targetPath);
-          console.warn(String(error));
-
-          if (stderr) {
-            console.warn(String(stderr).trim());
-          }
+          console.warn(
+            '[Util] Failed to get drive format',
+            targetPath,
+            String(error),
+            String(stderr).trim(),
+          );
 
           resolve(undefined);
           return;
@@ -807,10 +805,14 @@ const getDriveFormat = async (
   });
 };
 
-const isNtfsPath = async (targetPath: string): Promise<boolean | undefined> => {
+const isNtfsPath = async (targetPath: string): Promise<boolean> => {
   const driveFormat = await getDriveFormat(targetPath);
 
-  return driveFormat ? driveFormat.toLowerCase() === 'ntfs' : undefined;
+  if (driveFormat && driveFormat.toLowerCase() === 'ntfs') {
+    return true;
+  }
+
+  return false;
 };
 
 /**
