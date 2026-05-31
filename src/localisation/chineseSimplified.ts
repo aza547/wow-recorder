@@ -277,6 +277,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Depleted]: '未限时',
   [Phrase.AreYouSure]: '确定吗？',
   [Phrase.ThisWillPermanentlyDelete]: '这将永久删除',
+  [Phrase.DeleteSelectionContainsLocked]: '此选择包含已锁定的录制，也将被删除。',
   [Phrase.Recordings]: '个录制文件',
   [Phrase.From]: '从',
   [Phrase.Rows]: '行',

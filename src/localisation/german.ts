@@ -277,6 +277,7 @@ const GERMAN: Translations = {
   [Phrase.Depleted]: 'Depleted',
   [Phrase.AreYouSure]: 'Bist du dir sicher?',
   [Phrase.ThisWillPermanentlyDelete]: 'Die Löschung ist permanent.',
+  [Phrase.DeleteSelectionContainsLocked]: 'Diese Auswahl enthält gesperrte Aufnahmen, die ebenfalls gelöscht werden.',
   [Phrase.Recordings]: 'Aufnahme(n)',
   [Phrase.From]: 'aus',
   [Phrase.Rows]: 'Reihe(n)',

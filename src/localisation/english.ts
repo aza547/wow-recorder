@@ -283,6 +283,7 @@ const ENGLISH: Translations = {
   [Phrase.Depleted]: 'Depleted',
   [Phrase.AreYouSure]: 'Are you sure?',
   [Phrase.ThisWillPermanentlyDelete]: 'This will permanently delete',
+  [Phrase.DeleteSelectionContainsLocked]: 'This selection contains locked recordings which will also be deleted.',
   [Phrase.Recordings]: 'recording(s)',
   [Phrase.From]: 'from',
   [Phrase.Rows]: 'row(s)',

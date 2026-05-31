@@ -283,6 +283,7 @@ enum Phrase {
   Depleted,
   AreYouSure,
   ThisWillPermanentlyDelete,
+  DeleteSelectionContainsLocked,
   Recordings,
   From,
   Rows,

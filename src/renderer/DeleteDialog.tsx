@@ -62,6 +62,8 @@ const DeleteDialog = ({
     }),
   ]);
 
+  const inScopeLocked = inScope.filter((video) => video.isProtected);
+
   const [rowSelection, setRowSelection] = useState({});
 
   // Initialize all the rows to be selected by default.
@@ -157,7 +159,16 @@ const DeleteDialog = ({
       Phrase.From,
     )} ${Math.max(selectedRowCount, 1)} ${getLocalePhrase(language, Phrase.Rows)}.`;
 
-    return <div className="text-sm">{warning}</div>;
+    return (
+      <div className="text-sm">
+        <p>{warning}</p>
+        {inScopeLocked.length > 0 && (
+          <p className="text-destructive">
+            {getLocalePhrase(language, Phrase.DeleteSelectionContainsLocked)}
+          </p>
+        )}
+      </div>
+    );
   };
 
   const doDelete = () => {
