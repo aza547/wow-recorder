@@ -300,7 +300,7 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
   const metadataFileName = getMetadataFileNameForVideo(videoPath);
   const jsonString = JSON.stringify(metadata, null, 2);
 
-  fspromise.writeFile(metadataFileName, jsonString, {
+  await fspromise.writeFile(metadataFileName, jsonString, {
     encoding: 'utf-8',
   });
 };
