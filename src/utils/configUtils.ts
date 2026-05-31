@@ -270,13 +270,13 @@ const validateLogPathFilesystem = async (
   if (!driveFormat) {
     // The above can return undefined. If it does just log it and move
     // on. We don't want to block the whole setup if for example powershell
-    //  isn't available for some reason.
+    // isn't available for some reason.
     console.warn('[Util] Skipping NTFS filesystem check for', logPath);
     return;
   }
 
-  // NTFS is the only supported filesystem for reading the combat log from
-  // due to our reliance on the Node watch API for reading the combat log.
+  // NTFS is the only supported filesystem for reading the combat log due
+  // to our reliance on the Node watch API.
   if (driveFormat.toLowerCase() !== 'ntfs') {
     console.error(
       '[Util] Unsupported filesystem for WoW log path',
