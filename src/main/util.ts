@@ -773,7 +773,7 @@ const getDriveFormat = async (
         '-ExecutionPolicy',
         'Bypass',
         '-Command',
-        '[System.IO.DriveInfo]::new($args[0]).DriveFormat',
+        '& { param([string]$DriveRoot) [System.IO.DriveInfo]::new($DriveRoot).DriveFormat }',
         root,
       ],
       { windowsHide: true },
