@@ -57,6 +57,7 @@ import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
 import VideoChat from './VideoChat';
 import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
+import { findVideoChatViewpoint } from './videoChatLinks';
 
 interface IProps {
   category: VideoCategory;
@@ -193,7 +194,10 @@ const CategoryPage = (props: IProps) => {
     };
   }, [playerHeight]);
 
-  const renderChat = (video: RendererVideo | undefined) => {
+  const renderChat = (
+    video: RendererVideo | undefined,
+    availablePovs: RendererVideo[],
+  ) => {
     if (!video) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center text-foreground text-sm font-bold">
@@ -213,13 +217,56 @@ const CategoryPage = (props: IProps) => {
       );
     }
 
+    const handleTimestampClick = (seconds: number, viewpoint?: string) => {
+      if (!viewpoint) {
+        videoPlayerRef.current?.seekAllPlayersTo(seconds);
+        return;
+      }
+
+      const target = findVideoChatViewpoint(availablePovs, viewpoint);
+
+      if (!target) {
+        // Keep timestamp-only behavior if the named POV is not available in
+        // this activity, so old messages and typos still seek usefully.
+        videoPlayerRef.current?.seekAllPlayersTo(seconds);
+        return;
+      }
+
+      // With no explicit selection, VideoPlayer renders the first active POV.
+      // Treat that fallback as selected so a self-link seeks immediately.
+      const currentSinglePov =
+        selectedVideos.length === 1 ? selectedVideos[0] : availablePovs[0];
+
+      const alreadySelected =
+        selectedVideos.length <= 1 &&
+        currentSinglePov.videoName === target.videoName &&
+        currentSinglePov.cloud === target.cloud;
+
+      if (alreadySelected) {
+        videoPlayerRef.current?.seekAllPlayersTo(seconds);
+        return;
+      }
+
+      persistentProgress.current = seconds;
+
+      // Switching videos remounts VideoPlayer; persistentProgress carries the
+      // clicked timestamp into the new POV's initial seek.
+      setAppState((prevState) => ({
+        ...prevState,
+        selectedVideos: [target],
+        multiPlayerMode: false,
+        preferredViewpoint:
+          target.player?._name || prevState.preferredViewpoint,
+      }));
+    };
+
     return (
       <VideoChat
         key={video.videoName}
-        videoPlayerRef={videoPlayerRef}
         video={video}
         language={language}
         deletePermissions={del}
+        onTimestampClick={handleTimestampClick}
       />
     );
   };
@@ -246,11 +293,15 @@ const CategoryPage = (props: IProps) => {
 
     const activeParentVideo = selectedRow
       ? selectedRow.original
-      : filteredState[0];
+      : filteredState[0] || categoryState[0];
+
+    const activePovs = [activeParentVideo, ...activeParentVideo.multiPov].sort(
+      povDiskFirstNameSort,
+    );
 
     // Only try to find a chat video if we have a video with cloud storage,
     // a start time and a hash, else we cannot find the chat correlator.
-    const chatVideo = [activeParentVideo, ...activeParentVideo.multiPov].find(
+    const chatVideo = activePovs.find(
       (rv) => rv.cloud && rv.uniqueHash && rv.start,
     );
 
@@ -295,7 +346,7 @@ const CategoryPage = (props: IProps) => {
             persistentProgress={persistentProgress}
           />
         </div>
-        {renderChat(chatVideo)}
+        {renderChat(chatVideo, activePovs)}
       </div>
     );
   };

@@ -1,31 +1,31 @@
 import { MessageSquare, SendHorizontal, Unplug, X } from 'lucide-react';
 import { Textarea } from './components/TextArea/textarea';
 import { Button } from './components/Button/Button';
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RendererVideo } from 'main/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircularProgress } from '@mui/material';
 import { ChatMessageWithId, TChatMessageWithId } from 'types/api';
 import { Tooltip } from './components/Tooltip/Tooltip';
-import { VideoPlayerRef } from './VideoPlayer';
 import { getLocalePhrase, Language } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
 import { z } from 'zod';
+import { parseVideoChatMessageLinks } from './videoChatLinks';
 
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   video: RendererVideo;
-  videoPlayerRef: RefObject<VideoPlayerRef | null>;
   language: Language;
   deletePermissions: boolean;
+  onTimestampClick: (seconds: number, viewpoint?: string) => void;
 }
 
 /**
  * A page representing a video category.
  */
 const VideoChat = (props: IProps) => {
-  const { video, videoPlayerRef, language, deletePermissions } = props;
+  const { video, language, deletePermissions, onTimestampClick } = props;
   const [message, setMessage] = useState<string>('');
   const chatRef = useRef<HTMLDivElement>(null);
   const correlatorRef = useRef<string | null>(null);
@@ -130,41 +130,25 @@ const VideoChat = (props: IProps) => {
   };
 
   const processMessageContent = (msg: string) => {
-    const timestampRegex = /\b(\d{1,2}):(\d{2})\b/g;
-    const parts: React.ReactNode[] = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = timestampRegex.exec(msg)) !== null) {
-      const [fullMatch, minutes, seconds] = match;
-      const index = match.index;
-
-      if (index > lastIndex) {
-        parts.push(msg.slice(lastIndex, index)); // text before timestamp
+    const parts = parseVideoChatMessageLinks(msg).map((part, index) => {
+      if (part.type === 'text') {
+        return part.text;
       }
 
-      parts.push(
+      return (
         <Button
           variant="secondary"
           className="px-1 m-0 h-5"
           size="xs"
           key={index}
           onClick={() => {
-            videoPlayerRef.current?.seekAllPlayersTo(
-              parseInt(minutes) * 60 + parseInt(seconds),
-            );
+            onTimestampClick(part.seconds, part.viewpoint);
           }}
         >
-          {fullMatch}
-        </Button>,
+          {part.text}
+        </Button>
       );
-
-      lastIndex = index + fullMatch.length;
-    }
-
-    if (lastIndex < msg.length) {
-      parts.push(msg.slice(lastIndex));
-    }
+    });
 
     return <div className="pl-2">{parts}</div>;
   };
