@@ -18,6 +18,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import { ESupportedEncoders } from '../main/obsEnums';
 import { Language, Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
+import { isWindows } from 'main/platform';
 import {
   checkDisk,
   exists,
@@ -266,6 +267,12 @@ const validateLogPathFilesystem = async (
   logPath: string,
   logPathLabel: Phrase,
 ) => {
+  // The NTFS check only applies to Windows. On Linux, inotify operates at
+  // the VFS layer and works reliably on all common filesystems, including FAT/exFAT.
+  if (!isWindows) {
+    return;
+  }
+
   const driveFormat = await getDriveFormat(logPath);
 
   if (!driveFormat) {
@@ -277,7 +284,7 @@ const validateLogPathFilesystem = async (
   }
 
   // NTFS is the only supported filesystem for reading the combat log due
-  // to our reliance on the Node watch API.
+  // to our reliance on the Node watch API on Windows.
   if (driveFormat.toLowerCase() !== 'ntfs') {
     console.error(
       '[Util] Unsupported filesystem for WoW log path',

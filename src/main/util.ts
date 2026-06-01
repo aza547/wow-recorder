@@ -33,7 +33,8 @@ import { send } from './main';
 import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
-import { exec, execFile } from 'child_process';
+import { execFile } from 'child_process';
+import { isWindows } from './platform';
 import { specializationById, wowInstallSearchPaths } from './constants';
 import {
   getPlayerName,
@@ -761,13 +762,9 @@ const getWindowsRoot = (targetPath: string) => {
   return path.win32.parse(path.win32.resolve(targetPath)).root;
 };
 
-const getDriveFormat = async (
+const getDriveFormatWindows = (
   targetPath: string,
 ): Promise<string | undefined> => {
-  if (process.platform !== 'win32') {
-    return undefined;
-  }
-
   const root = getWindowsRoot(targetPath);
 
   return new Promise((resolve) => {
@@ -808,6 +805,19 @@ const getDriveFormat = async (
       },
     );
   });
+};
+
+const getDriveFormat = async (
+  targetPath: string,
+): Promise<string | undefined> => {
+  // this is only used on windows.
+  // if this is needed on other platforms (eg, linux) in the future
+  // this can be accomplished via shelling out to findmnt
+  if (isWindows) {
+    return getDriveFormatWindows(targetPath);
+  }
+  console.error('[Util] getDriveFormat called on non-Windows platform');
+  return undefined;
 };
 
 /**
