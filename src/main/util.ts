@@ -33,6 +33,7 @@ import { send } from './main';
 import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
+import { exec, execFile } from 'child_process';
 import { specializationById, wowInstallSearchPaths } from './constants';
 import {
   getPlayerName,
@@ -73,8 +74,6 @@ const setupApplicationLogging = () => {
   Object.assign(console, log.functions);
   return path.dirname(logPath);
 };
-
-const { exec } = require('child_process');
 
 const getResolvedHtmlPath = () => {
   if (process.env.NODE_ENV === 'development') {
@@ -309,7 +308,7 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
   const metadataFileName = getMetadataFileNameForVideo(videoPath);
   const jsonString = JSON.stringify(metadata, null, 2);
 
-  fspromise.writeFile(metadataFileName, jsonString, {
+  await fspromise.writeFile(metadataFileName, jsonString, {
     encoding: 'utf-8',
   });
 };
@@ -756,6 +755,59 @@ const checkDisk = async (dir: string, req: number) => {
     console.error(`Disk check failed: ${msg}`);
     throw new Error(msg);
   }
+};
+
+const getWindowsRoot = (targetPath: string) => {
+  return path.win32.parse(path.win32.resolve(targetPath)).root;
+};
+
+const getDriveFormat = async (
+  targetPath: string,
+): Promise<string | undefined> => {
+  if (process.platform !== 'win32') {
+    return undefined;
+  }
+
+  const root = getWindowsRoot(targetPath);
+
+  return new Promise((resolve) => {
+    execFile(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-Command',
+        `[System.IO.DriveInfo]::new("${root}").DriveFormat`,
+      ],
+      { windowsHide: true },
+      (error, stdout, stderr) => {
+        if (error) {
+          console.warn(
+            '[Util] Failed to get drive format',
+            targetPath,
+            String(error),
+            String(stderr).trim(),
+          );
+
+          resolve(undefined);
+          return;
+        }
+
+        const driveFormat = String(stdout).trim();
+
+        if (!driveFormat) {
+          console.warn('[Util] Empty drive format returned', targetPath);
+          resolve(undefined);
+          return;
+        }
+
+        console.info('[Util] Drive format', driveFormat, 'for', targetPath);
+        resolve(driveFormat);
+      },
+    );
+  });
 };
 
 /**
@@ -1205,4 +1257,5 @@ export {
   runFirstTimeSetupActionsNoObs,
   checkAdvancedCombatLogging,
   getConfigWtfPath,
+  getDriveFormat,
 };

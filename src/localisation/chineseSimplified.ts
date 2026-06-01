@@ -277,6 +277,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Depleted]: '未限时',
   [Phrase.AreYouSure]: '确定吗？',
   [Phrase.ThisWillPermanentlyDelete]: '这将永久删除',
+  [Phrase.DeleteSelectionContainsLocked]: '此选择包含已锁定的录制，也将被删除。',
   [Phrase.Recordings]: '个录制文件',
   [Phrase.From]: '从',
   [Phrase.Rows]: '行',
@@ -322,6 +323,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.InvalidRetailLogPath]: '无效的正式服日志路径。',
   [Phrase.InvalidClassicLogPath]: '无效的怀旧服日志路径。',
   [Phrase.InvalidEraLogPath]: '无效的经典旧世服日志路径。',
+  [Phrase.UnsupportedWowFilesystem]:
+    '配置的 WoW 日志路径不在 NTFS 驱动器上。其他文件系统上的战斗日志更新可能不可靠。请将 WoW 移动到 NTFS 驱动器并更新此路径。',
   [Phrase.SelectAnOutputDevice]: '请选择一个输出设备',
   [Phrase.SelectAnInputDevice]: '请选择一个输入设备',
   [Phrase.ClickToSelectAll]: '单击以选择全部',

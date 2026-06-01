@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 767](https://github.com/aza547/wow-recorder/issues/767) - Detect if WoW is on non-NTFS filesystem during configuration. Other filesystems, in particular exFAT are known not to work correctly with the Node watch API, which is used as the mechanism for reading combat log events.
 - Improve the disk space check error message to accurately reflect the space requirement when accounting for stored videos.
+- Add warning when delete selection contains locked videos.
 
 ## [7.7.2] - 2026-05-24
 ### Fixed

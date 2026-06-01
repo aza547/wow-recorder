@@ -277,6 +277,7 @@ const GERMAN: Translations = {
   [Phrase.Depleted]: 'Depleted',
   [Phrase.AreYouSure]: 'Bist du dir sicher?',
   [Phrase.ThisWillPermanentlyDelete]: 'Die Löschung ist permanent.',
+  [Phrase.DeleteSelectionContainsLocked]: 'Diese Auswahl enthält gesperrte Aufnahmen, die ebenfalls gelöscht werden.',
   [Phrase.Recordings]: 'Aufnahme(n)',
   [Phrase.From]: 'aus',
   [Phrase.Rows]: 'Reihe(n)',
@@ -322,6 +323,8 @@ const GERMAN: Translations = {
   [Phrase.InvalidRetailLogPath]: 'Ungültiger Retail Log Pfad.',
   [Phrase.InvalidClassicLogPath]: 'Ungültiger Classic Log Pfad.',
   [Phrase.InvalidEraLogPath]: 'Ungültiger Classic Era Log Pfad.',
+  [Phrase.UnsupportedWowFilesystem]:
+    'Der konfigurierte WoW-Logpfad befindet sich nicht auf einem NTFS-Laufwerk. Aktualisierungen des Kampflogs können auf anderen Dateisystemen unzuverlässig sein. Verschiebe WoW auf ein NTFS-Laufwerk und aktualisiere diesen Pfad.',
   [Phrase.SelectAnOutputDevice]: 'Wähle ein Audioausgabegerät',
   [Phrase.SelectAnInputDevice]: 'Wähle ein Audioeingabegerät.',
   [Phrase.ClickToSelectAll]: 'Klicken Sie, um alle auszuwählen',
