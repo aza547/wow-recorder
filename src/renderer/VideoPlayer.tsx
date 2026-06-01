@@ -62,6 +62,7 @@ import CloudOffIcon from '@mui/icons-material/CloudOff';
 import Separator from './components/Separator/Separator';
 import { toast } from './components/Toast/useToast';
 import { Phrase } from 'localisation/phrases';
+import { copyTextPromiseToClipboard } from './clipboard';
 
 interface IProps {
   videos: RendererVideo[];
@@ -1041,7 +1042,18 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     if (!cloudVideo) return;
 
     try {
-      await ipc.invoke('getShareableLink', [cloudVideo.videoName]);
+      const shareableLinkPromise = ipc.invoke('getShareableLink', [
+        cloudVideo.videoName,
+      ]) as Promise<string>;
+
+      // Do not await the link before starting the clipboard write. iOS Safari
+      // requires the write call to begin in the original click handler.
+      await copyTextPromiseToClipboard(shareableLinkPromise).catch(async () => {
+        // The main process also writes this link to the clipboard in Electron.
+        // If the browser clipboard path is unavailable, keep desktop behavior.
+        await shareableLinkPromise;
+      });
+
       toast({
         title: getLocalePhrase(appState.language, Phrase.ShareableLinkTitle),
         description: getLocalePhrase(
