@@ -20,11 +20,11 @@ import {
   TimelineSegmentType,
 } from '../main/keystone';
 
-import { Flavour } from '../main/types';
+import { Flavour, PlayerDeathType } from '../main/types';
 import SoloShuffle from '../activitys/SoloShuffle';
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
-import { isUnitSelf } from './logutils';
+import { isUnitFriendly, isUnitSelf } from './logutils';
 import ConfigService from 'config/ConfigService';
 import RaidEncounter from 'activitys/RaidEncounter';
 
@@ -519,6 +519,27 @@ export default class RetailLogHandler extends LogHandler {
     // have a partially defined combatant. See issue 650 & 683.
     const allowNew = this.isBattleground() || isUnitSelf(srcFlags);
     this.processCombatant(srcGUID, srcNameRealm, srcFlags, allowNew);
+
+    const id = parseInt(line.arg(9), 10);
+
+    if (id === 211319) {
+      console.log("SAW REST", id);
+      // This is the Holy priest "Restitution" debuff being applied, count
+      // that as a death (https://www.wowhead.com/spell=211319).
+      const deathDate = (line.date().getTime() - 2) / 1000;
+      const activityStartDate = LogHandler.activity.startDate.getTime() / 1000;
+      const relativeTime = deathDate - activityStartDate;
+
+      const playerDeath: PlayerDeathType = {
+        name: srcNameRealm,
+        specId: 257, // Must be a holy priest.
+        date: line.date(),
+        timestamp: relativeTime,
+        friendly: isUnitFriendly(srcFlags),
+      };
+
+      LogHandler.activity.addDeath(playerDeath);
+    }
   }
 
   private handleSpellCastStart(line: LogLine) {
