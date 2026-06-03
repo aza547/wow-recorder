@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - [Issue 767](https://github.com/aza547/wow-recorder/issues/767) - Detect if WoW is on non-NTFS filesystem during configuration. Other filesystems, in particular exFAT are known not to work correctly with the Node watch API, which is used as the mechanism for reading combat log events.
-- [Issue 690](https://github.com/aza547/wow-recorder/issues/690) - Adds Holy priest guardian deaths to metdata and video progress bar tracking.
+- [Issue 690](https://github.com/aza547/wow-recorder/issues/690) - Adds Holy priest guardian deaths to video metadata and video progress bar tracking.
 - Improve the disk space check error message to accurately reflect the space requirement when accounting for stored videos.
 - Add warning when delete selection contains locked videos.
 
