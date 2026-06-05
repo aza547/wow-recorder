@@ -80,24 +80,6 @@ export default class ClassicLogHandler extends LogHandler {
       return;
     }
 
-    const isEnemyCombatant = combatant.teamID === 0;
-
-    // If it's the first time we have spotted an enemy combatant in arena,
-    // then the gates have just opened. Adjust the activity start time.
-    if (this.isArena() && !alreadyKnowCombatant && isEnemyCombatant) {
-      const combatants = LogHandler.activity.combatantMap.values();
-      const enemyCombatants = [...combatants].filter((c) => c.teamID === 0);
-
-      if (enemyCombatants.length === 1) {
-        const newStartDate = line.date();
-        console.info(
-          '[ClassicLogHandler] Adjusting game start date:',
-          newStartDate,
-        );
-        LogHandler.activity.startDate = newStartDate;
-      }
-    }
-
     if (combatant.specID === undefined) {
       const knownSpell = Object.prototype.hasOwnProperty.call(
         classicUniqueSpecAuras,
