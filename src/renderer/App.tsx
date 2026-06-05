@@ -13,7 +13,6 @@ import {
   StorageFilter,
   ActivityStatus,
   AdvancedLoggingStatus,
-  KillVideoStatus,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language } from 'localisation/translations';
@@ -74,6 +73,9 @@ const WarcraftRecorder = () => {
 
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
+  // Platform detection - fetched synchronously so it's correct from first render.
+  const osPlatform = ipc.getPlatform();
+
   const [appState, setAppState] = useState<AppState>({
     // Navigation.
     page: Pages.None,
@@ -127,6 +129,10 @@ const WarcraftRecorder = () => {
     // This is updated when a user switches viewpoint to in the viewpoint
     // selector to remember their preference when changing rows in the table.
     preferredViewpoint: '',
+
+    platform: osPlatform,
+    isLinux: osPlatform === 'linux',
+    isWindows: osPlatform === 'win32',
   });
 
   // The video state contains most of the frontend state.

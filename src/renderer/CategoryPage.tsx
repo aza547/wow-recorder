@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { AppState, RendererVideo } from 'main/types';
+import { AppState, Pages, RendererVideo } from 'main/types';
 import {
   Dispatch,
   MutableRefObject,
   SetStateAction,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -109,7 +110,17 @@ const CategoryPage = (props: IProps) => {
   }, [correlatedState, dateRangeFilter, videoFilterTags, language]);
 
   // The data backing the video selection table.
-  const table = useTable(filteredState, appState, setVideoState);
+  const openSettings = useCallback(
+    () => setAppState((prev) => ({ ...prev, page: Pages.Settings })),
+    [setAppState],
+  );
+  const table = useTable(
+    filteredState,
+    appState,
+    setVideoState,
+    config.hevcTranscodeEnabled,
+    openSettings,
+  );
 
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;

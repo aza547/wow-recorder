@@ -58,6 +58,8 @@ const useTable = (
   videoState: RendererVideo[],
   appState: AppState,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
+  hevcTranscodeEnabled: boolean,
+  onOpenSettings: () => void,
 ) => {
   const {
     category,
@@ -155,10 +157,25 @@ const useTable = (
         accessorFn: (v) => v,
         sortingFn: (a, b) => creatorSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateCreatorCell(ctx, language),
+        cell: (ctx) =>
+          populateCreatorCell(
+            ctx,
+            language,
+            appState.isLinux,
+            hevcTranscodeEnabled,
+            onOpenSettings,
+          ),
       },
     ],
-    [language, cloudStatus, videoState, setVideoState],
+    [
+      language,
+      cloudStatus,
+      videoState,
+      setVideoState,
+      appState.isLinux,
+      hevcTranscodeEnabled,
+      onOpenSettings,
+    ],
   );
 
   /**

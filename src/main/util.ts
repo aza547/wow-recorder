@@ -6,7 +6,7 @@ import fs, {
   promises as fspromise,
   Stats,
 } from 'fs';
-import { app, Display, screen } from 'electron';
+import { app, Display, screen, shell } from 'electron';
 import {
   EventType,
   uIOhook,
@@ -33,7 +33,8 @@ import { send } from './main';
 import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
 import Recorder from './Recorder';
-import { exec, execFile } from 'child_process';
+import { execFile } from 'child_process';
+import { isWindows } from './platform';
 import { specializationById, wowInstallSearchPaths } from './constants';
 import {
   getPlayerName,
@@ -58,9 +59,18 @@ const fixPathWhenPackaged = (p: string) => {
  */
 const setupApplicationLogging = () => {
   const log = require('electron-log');
-  const date = new Date().toISOString().slice(0, 10);
-  const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
-  const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath));
+
+  // always use local time for the file names
+  const now = new Date();
+  const date = `${now.getFullYear()}-${String(now.getMonth() + 1)
+    .padStart(2, '0')}-${String(now.getDate())
+    .padStart(2, '0')}`;
+
+  const logFileName = `WarcraftRecorder-${date}.log`;
+
+  const logPath = app.isPackaged
+    ? path.join(app.getPath('logs'), logFileName)
+    : fixPathWhenPackaged(path.join(__dirname, 'logs', logFileName));
   log.transports.file.resolvePath = () => logPath;
   Object.assign(console, log.functions);
   return path.dirname(logPath);
@@ -308,9 +318,7 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
  * Open a folder in system explorer.
  */
 const openSystemExplorer = (filePath: string) => {
-  const windowsPath = filePath.replace(/\//g, '\\');
-  const cmd = `explorer.exe /select,"${windowsPath}"`;
-  exec(cmd, () => {});
+  shell.showItemInFolder(filePath);
 };
 
 /**
@@ -754,13 +762,9 @@ const getWindowsRoot = (targetPath: string) => {
   return path.win32.parse(path.win32.resolve(targetPath)).root;
 };
 
-const getDriveFormat = async (
+const getDriveFormatWindows = (
   targetPath: string,
 ): Promise<string | undefined> => {
-  if (process.platform !== 'win32') {
-    return undefined;
-  }
-
   const root = getWindowsRoot(targetPath);
 
   return new Promise((resolve) => {
@@ -801,6 +805,19 @@ const getDriveFormat = async (
       },
     );
   });
+};
+
+const getDriveFormat = async (
+  targetPath: string,
+): Promise<string | undefined> => {
+  // this is only used on windows.
+  // if this is needed on other platforms (eg, linux) in the future
+  // this can be accomplished via shelling out to findmnt
+  if (isWindows) {
+    return getDriveFormatWindows(targetPath);
+  }
+  console.error('[Util] getDriveFormat called on non-Windows platform');
+  return undefined;
 };
 
 /**
@@ -942,6 +959,7 @@ const takeOwnershipStorageDir = async (dir: string) => {
     .filter((file) => !file.endsWith('.json'))
     .filter((file) => !file.endsWith('.png'))
     .filter((file) => file !== '.temp')
+    .filter((file) => file !== '.playback-cache')
     .filter((file) => file !== 'managed.txt')
     .filter((file) => file !== 'desktop.ini');
 

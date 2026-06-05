@@ -35,6 +35,8 @@ import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
+import { ensureAutostartPath, isLinux } from './platform';
+import PlaybackTranscoder from './PlaybackTranscoder';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -205,6 +207,9 @@ const createWindow = async () => {
   Recorder.getInstance().initializeObs();
   await manager.startup();
 
+  // [linux] ensure autostart points to the current appimage
+  ensureAutostartPath(cfg.get<boolean>('startUp'));
+
   if (firstTimeSetup) {
     console.info('[Main] Run first time setup actions');
     runFirstTimeSetupActionsObs();
@@ -368,7 +373,12 @@ ipcMain.handle('selectImage', async () => {
 
   const result = await dialog.showOpenDialog(window, {
     properties: ['openFile'],
-    filters: [{ name: 'Images', extensions: ['gif', 'png'] }],
+    filters: [
+      {
+        name: 'Images',
+        extensions: ['gif', 'png', ...(isLinux ? ['jpg'] : [])],
+      },
+    ],
   });
 
   if (result.canceled) {
@@ -423,6 +433,13 @@ ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
   return getAvailableDisplays();
 });
 
+/**
+ * Get the current platform and make it available to the renderer.
+ */
+ipcMain.on('getPlatform', (event) => {
+  event.returnValue = process.platform;
+});
+
 const refreshCloudGuilds = async () => {
   console.info('[Main] Frontend triggered cloud guilds refresh');
   const client = CloudClient.getInstance();
@@ -450,6 +467,61 @@ ipcMain.on('postChatMessage', (event, correlator, message) => {
 ipcMain.on('deleteChatMessage', (event, id) => {
   const client = CloudClient.getInstance();
   client.deleteChatMessage(id);
+});
+
+/**
+ * Resolve a playable source for the renderer. On Linux, HEVC sources are
+ * transcoded to H.264 in a disk cache and a vod:// URL to the cache file is
+ * returned. On other platforms, this is a no-op that wraps the original source in vod://
+ * or returns the https:// URL verbatim.
+ *
+ * The renderer is the source of truth for whether the video is HEVC, derived
+ * from `RendererVideo.encoder` via `isHevcEncoder`. Old videos predating the
+ * encoder metadata field are passed in as `isHevc=false` and will skip the
+ * transcode.
+ *
+ * In-progress transcodes status is published on the
+ * 'videoTranscodeProgress' channel.
+ */
+ipcMain.handle('videoPrepareForPlayback', async (_event, args) => {
+  if (!Array.isArray(args) || typeof args[0] !== 'string') {
+    console.error('[Main] videoPrepareForPlayback bad args:', args);
+    return { playableSource: '', error: 'bad args' };
+  }
+  const source = args[0] as string;
+  const cacheKey = (typeof args[1] === 'string' ? args[1] : source) as string;
+  const isHevc = args[2] === true;
+  try {
+    return await PlaybackTranscoder.getInstance().prepareForPlayback(
+      source,
+      cacheKey,
+      isHevc,
+    );
+  } catch (err) {
+    console.error('[Main] videoPrepareForPlayback failed:', err);
+    // Fall back to a best-effort source rather than crashing
+    const fallback = source.startsWith('https://')
+      ? source
+      : `vod://wcr/${source}`;
+    return {
+      playableSource: fallback,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+});
+
+/**
+ * Cancel an in progress playback transcode. Used when a
+ * video selection is chaganged mid-transcode.
+ */
+ipcMain.on('videoCancelTranscode', (_event, args) => {
+  if (!Array.isArray(args) || typeof args[0] !== 'string') return;
+  PlaybackTranscoder.getInstance().cancel(args[0]);
+});
+
+// Cancel all in-flight playback transcodes. Fires when HEVC transcoding is toggled off.
+ipcMain.on('hevcTranscodeCancelAll', () => {
+  PlaybackTranscoder.getInstance().cancelAll();
 });
 
 /**
