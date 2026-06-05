@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 690](https://github.com/aza547/wow-recorder/issues/690) - Adds Holy priest guardian deaths to video metadata and video progress bar tracking.
 - Improve the disk space check error message to accurately reflect the space requirement when accounting for stored videos.
 - Add warning when delete selection contains locked videos.
+- Fixed a bug where classic arenas were being miscut.
 
 ## [7.7.2] - 2026-05-24
 ### Fixed
