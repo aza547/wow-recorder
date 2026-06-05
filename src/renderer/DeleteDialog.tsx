@@ -161,11 +161,12 @@ const DeleteDialog = ({
 
     return (
       <div className="text-sm">
-        <p>{warning}</p>
+        <p className="inline ">{warning}</p>
+
         {inScopeLocked.length > 0 && (
-          <p className="text-destructive">
+          <span className="text-destructive ml-1">
             {getLocalePhrase(language, Phrase.DeleteSelectionContainsLocked)}
-          </p>
+          </span>
         )}
       </div>
     );
