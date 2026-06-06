@@ -158,7 +158,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-error-boundary": "^5.0.0",
-    "react-player": "^2.14.1",
+    "react-player": "^3.4.0",
     "react-router-dom": "^7.3.0",
     "react-tag-autocomplete": "^7.5.0",
     "react-tailwindcss-datepicker": "^2.0.0",
