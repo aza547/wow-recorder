@@ -180,8 +180,10 @@ export default class DiskClient implements StorageClient {
   }
 
   public async annotateVideos(videoPaths: string[], annotations: string) {
-    videoPaths.forEach((videoPath) =>
-      this.annotateVideoDisk(videoPath, annotations),
+    await Promise.all(
+      videoPaths.map((videoPath) =>
+        this.annotateVideoDisk(videoPath, annotations),
+      ),
     );
   }
 
@@ -327,7 +329,14 @@ export default class DiskClient implements StorageClient {
         const videos = args[2] as RendererVideo[];
         const disk = videos.filter((v) => !v.cloud);
         const toAnnotate = disk.map((v) => v.videoSource);
-        this.annotateVideos(toAnnotate, annotations);
+        await this.annotateVideos(toAnnotate, annotations);
+
+        // Refresh so the in-memory video state reflects the saved annotations.
+        // Without this, reopening the VOD later in the same session (which
+        // remounts the player and re-seeds from videos[0].annotations) would
+        // show an empty overlay. The currently-playing player isn't disrupted
+        // (its videos come from selectedVideos, and its key is unchanged).
+        this.refreshVideos();
       }
     });
   }

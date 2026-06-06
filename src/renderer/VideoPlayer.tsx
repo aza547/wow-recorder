@@ -216,10 +216,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
 
-  // Parse any persisted annotations stored on the primary video's metadata.
-  // Annotations are a JSON-serialized array of Excalidraw elements.
-  const parseAnnotations = (): readonly ExcalidrawElement[] => {
-    const raw = videos[0]?.annotations;
+  // Parse a serialized Excalidraw scene (JSON array of elements).
+  const parseAnnotations = (
+    raw: string | null | undefined,
+  ): readonly ExcalidrawElement[] => {
     if (!raw) return [];
 
     try {
@@ -230,13 +230,15 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     }
   };
 
-  // Live drawing elements. Held in a ref (not state) to avoid re-rendering the
-  // whole player on every stroke. Seeded once from the persisted annotations and
-  // used to re-seed the overlay when drawing mode is toggled off and back on.
-  const drawingElementsRef = useRef<readonly ExcalidrawElement[] | null>(null);
+  // Latest drawing scene as a serialized string. Seeded from the primary video's
+  // persisted annotations and updated on every change. We deliberately keep the
+  // *serialized* form rather than Excalidraw's live element array (which it
+  // mutates/empties on unmount), so the overlay can be re-seeded with fresh
+  // element objects when drawing mode is toggled off and back on.
+  const liveAnnotationsRef = useRef<string | null>(null);
 
-  if (drawingElementsRef.current === null) {
-    drawingElementsRef.current = parseAnnotations();
+  if (liveAnnotationsRef.current === null) {
+    liveAnnotationsRef.current = videos[0]?.annotations ?? '[]';
   }
 
   // The last serialized scene we persisted, used to skip redundant writes.
@@ -257,8 +259,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    */
   const onDrawingChange = useCallback(
     (elements: readonly ExcalidrawElement[]) => {
-      drawingElementsRef.current = elements;
       const serialized = JSON.stringify(elements);
+      liveAnnotationsRef.current = serialized;
 
       if (!annotationsInitRef.current) {
         // First event after mount is Excalidraw echoing the seeded scene.
@@ -1452,7 +1454,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
           isDrawingEnabled={isDrawingEnabled}
           onDrawingChange={onDrawingChange}
           appState={appState}
-          initialElements={drawingElementsRef.current ?? []}
+          initialElements={parseAnnotations(liveAnnotationsRef.current)}
         />
       </div>
     );
