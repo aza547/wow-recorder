@@ -49,9 +49,7 @@ const configuration: webpack.Configuration = {
         use: [
           {
             loader: reactCompilerLoader,
-            options: defineReactCompilerLoaderOption({
-              // React Compiler options goes here
-            }),
+            options: defineReactCompilerLoaderOption({}),
           },
         ],
       },
