@@ -594,9 +594,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     if (Array.isArray(value) && typeof value[1] == 'number') {
       // In Clip mode we have 3 thumbs and the middle is the progress.
       seekAllPlayers(value[1]);
-    }
-
-    if (typeof value === 'number') {
+    } else if (typeof value === 'number') {
       seekAllPlayers(value);
     }
   };
