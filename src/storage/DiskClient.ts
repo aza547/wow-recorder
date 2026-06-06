@@ -13,8 +13,9 @@ import {
   openSystemExplorer,
   writeMetadataFile,
 } from 'main/util';
-import { DiskStatus, FileInfo, RendererVideo } from 'main/types';
+import { DiskStatus, RendererVideo } from 'main/types';
 import DiskSizeMonitor from './DiskSizeMonitor';
+import MetadataIndex from './MetadataIndex';
 import { ipcMain } from 'electron';
 import assert from 'assert';
 import { send } from 'main/main';
@@ -39,6 +40,11 @@ export default class DiskClient implements StorageClient {
   private constructor() {
     console.info('[DiskClient] Creating disk client');
     this.setupListeners();
+
+    // Construct the metadata index now so its storage hooks
+    // (writeMetadataFile / deleteVideoDisk) are registered before any video is
+    // written, keeping the index coherent from the very first write.
+    MetadataIndex.getInstance();
   }
 
   public async ready() {
@@ -92,55 +98,50 @@ export default class DiskClient implements StorageClient {
 
     const cfg = ConfigService.getInstance();
     const storageDir = cfg.get<string>('storagePath');
-    const storageVideos = await getSortedVideos(storageDir);
-
-    // When the "review locally while relocating" feature is active, also
-    // surface videos that currently only exist in the local staging dir. Dedupe
-    // by name, preferring the storage copy (which is canonical once relocated).
     const stagingDir = getStagingDir(cfg);
-    let stagingVideos: FileInfo[] = [];
+
+    // Reconcile the in-memory metadata index with the storage dir. This is
+    // delta-only: a single readdir, reading just the files new since last time.
+    // The bulk of refreshes (after a record/clip/delete) change nothing and so
+    // cost only the readdir, instead of re-stat'ing and re-parsing every video.
+    const index = MetadataIndex.getInstance();
+    await index.reconcile(storageDir);
+    const storageVideos = index.list();
+
+    // When the "review locally while relocating" feature is active, also surface
+    // videos that currently only exist in the local staging dir. The index's
+    // write hook catches staging videos cut this session, but not ones left over
+    // from a previous session (e.g. a restart mid-relocation), so scan for those
+    // here. Dedupe by name against what's already listed so nothing appears
+    // twice, and tag the survivors as relocating.
+    let stagingVideos: RendererVideo[] = [];
 
     if (stagingDir && (await exists(stagingDir))) {
-      const onStorage = new Set(
-        storageVideos.map((v) => path.basename(v.name, '.mp4')),
+      const alreadyListed = new Set(
+        storageVideos.map((v) => path.basename(v.videoSource, '.mp4')),
       );
 
       const staged = await getSortedVideos(stagingDir);
 
-      stagingVideos = staged.filter(
-        (v) => !onStorage.has(path.basename(v.name, '.mp4')),
-      );
-    }
-
-    const videos = [...storageVideos, ...stagingVideos];
-
-    if (videos.length === 0) {
-      return [];
-    }
-
-    // Windows has a 16k file handle limit per process. Load in batches
-    // of 1000 to be safe. The real fix here would be to have a local database
-    // for managing this stuff rather than reading many thousand files here.
-    const batchSize = 1000;
-    const videoDetails: RendererVideo[] = [];
-
-    for (let i = 0; i < videos.length; i += batchSize) {
-      console.info('[DiskClient] Batch loading videos', i, 'to', i + batchSize);
-      const batch = videos.slice(i, i + batchSize);
-
-      const batchPromises = batch.map((video) =>
-        loadVideoDetailsDisk(video).catch((e) => e),
+      const stagingOnly = staged.filter(
+        (v) => !alreadyListed.has(path.basename(v.name, '.mp4')),
       );
 
-      const batchResults = await Promise.all(batchPromises);
-
-      videoDetails.push(
-        ...batchResults.filter((result) => !(result instanceof Error)),
+      const loaded = await Promise.all(
+        stagingOnly.map((v) => loadVideoDetailsDisk(v).catch((e) => e)),
       );
+
+      stagingVideos = loaded
+        .filter((r): r is RendererVideo => !(r instanceof Error))
+        .map((rv) => ({ ...rv, relocating: true }));
     }
+
+    const videoDetails = [...storageVideos, ...stagingVideos];
 
     // Tag any videos still being served from the local staging dir, so the
-    // frontend can optionally indicate they're mid-relocation to storage.
+    // frontend can optionally indicate they're mid-relocation to storage. This
+    // catches staging videos that ARE in the index (cut this session via the
+    // write hook); restart-only staging videos are already tagged above.
     if (stagingDir) {
       const resolvedStaging = path.resolve(stagingDir);
 
