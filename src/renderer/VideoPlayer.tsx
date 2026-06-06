@@ -139,14 +139,13 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   const seekAllPlayers = (seconds: number) => {
     players.forEach((p) => seekPlayer(p, seconds));
+    persistentProgress.current = seconds;
   };
 
-  // Exposes the seekTo method so that we can seek from outside the component.
+  // Allows triggering seek from outside the component.
   useImperativeHandle(ref, () => ({
     seekAllPlayersTo(seconds: number) {
-      // Seek all players
       seekAllPlayers(seconds);
-      persistentProgress.current = seconds;
     },
   }));
 
