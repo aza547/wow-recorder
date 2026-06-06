@@ -1,4 +1,5 @@
 import path from 'path';
+import { ipcMain } from 'electron';
 import {
   getBaseConfig,
   getStagingDir,
@@ -128,6 +129,19 @@ export default class VideoProcessQueue {
   private inProgressKillVideos: string[] = [];
 
   /**
+   * Resolved paths of the video sources currently loaded in the frontend
+   * player(s). Reported by the renderer. Used so we never delete a local
+   * staging copy that is currently being reviewed.
+   */
+  private activeSources = new Set<string>();
+
+  /**
+   * Staging copies that have been relocated to storage but couldn't be deleted
+   * yet because they were in use. Cleaned up once playback moves off them.
+   */
+  private pendingStagingDeletes = new Set<string>();
+
+  /**
    * Constructor.
    */
   private constructor() {
@@ -136,6 +150,17 @@ export default class VideoProcessQueue {
     this.downloadQueue = this.createDownloadQueue();
     this.killVideoQueue = this.createKillVideoQueue();
     this.relocateQueue = this.createRelocateQueue();
+    this.registerListeners();
+  }
+
+  /**
+   * Register IPC listeners.
+   */
+  private registerListeners() {
+    ipcMain.on('activeVideoSources', (_event, args) => {
+      const sources = (args as string[]) ?? [];
+      this.setActiveVideoSources(sources);
+    });
   }
 
   private createVideoQueue() {
@@ -298,8 +323,10 @@ export default class VideoProcessQueue {
    * already exists in storage, delete the now-redundant local copy; otherwise
    * (e.g. the app closed mid-relocation) re-queue it for relocation.
    *
-   * Deliberately only run at startup so we never delete a staged file that the
-   * user might be reviewing during a session.
+   * This is a startup backstop. During a session, relocated staging copies are
+   * cleaned up promptly by disposeStagingCopy once they're no longer being
+   * reviewed (tracked via activeSources). Running at startup is always safe as
+   * nothing can be open in the player yet.
    */
   public reconcileStaging = async () => {
     const stagingDir = getStagingDir(this.cfg);
@@ -332,6 +359,59 @@ export default class VideoProcessQueue {
       }),
     );
   };
+
+  /**
+   * Record which video sources are currently loaded in the frontend player(s),
+   * then clean up any deferred staging deletions that are no longer in use.
+   */
+  public setActiveVideoSources(sources: string[]) {
+    this.activeSources = new Set(sources.map((s) => path.resolve(s)));
+    this.cleanPendingStaging();
+  }
+
+  /**
+   * Dispose of a staging copy once it has been relocated to storage. If it's
+   * currently being reviewed, defer deletion until playback moves off it.
+   */
+  private async disposeStagingCopy(stagingPath: string) {
+    if (this.activeSources.has(path.resolve(stagingPath))) {
+      console.info(
+        '[VideoProcessQueue] Staging copy in use, deferring cleanup',
+        stagingPath,
+      );
+
+      this.pendingStagingDeletes.add(stagingPath);
+      return;
+    }
+
+    console.info(
+      '[VideoProcessQueue] Removing relocated staging copy',
+      stagingPath,
+    );
+
+    await deleteVideoDisk(stagingPath);
+  }
+
+  /**
+   * Delete any deferred staging copies that are no longer in use.
+   */
+  private cleanPendingStaging() {
+    this.pendingStagingDeletes.forEach((stagingPath) => {
+      if (this.activeSources.has(path.resolve(stagingPath))) {
+        // Still being reviewed; leave it for now.
+        return;
+      }
+
+      this.pendingStagingDeletes.delete(stagingPath);
+
+      console.info(
+        '[VideoProcessQueue] Removing deferred staging copy',
+        stagingPath,
+      );
+
+      deleteVideoDisk(stagingPath);
+    });
+  }
 
   /**
    * Process a video by cutting it to size and saving it to disk, also
@@ -638,6 +718,11 @@ export default class VideoProcessQueue {
       // Refresh so the frontend now resolves the video from storage. Any
       // in-progress playback of the local staging copy is unaffected.
       DiskClient.getInstance().refreshVideos();
+
+      // Remove the local staging copy now it's safely in storage, unless it's
+      // currently being reviewed (in which case it's cleaned up once playback
+      // moves on).
+      await this.disposeStagingCopy(stagingPath);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error relocating video:',
