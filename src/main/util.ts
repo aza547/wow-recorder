@@ -88,6 +88,29 @@ export const resolveHtmlPath = getResolvedHtmlPath();
 /**
  * Return information about a file needed for various parts of the application
  */
+/**
+ * Hooks used by the storage metadata index (src/storage/MetadataIndex.ts) to
+ * stay coherent as videos are written and deleted. The index registers these
+ * via setStorageIndexHooks so that util does NOT import the index (which would
+ * create a circular import). They are no-ops until registered.
+ */
+type MetadataWriteHook = (
+  videoPath: string,
+  metadata: Metadata,
+) => void | Promise<void>;
+type VideoDeleteHook = (videoPath: string) => void;
+
+let metadataWriteHook: MetadataWriteHook | null = null;
+let videoDeleteHook: VideoDeleteHook | null = null;
+
+const setStorageIndexHooks = (
+  write: MetadataWriteHook,
+  del: VideoDeleteHook,
+) => {
+  metadataWriteHook = write;
+  videoDeleteHook = del;
+};
+
 export const getFileInfo = async (pathSpec: string): Promise<FileInfo> => {
   const filePath = path.resolve(pathSpec);
   const fstats = await fspromise.stat(filePath);
@@ -233,6 +256,11 @@ const deleteVideoDisk = async (videoPath: string) => {
     return false;
   }
 
+  // Evict from the metadata index now the video file is gone.
+  if (videoDeleteHook) {
+    videoDeleteHook(videoPath);
+  }
+
   const metadataPath = getMetadataFileNameForVideo(videoPath);
   const deletedJson = await tryUnlink(metadataPath);
 
@@ -303,6 +331,11 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
   await fspromise.writeFile(metadataFileName, jsonString, {
     encoding: 'utf-8',
   });
+
+  // Keep the metadata index coherent with this write.
+  if (metadataWriteHook) {
+    await metadataWriteHook(videoPath, metadata);
+  }
 };
 
 /**
@@ -1241,6 +1274,7 @@ export {
   setupApplicationLogging,
   writeMetadataFile,
   deleteVideoDisk,
+  setStorageIndexHooks,
   openSystemExplorer,
   fixPathWhenPackaged,
   getSortedVideos,
