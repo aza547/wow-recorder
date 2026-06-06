@@ -207,6 +207,36 @@ const getBaseConfig = (cfg: ConfigService): BaseConfig => {
   };
 };
 
+/**
+ * Name of the subdirectory (within the local buffer dir) used to stage freshly
+ * cut MP4s so they can be reviewed locally before being relocated to the NAS.
+ */
+const STAGING_DIR_NAME = '.staging';
+
+/**
+ * Returns the local staging directory used by the "review locally while
+ * relocating to storage" feature, or null when it doesn't apply.
+ *
+ * Staging only makes sense when a separate (fast, local) buffer path is
+ * configured distinct from the storage path. When there is no separate buffer
+ * (buffer lives under storagePath/.temp) there's no faster-than-storage disk to
+ * stage on, so we return null and callers fall back to current behaviour
+ * (cutting straight to storagePath).
+ */
+const getStagingDir = (cfg: ConfigService): string | null => {
+  if (!cfg.get<boolean>('separateBufferPath')) {
+    return null;
+  }
+
+  const bufferPath = cfg.getPath('bufferStoragePath');
+
+  if (!bufferPath) {
+    return null;
+  }
+
+  return path.join(bufferPath, STAGING_DIR_NAME);
+};
+
 const getObsVideoConfig = (cfg: ConfigService): ObsVideoConfig => {
   return {
     obsCaptureMode: cfg.get<string>('obsCaptureMode'),
@@ -485,6 +515,7 @@ export {
   allowRecordCategory,
   shouldUpload,
   getBaseConfig,
+  getStagingDir,
   getObsVideoConfig,
   getObsAudioConfig,
   getOverlayConfig,

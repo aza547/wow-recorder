@@ -1,4 +1,6 @@
+import path from 'path';
 import ConfigService from 'config/ConfigService';
+import { getStagingDir } from 'utils/configUtils';
 import StorageClient from './StorageClient';
 import {
   delayedDeleteVideo,
@@ -11,7 +13,7 @@ import {
   openSystemExplorer,
   writeMetadataFile,
 } from 'main/util';
-import { DiskStatus, RendererVideo } from 'main/types';
+import { DiskStatus, FileInfo, RendererVideo } from 'main/types';
 import DiskSizeMonitor from './DiskSizeMonitor';
 import { ipcMain } from 'electron';
 import assert from 'assert';
@@ -88,8 +90,29 @@ export default class DiskClient implements StorageClient {
 
     console.info('[DiskClient] Getting videos from disk');
 
-    const storageDir = ConfigService.getInstance().get<string>('storagePath');
-    const videos = await getSortedVideos(storageDir);
+    const cfg = ConfigService.getInstance();
+    const storageDir = cfg.get<string>('storagePath');
+    const storageVideos = await getSortedVideos(storageDir);
+
+    // When the "review locally while relocating" feature is active, also
+    // surface videos that currently only exist in the local staging dir. Dedupe
+    // by name, preferring the storage copy (which is canonical once relocated).
+    const stagingDir = getStagingDir(cfg);
+    let stagingVideos: FileInfo[] = [];
+
+    if (stagingDir && (await exists(stagingDir))) {
+      const onStorage = new Set(
+        storageVideos.map((v) => path.basename(v.name, '.mp4')),
+      );
+
+      const staged = await getSortedVideos(stagingDir);
+
+      stagingVideos = staged.filter(
+        (v) => !onStorage.has(path.basename(v.name, '.mp4')),
+      );
+    }
+
+    const videos = [...storageVideos, ...stagingVideos];
 
     if (videos.length === 0) {
       return [];
@@ -114,6 +137,18 @@ export default class DiskClient implements StorageClient {
       videoDetails.push(
         ...batchResults.filter((result) => !(result instanceof Error)),
       );
+    }
+
+    // Tag any videos still being served from the local staging dir, so the
+    // frontend can optionally indicate they're mid-relocation to storage.
+    if (stagingDir) {
+      const resolvedStaging = path.resolve(stagingDir);
+
+      videoDetails.forEach((video) => {
+        if (path.resolve(path.dirname(video.videoSource)) === resolvedStaging) {
+          video.relocating = true;
+        }
+      });
     }
 
     // Any details marked for deletion do it now. We allow for this flag to be
