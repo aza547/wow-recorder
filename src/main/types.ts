@@ -185,6 +185,16 @@ type VideoQueueItem = {
 };
 
 /**
+ * An item on the relocate queue. Used by the "review locally while relocating
+ * to storage" feature to copy a freshly cut MP4 (and its metadata) from the
+ * local staging dir to the final storage path in the background.
+ */
+type RelocateQueueItem = {
+  stagingPath: string; // Full path to the .mp4 in the local staging dir.
+  storageDir: string; // Final storage directory (e.g. the NAS).
+};
+
+/**
  * This is what we write to the .json files. We use "raw" subtypes here to
  * represent any classes as writing entire classes to JSON files causes
  * problems on the frontend.
@@ -273,6 +283,10 @@ type RendererVideo = Metadata & {
   isProtected: boolean;
   cloud: boolean;
   multiPov: RendererVideo[];
+
+  // True while this video is being served from the local staging dir and is
+  // still being relocated to the final storage path in the background.
+  relocating?: boolean;
 
   // Used by frontend to uniquely identify a video, as videoName
   // is identical for a disk and cloud viewpoint.
@@ -681,6 +695,7 @@ export {
   FileInfo,
   FileFinderCallbackType,
   VideoQueueItem,
+  RelocateQueueItem,
   Metadata,
   RendererVideo,
   Flavour,

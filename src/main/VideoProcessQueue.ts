@@ -1,5 +1,9 @@
 import path from 'path';
-import { getBaseConfig, shouldUpload } from '../utils/configUtils';
+import {
+  getBaseConfig,
+  getStagingDir,
+  shouldUpload,
+} from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from '../config/ConfigService';
 import {
@@ -7,6 +11,7 @@ import {
   DiskStatus,
   KillVideoQueueItem,
   KillVideoStatus,
+  RelocateQueueItem,
   RendererVideo,
   SaveStatus,
   UploadQueueItem,
@@ -15,6 +20,10 @@ import {
 import {
   writeMetadataFile,
   getMetadataForVideo,
+  getMetadataFileNameForVideo,
+  getSortedVideos,
+  deleteVideoDisk,
+  exists,
   rendererVideoToMetadata,
   getFileInfo,
   fixPathWhenPackaged,
@@ -86,6 +95,14 @@ export default class VideoProcessQueue {
   private killVideoQueue: any;
 
   /**
+   * Atomic queue for relocating freshly cut videos from the local staging dir
+   * to the final storage path (e.g. a NAS). Kept separate so the slow network
+   * copy doesn't block further video cuts. Used by the "review locally while
+   * relocating to storage" feature.
+   */
+  private relocateQueue: any;
+
+  /**
    * Config service handle.
    */
   private cfg = ConfigService.getInstance();
@@ -118,6 +135,7 @@ export default class VideoProcessQueue {
     this.uploadQueue = this.createUploadQueue();
     this.downloadQueue = this.createDownloadQueue();
     this.killVideoQueue = this.createKillVideoQueue();
+    this.relocateQueue = this.createRelocateQueue();
   }
 
   private createVideoQueue() {
@@ -192,6 +210,20 @@ export default class VideoProcessQueue {
     return queue;
   }
 
+  private createRelocateQueue() {
+    const worker = this.processRelocateQueueItem.bind(this);
+    const settings = { concurrency: 1 };
+    const queue = atomicQueue(worker, settings);
+
+    /* eslint-disable prettier/prettier */
+    queue
+      .on('error', VideoProcessQueue.errorRelocatingVideo)
+      .on('idle', () => { this.relocateQueueEmpty() });
+    /* eslint-enable prettier/prettier */
+
+    return queue;
+  }
+
   /**
    * Add a video to the queue for processing, the processing it undergoes is
    * dictated by the input. This is the only public method on this class.
@@ -250,6 +282,58 @@ export default class VideoProcessQueue {
   };
 
   /**
+   * Queue a freshly cut video for relocation from the local staging dir to the
+   * final storage path.
+   */
+  public queueRelocate = async (item: RelocateQueueItem) => {
+    console.info(
+      '[VideoProcessQueue] Queuing video for relocation',
+      item.stagingPath,
+    );
+    this.relocateQueue.write(item);
+  };
+
+  /**
+   * Reconcile the local staging dir on startup. For each staged video: if it
+   * already exists in storage, delete the now-redundant local copy; otherwise
+   * (e.g. the app closed mid-relocation) re-queue it for relocation.
+   *
+   * Deliberately only run at startup so we never delete a staged file that the
+   * user might be reviewing during a session.
+   */
+  public reconcileStaging = async () => {
+    const stagingDir = getStagingDir(this.cfg);
+
+    if (!stagingDir || !(await exists(stagingDir))) {
+      return;
+    }
+
+    const storageDir = this.cfg.get<string>('storagePath');
+    const staged = await getSortedVideos(stagingDir);
+
+    await Promise.all(
+      staged.map(async (file) => {
+        const name = path.basename(file.name); // "<name>.mp4"
+        const onStorage = await exists(path.join(storageDir, name));
+
+        if (onStorage) {
+          console.info(
+            '[VideoProcessQueue] Removing relocated staging copy',
+            file.name,
+          );
+          await deleteVideoDisk(file.name);
+        } else {
+          console.info(
+            '[VideoProcessQueue] Re-queuing orphaned staging video',
+            file.name,
+          );
+          this.queueRelocate({ stagingPath: file.name, storageDir });
+        }
+      }),
+    );
+  };
+
+  /**
    * Process a video by cutting it to size and saving it to disk, also
    * writes out the metadata JSON file.
    */
@@ -258,7 +342,18 @@ export default class VideoProcessQueue {
     done: () => void,
   ): Promise<void> {
     try {
-      const outputDir = this.cfg.get<string>('storagePath');
+      const storagePath = this.cfg.get<string>('storagePath');
+      const stagingDir = getStagingDir(this.cfg);
+
+      // When a separate local buffer is configured we cut into a local staging
+      // dir so the video can be reviewed immediately, then relocate it to the
+      // (possibly slow) storage path in the background. Otherwise we cut
+      // straight to storage as before.
+      const outputDir = stagingDir ?? storagePath;
+
+      if (stagingDir) {
+        await fspromise.mkdir(stagingDir, { recursive: true });
+      }
 
       // In a lot of cases this is basically just a copy. But this also
       // covers the cases where we're cutting a section off the end of
@@ -278,6 +373,13 @@ export default class VideoProcessQueue {
       if (upload) {
         const item: UploadQueueItem = { path: videoPath };
         this.queueUpload(item);
+      }
+
+      if (stagingDir) {
+        // The cut MP4 now lives on the local disk and becomes reviewable as
+        // soon as the frontend refreshes (finishProcessingVideo). Relocate it
+        // to the final storage path in the background.
+        this.queueRelocate({ stagingPath: videoPath, storageDir: storagePath });
       }
     } catch (error) {
       console.error(
@@ -484,6 +586,74 @@ export default class VideoProcessQueue {
   }
 
   /**
+   * Relocate a freshly cut video from the local staging dir to the final
+   * storage path. Publishes atomically: the MP4/JSON are first copied into a
+   * hidden ".relocating" temp dir on the storage volume, then renamed into
+   * place (rename is atomic on the same filesystem) so a refresh never sees a
+   * half-written file. The local staging copy is left in place and cleaned up
+   * at next startup (reconcileStaging) so we never delete a file mid-review.
+   */
+  private async processRelocateQueueItem(
+    item: RelocateQueueItem,
+    done: () => void,
+  ): Promise<void> {
+    const { stagingPath, storageDir } = item;
+    const name = path.basename(stagingPath); // "<name>.mp4"
+    const stagingJson = getMetadataFileNameForVideo(stagingPath);
+
+    const tmpDir = path.join(storageDir, '.relocating');
+    const tmpMp4 = path.join(tmpDir, name);
+    const tmpJson = getMetadataFileNameForVideo(tmpMp4);
+
+    const destMp4 = path.join(storageDir, name);
+    const destJson = getMetadataFileNameForVideo(destMp4);
+
+    try {
+      await fspromise.mkdir(tmpDir, { recursive: true });
+
+      // Copy both files fully into the temp dir (the slow network part).
+      await fspromise.copyFile(stagingJson, tmpJson);
+      await fspromise.copyFile(stagingPath, tmpMp4);
+
+      // Sanity check the copied video size matches the source.
+      const [srcStat, dstStat] = await Promise.all([
+        fspromise.stat(stagingPath),
+        fspromise.stat(tmpMp4),
+      ]);
+
+      if (srcStat.size !== dstStat.size) {
+        throw new Error(
+          `Relocated size mismatch ${srcStat.size} != ${dstStat.size} for ${name}`,
+        );
+      }
+
+      // Publish: rename the JSON first, then the MP4. getSortedVideos only
+      // lists .mp4 files, so the video only becomes visible on storage once
+      // its metadata is already in place.
+      await fspromise.rename(tmpJson, destJson);
+      await fspromise.rename(tmpMp4, destMp4);
+
+      console.info('[VideoProcessQueue] Relocated video to storage', destMp4);
+
+      // Refresh so the frontend now resolves the video from storage. Any
+      // in-progress playback of the local staging copy is unaffected.
+      DiskClient.getInstance().refreshVideos();
+    } catch (error) {
+      console.error(
+        '[VideoProcessQueue] Error relocating video:',
+        String(error),
+      );
+
+      // Best effort: remove any partial temp files (deletes the temp mp4 and
+      // its json sibling). The staging copy remains, so the video is still
+      // reviewable and reconcileStaging will retry on the next startup.
+      await deleteVideoDisk(tmpMp4);
+    }
+
+    done();
+  }
+
+  /**
    * Push kill video encoding progress to the frontend.
    */
   private onKillVideoProgress(progress: number) {
@@ -519,6 +689,13 @@ export default class VideoProcessQueue {
    */
   private static errorKillVideo(err: unknown) {
     console.error('[VideoProcessQueue] Error creating kill video', String(err));
+  }
+
+  /**
+   * Log an error relocating a video.
+   */
+  private static errorRelocatingVideo(err: unknown) {
+    console.error('[VideoProcessQueue] Error relocating video', String(err));
   }
 
   /**
@@ -658,6 +835,13 @@ export default class VideoProcessQueue {
    */
   private async uploadQueueEmpty() {
     console.info('[VideoProcessQueue] Upload processing queue empty');
+  }
+
+  /**
+   * Run actions on the relocate queue being empty.
+   */
+  private async relocateQueueEmpty() {
+    console.info('[VideoProcessQueue] Relocate processing queue empty');
   }
 
   /**
