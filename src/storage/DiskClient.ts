@@ -143,6 +143,12 @@ export default class DiskClient implements StorageClient {
     );
   }
 
+  public async annotateVideos(videoPaths: string[], annotations: string) {
+    videoPaths.forEach((videoPath) =>
+      this.annotateVideoDisk(videoPath, annotations),
+    );
+  }
+
   /**
    * Put a save marker on a video, protecting it from the file monitor.
    */
@@ -191,6 +197,32 @@ export default class DiskClient implements StorageClient {
     } else {
       console.info('[Util] User tagged', videoPath, 'with', tag);
       metadata.tag = tag;
+    }
+
+    await writeMetadataFile(videoPath, metadata);
+  }
+
+  private async annotateVideoDisk(videoPath: string, annotations: string) {
+    let metadata;
+
+    try {
+      metadata = await getMetadataForVideo(videoPath);
+    } catch (err) {
+      console.error(
+        `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
+        err,
+      );
+
+      return;
+    }
+
+    if (!annotations || annotations === '[]') {
+      // No elements; clear any existing annotations.
+      console.info('[Util] User cleared annotations on', videoPath);
+      metadata.annotations = undefined;
+    } else {
+      console.info('[Util] User annotated', videoPath);
+      metadata.annotations = annotations;
     }
 
     await writeMetadataFile(videoPath, metadata);
@@ -252,6 +284,14 @@ export default class DiskClient implements StorageClient {
         const disk = videos.filter((v) => !v.cloud);
         const toTag = disk.map((v) => v.videoSource);
         this.tagVideos(toTag, tag);
+      }
+
+      if (action === 'annotations') {
+        const annotations = args[1] as string;
+        const videos = args[2] as RendererVideo[];
+        const disk = videos.filter((v) => !v.cloud);
+        const toAnnotate = disk.map((v) => v.videoSource);
+        this.annotateVideos(toAnnotate, annotations);
       }
     });
   }

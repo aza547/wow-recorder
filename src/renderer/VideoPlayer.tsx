@@ -215,7 +215,89 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
 
   const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
-  const [, setDrawingElements] = useState<readonly ExcalidrawElement[]>([]);
+
+  // Parse any persisted annotations stored on the primary video's metadata.
+  // Annotations are a JSON-serialized array of Excalidraw elements.
+  const parseAnnotations = (): readonly ExcalidrawElement[] => {
+    const raw = videos[0]?.annotations;
+    if (!raw) return [];
+
+    try {
+      return JSON.parse(raw) as ExcalidrawElement[];
+    } catch {
+      console.error('Failed to parse stored annotations');
+      return [];
+    }
+  };
+
+  // Live drawing elements. Held in a ref (not state) to avoid re-rendering the
+  // whole player on every stroke. Seeded once from the persisted annotations and
+  // used to re-seed the overlay when drawing mode is toggled off and back on.
+  const drawingElementsRef = useRef<readonly ExcalidrawElement[] | null>(null);
+
+  if (drawingElementsRef.current === null) {
+    drawingElementsRef.current = parseAnnotations();
+  }
+
+  // The last serialized scene we persisted, used to skip redundant writes.
+  const lastSavedAnnotationsRef = useRef<string>('');
+
+  // Excalidraw fires onChange once on mount echoing the seeded scene. We use the
+  // first event to establish a normalized baseline rather than persisting it.
+  const annotationsInitRef = useRef<boolean>(false);
+
+  // Debounce timer for persisting annotations.
+  const annotationsSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  /**
+   * Handle a change to the drawing overlay. Persists the serialized elements to
+   * the primary video's metadata on disk, debounced, and only when changed.
+   */
+  const onDrawingChange = useCallback(
+    (elements: readonly ExcalidrawElement[]) => {
+      drawingElementsRef.current = elements;
+      const serialized = JSON.stringify(elements);
+
+      if (!annotationsInitRef.current) {
+        // First event after mount is Excalidraw echoing the seeded scene.
+        // Record it as the baseline; don't persist.
+        annotationsInitRef.current = true;
+        lastSavedAnnotationsRef.current = serialized;
+        return;
+      }
+
+      if (serialized === lastSavedAnnotationsRef.current) {
+        // Nothing meaningful changed (e.g. selection / pointer move).
+        return;
+      }
+
+      lastSavedAnnotationsRef.current = serialized;
+
+      if (annotationsSaveTimer.current) {
+        clearTimeout(annotationsSaveTimer.current);
+      }
+
+      annotationsSaveTimer.current = setTimeout(() => {
+        ipc.sendMessage('videoButtonDisk', [
+          'annotations',
+          serialized,
+          [videos[0]],
+        ]);
+      }, 500);
+    },
+    [videos],
+  );
+
+  // Flush any pending annotation save when unmounting.
+  useEffect(() => {
+    return () => {
+      if (annotationsSaveTimer.current) {
+        clearTimeout(annotationsSaveTimer.current);
+      }
+    };
+  }, []);
 
   /**
    * Set if the video is playing or not.
@@ -1355,8 +1437,9 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       <div className="absolute top-0 left-0 w-full h-full">
         <DrawingOverlay
           isDrawingEnabled={isDrawingEnabled}
-          onDrawingChange={setDrawingElements}
+          onDrawingChange={onDrawingChange}
           appState={appState}
+          initialElements={drawingElementsRef.current ?? []}
         />
       </div>
     );

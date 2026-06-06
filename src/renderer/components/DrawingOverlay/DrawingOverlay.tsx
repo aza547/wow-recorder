@@ -4,17 +4,20 @@ import '@excalidraw/excalidraw/index.css';
 import './DrawingOverlay.css';
 import { AppState } from 'main/types';
 import { Language } from 'localisation/phrases';
+import { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
 
 interface DrawingOverlayProps {
   isDrawingEnabled: boolean;
-  onDrawingChange: (elements: readonly any[]) => void;
+  onDrawingChange: (elements: readonly ExcalidrawElement[]) => void;
   appState: AppState;
+  initialElements?: readonly ExcalidrawElement[];
 }
 
 export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   isDrawingEnabled,
   onDrawingChange,
   appState,
+  initialElements = [],
 }) => {
   if (!isDrawingEnabled) return null;
 
@@ -46,6 +49,7 @@ export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           onChange={(elements) => onDrawingChange(elements)}
           langCode={langCode}
           initialData={{
+            elements: initialElements,
             appState: {
               viewBackgroundColor: 'transparent',
               activeTool: {
