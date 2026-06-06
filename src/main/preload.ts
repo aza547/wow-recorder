@@ -51,7 +51,8 @@ export type Channels =
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
   | 'getSensibleEncoderDefault'
-  | 'refreshCloudGuilds';
+  | 'refreshCloudGuilds'
+  | 'activeVideoSources';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

@@ -1414,6 +1414,18 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     ipc.sendMessage('videoPlayerSettings', ['set', soundSettings]);
   }, [volume, muted]);
 
+  // Tell the main process which video sources are currently loaded in the
+  // player. This lets the staging relocation logic avoid deleting a local
+  // staging copy that's being reviewed, and clean it up once playback moves on.
+  useEffect(() => {
+    const sources = videos.map((v) => v.videoSource);
+    ipc.sendMessage('activeVideoSources', sources);
+
+    return () => {
+      ipc.sendMessage('activeVideoSources', []);
+    };
+  }, [videos]);
+
   // Used to pause when the app is minimized to the system tray.
   useEffect(() => {
     ipc.on('pausePlayer', () => setPlaying(false));
