@@ -1000,8 +1000,8 @@ export default class Recorder extends EventEmitter {
     }
 
     this.stopQueue.empty();
-    noobs.StopRecording();
     const wrote = this.stopQueue.shift();
+    noobs.StopRecording();
 
     try {
       await Promise.race([wrote, getPromiseBomb(60, 'Failed to stop')]);
@@ -1017,7 +1017,7 @@ export default class Recorder extends EventEmitter {
 
       await Promise.race([
         wrote,
-        getPromiseBomb(3, 'Failed to recover by force stopping'),
+        getPromiseBomb(60, 'Failed to recover by force stopping'),
       ]);
 
       console.info('[Recorder] Force stopped successfully');
