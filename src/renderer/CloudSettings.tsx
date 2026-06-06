@@ -749,6 +749,10 @@ const CloudSettings = (props: IProps) => {
         <div className="flex flex-row gap-x-6">
           {getSwitchForm('manualRecordUpload', Phrase.ManualRecordUploadLabel)}
           {getSwitchForm('cloudUploadClips', Phrase.UploadClipsLabel)}
+          {getSwitchForm(
+            'cloudUploadDeleteAfterUpload',
+            Phrase.CloudUploadDeleteAfterUploadLabel,
+          )}
         </div>
       </>
     );

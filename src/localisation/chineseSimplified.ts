@@ -529,6 +529,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.CodecDescriptionH265]:'H265/HEVC 是一种专有编码格式，在相同画质下通常可以比 H264 提供更小的文件体积，但设备和软件兼容性相对较差。',
   [Phrase.CodecDescriptionAV1]:'AV1 是一种免版税的视频编码格式，相比 H265 可以提供更高的压缩效率，但设备支持情况可能有所不同。',
   [Phrase.CodecNeedsHardwareRendering]: '所选编码器需要硬件渲染才能播放。请在应用设置中启用硬件渲染并重新启动应用，或选择其他编码器。',
+  [Phrase.CloudUploadDeleteAfterUploadDescription]: '本地视频排队上传时将其隐藏，并在上传成功后删除本地副本。',
+  [Phrase.CloudUploadDeleteAfterUploadLabel]: '上传后删除',
 };
 
 export default CHINESE_SIMPLIFIED;

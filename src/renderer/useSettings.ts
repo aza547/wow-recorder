@@ -80,6 +80,9 @@ export const getSettings = (): ConfigurationSchema => {
     dungeonOverrun: getConfigValue<number>('dungeonOverrun'),
     cloudStorage: getConfigValue<boolean>('cloudStorage'),
     cloudUpload: getConfigValue<boolean>('cloudUpload'),
+    cloudUploadDeleteAfterUpload: getConfigValue<boolean>(
+      'cloudUploadDeleteAfterUpload',
+    ),
     cloudUploadRetail: getConfigValue<boolean>('cloudUploadRetail'),
     cloudUploadClassic: getConfigValue<boolean>('cloudUploadClassic'),
     cloudUploadRateLimit: getConfigValue<boolean>('cloudUploadRateLimit'),

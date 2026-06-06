@@ -122,9 +122,11 @@ export default class DiskClient implements StorageClient {
     // refresh, that guarentees it cannot be loaded in the player.
     videoDetails.filter((video) => video.delete).forEach(delayedDeleteVideo);
 
-    // Return this list of videos without those marked for deletion which may still
-    // exist for a short time.
-    const toDisplay = videoDetails.filter((video) => !video.delete);
+    // Return this list of videos without those marked for deletion, or hidden
+    // while they are being staged for upload.
+    const toDisplay = videoDetails.filter(
+      (video) => !video.delete && !video.hideFromDisk,
+    );
     console.info('[DiskClient] Loaded', toDisplay.length, 'videos from disk');
     return toDisplay;
   }

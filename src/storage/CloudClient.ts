@@ -455,6 +455,32 @@ export default class CloudClient implements StorageClient {
     this.stopPolling();
   }
 
+  private async restoreHiddenUploadStaging() {
+    try {
+      // Cloud is not usable with the current configuration, so hidden staging
+      // videos must be returned to the disk list.
+      await VideoProcessQueue.getInstance().recoverHiddenUploads(true);
+    } catch (error) {
+      console.error(
+        '[CloudClient] Failed to restore hidden upload staging',
+        String(error),
+      );
+    }
+  }
+
+  private async recoverHiddenUploadStaging() {
+    try {
+      // Once cloud is ready, resume any uploads that were hidden before a
+      // previous process ended.
+      await VideoProcessQueue.getInstance().recoverHiddenUploads();
+    } catch (error) {
+      console.error(
+        '[CloudClient] Failed to recover hidden upload staging',
+        String(error),
+      );
+    }
+  }
+
   /**
    * Login to the cloud store.
    */
@@ -483,18 +509,21 @@ export default class CloudClient implements StorageClient {
 
     if (!this.enabled) {
       console.info('[CloudClient] Cloud storage is not enabled');
+      await this.restoreHiddenUploadStaging();
       this.refreshStatus();
       return;
     }
 
     if (!cloudAccountName) {
       console.warn('[CloudClient] Empty account name');
+      await this.restoreHiddenUploadStaging();
       this.refreshStatus();
       return;
     }
 
     if (!cloudAccountPassword) {
       console.warn('[CloudClient] Empty account pass');
+      await this.restoreHiddenUploadStaging();
       this.refreshStatus();
       return;
     }
@@ -507,6 +536,7 @@ export default class CloudClient implements StorageClient {
 
     if (!success) {
       // Probably bad credentials.
+      await this.restoreHiddenUploadStaging();
       this.refreshStatus();
       return;
     }
@@ -516,6 +546,7 @@ export default class CloudClient implements StorageClient {
 
     if (!cloudGuildName) {
       console.warn('[CloudClient] Empty guild name');
+      await this.restoreHiddenUploadStaging();
       this.refreshStatus();
       return;
     }
@@ -528,6 +559,7 @@ export default class CloudClient implements StorageClient {
 
     if (!affiliation) {
       console.warn('[CloudClient] User is not affiliated with the guild');
+      await this.restoreHiddenUploadStaging();
       this.refreshStatus();
       return;
     }
@@ -538,6 +570,7 @@ export default class CloudClient implements StorageClient {
 
     if (cloudUpload && !affiliation.write) {
       console.warn('[CloudClient] User is not authorized to upload');
+      await this.restoreHiddenUploadStaging();
       this.refreshStatus();
       return;
     }
@@ -553,11 +586,13 @@ export default class CloudClient implements StorageClient {
     } catch (error) {
       // Unlikely to fail here as we've already contacted the server.
       console.error('[CloudClient] Failed to get guild storage info', error);
+      await this.restoreHiddenUploadStaging();
       this.refreshStatus();
       return;
     }
 
     this.startPolling();
+    await this.recoverHiddenUploadStaging();
     this.refreshStatus();
   }
 
@@ -580,16 +615,25 @@ export default class CloudClient implements StorageClient {
     const url = `${CloudClient.api}/guild/${guild}/video`;
     const headers = { Authorization: this.authHeader };
 
-    await axios.post(url, metadata, {
+    const response = await axios.post(url, metadata, {
       headers,
-      validateStatus: (s) => this.validateResponseStatus(s),
+      validateStatus: (s) => s === 409 || this.validateResponseStatus(s),
     });
 
-    console.info(
-      '[CloudClient] Added',
-      metadata.videoName,
-      'to video database.',
-    );
+    if (response.status === 409) {
+      // A retry after a crash can reach this point when the cloud database
+      // record was committed but the local delete marker was not yet written.
+      console.info(
+        '[CloudClient] Video metadata already exists, treating as uploaded',
+        metadata.videoName,
+      );
+    } else {
+      console.info(
+        '[CloudClient] Added',
+        metadata.videoName,
+        'to video database.',
+      );
+    }
 
     this.refreshStatus();
 

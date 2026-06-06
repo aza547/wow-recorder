@@ -831,11 +831,12 @@ const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
  * This helps us avoid any scenario where we attempt and fail to delete a
  * video open by the player.
  */
-const markForVideoForDelete = async (videoPath: string) => {
+const markForVideoForDelete = async (videoPath: string): Promise<boolean> => {
   try {
     const metadata = await getMetadataForVideo(videoPath);
     metadata.delete = true;
     await writeMetadataFile(videoPath, metadata);
+    return true;
   } catch (error) {
     // This isn't a total disaster, but might cause some duplicates to
     // display in the UI; i.e. a cloud and disk version of the same video.
@@ -843,6 +844,35 @@ const markForVideoForDelete = async (videoPath: string) => {
     // manual delete.
     console.error(
       '[Util] Failed to mark a video for deletion',
+      videoPath,
+      String(error),
+    );
+    return false;
+  }
+};
+
+const hideVideoFromDisk = async (videoPath: string) => {
+  try {
+    const metadata = await getMetadataForVideo(videoPath);
+    metadata.hideFromDisk = true;
+    await writeMetadataFile(videoPath, metadata);
+  } catch (error) {
+    console.error(
+      '[Util] Failed to hide a video from disk display',
+      videoPath,
+      String(error),
+    );
+  }
+};
+
+const unhideVideoFromDisk = async (videoPath: string) => {
+  try {
+    const metadata = await getMetadataForVideo(videoPath);
+    delete metadata.hideFromDisk;
+    await writeMetadataFile(videoPath, metadata);
+  } catch (error) {
+    console.error(
+      '[Util] Failed to unhide a video from disk display',
       videoPath,
       String(error),
     );
@@ -1243,6 +1273,8 @@ export {
   convertKoreanVideoCategory,
   isManualRecordHotKey,
   delayedDeleteVideo,
+  hideVideoFromDisk,
+  unhideVideoFromDisk,
   logAxiosError,
   handleSafeVodRequest,
   runFirstTimeSetupActionsObs,

@@ -63,6 +63,7 @@ export type ConfigurationSchema = {
   dungeonOverrun: number;
   cloudStorage: boolean;
   cloudUpload: boolean;
+  cloudUploadDeleteAfterUpload: boolean;
   cloudUploadRetail: boolean;
   cloudUploadClassic: boolean;
   cloudUploadRateLimit: boolean;
@@ -435,6 +436,11 @@ export const configSchema = {
   },
   cloudUpload: {
     description: Phrase.CloudUploadDescription,
+    type: 'boolean',
+    default: false,
+  },
+  cloudUploadDeleteAfterUpload: {
+    description: Phrase.CloudUploadDeleteAfterUploadDescription,
     type: 'boolean',
     default: false,
   },

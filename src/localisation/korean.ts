@@ -529,6 +529,8 @@ const KOREAN: Translations = {
   [Phrase.CodecDescriptionH265]:'H265/HEVC는 독점 코덱으로, 동일한 화질에서 H264보다 훨씬 작은 파일 크기를 제공할 수 있지만 기기 및 소프트웨어 호환성은 더 제한적입니다.',
   [Phrase.CodecDescriptionAV1]:'AV1은 로열티 프리 비디오 코덱으로, H265보다 더 뛰어난 압축 효율을 제공할 수 있지만 기기 지원은 다를 수 있습니다.',
   [Phrase.CodecNeedsHardwareRendering]: '선택한 인코더는 재생을 위해 하드웨어 렌더링이 필요합니다. 애플리케이션 설정에서 이를 활성화한 후 앱을 다시 시작하거나 다른 인코더를 선택하세요.',
+  [Phrase.CloudUploadDeleteAfterUploadDescription]: '업로드 대기 중인 로컬 영상을 숨기고, 업로드가 성공하면 로컬 사본을 삭제합니다.',
+  [Phrase.CloudUploadDeleteAfterUploadLabel]: '업로드 후 삭제',
 };
 
 export default KOREAN;

@@ -219,6 +219,7 @@ type Metadata = {
   affixes?: number[];
   tag?: string;
   delete?: boolean; // signals video should be deleted when possible
+  hideFromDisk?: boolean; // hide local staging video from the UI
   uniqueHash?: string; // used for cloud video grouping
   bossPercent?: number;
   appVersion?: string;

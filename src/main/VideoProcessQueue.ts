@@ -7,6 +7,7 @@ import {
   DiskStatus,
   KillVideoQueueItem,
   KillVideoStatus,
+  Metadata,
   RendererVideo,
   SaveStatus,
   UploadQueueItem,
@@ -21,6 +22,10 @@ import {
   logAxiosError,
   buildKillVideoMetadata,
   getOBSFormattedDate,
+  getSortedVideos,
+  hideVideoFromDisk,
+  markForVideoForDelete,
+  unhideVideoFromDisk,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import { send } from './main';
@@ -214,10 +219,66 @@ export default class VideoProcessQueue {
 
     console.log('[VideoProcessQueue] Queuing video for upload', item.path);
     this.inProgressUploads.push(item.path);
-    this.uploadQueue.write(item);
 
     const queued = Math.max(0, this.inProgressUploads.length);
     send('updateUploadQueueLength', queued);
+
+    if (this.cfg.get<boolean>('cloudUploadDeleteAfterUpload')) {
+      // Hide first, but keep the file as upload staging until cloud metadata is
+      // committed successfully.
+      await hideVideoFromDisk(item.path);
+      DiskClient.getInstance().refreshVideos();
+    }
+
+    this.uploadQueue.write(item);
+  };
+
+  /**
+   * Reconcile videos hidden from the disk view while staged for upload. This
+   * protects users from a stale hidden flag after an app restart or cloud
+   * configuration change.
+   */
+  public recoverHiddenUploads = async (forceUnhide = false) => {
+    const storageDir = this.cfg.get<string>('storagePath');
+    const videos = await getSortedVideos(storageDir);
+    const readyToUpload =
+      !forceUnhide && (await CloudClient.getInstance().ready());
+
+    let changed = false;
+
+    for (const video of videos) {
+      let metadata: Metadata;
+
+      try {
+        metadata = await getMetadataForVideo(video.name);
+      } catch (error) {
+        console.warn(
+          '[VideoProcessQueue] Failed to inspect upload staging metadata',
+          video.name,
+          String(error),
+        );
+        continue;
+      }
+
+      if (!metadata.hideFromDisk || metadata.delete) {
+        continue;
+      }
+
+      const upload = readyToUpload && shouldUpload(this.cfg, metadata);
+
+      if (upload) {
+        // Resume the staged upload if the cloud client is ready; otherwise
+        // expose the local file again so it is not silently stranded.
+        await this.queueUpload({ path: video.name });
+      } else {
+        await unhideVideoFromDisk(video.name);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      DiskClient.getInstance().refreshVideos();
+    }
   };
 
   /**
@@ -313,16 +374,24 @@ export default class VideoProcessQueue {
     };
 
     const client = CloudClient.getInstance();
+    let deleteAfterUpload = this.cfg.get<boolean>(
+      'cloudUploadDeleteAfterUpload',
+    );
 
     try {
+      // Read metadata before uploading so a failure can restore hidden staging
+      // state when delete-after-upload is active.
+      const metadata = await getMetadataForVideo(item.path);
+      deleteAfterUpload = deleteAfterUpload || Boolean(metadata.hideFromDisk);
+
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
       await client.putFile(item.path, rateLimit, progressCallback);
       progressCallback(100);
 
       // Now add the metadata.
-      const metadata = await getMetadataForVideo(item.path);
-
+      // Local lifecycle flags are only for this client and must not be persisted
+      // to the shared cloud video record.
       const cloudMetadata: CloudMetadata = {
         ...metadata,
         start: metadata.start || 0,
@@ -330,6 +399,9 @@ export default class VideoProcessQueue {
         videoName: path.basename(item.path, '.mp4'),
         videoKey: path.basename(item.path),
       };
+
+      delete cloudMetadata.delete;
+      delete cloudMetadata.hideFromDisk;
 
       if (cloudMetadata.level) {
         // The string "level" isn't a valid SQL column name, in new videos we
@@ -348,6 +420,24 @@ export default class VideoProcessQueue {
       }
 
       await client.postVideo(cloudMetadata);
+
+      if (deleteAfterUpload) {
+        // Only delete after the database record exists; an object upload alone
+        // is not enough for the user to find the video in cloud storage.
+        const markedForDelete = await markForVideoForDelete(item.path);
+
+        if (!markedForDelete) {
+          // If the local delete marker cannot be written, show the disk copy
+          // again instead of leaving it hidden indefinitely.
+          await unhideVideoFromDisk(item.path);
+        }
+
+        if (markedForDelete) {
+          DiskClient.getInstance().refreshStatus();
+        }
+
+        DiskClient.getInstance().refreshVideos();
+      }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const msg = '[CloudClient] Axios error processing video';
@@ -357,6 +447,12 @@ export default class VideoProcessQueue {
       }
 
       progressCallback(100);
+
+      if (deleteAfterUpload) {
+        // Failed uploads should make the local staging copy visible again.
+        await unhideVideoFromDisk(item.path);
+        DiskClient.getInstance().refreshVideos();
+      }
     }
 
     done();
