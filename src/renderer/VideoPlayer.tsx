@@ -9,7 +9,7 @@ import {
 } from 'main/types';
 import {
   forwardRef,
-  MutableRefObject,
+  RefObject,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -28,7 +28,6 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import MovieIcon from '@mui/icons-material/Movie';
 import ClearIcon from '@mui/icons-material/Clear';
 import DoneIcon from '@mui/icons-material/Done';
-import { OnProgressProps } from 'react-player/base';
 import ReactPlayer from 'react-player';
 import screenfull from 'screenfull';
 import { ConfigurationSchema } from 'config/configSchema';
@@ -66,7 +65,7 @@ import { Phrase } from 'localisation/phrases';
 interface IProps {
   videos: RendererVideo[];
   categoryState: RendererVideo[];
-  persistentProgress: MutableRefObject<number>;
+  persistentProgress: RefObject<number>;
   config: ConfigurationSchema;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
@@ -75,7 +74,6 @@ interface IProps {
 const ipc = window.electron.ipcRenderer;
 const playbackRates = [0.25, 0.5, 1, 2];
 const style = { backgroundColor: 'black' };
-const progressInterval = 100;
 
 const sliderBaseSx = {
   '& .MuiSlider-thumb': {
@@ -124,19 +122,30 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     throw new Error('VideoPlayer should only be passed up to 4 videos');
   }
 
-  // Reference to each player. Required to control the ReactPlayer component.
-  // Probably breaking some hook rules here and being saved by the key in the
-  // parent remounting this when videos changes. Maybe should just use 4
-  // hardcoded refs rather than this array.
-  const players: MutableRefObject<ReactPlayer | null>[] = videos.map(() =>
-    useRef(null),
-  );
+  // Typically just have one player but we may have up to 4.
+  const player1 = useRef<HTMLVideoElement>(null);
+  const player2 = useRef<HTMLVideoElement>(null);
+  const player3 = useRef<HTMLVideoElement>(null);
+  const player4 = useRef<HTMLVideoElement>(null);
+  const players = [player1, player2, player3, player4];
+
+  const seekPlayer = (
+    player: RefObject<HTMLVideoElement | null>,
+    seconds: number,
+  ) => {
+    if (!player.current) return;
+    player.current.currentTime = seconds;
+  };
+
+  const seekAllPlayers = (seconds: number) => {
+    players.forEach((p) => seekPlayer(p, seconds));
+  };
 
   // Exposes the seekTo method so that we can seek from outside the component.
   useImperativeHandle(ref, () => ({
     seekAllPlayersTo(seconds: number) {
       // Seek all players
-      players.forEach((player) => player.current?.seekTo(seconds, 'seconds'));
+      seekAllPlayers(seconds);
       persistentProgress.current = seconds;
     },
   }));
@@ -152,7 +161,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   // While the user is dragging the thumb of the slider, we don't
   // want to update the video position. This is used to conditionally
   // avoid this.
-  const [isDragging, setIsDragging] = useState(false);
+  const isDragging = useRef<boolean>(false);
 
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [duration, setDuration] = useState<number>(0);
@@ -471,29 +480,50 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   };
 
   /**
-   * Toggle if the video is currently playing or not. You would think this
-   * would be straight forward and you could just do setPlaying(!playing). You
-   * would be wrong. Seems a limitation on the react-player library we are using.
    *
-   * Instead we access the internal player's state and determine if it's playing
-   * or not and set the state depending on that. That logic is stolen from here:
-   * https://stackoverflow.com/questions/6877403/how-to-tell-if-a-video-element-is-currently-playing.
    */
   const togglePlaying = () => {
-    const [primary] = players;
+    players.forEach((player) => {
+      if (!player1.current) return;
+      if (!player.current) return;
+      setPlaying(player1.current.paused); // Always use player1 as the source of truth.
+    });
+  };
 
-    if (!primary.current) {
+  const progressBarSyncRef = useRef<number | null>(null);
+
+  const startProgressBarSync = () => {
+    if (progressBarSyncRef.current) return;
+
+    progressBarSyncRef.current = window.setInterval(() => {
+      if (!player1.current) return;
+      if (isDragging.current) return;
+      if (
+        player1.current.seeking ||
+        player2.current?.seeking ||
+        player3.current?.seeking ||
+        player4.current?.seeking
+      ) {
+        return;
+      }
+
+      setProgress(player1.current.currentTime);
+    }, 100); // 10fps-ish smooth UI
+  };
+
+  const stopProgressBarSync = () => {
+    if (!progressBarSyncRef.current) return;
+    window.clearInterval(progressBarSyncRef.current);
+    progressBarSyncRef.current = null;
+  };
+
+  const onDurationChange = () => {
+    if (!player1.current || Number.isNaN(player1.current.duration)) {
       return;
     }
 
-    const internalPlayer = primary.current.getInternalPlayer();
-    const { paused, currentTime, ended } = internalPlayer;
-
-    if (currentTime > 0 && !paused && !ended) {
-      setPlaying(false);
-    } else {
-      setPlaying(true);
-    }
+    persistentProgress.current = player1.current.currentTime;
+    setDuration(player1.current.duration);
   };
 
   // By default the window hijacks media keys even when
@@ -533,18 +563,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   };
 
   /**
-   * Handle an onProgress event fired from the player by updating the
-   * progresss bar position.
-   */
-  const onProgress = (event: OnProgressProps) => {
-    persistentProgress.current = event.playedSeconds;
-
-    if (!isDragging) {
-      setProgress(event.playedSeconds);
-    }
-  };
-
-  /**
    * Handle a click from the user on the progress slider by seeking to that
    * position.
    */
@@ -571,14 +589,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     _event: React.SyntheticEvent | Event,
     value: number | number[],
   ) => {
-    setIsDragging(false);
-
-    if (Array.isArray(value) && typeof value[1] == 'number') {
-      players.forEach((player) => player.current?.seekTo(value[1], 'seconds'));
-    }
+    isDragging.current = false;
 
     if (typeof value === 'number') {
-      players.forEach((player) => player.current?.seekTo(value, 'seconds'));
+      seekAllPlayers(value);
     }
   };
 
@@ -586,7 +600,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Handle a mouse down event for the slider.
    */
   const onSliderMouseDown = () => {
-    setIsDragging(true);
+    isDragging.current = true;
 
     if (multiPlayerMode) {
       // Force a pause in multi player mode to avoid any risk of video
@@ -621,21 +635,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     }
 
     setSpinner(false);
-
-    if (duration === 0) {
-      // We don't have a duration on the slider yet but the players
-      // are ready so each must know. Apply it to the component state.
-      const durations = players
-        .map((p) => p.current)
-        .filter((r): r is ReactPlayer => r !== null)
-        .map((r) => r.getDuration());
-
-      // Take the max duration of all videos, if we're in multiplayer
-      // mode some might have an overrun longer than others so we want
-      // the slider to represent the longest.
-      const max = Math.max(...durations);
-      setDuration(max);
-    }
   };
 
   /**
@@ -699,11 +698,25 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     );
   };
 
+  const onPlay = (primary: boolean) => {
+    if (primary) {
+      setPlaying(true);
+      startProgressBarSync();
+    }
+  };
+
+  const onPause = (primary: boolean) => {
+    if (primary) {
+      setPlaying(false);
+      stopProgressBarSync();
+    }
+  };
+
   /**
    * Returns the video player itself, passing through all necessary callbacks
    * and props for it to function and be controlled.
    */
-  const renderPlayer = (src: MutableRefObject<string>, index: number) => {
+  const renderPlayer = (src: RefObject<string>, index: number) => {
     const primary = index === 0;
     const player = players[index];
 
@@ -723,19 +736,19 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         height="100%"
         width="100%"
         key={src.current}
-        url={safe}
+        src={safe}
         style={style}
         playing={playing}
         volume={volume}
         muted={primary ? muted : true}
         playbackRate={playbackRate}
-        progressInterval={progressInterval}
-        onProgress={primary ? onProgress : undefined}
+        onDurationChange={primary ? onDurationChange : undefined}
         onClick={togglePlaying}
         onDoubleClick={toggleFullscreen}
-        onPlay={primary ? () => setPlaying(true) : undefined}
-        onPause={primary ? () => setPlaying(false) : undefined}
+        onPlay={() => onPlay(primary)}
+        onPause={() => onPause(primary)}
         onReady={onReady}
+        onSeeked={onReady}
         onError={onError}
       />
     );
@@ -1248,49 +1261,40 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * such events, so instead we do this.
    */
   const handleKeyDown = (e: KeyboardEvent) => {
-    const [primary] = players;
-
-    if (!primary.current) {
+    if (!player1.current) {
       return;
     }
 
     if (e.key === 'k' || e.key === ' ') {
       togglePlaying();
       e.preventDefault();
+      e.stopPropagation();
     }
 
     if (e.key === 'j' || e.key === 'ArrowLeft') {
-      const current = primary.current.getCurrentTime();
-
-      players.forEach((player) =>
-        player.current?.seekTo(current - 5, 'seconds'),
-      );
+      const current = player1.current.currentTime;
+      seekAllPlayers(current - 5);
+      setProgress(current - 5);
     }
 
     if (e.key === 'l' || e.key === 'ArrowRight') {
-      const current = primary.current.getCurrentTime();
-
-      players.forEach((player) =>
-        player.current?.seekTo(current + 5, 'seconds'),
-      );
+      const current = player1.current.currentTime;
+      seekAllPlayers(current + 5);
+      setProgress(current + 5);
     }
 
     if (e.key === '.') {
-      const current = primary.current.getCurrentTime();
+      const current = player1.current.currentTime;
       const frame = 1 / 30; // Assume 30fps, not the end of the world if we skip 2 frames.
-
-      players.forEach((player) =>
-        player.current?.seekTo(current + frame, 'seconds'),
-      );
+      seekAllPlayers(current + frame);
+      setProgress(current + frame);
     }
 
     if (e.key === ',') {
-      const current = primary.current.getCurrentTime();
+      const current = player1.current.currentTime;
       const frame = 1 / 30; // Assume 30fps, not the end of the world if we skip 2 frames.
-
-      players.forEach((player) =>
-        player.current?.seekTo(current - frame, 'seconds'),
-      );
+      seekAllPlayers(current - frame);
+      setProgress(current - frame);
     }
   };
 

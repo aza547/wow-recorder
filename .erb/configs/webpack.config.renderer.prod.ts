@@ -8,6 +8,10 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import {
+  defineReactCompilerLoaderOption,
+  reactCompilerLoader,
+} from 'react-compiler-webpack';
 import { merge } from 'webpack-merge';
 import TerserPlugin from 'terser-webpack-plugin';
 import baseConfig from './webpack.config.base';
@@ -38,6 +42,17 @@ const configuration: webpack.Configuration = {
 
   module: {
     rules: [
+      {
+        test: /\.[jt]sx?$/,
+        exclude: /node_modules/,
+        enforce: 'pre',
+        use: [
+          {
+            loader: reactCompilerLoader,
+            options: defineReactCompilerLoaderOption({}),
+          },
+        ],
+      },
       {
         test: /\.s?(a|c)ss$/,
         use: [
