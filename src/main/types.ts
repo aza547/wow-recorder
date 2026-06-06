@@ -219,6 +219,7 @@ type Metadata = {
   overrun: number;
   affixes?: number[];
   tag?: string;
+  annotations?: string; // serialized Excalidraw drawing elements (JSON string)
   delete?: boolean; // signals video should be deleted when possible
   uniqueHash?: string; // used for cloud video grouping
   bossPercent?: number;
