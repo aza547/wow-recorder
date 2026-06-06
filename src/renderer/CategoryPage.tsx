@@ -217,6 +217,29 @@ const CategoryPage = (props: IProps) => {
       );
     }
 
+    const switchToViewpoint = (target: RendererVideo) => {
+      setAppState((prevState) => ({
+        ...prevState,
+        selectedVideos: [target],
+        multiPlayerMode: false,
+        preferredViewpoint:
+          target.player?._name || prevState.preferredViewpoint,
+      }));
+    };
+
+    const isViewpointSelected = (target: RendererVideo) => {
+      // With no explicit selection, VideoPlayer renders the first active POV.
+      // Treat that fallback as selected so a self-link seeks immediately.
+      const currentSinglePov =
+        selectedVideos.length === 1 ? selectedVideos[0] : availablePovs[0];
+
+      return (
+        selectedVideos.length <= 1 &&
+        currentSinglePov.videoName === target.videoName &&
+        currentSinglePov.cloud === target.cloud
+      );
+    };
+
     const handleTimestampClick = (seconds: number, viewpoint?: string) => {
       if (!viewpoint) {
         videoPlayerRef.current?.seekAllPlayersTo(seconds);
@@ -232,17 +255,7 @@ const CategoryPage = (props: IProps) => {
         return;
       }
 
-      // With no explicit selection, VideoPlayer renders the first active POV.
-      // Treat that fallback as selected so a self-link seeks immediately.
-      const currentSinglePov =
-        selectedVideos.length === 1 ? selectedVideos[0] : availablePovs[0];
-
-      const alreadySelected =
-        selectedVideos.length <= 1 &&
-        currentSinglePov.videoName === target.videoName &&
-        currentSinglePov.cloud === target.cloud;
-
-      if (alreadySelected) {
+      if (isViewpointSelected(target)) {
         videoPlayerRef.current?.seekAllPlayersTo(seconds);
         return;
       }
@@ -251,22 +264,30 @@ const CategoryPage = (props: IProps) => {
 
       // Switching videos remounts VideoPlayer; persistentProgress carries the
       // clicked timestamp into the new POV's initial seek.
-      setAppState((prevState) => ({
-        ...prevState,
-        selectedVideos: [target],
-        multiPlayerMode: false,
-        preferredViewpoint:
-          target.player?._name || prevState.preferredViewpoint,
-      }));
+      switchToViewpoint(target);
+    };
+
+    const handleViewpointClick = (viewpoint: string) => {
+      const target = findVideoChatViewpoint(availablePovs, viewpoint);
+
+      if (!target || isViewpointSelected(target)) {
+        return;
+      }
+
+      // For @Player without a timestamp, keep the current playback position
+      // carried in persistentProgress and only change the selected POV.
+      switchToViewpoint(target);
     };
 
     return (
       <VideoChat
         key={video.videoName}
         video={video}
+        availablePovs={availablePovs}
         language={language}
         deletePermissions={del}
         onTimestampClick={handleTimestampClick}
+        onViewpointClick={handleViewpointClick}
       />
     );
   };

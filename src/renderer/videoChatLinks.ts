@@ -10,7 +10,16 @@ type VideoChatLinkPart = {
   viewpoint?: string;
 };
 
-export type VideoChatMessagePart = VideoChatTextPart | VideoChatLinkPart;
+type VideoChatMentionPart = {
+  type: 'mention';
+  text: string;
+  viewpoint: string;
+};
+
+export type VideoChatMessagePart =
+  | VideoChatTextPart
+  | VideoChatLinkPart
+  | VideoChatMentionPart;
 
 export type VideoChatViewpoint = {
   videoName: string;
@@ -21,9 +30,21 @@ export type VideoChatViewpoint = {
   };
 };
 
+export type VideoChatMentionSuggestion<T extends VideoChatViewpoint> = {
+  viewpoint: T;
+  label: string;
+  detail?: string;
+  // Text inserted after @. It may include a realm or raw video name only when
+  // the short player name would be ambiguous.
+  mention: string;
+  // Lowercase aliases used by the textarea mention filter.
+  searchText: string;
+};
+
 // Supports plain timestamps, and optional POV-qualified timestamps:
 // "2:15" or "@Player-Realm 2:15".
 const chatLinkRegex = /(?:@(\S+)\s+)?\b(\d{1,2}):(\d{2})\b/g;
+const chatMentionRegex = /(^|\s)@(\S+)/g;
 
 const normalize = (value: string) => value.trim().toLowerCase();
 
@@ -31,6 +52,33 @@ const appendTextPart = (parts: VideoChatMessagePart[], text: string) => {
   if (text.length > 0) {
     parts.push({ type: 'text', text });
   }
+};
+
+const appendTextAndMentionParts = (
+  parts: VideoChatMessagePart[],
+  text: string,
+) => {
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  chatMentionRegex.lastIndex = 0;
+
+  while ((match = chatMentionRegex.exec(text)) !== null) {
+    const [rawText, separator, viewpoint] = match;
+    const mentionStart = match.index + separator.length;
+
+    appendTextPart(parts, text.slice(lastIndex, mentionStart));
+
+    parts.push({
+      type: 'mention',
+      text: rawText.slice(separator.length),
+      viewpoint,
+    });
+
+    lastIndex = match.index + rawText.length;
+  }
+
+  appendTextPart(parts, text.slice(lastIndex));
 };
 
 export const parseVideoChatMessageLinks = (
@@ -50,7 +98,7 @@ export const parseVideoChatMessageLinks = (
       continue;
     }
 
-    appendTextPart(parts, message.slice(lastIndex, match.index));
+    appendTextAndMentionParts(parts, message.slice(lastIndex, match.index));
 
     const link: VideoChatLinkPart = {
       type: 'link',
@@ -66,15 +114,21 @@ export const parseVideoChatMessageLinks = (
     lastIndex = match.index + text.length;
   }
 
-  appendTextPart(parts, message.slice(lastIndex));
+  appendTextAndMentionParts(parts, message.slice(lastIndex));
 
   return parts;
 };
 
+const getPlayerName = (viewpoint: VideoChatViewpoint) =>
+  viewpoint.player?._name || viewpoint.videoName;
+
+const getPlayerRealm = (viewpoint: VideoChatViewpoint) =>
+  viewpoint.player?._realm;
+
 const getViewpointAliases = (viewpoint: VideoChatViewpoint) => {
   const aliases = [viewpoint.videoName];
-  const playerName = viewpoint.player?._name;
-  const playerRealm = viewpoint.player?._realm;
+  const playerName = getPlayerName(viewpoint);
+  const playerRealm = getPlayerRealm(viewpoint);
 
   if (playerName) {
     aliases.push(playerName);
@@ -85,6 +139,60 @@ const getViewpointAliases = (viewpoint: VideoChatViewpoint) => {
   }
 
   return aliases.map(normalize);
+};
+
+const getPlayerNameContexts = (viewpoints: VideoChatViewpoint[]) => {
+  // Disk and cloud copies of the same POV share one context; genuinely
+  // different realms/video names need disambiguated mention text.
+  return viewpoints.reduce<Map<string, Set<string>>>((counts, viewpoint) => {
+    const normalizedName = normalize(getPlayerName(viewpoint));
+    const context = normalize(getPlayerRealm(viewpoint) || viewpoint.videoName);
+    const contexts = counts.get(normalizedName) || new Set<string>();
+    contexts.add(context);
+    counts.set(normalizedName, contexts);
+    return counts;
+  }, new Map());
+};
+
+export const getVideoChatMentionSuggestions = <T extends VideoChatViewpoint>(
+  viewpoints: T[],
+): VideoChatMentionSuggestion<T>[] => {
+  const playerNameContexts = getPlayerNameContexts(viewpoints);
+  const seen = new Set<string>();
+
+  return [...viewpoints]
+    .sort((a, b) => Number(a.cloud) - Number(b.cloud))
+    .reduce<VideoChatMentionSuggestion<T>[]>((suggestions, viewpoint) => {
+      const label = getPlayerName(viewpoint);
+      const realm = getPlayerRealm(viewpoint);
+      const normalizedLabel = normalize(label);
+      const duplicateName =
+        (playerNameContexts.get(normalizedLabel)?.size || 0) > 1;
+      // Keep common cases short, but insert a disambiguated token when the
+      // same player name maps to more than one real POV.
+      const mention = duplicateName
+        ? realm
+          ? `${label}-${realm}`
+          : viewpoint.videoName
+        : label;
+      const key = normalize(mention);
+
+      if (seen.has(key)) {
+        return suggestions;
+      }
+
+      seen.add(key);
+
+      suggestions.push({
+        viewpoint,
+        label,
+        detail: realm,
+        mention,
+        searchText: getViewpointAliases(viewpoint).join(' '),
+      });
+
+      return suggestions;
+    }, []);
 };
 
 export const findVideoChatViewpoint = <T extends VideoChatViewpoint>(
