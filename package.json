@@ -137,7 +137,7 @@
     "@tanstack/react-query": "^5.90.7",
     "@tanstack/react-table": "^8.20.5",
     "atomic-queue": "^5.0.4",
-    "axios": "^1.6.8",
+    "axios": "^1.17.0",
     "check-disk-space": "^3.4.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
