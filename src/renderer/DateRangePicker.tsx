@@ -1,7 +1,14 @@
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase, Language } from 'localisation/phrases';
 import { AppState } from 'main/types';
-import { Dispatch, SetStateAction, useCallback } from 'react';
+import {
+  Dispatch,
+  MouseEvent,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react';
 import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';
 
 interface IProps {
@@ -12,6 +19,10 @@ interface IProps {
 const DateRangePicker = (props: IProps) => {
   const { appState, setAppState } = props;
   const { dateRangeFilter } = appState;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const closeAnimationTimeout = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const format =
     appState.language === Language.KOREAN ? 'YY/MM/DD' : 'DD/MM/YY';
@@ -75,21 +86,121 @@ const DateRangePicker = (props: IProps) => {
     [setAppState],
   );
 
+  const clearCloseAnimationTimeout = useCallback(() => {
+    if (closeAnimationTimeout.current) {
+      clearTimeout(closeAnimationTimeout.current);
+      closeAnimationTimeout.current = null;
+    }
+  }, []);
+
+  const getDatepickerElements = useCallback(() => {
+    const datepicker = containerRef.current?.querySelector<HTMLElement>(
+      '.tailwind-datepicker',
+    );
+    const input = datepicker?.querySelector<HTMLInputElement>(':scope > input');
+    const toggle =
+      datepicker?.querySelector<HTMLButtonElement>(':scope > button');
+    const popup = datepicker?.querySelector<HTMLElement>(
+      ':scope > div:last-child',
+    );
+    const arrow =
+      popup?.firstElementChild instanceof HTMLElement
+        ? popup.firstElementChild
+        : null;
+
+    return {
+      input,
+      toggle,
+      popup,
+      arrow,
+    };
+  }, []);
+
+  const closeDatepicker = useCallback(() => {
+    const { popup, arrow } = getDatepickerElements();
+
+    if (!popup?.classList.contains('block') || !arrow) {
+      return false;
+    }
+
+    clearCloseAnimationTimeout();
+
+    // The bundled datepicker does not expose its close handler, so mirror the
+    // library's class-based hide animation until the upstream fix is released.
+    popup.classList.remove('block', 'translate-y-0', 'opacity-1');
+    popup.classList.add('translate-y-4', 'opacity-0');
+
+    closeAnimationTimeout.current = setTimeout(() => {
+      popup.classList.remove('bottom-full');
+      popup.classList.add('hidden', 'mb-2.5', 'mt-2.5');
+      arrow.classList.remove('-bottom-2', 'border-r', 'border-b');
+      arrow.classList.add('border-l', 'border-t');
+      closeAnimationTimeout.current = null;
+    }, 300);
+
+    return true;
+  }, [clearCloseAnimationTimeout, getDatepickerElements]);
+
+  const handleMouseDown = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      const target = event.target;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      const { input, toggle } = getDatepickerElements();
+      const isInput = target === input;
+      const isToggle = Boolean(toggle?.contains(target));
+
+      if ((isInput || isToggle) && closeDatepicker()) {
+        event.preventDefault();
+        event.stopPropagation();
+        input?.blur();
+      }
+    },
+    [closeDatepicker, getDatepickerElements],
+  );
+
+  useEffect(() => {
+    const handleEscapeKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Escape' || !closeDatepicker()) {
+        return;
+      }
+
+      event.preventDefault();
+      getDatepickerElements().input?.blur();
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [closeDatepicker, getDatepickerElements]);
+
+  useEffect(() => clearCloseAnimationTimeout, [clearCloseAnimationTimeout]);
+
   return (
-    <Datepicker
-      key={appState.language}
-      value={dateRangeFilter}
-      onChange={onChange}
-      separator={getLocalePhrase(appState.language, Phrase.DateFilterSeparator)}
-      displayFormat={format}
-      showShortcuts
-      showFooter
-      primaryColor="red"
-      containerClassName="relative tailwind-datepicker" // See App.css for tailwind overrides. This library doesn't expose much.
-      inputClassName="relative transition-all duration-300 h-[38px] pl-4 pr-14 w-full border border-background bg-card text-foreground placeholder:text-foreground rounded-lg text-sm placeholder:text-sm"
-      i18n={i18n}
-      configs={configs}
-    />
+    <div ref={containerRef} onMouseDownCapture={handleMouseDown}>
+      <Datepicker
+        key={appState.language}
+        value={dateRangeFilter}
+        onChange={onChange}
+        separator={getLocalePhrase(
+          appState.language,
+          Phrase.DateFilterSeparator,
+        )}
+        displayFormat={format}
+        showShortcuts
+        showFooter
+        primaryColor="red"
+        containerClassName="relative tailwind-datepicker" // See App.css for tailwind overrides. This library doesn't expose much.
+        inputClassName="relative transition-all duration-300 h-[38px] pl-4 pr-14 w-full border border-background bg-card text-foreground placeholder:text-foreground rounded-lg text-sm placeholder:text-sm"
+        i18n={i18n}
+        configs={configs}
+      />
+    </div>
   );
 };
 
