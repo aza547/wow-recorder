@@ -6,7 +6,6 @@ import {
   buildClipMetadata,
   checkAdvancedCombatLogging,
   getConfigWtfPath,
-  getMetadataForVideo,
   getOBSFormattedDate,
   isManualRecordHotKey,
   nextKeyPressPromise,
@@ -38,7 +37,7 @@ import {
   getBaseConfig,
   validateBaseConfig,
 } from '../utils/configUtils';
-import { ERecordingState, QualityPresets } from './obsEnums';
+import { ERecordingState } from './obsEnums';
 import {
   runClassicRecordingTest,
   runRetailRecordingTest,
@@ -504,7 +503,9 @@ export default class Manager {
     }
 
     if (config.recordClassicPtr) {
-      this.classicPtrLogHandler = new ClassicLogHandler(config.classicPtrLogPath);
+      this.classicPtrLogHandler = new ClassicLogHandler(
+        config.classicPtrLogPath,
+      );
     }
 
     if (config.recordEra) {
@@ -591,7 +592,13 @@ export default class Manager {
 
         const sourceMetadata = rendererVideoToMetadata({ ...video });
         const now = new Date();
-        const clipMetadata = buildClipMetadata(sourceMetadata, duration, now);
+        const clipMetadata = buildClipMetadata(
+          sourceMetadata,
+          duration,
+          now,
+          offset,
+          video.videoName,
+        );
 
         const clipQueueItem: VideoQueueItem = {
           name: video.videoName,

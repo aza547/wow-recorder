@@ -220,6 +220,8 @@ const GERMAN: Translations = {
   [Phrase.PlaybackSpeedTooltip]: 'Wiedergabegeschwindigkeit',
   [Phrase.ClipTooltip]: 'Clip',
   [Phrase.ClipUnavailableTooltip]: 'Du kannst nur lokal gespeicherte Videos clipen',
+  [Phrase.ClipSourceTooltip]: 'Zur Quellaufnahme wechseln',
+  [Phrase.ClipSourceUnavailableTooltip]: 'Quellaufnahme nicht verfügbar',
   [Phrase.ConfirmTooltip]: 'Bestätigen',
   [Phrase.CancelTooltip]: 'Abbrechen',
   [Phrase.TagButtonTooltip]: 'Einen Tag hinzufügen',
