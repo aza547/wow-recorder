@@ -1123,7 +1123,7 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
   159: 'Oblivion',
   160: 'Devour',
   162: 'Pulsar',
-  165: "Lindormi's Guidance"
+  165: "Lindormi's Guidance",
 };
 
 /**
