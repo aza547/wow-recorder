@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Upgrade to React 19 and enable the React compiler. In theory this improves UI performance.
 ### Added
+- Added Lindormi's Guidance affix.
 ### Fixed
 
 ## [7.7.3] - 2026-06-06
