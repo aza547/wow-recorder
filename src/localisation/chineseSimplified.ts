@@ -220,6 +220,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.PlaybackSpeedTooltip]: '回放速度',
   [Phrase.ClipTooltip]: '剪辑',
   [Phrase.ClipUnavailableTooltip]: '只能剪辑本地保存的视频',
+  [Phrase.ClipSourceTooltip]: '转到源录制',
+  [Phrase.ClipSourceUnavailableTooltip]: '源录制不可用',
   [Phrase.ConfirmTooltip]: '确认',
   [Phrase.CancelTooltip]: '取消',
   [Phrase.TagButtonTooltip]: '添加标签',

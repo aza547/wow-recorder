@@ -28,12 +28,14 @@ import {
   LockOpen,
   MessageSquare,
   MessageSquareMore,
+  ExternalLink,
 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
 import TagDialog from 'renderer/TagDialog';
 import KillVideoDialog from 'renderer/KillVideoDialog';
 import wcrIcon from '../../../../assets/icon/small-icon.png';
+import { VideoCategory } from 'types/VideoCategory';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -103,6 +105,8 @@ export const populateDetailsCell = (
   language: Language,
   cloudStatus: CloudStatus,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
+  getClipParent?: (clip: RendererVideo) => RendererVideo | undefined,
+  goToClipParent?: (clip: RendererVideo) => void,
 ) => {
   const video = ctx.getValue() as RendererVideo;
   const { write, del } = cloudStatus;
@@ -212,10 +216,47 @@ export const populateDetailsCell = (
     );
   };
 
+  const renderSourceIcon = () => {
+    if (
+      video.category !== VideoCategory.Clips ||
+      !getClipParent ||
+      !goToClipParent
+    ) {
+      return <></>;
+    }
+
+    const parent = getClipParent(video);
+    const disabled = parent === undefined;
+    const tooltip = disabled
+      ? getLocalePhrase(language, Phrase.ClipSourceUnavailableTooltip)
+      : getLocalePhrase(language, Phrase.ClipSourceTooltip);
+
+    const goToSource = (e: React.MouseEvent<HTMLButtonElement>) => {
+      stopPropagation(e);
+      goToClipParent(video);
+    };
+
+    return (
+      <Tooltip content={tooltip}>
+        <div>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={goToSource}
+            disabled={disabled}
+          >
+            <ExternalLink size={18} />
+          </Button>
+        </div>
+      </Tooltip>
+    );
+  };
+
   return (
     <Box className="inline-flex">
       {renderProtectedIcon()}
       {renderTagIcon()}
+      {renderSourceIcon()}
     </Box>
   );
 };

@@ -597,7 +597,13 @@ export default class Manager {
 
         const sourceMetadata = rendererVideoToMetadata({ ...video });
         const now = new Date();
-        const clipMetadata = buildClipMetadata(sourceMetadata, duration, now);
+        const clipMetadata = buildClipMetadata(
+          sourceMetadata,
+          duration,
+          now,
+          offset,
+          video.videoName,
+        );
 
         const clipQueueItem: VideoQueueItem = {
           name: video.videoName,

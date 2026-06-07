@@ -10,7 +10,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from 'lucide-react';
-import { povDiskFirstNameSort } from '../../rendererutils';
+import { povDiskFirstNameSort, videoMatch } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { getLocalePhrase } from 'localisation/translations';
 import { ScrollArea } from '../ScrollArea/ScrollArea';
@@ -279,9 +279,21 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>, sortedIndex: number) => {
+    const selectedVideo = appState.selectedVideos[0];
+    // Programmatic navigation, such as jumping from a clip to its source,
+    // updates appState before react-table has a selected row in the new view.
+    const appStateSelected =
+      selectedVideo !== undefined &&
+      [row.original, ...row.original.multiPov].some((video) =>
+        videoMatch(video, selectedVideo),
+      );
+
     const selected =
       row.getIsSelected() ||
-      (!table.getIsSomeRowsSelected() && row.index === 0);
+      appStateSelected ||
+      (!table.getIsSomeRowsSelected() &&
+        appState.selectedVideos.length === 0 &&
+        row.index === 0);
 
     return (
       <Fragment key={row.id}>

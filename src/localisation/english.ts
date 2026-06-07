@@ -225,6 +225,8 @@ const ENGLISH: Translations = {
   [Phrase.PlaybackSpeedTooltip]: 'Playback Speed',
   [Phrase.ClipTooltip]: 'Clip',
   [Phrase.ClipUnavailableTooltip]: 'You can only clip locally saved videos, while in single player mode',
+  [Phrase.ClipSourceTooltip]: 'Go to source recording',
+  [Phrase.ClipSourceUnavailableTooltip]: 'Source recording unavailable',
   [Phrase.ConfirmTooltip]: 'Confirm',
   [Phrase.CancelTooltip]: 'Cancel',
   [Phrase.TagButtonTooltip]: 'Add a custom tag.',
