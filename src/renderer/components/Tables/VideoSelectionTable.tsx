@@ -3,7 +3,7 @@ import { AppState, RendererVideo } from 'main/types';
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
 import React, {
   Fragment,
-  MutableRefObject,
+  RefObject,
   useCallback,
   useEffect,
 } from 'react';
@@ -25,7 +25,7 @@ interface IProps {
   table: Table<RendererVideo>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
-  persistentProgress: MutableRefObject<number>;
+  persistentProgress: RefObject<number>;
 }
 
 /**

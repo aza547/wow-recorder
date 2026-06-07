@@ -26,7 +26,7 @@ import {
 } from 'main/types';
 import {
   Dispatch,
-  MutableRefObject,
+  RefObject,
   SetStateAction,
   useEffect,
   useRef,
@@ -61,7 +61,7 @@ interface IProps {
   videoCounters: Record<VideoCategory, number>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
-  persistentProgress: MutableRefObject<number>;
+  persistentProgress: RefObject<number>;
   error: string;
   micStatus: MicStatus;
   errorReports: ErrorReport[];
