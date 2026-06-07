@@ -58,6 +58,8 @@ const useTable = (
   videoState: RendererVideo[],
   appState: AppState,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
+  getClipParent: (clip: RendererVideo) => RendererVideo | undefined,
+  goToClipParent: (clip: RendererVideo) => void,
 ) => {
   const {
     category,
@@ -345,12 +347,19 @@ const useTable = (
     () => [
       {
         id: 'Details',
-        size: 80,
+        size: 120,
         accessorFn: (v) => v,
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
-          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
+          populateDetailsCell(
+            ctx,
+            language,
+            cloudStatus,
+            setVideoState,
+            getClipParent,
+            goToClipParent,
+          ),
       },
       {
         id: 'Type',
@@ -390,7 +399,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, setVideoState],
+    [appState, setVideoState, getClipParent, goToClipParent],
   );
 
   const manualColumns = useMemo<ColumnDef<RendererVideo>[]>(

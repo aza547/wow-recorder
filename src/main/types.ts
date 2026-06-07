@@ -191,6 +191,8 @@ type VideoQueueItem = {
 type Metadata = {
   category: VideoCategory;
   parentCategory?: VideoCategory; // present if it's a clip
+  parentVideoName?: string; // present if a clip knows its source video
+  parentOffset?: number; // seconds into the source video where the clip starts
   duration: number;
   start?: number; // epoch start time of activity
   clippedAt?: number; // epoch time of clipping

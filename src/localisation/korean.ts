@@ -220,6 +220,8 @@ const KOREAN: Translations = {
   [Phrase.PlaybackSpeedTooltip]: '재생 속도',
   [Phrase.ClipTooltip]: '클립',
   [Phrase.ClipUnavailableTooltip]: '디스크에 저장된 동영상만 클립할 수 있습니다.',
+  [Phrase.ClipSourceTooltip]: '원본 녹화로 이동',
+  [Phrase.ClipSourceUnavailableTooltip]: '원본 녹화를 사용할 수 없습니다',
   [Phrase.ConfirmTooltip]: '확인',
   [Phrase.CancelTooltip]: '취소',
   [Phrase.TagButtonTooltip]: '태그',

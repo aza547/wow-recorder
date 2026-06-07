@@ -626,10 +626,20 @@ const getPromiseBomb = (fuse: number, reason: string) => {
   });
 };
 
-const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
+const buildClipMetadata = (
+  initial: Metadata,
+  duration: number,
+  date: Date,
+  offset: number,
+  parentVideoName?: string,
+) => {
   const final = initial;
   final.duration = duration;
+  // Most clip metadata is copied from the source recording; parent-prefixed
+  // fields are the trusted source navigation data added at clipping time.
   final.parentCategory = initial.category;
+  final.parentVideoName = parentVideoName;
+  final.parentOffset = offset;
   final.category = VideoCategory.Clips;
   final.protected = true;
   final.clippedAt = date.getTime();
