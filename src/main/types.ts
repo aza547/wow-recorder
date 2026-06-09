@@ -235,6 +235,7 @@ type CloudMetadata = Metadata & {
   videoKey: string;
   start: number;
   uniqueHash: string;
+  uploader: string;
 };
 
 /**
@@ -510,6 +511,7 @@ interface IBrowserWindow {
 
 type UploadQueueItem = {
   path: string;
+  uploader: string;
 };
 
 type KillVideoQueueItem = {
