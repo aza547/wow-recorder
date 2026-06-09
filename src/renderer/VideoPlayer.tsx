@@ -156,6 +156,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   // slider, which is usally the same as the video except for
   // when the user is dragging.
   const [progress, setProgress] = useState<number>(0);
+  const [buffered, setBuffered] = useState<TimeRanges | null>(null);
 
   // While the user is dragging the thumb of the slider, we don't
   // want to update the video position. This is used to conditionally
@@ -383,6 +384,50 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     );
   };
 
+  const getBufferGradient = (
+    buffered: TimeRanges | null,
+    duration: number,
+    sliderWidth: number,
+    color = 'rgba(255,255,255,0.25)',
+  ) => {
+    if (!buffered || duration === 0 || !sliderWidth) {
+      console.log("RRRRRRR")
+      return '';
+    }
+
+    const pxPerSec = sliderWidth / duration;
+    const stops: string[] = [];
+
+    let cursor = 0;
+
+    for (let i = 0; i < buffered.length; i++) {
+      const start = Math.round(buffered.start(i) * pxPerSec);
+      const end = Math.round(buffered.end(i) * pxPerSec);
+
+      // transparent gap
+      if (start > cursor) {
+        stops.push(`transparent ${cursor}px`);
+        stops.push(`transparent ${start}px`);
+      }
+
+      // buffered segment (light highlight, not solid fill)
+      stops.push(`${color} ${start}px`);
+      stops.push(`${color} ${end}px`);
+
+      cursor = end;
+    }
+
+    // tail gap
+    if (cursor < sliderWidth) {
+      stops.push(`transparent ${cursor}px`);
+      stops.push(`transparent ${sliderWidth}px`);
+    }
+
+    console.log("GRAD", `linear-gradient(90deg, ${stops.join(', ')})`)
+
+    return `linear-gradient(90deg, ${stops.join(', ')})`;
+  };
+
   /**
    * Conveince method to get an appropriate sx prop for the regular
    * progress slider.
@@ -401,8 +446,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         height: '4px',
       },
       '& .MuiSlider-rail': {
-        background: getRailGradient(),
-        height: '4px',
+        backgroundImage: `
+        ${getRailGradient()}
+        ${getBufferGradient(buffered, duration, progressSlider.current?.getBoundingClientRect().width ?? 0)}
+      `,
       },
       '& .MuiSlider-track': {
         background: getTrackGradient(),
@@ -507,6 +554,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       }
 
       setProgress(player1.current.currentTime);
+      setBuffered(player1.current.buffered);
     }, 100); // 10fps-ish smooth UI
   };
 
@@ -576,11 +624,13 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
       if (index === 1) {
         setProgress(value[1]);
+        setBuffered(null);
       }
     }
 
     if (typeof value === 'number') {
       setProgress(value);
+      setBuffered(null);
     }
   };
 
@@ -1277,12 +1327,14 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       const current = player1.current.currentTime;
       seekAllPlayers(current - 5);
       setProgress(current - 5);
+      setBuffered(null);
     }
 
     if (e.key === 'l' || e.key === 'ArrowRight') {
       const current = player1.current.currentTime;
       seekAllPlayers(current + 5);
       setProgress(current + 5);
+      setBuffered(null);
     }
 
     if (e.key === '.') {
@@ -1290,6 +1342,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       const frame = 1 / 30; // Assume 30fps, not the end of the world if we skip 2 frames.
       seekAllPlayers(current + frame);
       setProgress(current + frame);
+      setBuffered(null);
     }
 
     if (e.key === ',') {
@@ -1297,6 +1350,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       const frame = 1 / 30; // Assume 30fps, not the end of the world if we skip 2 frames.
       seekAllPlayers(current - frame);
       setProgress(current - frame);
+      setBuffered(null);
     }
   };
 
