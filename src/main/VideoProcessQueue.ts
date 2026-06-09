@@ -276,10 +276,7 @@ export default class VideoProcessQueue {
       const upload = readyToUpload && shouldUpload(this.cfg, data.metadata);
 
       if (upload) {
-        const item: UploadQueueItem = {
-          path: videoPath,
-          uploader: this.cfg.get<string>('cloudAccountName'),
-        };
+        const item: UploadQueueItem = { path: videoPath };
         this.queueUpload(item);
       }
     } catch (error) {
@@ -332,7 +329,6 @@ export default class VideoProcessQueue {
         uniqueHash: metadata.uniqueHash || '',
         videoName: path.basename(item.path, '.mp4'),
         videoKey: path.basename(item.path),
-        uploader: item.uploader,
       };
 
       if (cloudMetadata.level) {
@@ -479,10 +475,7 @@ export default class VideoProcessQueue {
       const upload = readyToUpload && shouldUpload(this.cfg, metadata);
 
       if (upload) {
-        const item: UploadQueueItem = {
-          path: videoPath,
-          uploader: this.cfg.get<string>('cloudAccountName'),
-        };
+        const item: UploadQueueItem = { path: videoPath };
         this.queueUpload(item);
       }
     } finally {
