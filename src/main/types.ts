@@ -195,6 +195,17 @@ type RelocateQueueItem = {
 };
 
 /**
+ * Status of the background relocation of cut videos from the local staging dir
+ * to storage. Drives the small progress bar under the top-left status. perc is
+ * 0-100, or -1 to indicate an indeterminate (activity-only) state when the copy
+ * target doesn't expose progressive size growth.
+ */
+type RelocateStatus = {
+  queued: number;
+  perc: number;
+};
+
+/**
  * This is what we write to the .json files. We use "raw" subtypes here to
  * represent any classes as writing entire classes to JSON files causes
  * problems on the frontend.
@@ -748,4 +759,5 @@ export {
   KillVideoQueueItem,
   KillVideoSegment,
   KillVideoStatus,
+  RelocateStatus,
 };
