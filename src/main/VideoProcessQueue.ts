@@ -715,6 +715,13 @@ export default class VideoProcessQueue {
 
       console.info('[VideoProcessQueue] Relocated video to storage', destMp4);
 
+      // Tell the frontend the source moved staging -> storage so any open
+      // player swaps its reference to the permanent copy (and the relocating
+      // badge clears). Combined with the vod:// storage fallback, this makes
+      // the cutover seamless: the live media keeps streaming while state
+      // catches up to the permanent path.
+      send('videoSourceRelocated', { from: stagingPath, to: destMp4 });
+
       // Refresh so the frontend now resolves the video from storage. Any
       // in-progress playback of the local staging copy is unaffected.
       DiskClient.getInstance().refreshVideos();

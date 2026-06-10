@@ -299,6 +299,30 @@ const WarcraftRecorder = () => {
     });
   };
 
+  // A local staging copy ("review while relocating") has finished moving to
+  // permanent storage. Swap any references from the staging path to the
+  // storage path so the selected/listed videos track the permanent file and
+  // the relocating badge clears. The currently-playing media keeps streaming
+  // seamlessly via the vod:// storage fallback, so this is non-disruptive;
+  // updating selectedVideos also re-reports the active source to main so the
+  // staging copy can be cleaned up promptly.
+  const videoSourceRelocated = (payload: unknown) => {
+    const { from, to } = payload as { from: string; to: string };
+    const fromName = from.split(/[\\/]/).pop();
+
+    const swap = (v: RendererVideo): RendererVideo =>
+      !v.cloud && v.videoSource.split(/[\\/]/).pop() === fromName
+        ? { ...v, videoSource: to, relocating: false }
+        : v;
+
+    setVideoState((prev) => prev.map(swap));
+
+    setAppState((prevState) => ({
+      ...prevState,
+      selectedVideos: prevState.selectedVideos.map(swap),
+    }));
+  };
+
   // Incrementally add a new cloud video to the frontend, or update
   // it if it exists already.
   const displayAddCloudVideo = (video: unknown) => {
@@ -433,6 +457,7 @@ const WarcraftRecorder = () => {
     ipc.on('playAudio', playAudio);
     ipc.on('setCloudVideos', setCloudVideos);
     ipc.on('setDiskVideos', setDiskVideos);
+    ipc.on('videoSourceRelocated', videoSourceRelocated);
     ipc.on('displayAddCloudVideo', displayAddCloudVideo);
     ipc.on('displayRemoveCloudVideos', displayRemoveCloudVideos);
     ipc.on('displayProtectCloudVideos', displayProtectCloudVideos);
@@ -452,6 +477,7 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('playAudio');
       ipc.removeAllListeners('setCloudVideos');
       ipc.removeAllListeners('setDiskVideos');
+      ipc.removeAllListeners('videoSourceRelocated');
       ipc.removeAllListeners('displayAddCloudVideo');
       ipc.removeAllListeners('displayRemoveCloudVideos');
       ipc.removeAllListeners('displayProtectCloudVideos');
