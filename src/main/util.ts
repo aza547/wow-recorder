@@ -41,6 +41,7 @@ import {
   secToMmSs,
 } from 'renderer/rendererutils';
 import { ZipArchive } from 'archiver';
+import { getStagingDir } from 'utils/configUtils';
 
 /**
  * When packaged, we need to fix some paths
@@ -1079,6 +1080,39 @@ const logAxiosError = (msg: string, error: AxiosError) => {
 };
 
 /**
+ * If the given path points at a local staging copy (the "review while
+ * relocating" feature), return the equivalent permanent storage path, else
+ * null. The staging and storage copies are byte-identical, so this lets the
+ * vod:// handler transparently fall back to the storage copy when a staging
+ * file is removed mid-playback after its relocation completes. This is what
+ * keeps seeking and playback seamless across the relocation cutover.
+ */
+const resolveRelocatedStoragePath = (filePath: string): string | null => {
+  const cfg = ConfigService.getInstance();
+  const stagingDir = getStagingDir(cfg);
+
+  if (!stagingDir) {
+    return null;
+  }
+
+  const resolved = path.resolve(filePath);
+  const resolvedStaging = path.resolve(stagingDir);
+
+  if (!resolved.startsWith(resolvedStaging + path.sep)) {
+    // Not a staging path; nothing to fall back to.
+    return null;
+  }
+
+  const storageDir = cfg.get<string>('storagePath');
+
+  if (!storageDir) {
+    return null;
+  }
+
+  return path.join(storageDir, path.basename(filePath));
+};
+
+/**
  * Custom protocol that enables the frontend to request MP4 files from disk.
  */
 const handleSafeVodRequest = async (request: Request) => {
@@ -1095,7 +1129,7 @@ const handleSafeVodRequest = async (request: Request) => {
       });
     }
 
-    const filePath = Buffer.from(requestUrl).toString('utf-8').split('#')[0]; // Remove any timestamps, the frontend handles those.
+    let filePath = Buffer.from(requestUrl).toString('utf-8').split('#')[0]; // Remove any timestamps, the frontend handles those.
 
     if (!filePath.endsWith('.mp4')) {
       console.error('[Util] Not an MP4 file:', filePath);
@@ -1112,12 +1146,37 @@ const handleSafeVodRequest = async (request: Request) => {
       // This will throw if the file doesn't exist.
       stats = await fspromise.stat(filePath);
     } catch (err) {
-      console.error('[Util] Error stating file:', err, filePath);
+      // The staging copy may have just been relocated to permanent storage
+      // and deleted out from under an open player. Transparently fall back to
+      // the (byte-identical) storage copy so seeking/playback don't break.
+      const fallback = resolveRelocatedStoragePath(filePath);
 
-      return new Response('', {
-        status: 404,
-        statusText: 'File Not Found',
-      });
+      if (fallback) {
+        try {
+          stats = await fspromise.stat(fallback);
+
+          console.info(
+            '[Util] Staging file gone, serving relocated storage copy',
+            fallback,
+          );
+
+          filePath = fallback;
+        } catch {
+          console.error('[Util] Error stating file:', err, filePath);
+
+          return new Response('', {
+            status: 404,
+            statusText: 'File Not Found',
+          });
+        }
+      } else {
+        console.error('[Util] Error stating file:', err, filePath);
+
+        return new Response('', {
+          status: 404,
+          statusText: 'File Not Found',
+        });
+      }
     }
 
     const fileSize = stats.size;
