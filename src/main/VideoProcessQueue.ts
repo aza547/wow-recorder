@@ -13,6 +13,7 @@ import {
   KillVideoQueueItem,
   KillVideoStatus,
   RelocateQueueItem,
+  RelocateStatus,
   RendererVideo,
   SaveStatus,
   UploadQueueItem,
@@ -127,6 +128,12 @@ export default class VideoProcessQueue {
    * processing, or in progress currently.
    */
   private inProgressKillVideos: string[] = [];
+
+  /**
+   * Count of videos currently queued or in-flight for relocation to storage.
+   * Drives the queued count on the relocate progress indicator.
+   */
+  private inProgressRelocations = 0;
 
   /**
    * Resolved paths of the video sources currently loaded in the frontend
@@ -315,8 +322,24 @@ export default class VideoProcessQueue {
       '[VideoProcessQueue] Queuing video for relocation',
       item.stagingPath,
     );
+
+    this.inProgressRelocations += 1;
     this.relocateQueue.write(item);
+
+    // Surface the newly queued relocation (perc 0) so the indicator appears
+    // promptly, even before the copy of the current item makes progress.
+    this.emitRelocateStatus(0);
   };
+
+  /**
+   * Push the current relocation status to the frontend. perc is the copy
+   * progress of the in-flight item (0-100), or -1 for an indeterminate state.
+   */
+  private emitRelocateStatus(perc: number) {
+    const queued = Math.max(0, this.inProgressRelocations);
+    const status: RelocateStatus = { queued, perc };
+    send('updateRelocateStatus', status);
+  }
 
   /**
    * Reconcile the local staging dir on startup. For each staged video: if it
@@ -688,12 +711,66 @@ export default class VideoProcessQueue {
     const destMp4 = path.join(storageDir, name);
     const destJson = getMetadataFileNameForVideo(destMp4);
 
+    // Timer that watches the growing temp MP4 to report copy progress. It is a
+    // read-only observer (a periodic stat) running alongside the proven
+    // copyFile; it cannot affect the copy itself.
+    let progressTimer: ReturnType<typeof setInterval> | undefined;
+
     try {
       await fspromise.mkdir(tmpDir, { recursive: true });
 
-      // Copy both files fully into the temp dir (the slow network part).
+      // The JSON sidecar is tiny; copy it directly.
       await fspromise.copyFile(stagingJson, tmpJson);
+
+      // Source size is the denominator for progress. The MP4 is the slow
+      // (network) part, so we poll the temp file's size against this while
+      // copyFile runs.
+      const total = await fspromise
+        .stat(stagingPath)
+        .then((s) => s.size)
+        .catch(() => 0);
+
+      let lastPerc = -1;
+      let indeterminate = false;
+      let statInFlight = false;
+
+      progressTimer = setInterval(() => {
+        if (total <= 0 || statInFlight) {
+          return;
+        }
+
+        statInFlight = true;
+
+        fspromise
+          .stat(tmpMp4)
+          .then(({ size }) => {
+            const perc = Math.min(99, Math.round((size / total) * 100));
+
+            // If the very first observation is already "complete", the target
+            // likely preallocates the file rather than growing it; fall back to
+            // an indeterminate (activity-only) display instead of a fake bar.
+            if (lastPerc === -1 && size >= total) {
+              indeterminate = true;
+            }
+
+            if (perc !== lastPerc) {
+              lastPerc = perc;
+              this.emitRelocateStatus(indeterminate ? -1 : perc);
+            }
+          })
+          .catch(() => {
+            // Temp file not created yet, or a transient stat error; ignore.
+          })
+          .finally(() => {
+            statInFlight = false;
+          });
+      }, 300);
+
+      // Copy the MP4 into the temp dir (the slow network part).
       await fspromise.copyFile(stagingPath, tmpMp4);
+
+      clearInterval(progressTimer);
+      progressTimer = undefined;
 
       // Sanity check the copied video size matches the source.
       const [srcStat, dstStat] = await Promise.all([
@@ -740,6 +817,15 @@ export default class VideoProcessQueue {
       // its json sibling). The staging copy remains, so the video is still
       // reviewable and reconcileStaging will retry on the next startup.
       await deleteVideoDisk(tmpMp4);
+    } finally {
+      if (progressTimer) {
+        clearInterval(progressTimer);
+      }
+
+      // This relocation is done (success or failure). Drop the queued count and
+      // push status so the indicator advances to the next item or hides.
+      this.inProgressRelocations = Math.max(0, this.inProgressRelocations - 1);
+      this.emitRelocateStatus(0);
     }
 
     done();
@@ -934,6 +1020,11 @@ export default class VideoProcessQueue {
    */
   private async relocateQueueEmpty() {
     console.info('[VideoProcessQueue] Relocate processing queue empty');
+
+    // Backstop: the queue is drained, so nothing is in flight. Reset the count
+    // and hide the indicator in case the per-item bookkeeping ever drifted.
+    this.inProgressRelocations = 0;
+    this.emitRelocateStatus(0);
   }
 
   /**
