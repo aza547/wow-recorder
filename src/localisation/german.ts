@@ -534,6 +534,8 @@ const GERMAN: Translations = {
   [Phrase.DiagnosticsCreateBundleButton]: 'Diagnosepaket erstellen',
   [Phrase.DiagnosticsZippingInProgress]: 'Protokolle werden gepackt...',
   [Phrase.DiagnosticsOpenBundleCreated]: 'Paketordner öffnen',
+  [Phrase.StatusTitleMigrated]: 'Migriert',
+  [Phrase.StatusDescrMigrated]: 'Diese Gilde wurde migriert.', // TODO: add more details here.
 };
 
 export default GERMAN;

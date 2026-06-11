@@ -534,6 +534,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.DiagnosticsCreateBundleButton]: '创建诊断包',
   [Phrase.DiagnosticsZippingInProgress]: '正在打包日志...',
   [Phrase.DiagnosticsOpenBundleCreated]: '打开包文件夹',
-  };
+  [Phrase.StatusTitleMigrated]: '已迁移',
+  [Phrase.StatusDescrMigrated]: '此公会已迁移。', // TODO: add more details here.
+};
 
 export default CHINESE_SIMPLIFIED;

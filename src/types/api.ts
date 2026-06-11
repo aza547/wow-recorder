@@ -29,3 +29,25 @@ export const KeystoneTimerResponse = z.object({
 });
 
 export type TKeystoneTimerResponse = z.infer<typeof KeystoneTimerResponse>;
+
+export const Guild = z.object({
+  guildName: z.string(),
+  bucketName: z.string(),
+  tableName: z.string(),
+  usageGB: z.number(),
+  limitGB: z.number(),
+  mtime: z.number(),
+  expiry: z.number(),
+  region: z.string(),
+  patreonMemberId: z.string(),
+  disabled: z.boolean(),
+  migrated: z.boolean(),
+});
+
+export const PublicGuildInfo = Guild.omit({
+  bucketName: true,
+  tableName: true,
+  patreonMemberId: true,
+});
+
+export type TPublicGuildInfo = z.infer<typeof PublicGuildInfo>;

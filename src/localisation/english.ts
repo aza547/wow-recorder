@@ -534,6 +534,8 @@ const ENGLISH: Translations = {
   [Phrase.DiagnosticsCreateBundleButton]: 'Create Diagnostics Bundle',
   [Phrase.DiagnosticsZippingInProgress]: 'Zipping Up Logs...',
   [Phrase.DiagnosticsOpenBundleCreated]: 'Open Bundle Location',
+  [Phrase.StatusTitleMigrated]: 'Migrated',
+  [Phrase.StatusDescrMigrated]: 'This guild has been migrated.', // TODO: add more details here.
 };
 
 export default ENGLISH;
