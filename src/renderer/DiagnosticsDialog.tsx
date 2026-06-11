@@ -6,7 +6,7 @@ import {
   DialogTrigger,
 } from './components/Dialog/Dialog';
 import { Button } from './components/Button/Button';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { AppState } from 'main/types';
 import { ExternalLink, FileText, Package } from 'lucide-react';
 import Spinner from './components/Spinner/Spinner';
@@ -30,12 +30,6 @@ const DiagnosticsDialog = (props: IProps) => {
   const [open, setOpen] = useState(false);
   const [zipping, setZipping] = useState(false);
   const [bundlePath, setBundlePath] = useState('');
-
-  useEffect(() => {
-    if (!open) return;
-    setZipping(false);
-    setBundlePath('');
-  }, [open]);
 
   const renderOpenLogFolder = () => {
     return (
@@ -107,7 +101,16 @@ const DiagnosticsDialog = (props: IProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        setOpen(open);
+        if (open) {
+          setZipping(false);
+          setBundlePath('');
+        }
+      }}
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
