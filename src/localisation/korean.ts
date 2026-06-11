@@ -529,6 +529,11 @@ const KOREAN: Translations = {
   [Phrase.CodecDescriptionH265]:'H265/HEVC는 독점 코덱으로, 동일한 화질에서 H264보다 훨씬 작은 파일 크기를 제공할 수 있지만 기기 및 소프트웨어 호환성은 더 제한적입니다.',
   [Phrase.CodecDescriptionAV1]:'AV1은 로열티 프리 비디오 코덱으로, H265보다 더 뛰어난 압축 효율을 제공할 수 있지만 기기 지원은 다를 수 있습니다.',
   [Phrase.CodecNeedsHardwareRendering]: '선택한 인코더는 재생을 위해 하드웨어 렌더링이 필요합니다. 애플리케이션 설정에서 이를 활성화한 후 앱을 다시 시작하거나 다른 인코더를 선택하세요.',
+  [Phrase.DiagnosticsDialogDescription]: '애플리케이션 로그에 접근합니다. 문제가 발생한 경우 Discord에서 진단 번들을 공유하면 문제를 식별하고 해결하는 데 도움이 됩니다.',
+  [Phrase.DiagnosticsOpenLogButton]: '로그 폴더 열기',
+  [Phrase.DiagnosticsCreateBundleButton]: '진단 번들 생성',
+  [Phrase.DiagnosticsZippingInProgress]: '로그 압축 중...',
+  [Phrase.DiagnosticsOpenBundleCreated]: '번들 폴더 열기',
 };
 
 export default KOREAN;

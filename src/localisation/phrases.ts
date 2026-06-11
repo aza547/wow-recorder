@@ -525,6 +525,11 @@ enum Phrase {
   CodecDescriptionH265,
   CodecDescriptionAV1,
   CodecNeedsHardwareRendering,
+  DiagnosticsDialogDescription,
+  DiagnosticsOpenLogButton,
+  DiagnosticsCreateBundleButton,
+  DiagnosticsZippingInProgress,
+  DiagnosticsOpenBundleCreated,
 }
 
 enum Language {

@@ -529,7 +529,11 @@ const GERMAN: Translations = {
   [Phrase.CodecDescriptionH265]:'H265/HEVC ist ein proprietärer Codec, der bei vergleichbarer Qualität deutlich kleinere Dateigrößen als H264 ermöglichen kann, jedoch eine eingeschränktere Geräte- und Softwarekompatibilität besitzt.',
   [Phrase.CodecDescriptionAV1]:'AV1 ist ein lizenzfreier Codec, der eine noch bessere Komprimierungseffizienz als H265 bieten kann. Die Geräteunterstützung kann jedoch variieren.',
   [Phrase.CodecNeedsHardwareRendering]: 'Der ausgewählte Encoder benötigt Hardwarebeschleunigung für die Wiedergabe. Aktiviere diese in den Anwendungseinstellungen und starte die App neu oder wähle einen anderen Encoder.',
-
+  [Phrase.DiagnosticsDialogDescription]: 'Zugriff auf die Anwendungsprotokolle. Wenn du ein Problem hast, kann das Teilen eines Diagnosepakets in Discord helfen, die Ursache zu finden und zu beheben.',
+  [Phrase.DiagnosticsOpenLogButton]: 'Protokollordner öffnen',
+  [Phrase.DiagnosticsCreateBundleButton]: 'Diagnosepaket erstellen',
+  [Phrase.DiagnosticsZippingInProgress]: 'Protokolle werden gepackt...',
+  [Phrase.DiagnosticsOpenBundleCreated]: 'Paketordner öffnen',
 };
 
 export default GERMAN;
