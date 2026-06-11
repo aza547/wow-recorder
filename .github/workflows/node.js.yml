@@ -24,7 +24,15 @@ jobs:
 
     - name: Install deps
       run: npm install
+
+    - name: Build
+      run: npm run build
       
     # https://github.com/aza547/wow-recorder/issues/737
     # - name: Run unit tests 
     #   run: npm test
+
+    # This is just here for reference. Real builds are done on my PC with my 
+    # EV cert signing hardware token.
+    # - name: Package for distribution
+    #   run: npm run package
