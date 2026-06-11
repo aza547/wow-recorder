@@ -530,6 +530,8 @@ enum Phrase {
   DiagnosticsCreateBundleButton,
   DiagnosticsZippingInProgress,
   DiagnosticsOpenBundleCreated,
+  StatusTitleMigrated,
+  StatusDescrMigrated,
 }
 
 enum Language {

@@ -5,6 +5,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import { Tag } from 'react-tag-autocomplete';
 import { DateValueType } from 'react-tailwindcss-datepicker';
 import { ESupportedEncoders } from './obsEnums';
+import { ReactNode } from 'react';
 
 /**
  * Application recording status.
@@ -475,7 +476,7 @@ type VideoMarker = {
 
 type SliderMark = {
   value: number;
-  label: JSX.Element;
+  label: ReactNode;
 };
 
 type CloudStatus = {
@@ -489,6 +490,7 @@ type CloudStatus = {
   del: boolean;
   usage: number;
   limit: number;
+  migrated: boolean;
 };
 
 type DiskStatus = {

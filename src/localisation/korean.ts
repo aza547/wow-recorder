@@ -534,6 +534,8 @@ const KOREAN: Translations = {
   [Phrase.DiagnosticsCreateBundleButton]: '진단 번들 생성',
   [Phrase.DiagnosticsZippingInProgress]: '로그 압축 중...',
   [Phrase.DiagnosticsOpenBundleCreated]: '번들 폴더 열기',
+  [Phrase.StatusTitleMigrated]: '마이그레이션 완료',
+  [Phrase.StatusDescrMigrated]: '이 길드는 마이그레이션되었습니다.', // TODO: add more details here.
 };
 
 export default KOREAN;

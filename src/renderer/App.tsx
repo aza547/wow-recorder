@@ -13,7 +13,6 @@ import {
   StorageFilter,
   ActivityStatus,
   AdvancedLoggingStatus,
-  KillVideoStatus,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language } from 'localisation/translations';
@@ -115,6 +114,7 @@ const WarcraftRecorder = () => {
       del: false,
       usage: 0,
       limit: 0,
+      migrated: false,
     },
 
     // The disk storage status.

@@ -116,6 +116,19 @@ const CloudStatus = ({ appState, setPreviewEnabled }: StatusProps) => {
         </p>
       </div>
     );
+  } else if (cloudStatus.migrated) {
+    variant = 'error';
+    status = getLocalePhrase(language, Phrase.StatusTitleMigrated);
+
+    description = (
+      <div className="flex flex-col gap-y-2">
+        <h2 className="text-sm font-semibold">{status}</h2>
+        <Separator className="my-1" />
+        <p className="text-xs text-popover-foreground/60">
+          {getLocalePhrase(language, Phrase.StatusDescrMigrated)}
+        </p>
+      </div>
+    );
   } else {
     variant =
       cloudState.queuedDownloads > 0 || cloudState.queuedUploads > 0

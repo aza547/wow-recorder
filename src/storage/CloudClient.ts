@@ -14,6 +14,7 @@ import {
   Affiliation,
   ChatMessageWithId,
   KeystoneTimerResponse,
+  PublicGuildInfo,
   TAffiliation,
   TKeystoneTimerResponse,
 } from 'types/api';
@@ -77,6 +78,11 @@ export default class CloudClient implements StorageClient {
    * Whether the client is authorized or not.
    */
   private authorized = false;
+
+  /**
+   * Whether the selected guild has been migrated or not.
+   */
+  private migrated = false;
 
   /**
    * The username of the cloud user.
@@ -275,7 +281,9 @@ export default class CloudClient implements StorageClient {
    * Check if the client is ready for use.
    */
   public async ready() {
-    return this.enabled && this.authenticated && this.authorized;
+    return (
+      this.enabled && this.authenticated && this.authorized && !this.migrated
+    );
   }
 
   /**
@@ -316,6 +324,7 @@ export default class CloudClient implements StorageClient {
       read: this.read,
       write: this.write,
       del: this.del,
+      migrated: this.migrated,
     };
 
     const rdy = await this.ready();
@@ -444,6 +453,7 @@ export default class CloudClient implements StorageClient {
     this.authorized = false;
     this.user = '';
     this.pass = '';
+    this.migrated = false;
     this.authHeader = undefined;
     this.guild = '';
     this.affiliations = [];
@@ -544,6 +554,17 @@ export default class CloudClient implements StorageClient {
 
     // If we got this far the user is authorized for their configuration.
     this.authorized = true;
+
+    // Check the guild hasn't been migrated. If it is the user should
+    // login with WCL.
+    const info = await this.getGuildInfo();
+
+    if (info.migrated) {
+      console.warn('[CloudClient] Guild has been migrated');
+      this.migrated = true;
+      this.refreshStatus();
+      return;
+    }
 
     try {
       const usagePromise = this.getUsage();
@@ -1499,5 +1520,21 @@ export default class CloudClient implements StorageClient {
     );
 
     return parsed;
+  }
+
+  public async getGuildInfo() {
+    console.info('[CloudClient] Get guild info for guild', this.guild);
+
+    const url = `${CloudClient.api}/guild/${encodeURIComponent(this.guild)}`;
+    const headers = { Authorization: this.authHeader };
+
+    const rsp = await axios.get(url, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    const info = PublicGuildInfo.parse(rsp.data);
+    console.info('[CloudClient] Successfully got guild info', info);
+    return info;
   }
 }
