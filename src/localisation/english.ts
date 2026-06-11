@@ -528,7 +528,12 @@ const ENGLISH: Translations = {
   [Phrase.CodecDescriptionH264]: 'H264 (AVC) is the most widely supported video codec and is compatible with nearly all modern devices. If you are unsure which encoder to use, you should use this one.',
   [Phrase.CodecDescriptionH265]: 'H265 (HEVC) is a proprietary codec that can provide significantly smaller file sizes than H264 at similar quality, but has more limited playback compatibility.',
   [Phrase.CodecDescriptionAV1]: 'AV1 is a royalty-free codec that can provide even better compression efficiency than H265, but like H265 has more limited playback compatibility.',
-  [Phrase.CodecNeedsHardwareRendering]: 'Selected encoder requires hardware rendering for playback. Enable it in the Application settings and restart the app, or select a different encoder.'
+  [Phrase.CodecNeedsHardwareRendering]: 'Selected encoder requires hardware rendering for playback. Enable it in the Application settings and restart the app, or select a different encoder.', 
+  [Phrase.DiagnosticsDialogDescription]: 'If you are experiencing an issue, sharing a diagnostics bundle can help us identify and fix the problem.',
+  [Phrase.DiagnosticsOpenLogButton]: 'Open Log Folder',
+  [Phrase.DiagnosticsCreateBundleButton]: 'Create Diagnostics Bundle',
+  [Phrase.DiagnosticsZippingInProgress]: 'Zipping Up Logs...',
+  [Phrase.DiagnosticsOpenBundleCreated]: 'Open Bundle Location',
 };
 
 export default ENGLISH;

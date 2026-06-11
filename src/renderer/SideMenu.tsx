@@ -4,6 +4,7 @@ import {
   Dice2,
   Dice3,
   Dice5,
+  FileText,
   Goal,
   HardHat,
   MonitorCog,
@@ -53,6 +54,7 @@ import { Phrase } from 'localisation/phrases';
 import PatreonButton from './PatreonButton';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import DiagnosticsDialog from './DiagnosticsDialog';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -309,7 +311,11 @@ const SideMenu = (props: IProps) => {
             updateAvailable={updateAvailable}
             appState={appState}
           />
-          <LogsButton appState={appState} />
+          <DiagnosticsDialog appState={appState}>
+            <Button variant="ghost" size="icon">
+              <FileText size={20} />
+            </Button>
+          </DiagnosticsDialog>
           <TestButton recorderStatus={recorderStatus} appState={appState} />
           <DiscordButton appState={appState} />
           <PatreonButton appState={appState} />

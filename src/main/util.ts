@@ -40,6 +40,7 @@ import {
   getPlayerSpecID,
   secToMmSs,
 } from 'renderer/rendererutils';
+import { ZipArchive } from 'archiver';
 
 /**
  * When packaged, we need to fix some paths
@@ -1205,6 +1206,37 @@ const runFirstTimeSetupActionsNoObs = () => {
   }
 };
 
+const createDiagsBundle = async (logPath: string): Promise<string> => {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  const timestamp =
+    `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${String(now.getFullYear()).slice(-2)}-` +
+    `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+
+  const bundleName = `wcr-diag-bundle-${timestamp}.zip`;
+  const bundlePath = path.join(logPath, bundleName);
+
+  const archive = new ZipArchive({ zlib: { level: 9 } });
+  const output = fs.createWriteStream(bundlePath);
+
+  return new Promise((resolve, reject) => {
+    output.once('close', () => {
+      console.info(
+        `[Util] Created diagnostics bundle: ${bundleName} (${archive.pointer()} bytes)`,
+      );
+      resolve(bundlePath); // <-- return path here
+    });
+
+    archive.once('error', reject);
+    output.once('error', reject);
+
+    archive.pipe(output);
+    archive.glob('**/*', { cwd: logPath, ignore: ['*.zip'] });
+    archive.finalize();
+  });
+};
+
 export {
   setupApplicationLogging,
   writeMetadataFile,
@@ -1250,4 +1282,5 @@ export {
   checkAdvancedCombatLogging,
   getConfigWtfPath,
   getDriveFormat,
+  createDiagsBundle,
 };

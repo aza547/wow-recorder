@@ -23,6 +23,7 @@ import {
   handleSafeVodRequest,
   runFirstTimeSetupActionsObs,
   runFirstTimeSetupActionsNoObs,
+  createDiagsBundle,
 } from './util';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
@@ -386,6 +387,21 @@ ipcMain.on('logPath', (_event, args) => {
   if (args[0] === 'open') {
     openSystemExplorer(logDir);
   }
+});
+
+/**
+ * Zips a diags bundle up in the log folder and return the path.
+ */
+ipcMain.handle('createDiagsBundle', async () => {
+  return createDiagsBundle(logDir);
+});
+
+/**
+ * Generic open a file in system explorer listener.
+ */
+ipcMain.on('systemExplorer', (_event, target) => {
+  const targetPath = target as string;
+  openSystemExplorer(targetPath);
 });
 
 /**
