@@ -265,6 +265,11 @@ const validateLogPathFilesystem = async (
   logPath: string,
   logPathLabel: Phrase,
 ) => {
+  if (!ConfigService.getInstance().get<boolean>('validateNtfs')) {
+    console.warn('[Util] Skipping NTFS filesystem check for', logPath);
+    return;
+  }
+
   const driveFormat = await getDriveFormat(logPath);
 
   if (!driveFormat) {

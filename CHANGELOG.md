@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Add a switch to allow disabling of NTFS checks (at users own risk).
+
 ### Fixed
+
 
 ## [7.8.0] - 2026-06-11
 ### Changed

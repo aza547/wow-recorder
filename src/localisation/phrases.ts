@@ -504,6 +504,8 @@ enum Phrase {
   ChatDeleteMessageTooltip,
   ValidateLogPathLabel,
   ValidateLogPathsDescription,
+  ValidateNtfsLabel,
+  ValidateNtfsDescription,
   StartManualRecordingTooltip,
   StopManualRecordingTooltip,
   RecordedAt,

@@ -98,6 +98,7 @@ export type ConfigurationSchema = {
   firstTimeSetup: boolean;
   chatUserNameAgreed: string;
   validateLogPaths: boolean;
+  validateNtfs: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -610,6 +611,11 @@ export const configSchema = {
   },
   validateLogPaths: {
     description: Phrase.ValidateLogPathsDescription,
+    type: 'boolean',
+    default: true,
+  },
+  validateNtfs: {
+    description: Phrase.ValidateNtfsDescription,
     type: 'boolean',
     default: true,
   },

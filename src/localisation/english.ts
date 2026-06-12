@@ -506,6 +506,8 @@ const ENGLISH: Translations = {
   [Phrase.ChatDeleteMessageTooltip]: 'Delete this chat message',
   [Phrase.ValidateLogPathLabel]: 'Validate Log Paths',
   [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder checks the log paths you set point to a supported WoW installation. You can disable this checking to allow you to set unsupported game modes. Disable this at your own risk.',
+  [Phrase.ValidateNtfsLabel]: 'Validate NTFS',
+  [Phrase.ValidateNtfsDescription]: 'Warcraft Recorder checks if the log paths are on an NTFS file system. You can disable this checking to allow you to set unsupported file systems. Disable this at your own risk.',
   [Phrase.StartManualRecordingTooltip]: 'Start a manual recording.',
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
