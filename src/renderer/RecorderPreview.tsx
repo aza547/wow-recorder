@@ -37,10 +37,15 @@ const RecorderPreview = (props: {
 
   const initialRender = useRef(true);
   const previewDivRef = useRef<HTMLDivElement>(null);
+  const previewVideoRef = useRef<HTMLVideoElement>(null);
+  const previewStreamRef = useRef<MediaStream | null>(null);
+  const browserPreviewRequestId = useRef(0);
+  const browserPreviewSupported = useRef(false);
+  const resizeObserver = useRef<ResizeObserver | null>(null);
   const draggingOverlay = useRef<SceneInteraction>(SceneInteraction.NONE);
   const draggingGame = useRef<SceneInteraction>(SceneInteraction.NONE);
   let zIndex = 1;
-  let resizeObserver: ResizeObserver | undefined;
+  const [browserPreviewVisible, setBrowserPreviewVisible] = useState(false);
 
   const [previewInfo, setPreviewInfo] = useState<{
     canvasWidth: number;
@@ -80,22 +85,151 @@ const RecorderPreview = (props: {
     cropBottom: 0,
   });
 
+  const getPreviewPixelSize = () => {
+    if (!previewDivRef.current) return null;
+
+    const { width, height } = previewDivRef.current.getBoundingClientRect();
+    const zoomFactor = window.devicePixelRatio;
+
+    return {
+      previewWidth: width * zoomFactor,
+      previewHeight: height * zoomFactor,
+    };
+  };
+
+  const clearBrowserPreviewStream = useCallback(() => {
+    previewStreamRef.current?.getTracks().forEach((track) => track.stop());
+    previewStreamRef.current = null;
+
+    if (previewVideoRef.current) {
+      previewVideoRef.current.srcObject = null;
+    }
+
+    setBrowserPreviewVisible(false);
+  }, []);
+
+  const stopBrowserPreview = useCallback(() => {
+    browserPreviewRequestId.current += 1;
+    clearBrowserPreviewStream();
+  }, [clearBrowserPreviewStream]);
+
+  const startBrowserPreview = useCallback(async () => {
+    const requestId = browserPreviewRequestId.current + 1;
+    browserPreviewRequestId.current = requestId;
+
+    const result = await ipc.getMacOSPreviewCaptureSource();
+
+    if (!result.supported) {
+      return false;
+    }
+
+    if (browserPreviewRequestId.current !== requestId) {
+      return true;
+    }
+
+    browserPreviewSupported.current = true;
+    configureDraggableBoxes();
+
+    if (!previewEnabled || !result.source) {
+      clearBrowserPreviewStream();
+      return true;
+    }
+
+    clearBrowserPreviewStream();
+
+    try {
+      const videoConstraints: MediaTrackConstraints = {
+        frameRate: { ideal: 30, max: 30 },
+      };
+      const previewSize = getPreviewPixelSize();
+
+      if (previewSize !== null) {
+        videoConstraints.width = { ideal: Math.round(previewSize.previewWidth) };
+        videoConstraints.height = {
+          ideal: Math.round(previewSize.previewHeight),
+        };
+      }
+
+      let stream: MediaStream;
+
+      try {
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          audio: false,
+          video: videoConstraints,
+        });
+      } catch (displayMediaError) {
+        console.warn(
+          '[RecorderPreview] getDisplayMedia failed, trying legacy desktop capture',
+          displayMediaError,
+        );
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: result.source.id,
+            },
+          } as unknown as MediaTrackConstraints,
+        });
+      }
+
+      if (browserPreviewRequestId.current !== requestId) {
+        stream.getTracks().forEach((track) => track.stop());
+        return true;
+      }
+
+      previewStreamRef.current = stream;
+
+      if (previewVideoRef.current) {
+        previewVideoRef.current.srcObject = stream;
+        await previewVideoRef.current.play();
+      }
+
+      if (browserPreviewRequestId.current !== requestId) {
+        clearBrowserPreviewStream();
+        return true;
+      }
+
+      setBrowserPreviewVisible(true);
+    } catch (error) {
+      console.warn('[RecorderPreview] Failed to start browser preview', error);
+      if (browserPreviewRequestId.current === requestId) {
+        clearBrowserPreviewStream();
+      }
+    }
+
+    return true;
+  }, [clearBrowserPreviewStream, previewEnabled]);
+
   useEffect(() => {
     // On component mount, get the source dimensions from the backend
     // to initialize the draggable boxes.
     configureDraggableBoxes();
-
-    configurePreview();
-    showPreview();
     setupResizeObserver();
 
+    let disposed = false;
+
+    startBrowserPreview().then((usingBrowserPreview) => {
+      if (disposed || usingBrowserPreview) return;
+
+      configurePreview();
+      showPreview();
+    });
+
     return () => {
+      disposed = true;
+
       // Disconnect the resize observer.
       cleanupResizeObserver();
 
-      // Disable the preview, we're tabbing away. This means it's switched
-      // off and not consuming GPU resources rather than just hidden from view.
-      disablePreview();
+      if (browserPreviewSupported.current) {
+        stopBrowserPreview();
+      } else {
+        // Disable the preview, we're tabbing away. This means it's switched
+        // off and not consuming GPU resources rather than just hidden from view.
+        disablePreview();
+      }
     };
   }, []);
 
@@ -105,7 +239,13 @@ const RecorderPreview = (props: {
     // but it helps to avoid unnecessary function calls.
     if (initialRender.current) return;
 
-    if (previewEnabled) {
+    if (browserPreviewSupported.current) {
+      if (previewEnabled) {
+        startBrowserPreview();
+      } else {
+        stopBrowserPreview();
+      }
+    } else if (previewEnabled) {
       showPreview();
     } else {
       hidePreview();
@@ -194,7 +334,11 @@ const RecorderPreview = (props: {
 
   const configureDraggableBoxes = async () => {
     const display = await ipc.getDisplayInfo();
-    setPreviewInfo(display);
+    const previewSize = browserPreviewSupported.current
+      ? getPreviewPixelSize()
+      : null;
+
+    setPreviewInfo(previewSize ? { ...display, ...previewSize } : display);
 
     if (config.chatOverlayEnabled) {
       const pos = await ipc.getSourcePosition(SceneItem.OVERLAY);
@@ -362,19 +506,25 @@ const RecorderPreview = (props: {
   }, [onMouseMove, onMouseUp]);
 
   const cleanupResizeObserver = () => {
-    if (resizeObserver !== undefined) {
-      resizeObserver.disconnect();
-      resizeObserver = undefined;
+    if (resizeObserver.current !== null) {
+      resizeObserver.current.disconnect();
+      resizeObserver.current = null;
     }
   };
 
   const setupResizeObserver = () => {
-    if (resizeObserver === undefined) {
-      resizeObserver = new ResizeObserver(() => configurePreview());
+    if (resizeObserver.current === null) {
+      resizeObserver.current = new ResizeObserver(() => {
+        if (browserPreviewSupported.current) {
+          configureDraggableBoxes();
+        } else {
+          configurePreview();
+        }
+      });
     }
 
     if (previewDivRef.current) {
-      resizeObserver.observe(previewDivRef.current);
+      resizeObserver.current.observe(previewDivRef.current);
     }
   };
 
@@ -443,9 +593,28 @@ const RecorderPreview = (props: {
           cursor: 'move',
         }}
       >
-        <div className="flex w-full h-full items-center justify-center bg-black text-lg text-foreground-lighter">
+        <Box
+          sx={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            maxWidth: 'calc(100% - 16px)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            borderRadius: '4px',
+            backgroundColor: 'rgb(0 0 0 / 65%)',
+            color: '#d0d0d0',
+            fontSize: 18,
+            fontWeight: 600,
+            lineHeight: 1.25,
+            padding: '6px 10px',
+            pointerEvents: 'none',
+          }}
+        >
           {text}
-        </div>
+        </Box>
         <Box
           onMouseDown={(e) => onMouseDown(e, src, SceneInteraction.SCALE)}
           sx={{
@@ -469,6 +638,15 @@ const RecorderPreview = (props: {
         ref={previewDivRef}
         className="relative h-full mx-12 overflow-hidden border border-black"
       >
+        <video
+          ref={previewVideoRef}
+          autoPlay
+          muted
+          playsInline
+          className={`absolute inset-0 h-full w-full object-contain ${
+            browserPreviewVisible && previewEnabled ? 'block' : 'hidden'
+          }`}
+        />
         {renderDraggableSceneBox(SceneItem.GAME)}
         {renderDraggableSceneBox(SceneItem.OVERLAY)}
       </div>
