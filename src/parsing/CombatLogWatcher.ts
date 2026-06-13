@@ -34,6 +34,12 @@ export default class CombatLogWatcher extends EventEmitter {
   private watcher?: FSWatcher;
 
   /**
+   * Watchers for active combat log files. macOS directory watchers can report
+   * creation without reliably reporting subsequent appends.
+   */
+  private fileWatchers: Record<string, FSWatcher> = {};
+
+  /**
    * A duration after seeing a log write to send a timeout event in if no
    * other subsequent log writes seen. In seconds.
    */
@@ -99,7 +105,14 @@ export default class CombatLogWatcher extends EventEmitter {
         // Issue 624.
         console.info('[CombatLogWatcher] Create or delete event', file);
         const fullPath = path.join(this.logDir, file);
+        this.unwatchLogFile(fullPath);
         delete this.state[fullPath];
+
+        if (fs.existsSync(fullPath)) {
+          this.watchLogFile(fullPath);
+          this.queue.add(() => this.process(file));
+        }
+
         return;
       }
 
@@ -115,10 +128,51 @@ export default class CombatLogWatcher extends EventEmitter {
   /**
    * Stop watching the directory.
    */
-  public async unwatch() {
-    if (this.watcher) {
-      await this.watcher.close();
+  public unwatch() {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = undefined;
     }
+
+    Object.keys(this.fileWatchers).forEach((file) => this.unwatchLogFile(file));
+
+    if (this.watcher) {
+      this.watcher.close();
+      this.watcher = undefined;
+    }
+  }
+
+  private watchLogFile(file: string) {
+    if (this.fileWatchers[file]) return;
+
+    const basename = path.basename(file);
+
+    try {
+      this.fileWatchers[file] = watch(file, (type) => {
+        if (type === 'rename' && !fs.existsSync(file)) {
+          this.unwatchLogFile(file);
+          delete this.state[file];
+          return;
+        }
+
+        if (basename !== this.current) {
+          console.info('[CombatLogWatcher] New active log file', basename);
+          this.current = basename;
+        }
+
+        this.queue.add(() => this.process(basename));
+      });
+    } catch (error) {
+      console.warn('[CombatLogWatcher] Failed to watch combat log file', file);
+    }
+  }
+
+  private unwatchLogFile(file: string) {
+    const watcher = this.fileWatchers[file];
+    if (!watcher) return;
+
+    watcher.close();
+    delete this.fileWatchers[file];
   }
 
   /**
@@ -137,6 +191,7 @@ export default class CombatLogWatcher extends EventEmitter {
 
     fileInfo.forEach((info) => {
       this.state[info.name] = info;
+      this.watchLogFile(info.name);
     });
   }
 
@@ -153,8 +208,13 @@ export default class CombatLogWatcher extends EventEmitter {
 
     if (lastInfo) {
       // Existing file, read from the last known length.
-      bytesToRead = currentInfo.size - lastInfo.size;
-      startPosition = lastInfo.size;
+      if (currentInfo.size < lastInfo.size) {
+        bytesToRead = currentInfo.size;
+        startPosition = 0;
+      } else {
+        bytesToRead = currentInfo.size - lastInfo.size;
+        startPosition = lastInfo.size;
+      }
     } else {
       // New file, we want to read from the start.
       bytesToRead = currentInfo.size;
