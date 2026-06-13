@@ -1,9 +1,17 @@
 import EventEmitter from 'events';
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams, execFile, spawn } from 'child_process';
 import path from 'path';
 import { app } from 'electron';
 import ConfigService from 'config/ConfigService';
 import { WowProcessEvent } from 'main/types';
+import {
+  detectWowProcessesFromProcessList,
+  WowProcessSnapshot,
+} from './wowProcess';
+
+type ExecFileError = Error & {
+  code?: number | string;
+};
 
 /**
  * The Poller singleton periodically checks the list of WoW active
@@ -30,6 +38,26 @@ export default class Poller extends EventEmitter {
    * Spawned child process.
    */
   private child: ChildProcessWithoutNullStreams | undefined;
+
+  /**
+   * Timer used on non-Windows platforms where rust-ps.exe is unavailable.
+   */
+  private timer: NodeJS.Timeout | undefined;
+
+  /**
+   * Avoid overlapping process scans if the OS is slow to return process data.
+   */
+  private scanning = false;
+
+  /**
+   * True while process scan results are allowed to emit state changes.
+   */
+  private running = false;
+
+  /**
+   * Best-effort interval for platforms without the rust-ps.exe helper.
+   */
+  private pollIntervalMs = 5000;
 
   /**
    * Singleton instance.
@@ -66,7 +94,13 @@ export default class Poller extends EventEmitter {
    */
   public stop() {
     console.info('[Poller] Stop process poller');
+    this.running = false;
     this.wowRunning = false;
+
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = undefined;
+    }
 
     if (this.child) {
       this.child.kill();
@@ -80,10 +114,68 @@ export default class Poller extends EventEmitter {
   public start() {
     this.stop();
     console.info('[Poller] Start process poller');
+    this.running = true;
+
+    if (process.platform !== 'win32') {
+      this.startUnixPoller();
+      return;
+    }
 
     this.child = spawn(this.binary);
     this.child.stdout.on('data', this.handleStdout);
     this.child.stderr.on('data', this.handleStderr);
+  }
+
+  /**
+   * Start polling the Unix process table. Used for macOS/Linux support.
+   */
+  private startUnixPoller() {
+    void this.scanUnixProcesses();
+    this.timer = setInterval(() => {
+      void this.scanUnixProcesses();
+    }, this.pollIntervalMs);
+  }
+
+  /**
+   * Scan the process list for WoW on Unix-like systems.
+   */
+  private async scanUnixProcesses() {
+    if (this.scanning) {
+      return;
+    }
+
+    this.scanning = true;
+
+    try {
+      const stdout = await new Promise<string>((resolve, reject) => {
+        execFile('pgrep', ['-fl', 'World of Warcraft|Wow|WowClassic'], (
+          error: ExecFileError | null,
+          out,
+          stderr,
+        ) => {
+          if (error) {
+            if (error.code === 1) {
+              resolve('');
+              return;
+            }
+
+            reject(new Error(`${error.message}: ${stderr}`));
+            return;
+          }
+
+          resolve(out);
+        });
+      });
+
+      if (this.running) {
+        this.handleSnapshot(detectWowProcessesFromProcessList(stdout));
+      }
+    } catch (error) {
+      console.warn('[Poller] Failed to scan process list');
+      console.error(String(error));
+    } finally {
+      this.scanning = false;
+    }
   }
 
   /**
@@ -93,11 +185,15 @@ export default class Poller extends EventEmitter {
    * We don't care to do anything better in the scenario of multiple processes
    * running. We don't support users multi-boxing.
    */
-  private handleStdout = (data: string) => {
+  private handleStdout = (data: Buffer) => {
+    if (!this.running) {
+      return;
+    }
+
     let parsed;
 
     try {
-      parsed = JSON.parse(data);
+      parsed = JSON.parse(data.toString()) as WowProcessSnapshot;
     } catch {
       // We can hit this on sleeping/resuming from sleep. Or anything
       // else that blocks the event loop long enough to cause us to end up
@@ -106,7 +202,15 @@ export default class Poller extends EventEmitter {
       return;
     }
 
-    const { Retail, Classic } = parsed;
+    this.handleSnapshot(parsed);
+  };
+
+  private handleSnapshot = (snapshot: WowProcessSnapshot) => {
+    if (!this.running) {
+      return;
+    }
+
+    const { Retail, Classic } = snapshot;
 
     const recordRetail = this.cfg.get<boolean>('recordRetail');
     const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');

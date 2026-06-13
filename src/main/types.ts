@@ -33,6 +33,16 @@ type ActivityStatus = {
   start: number;
 };
 
+type MacOSPreviewCaptureSource = {
+  id: string;
+  name: string;
+};
+
+type MacOSPreviewCaptureSourceResult = {
+  supported: boolean;
+  source: MacOSPreviewCaptureSource | null;
+};
+
 enum MicStatus {
   NONE,
   MUTED,
@@ -498,6 +508,22 @@ type DiskStatus = {
   limit: number;
 };
 
+type MacOSPermissionState =
+  | 'not-determined'
+  | 'granted'
+  | 'denied'
+  | 'restricted'
+  | 'unknown';
+
+type MacOSPermissionTarget = 'screen' | 'microphone' | 'accessibility';
+
+type MacOSPermissions = {
+  supported: boolean;
+  screen: MacOSPermissionState;
+  microphone: MacOSPermissionState;
+  accessibility: boolean;
+};
+
 type CloudObject = {
   key: string;
   size: number;
@@ -708,6 +734,9 @@ export {
   SliderMark,
   CloudStatus,
   DiskStatus,
+  MacOSPermissionState,
+  MacOSPermissionTarget,
+  MacOSPermissions,
   CloudObject,
   IBrowserWindow,
   UploadQueueItem,
@@ -729,6 +758,8 @@ export {
   CloudState,
   ActivityStatus,
   AdvancedLoggingStatus,
+  MacOSPreviewCaptureSource,
+  MacOSPreviewCaptureSourceResult,
   KillVideoQueueItem,
   KillVideoSegment,
   KillVideoStatus,

@@ -3,6 +3,9 @@ import { Channels } from 'main/preload';
 import {
   AudioSourceType,
   KillVideoSegment,
+  MacOSPreviewCaptureSourceResult,
+  MacOSPermissionTarget,
+  MacOSPermissions,
   RendererVideo,
   SceneItem,
 } from 'main/types';
@@ -15,8 +18,8 @@ declare global {
       store: ElectronStore;
       ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]): void;
-        sendSync(channel: Channels, args: unknown[]): any;
-        invoke(channel: Channels, args: unknown[]): Promise<any>;
+        sendSync(channel: Channels, args: unknown[]): unknown;
+        invoke(channel: Channels, args: unknown[]): Promise<unknown>;
         on(
           channel: string,
           func: (...args: unknown[]) => void,
@@ -30,6 +33,7 @@ declare global {
           previewWidth: number;
           previewHeight: number;
         }>;
+        getMacOSPreviewCaptureSource(): Promise<MacOSPreviewCaptureSourceResult>;
 
         configurePreview(
           x: number,
@@ -77,6 +81,13 @@ declare global {
         reconfigureCloud(): void;
 
         getSensibleEncoderDefault(): Promise<string>;
+        getMacOSPermissions(): Promise<MacOSPermissions>;
+        requestMacOSPermission(
+          target: MacOSPermissionTarget,
+        ): Promise<MacOSPermissions>;
+        openMacOSPermissionSettings(
+          target: MacOSPermissionTarget,
+        ): Promise<void>;
         refreshCloudGuilds(): void;
         getOrCreateChatCorrelator(video: RendererVideo): Promise<string>;
         getChatMessages(correlator: string): Promise<TChatMessageWithId[]>;

@@ -166,6 +166,35 @@ export default class Manager {
   }
 
   /**
+   * Release long-lived process resources before the app exits.
+   */
+  public shutdown() {
+    console.info('[Manager] Shutting down');
+    this.poller.stop();
+
+    this.configWtfWatchers.forEach((watcher) => watcher.close());
+    this.configWtfWatchers = [];
+
+    const logHandlers = [
+      this.retailLogHandler,
+      this.retailPtrLogHandler,
+      this.classicLogHandler,
+      this.classicPtrLogHandler,
+      this.eraLogHandler,
+    ];
+
+    logHandlers
+      .filter((handler) => handler !== undefined)
+      .forEach((handler) => handler.destroy());
+
+    this.retailLogHandler = undefined;
+    this.retailPtrLogHandler = undefined;
+    this.classicLogHandler = undefined;
+    this.classicPtrLogHandler = undefined;
+    this.eraLogHandler = undefined;
+  }
+
+  /**
    * Reconfigure the base settings. This exists because we need the recorder
    * to be stopped to do this, and because the user can input invalid settings
    * which we want to catch.

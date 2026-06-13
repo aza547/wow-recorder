@@ -1,0 +1,763 @@
+diff --git a/node_modules/noobs/binding.gyp b/node_modules/noobs/binding.gyp
+index c4eb3a7..fcc56ee 100644
+--- a/node_modules/noobs/binding.gyp
++++ b/node_modules/noobs/binding.gyp
+@@ -12,12 +12,34 @@
+             "<!@(node -p \"require('node-addon-api').include\")",
+             "include"
+         ],
+-        'libraries': [
+-            "../bin/64bit/obs.lib",
+-        ],
+         'dependencies': [
+             "<!(node -p \"require('node-addon-api').gyp\")"
+         ],
+         'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
++        'conditions': [
++            ['OS=="win"', {
++                'libraries': [
++                    "../bin/64bit/obs.lib",
++                ],
++            }],
++            ['OS=="mac"', {
++                'libraries': [
++                    '/Applications/OBS.app/Contents/Frameworks/libobs.framework/libobs',
++                ],
++                'xcode_settings': {
++                    'CLANG_CXX_LANGUAGE_STANDARD': 'c++17',
++                    'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
++                    'GCC_ENABLE_CPP_RTTI': 'YES',
++                    'OTHER_CPLUSPLUSFLAGS': [
++                        '-fexceptions',
++                    ],
++                    'OTHER_LDFLAGS': [
++                        '-Wl,-rpath,@loader_path/../../../../../Frameworks',
++                        '-Wl,-rpath,@executable_path/../Frameworks',
++                        '-Wl,-rpath,/Applications/OBS.app/Contents/Frameworks',
++                    ],
++                },
++            }],
++        ],
+     }]
+ }
+diff --git a/node_modules/noobs/index.d.ts b/node_modules/noobs/index.d.ts
+index 109398b..9137d70 100644
+--- a/node_modules/noobs/index.d.ts
++++ b/node_modules/noobs/index.d.ts
+@@ -175,6 +175,7 @@ interface Noobs {
+   StartRecording(offset: number): void;
+   StopRecording(): void;
+   ForceStopRecording(): void;
++  ReplayBufferConvertSupported(): boolean;
+   GetLastRecording(): string;
+   SetRecordingCfg(recordingPath: string, fileExtension: FileExtension): void;
+   ResetVideoContext(fps: number, width: number, height: number): void;
+diff --git a/node_modules/noobs/index.js b/node_modules/noobs/index.js
+index 9fa180c..fecb1a1 100644
+--- a/node_modules/noobs/index.js
++++ b/node_modules/noobs/index.js
+@@ -1,21 +1,25 @@
+ const path = require('path');
+
+-// Path to the OBS binaries. We want this to come first so that the correct
+-// DLLs are loaded. It's possible other copies are on the system PATH already.
+-let binPath = path
+-  .resolve(__dirname, 'dist', 'bin')
++const distPath = path
++  .resolve(__dirname, 'dist')
+   .replace('app.asar', 'app.asar.unpacked');
+
+-if (process.env.PATH) {
++const binPath = path.join(distPath, 'bin');
++const pathKey = process.platform === 'win32' ? 'Path' : 'PATH';
++const existingPath = process.env[pathKey] || process.env.PATH;
++
++let updatedPath = binPath;
++
++if (existingPath) {
+   // Almost certainly there is an existing PATH. We don't want to drop
+   // things off the path as it might make other things fail.
+-  binPath += ';';
+-  binPath += process.env.PATH;
++  updatedPath += path.delimiter;
++  updatedPath += existingPath;
+ }
+
+ // Now set the updated PATH for this process.
+-process.env.Path = binPath;
++process.env[pathKey] = updatedPath;
+
+ const packageName = 'noobs.node';
+-const noobs = require(`./dist/${packageName}`);
++const noobs = require(path.join(distPath, packageName));
+ module.exports = noobs;
+diff --git a/node_modules/noobs/src/main.cpp b/node_modules/noobs/src/main.cpp
+index c0d0046..fbfcec2 100644
+--- a/node_modules/noobs/src/main.cpp
++++ b/node_modules/noobs/src/main.cpp
+@@ -1,13 +1,19 @@
+ #include <napi.h>
++#ifdef _WIN32
+ #include <windows.h>
++#else
++using HWND = void*;
++#endif
+ #include <obs.h>
+ #include "obs_interface.h"
+ #include "utils.h"
+
+ ObsInterface* obs = nullptr;
+
++#ifdef _WIN32
+ extern "C" __declspec(dllexport) DWORD NvOptimusEnablement = 1;
+ extern "C" __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
++#endif
+
+
+ Napi::Value ObsInit(const Napi::CallbackInfo& info) {
+   bool valid = info.Length() == 3 &&
+@@ -208,6 +214,17 @@ Napi::Value ObsForceStopRecording(const Napi::CallbackInfo& info) {
+   return info.Env().Undefined();
+ }
+
++Napi::Value ObsReplayBufferConvertSupported(const Napi::CallbackInfo& info) {
++  if (!obs) {
++    blog(LOG_ERROR, "ObsReplayBufferConvertSupported called but obs is not initialized");
++    Napi::Error::New(info.Env(), "Obs not initialized").ThrowAsJavaScriptException();
++    return info.Env().Undefined();
++  }
++
++  bool supported = obs->replayBufferConvertSupported();
++  return Napi::Boolean::New(info.Env(), supported);
++}
++
+ Napi::Value ObsGetLastRecording(const Napi::CallbackInfo& info) {
+   if (!obs) {
+     blog(LOG_ERROR, "ObsGetLastRecording called but obs is not initialized");
+@@ -682,6 +699,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
+   exports.Set("StartRecording", Napi::Function::New(env, ObsStartRecording));
+   exports.Set("StopRecording", Napi::Function::New(env, ObsStopRecording));
+   exports.Set("ForceStopRecording", Napi::Function::New(env, ObsForceStopRecording));
++  exports.Set("ReplayBufferConvertSupported", Napi::Function::New(env, ObsReplayBufferConvertSupported));
+   exports.Set("GetLastRecording", Napi::Function::New(env, ObsGetLastRecording));
+
+
+   exports.Set("CreateSource", Napi::Function::New(env, ObsCreateSource));
+diff --git a/node_modules/noobs/src/obs_interface.cpp b/node_modules/noobs/src/obs_interface.cpp
+index 5ade0fa..a088ba0 100644
+--- a/node_modules/noobs/src/obs_interface.cpp
++++ b/node_modules/noobs/src/obs_interface.cpp
+@@ -1,4 +1,6 @@
++#ifdef _WIN32
+ #include <windows.h>
++#endif
+ #include <obs.h>
+ #include "utils.h"
+ #include "obs_interface.h"
+@@ -7,6 +9,11 @@
+ #include <graphics/matrix4.h>
+ #include <graphics/vec4.h>
+ #include <util/platform.h>
++#ifdef __APPLE__
++#include <cstdlib>
++#include <dlfcn.h>
++#include <unistd.h>
++#endif
+
+
+ void call_jscb(Napi::Env env, Napi::Function cb, SignalData* sd) {
+   Napi::Object obj = Napi::Object::New(env);
+@@ -85,6 +92,91 @@ void ObsInterface::load_module(const char* module, const char* data, bool allowF
+   }
+ }
+
++#ifdef __APPLE__
++static void preload_macos_framework_dependency(const std::string& path) {
++  void* handle = dlopen(path.c_str(), RTLD_NOW | RTLD_GLOBAL);
++
++  if (handle) {
++    blog(LOG_DEBUG, "Preloaded macOS dependency: %s", path.c_str());
++    return;
++  }
++
++  const char* error = dlerror();
++  blog(
++    LOG_WARNING,
++    "Failed to preload macOS dependency %s: %s",
++    path.c_str(),
++    error ? error : "Unknown error"
++  );
++}
++
++static void preload_macos_framework_dependencies(const std::string& basePath) {
++  const std::string frameworkPath = basePath + "Contents/Frameworks/";
++  const std::vector<std::string> dependencies = {
++    "libavcodec.dylib",
++    "libavdevice.dylib",
++    "libavfilter.dylib",
++    "libavformat.dylib",
++    "libavutil.dylib",
++    "libobs.framework/libobs",
++    "librist.dylib",
++    "libsrt.dylib",
++    "libswresample.dylib",
++    "libswscale.dylib",
++  };
++
++  for (const auto& dependency : dependencies) {
++    preload_macos_framework_dependency(frameworkPath + dependency);
++  }
++}
++
++static bool macos_path_exists(const std::string& path) {
++  return access(path.c_str(), F_OK) == 0;
++}
++
++static std::string macos_join_path(
++  const std::string& parent,
++  const std::string& child
++) {
++  if (parent.empty()) {
++    return child;
++  }
++
++  if (parent.back() == '/') {
++    return parent + child;
++  }
++
++  return parent + "/" + child;
++}
++
++static std::string macos_resolve_plugin_bundle(
++  const std::string& basePath,
++  const std::string& module
++) {
++  const std::string bundleName = module + ".plugin";
++  const char* overridePath = getenv("WCR_OBS_PLUGIN_PATH");
++
++  if (overridePath && overridePath[0] != '\0') {
++    const std::string candidate = macos_join_path(overridePath, bundleName);
++
++    if (macos_path_exists(candidate)) {
++      blog(LOG_INFO, "Using OBS plugin from WCR_OBS_PLUGIN_PATH: %s", candidate.c_str());
++      return candidate;
++    }
++  }
++
++  const std::string wcrCandidate =
++    basePath + "Contents/WCRPlugIns/" + bundleName;
++
++  if (macos_path_exists(wcrCandidate)) {
++    blog(LOG_INFO, "Using bundled WCR OBS plugin: %s", wcrCandidate.c_str());
++    return wcrCandidate;
++  }
++
++  return basePath + "Contents/PlugIns/" + bundleName;
++}
++#endif
++
+ void ObsInterface::setVideoContext(int fps, int width, int height) {
+   blog(LOG_INFO, "Reset video context");
+
+
+@@ -136,7 +228,12 @@ int ObsInterface::reset_video(int fps, int width, int height) {
+   ovi.scale_type = OBS_SCALE_BILINEAR;
+   ovi.adapter = 0;
+   ovi.gpu_conversion = true;
++#ifdef _WIN32
+   ovi.graphics_module = "libobs-d3d11.dll";
++#else
++  std::string graphicsModule = obs_base_path + "Contents/Frameworks/libobs-opengl.dylib";
++  ovi.graphics_module = graphicsModule.c_str();
++#endif
+
+   int rc = obs_reset_video(&ovi);
+
+
+@@ -176,14 +273,27 @@ void ObsInterface::init_obs(const std::string& distPath) {
+     basePath += '/';
+   }
+
++  obs_base_path = basePath;
++
++#ifdef __APPLE__
++  std::string effectsPath = basePath + "Contents/Frameworks/libobs.framework/Resources/";
++  std::string pluginPath = basePath + "Contents/PlugIns/";
++#else
+   std::string effectsPath = basePath + "data/effects/";
+   std::string pluginPath = basePath + "obs-plugins/";
+   std::string pluginDataPath = basePath + "data/obs-plugins/";
++#endif
+
+
+   blog(LOG_INFO, "Base path: %s", basePath.c_str());
+   blog(LOG_INFO, "Effects path: %s", effectsPath.c_str());
+   blog(LOG_INFO, "Plugin path: %s", pluginPath.c_str());
++#ifndef __APPLE__
+   blog(LOG_INFO, "Data path: %s", pluginDataPath.c_str());
++#endif
++
++#ifdef __APPLE__
++  preload_macos_framework_dependencies(basePath);
++#endif
+
+   // Add the effects path. We need this before resetting video and audio
+   // to ensure the effects are available. The function is deprecated in
+@@ -204,6 +314,17 @@ void ObsInterface::init_obs(const std::string& distPath) {
+     throw std::runtime_error("Failed to reset audio!");
+   }
+
+
++#ifdef __APPLE__
++  std::vector<std::string> modules = {
++    "obs-x264",
++    "obs-ffmpeg",
++    "image-source",
++    "obs-filters",
++    "mac-capture",
++    "mac-videotoolbox",
++    "coreaudio-encoder",
++  };
++#else
+   std::vector<std::string> modules = {
+     "obs-x264",     // Software encoder.
+     "obs-ffmpeg",   // Contains AMF (AMD) encoder support.
+@@ -214,18 +335,27 @@ void ObsInterface::init_obs(const std::string& distPath) {
+     "obs-qsv11",    // Required for QSV video encoding.
+     "obs-filters"   // Required for audio filters.
+   };
++#endif
+
+   for (const auto& module : modules) {
++#ifdef __APPLE__
++    std::string pluginBundle = macos_resolve_plugin_bundle(basePath, module);
++    std::string modulePath = pluginBundle + "/Contents/MacOS/" + module;
++    std::string moduleDataPath = pluginBundle + "/Contents/Resources";
++#else
+     std::string modulePath = pluginPath + module + ".dll";
+     std::string moduleDataPath = pluginDataPath + module;
++#endif
+
+     // NVENC fails if there is no NVENC hardware support.
+-    bool allowFail = module == "obs-nvenc";
++    bool allowFail = module == "obs-nvenc" || module == "mac-videotoolbox";
+     load_module(modulePath.c_str(), moduleDataPath.c_str(), allowFail);
+   }
+
+   obs_post_load_modules();
++#ifdef _WIN32
+   register_preview_window_class();
++#endif
+
+
+   list_encoders();
+   list_source_types();
+@@ -266,7 +396,13 @@ void ObsInterface::create_output() {
+   } else {
+     blog(LOG_INFO, "Set ffmpeg_muxer settings");
+     // Need to specify the exact path for ffmpeg_muxer. We will write this again at start recording.
+-    std::string filename = recording_path + "\\" + get_current_date_time() + "." + file_extension;
++    std::string filename = recording_path
++#ifdef _WIN32
++      + "\\"
++#else
++      + "/"
++#endif
++      + get_current_date_time() + "." + file_extension;
+     obs_data_set_string(settings, "path", filename.c_str());
+     unbuffered_output_filename = filename;
+   }
+@@ -477,7 +613,12 @@ void ObsInterface::deleteSource(std::string name) {
+
+
+   if (vol_it != volmeters.end()) {
+     obs_volmeter_t* volmeter = vol_it->second;
+-    obs_volmeter_remove_callback(volmeter, volmeter_callback, this);
++    auto ctx_it = volmeter_cb_ctx.find(name);
++
++    if (ctx_it != volmeter_cb_ctx.end()) {
++      obs_volmeter_remove_callback(volmeter, volmeter_callback, ctx_it->second);
++    }
++
+     obs_volmeter_detach_source(volmeter);
+     obs_volmeter_destroy(volmeter);
+     blog(LOG_INFO, "Volmeter deleted for source: %s", name.c_str());
+@@ -631,7 +772,7 @@ void ObsInterface::disconnect_signal_handlers(obs_output_t *output) {
+   signal_handler_disconnect(sh, "stopping", output_signal_handler,  stopping_ctx);
+   signal_handler_disconnect(sh, "stop", output_signal_handler,  stop_ctx);
+   signal_handler_disconnect(sh, "activate", output_signal_handler, activate_ctx);
+-  signal_handler_disconnect(sh, "deactivate ", output_signal_handler, deactivate_ctx);
++  signal_handler_disconnect(sh, "deactivate", output_signal_handler, deactivate_ctx);
+ }
+
+
+ bool draw_source_outline(obs_scene_t *scene, obs_sceneitem_t *item, void *p) {
+@@ -768,6 +909,10 @@ void draw_callback(void* data, uint32_t cx, uint32_t cy) {
+ void ObsInterface::initPreview(HWND parent) {
+   blog(LOG_INFO, "ObsInterface::initPreview");
+
++#ifndef _WIN32
++  blog(LOG_WARNING, "Preview is not implemented on this platform");
++  return;
++#else
+   if (!preview_hwnd) {
+     blog(LOG_INFO, "Creating preview child window");
+
+
+@@ -824,11 +969,16 @@ void ObsInterface::initPreview(HWND parent) {
+   }
+
+   obs_display_set_enabled(display, false);
++#endif
+ }
+
+ void ObsInterface::configurePreview(int x, int y, int width, int height) {
+   blog(LOG_INFO, "ObsInterface::configurePreview");
+
++#ifndef _WIN32
++  blog(LOG_WARNING, "Preview is not implemented on this platform");
++  return;
++#else
+   if (!preview_hwnd) {
+     blog(LOG_ERROR, "Preview window not initialized");
+     return;
+@@ -857,11 +1007,16 @@ void ObsInterface::configurePreview(int x, int y, int width, int height) {
+
+
+   obs_display_resize(display, width, height);
+   obs_display_set_enabled(display, true);
++#endif
+ }
+
+ void ObsInterface::showPreview() {
+   blog(LOG_INFO, "ObsInterface::showPreview");
+
++#ifndef _WIN32
++  blog(LOG_WARNING, "Preview is not implemented on this platform");
++  return;
++#else
+   if (!preview_hwnd) {
+     blog(LOG_ERROR, "Preview window not initialized");
+     return;
+@@ -874,20 +1029,30 @@ void ObsInterface::showPreview() {
+
+   ShowWindow(preview_hwnd, SW_SHOW);
+   obs_display_set_enabled(display, true);
++#endif
+ }
+
+ void ObsInterface::hidePreview() {
+   blog(LOG_INFO, "ObsInterface::hidePreview");
+
++#ifndef _WIN32
++  blog(LOG_WARNING, "Preview is not implemented on this platform");
++  return;
++#else
+   if (preview_hwnd) {
+     ShowWindow(preview_hwnd, SW_HIDE);
+     blog(LOG_INFO, "Preview child window hidden");
+   }
++#endif
+ }
+
+ void ObsInterface::disablePreview() {
+   blog(LOG_INFO, "ObsInterface::disablePreview");
+
++#ifndef _WIN32
++  blog(LOG_WARNING, "Preview is not implemented on this platform");
++  return;
++#else
+   if (!display) {
+     blog(LOG_ERROR, "Preview display not initialized");
+     return;
+@@ -895,9 +1060,15 @@ void ObsInterface::disablePreview() {
+
+
+   hidePreview();
+   obs_display_set_enabled(display, false);
++#endif
+ }
+
+ PreviewInfo ObsInterface::getPreviewInfo() {
++#ifndef _WIN32
++  obs_video_info ovi;
++  obs_get_video_info(&ovi);
++  return { ovi.base_width, ovi.base_height, ovi.base_width, ovi.base_height };
++#else
+   if (!display) {
+     blog(LOG_WARNING, "Display not initialized when calling getPreviewInfo");
+     return { 1920, 1080, 1920, 1080 }; // Default values
+@@ -917,6 +1088,7 @@ PreviewInfo ObsInterface::getPreviewInfo() {
+   };
+
+   return info;
++#endif
+ }
+
+
+ void ObsInterface::setDrawSourceOutline(bool enabled) {
+@@ -933,7 +1105,8 @@ ObsInterface::ObsInterface(
+   Napi::ThreadSafeFunction cb
+ ) {
+   // Setup logs first so we have logs for the initialization.
+-  base_set_log_handler(log_handler, (void*)logPath.c_str());
++  obs_log_path = logPath;
++  base_set_log_handler(log_handler, (void*)obs_log_path.c_str());
+   blog(LOG_DEBUG, "Creating ObsInterface");
+
+
+   // Initialize OBS and load required modules.
+@@ -960,20 +1133,35 @@ ObsInterface::ObsInterface(
+ ObsInterface::~ObsInterface() {
+   blog(LOG_DEBUG, "Shutting down");
+
++  if (output) {
++    disconnect_signal_handlers(output);
++
++    if (obs_output_active(output)) {
++      blog(LOG_DEBUG, "Force stopping output");
++      obs_output_force_stop(output);
++    }
++  }
++
+   for (auto& kv : volmeters) {
++    const std::string& name = kv.first;
+     obs_volmeter_t* volmeter = kv.second;
+-    obs_volmeter_remove_callback(volmeter, volmeter_callback, this);
++    auto ctx_it = volmeter_cb_ctx.find(name);
++
++    if (ctx_it != volmeter_cb_ctx.end()) {
++      obs_volmeter_remove_callback(volmeter, volmeter_callback, ctx_it->second);
++    }
++
+     obs_volmeter_detach_source(volmeter);
+     obs_volmeter_destroy(volmeter);
+-    blog(LOG_INFO, "Volmeter deleted for source: %s", kv.first.c_str());
+-    volmeters.erase(kv.first);
++    blog(LOG_INFO, "Volmeter deleted for source: %s", name.c_str());
+   }
++  volmeters.clear();
+
+   for (auto& kv : volmeter_cb_ctx) {
+     SignalContext* ctx = kv.second;
+     delete ctx;
+-    volmeter_cb_ctx.erase(kv.first);
+   }
++  volmeter_cb_ctx.clear();
+
+   delete starting_ctx;
+   delete start_ctx;
+@@ -982,9 +1170,30 @@ ObsInterface::~ObsInterface() {
+   delete activate_ctx;
+   delete deactivate_ctx;
+
+-  for (auto& kv : sources) {
+-    std::string name = kv.first;
+-    obs_source_t* source = kv.second;
++  obs_set_output_source(0, nullptr);
++
++  std::vector<std::string> sourceNames;
++
++  for (const auto& kv : sources) {
++    sourceNames.push_back(kv.first);
++  }
++
++  for (const auto& name : sourceNames) {
++    auto source_it = sources.find(name);
++
++    if (source_it == sources.end()) {
++      continue;
++    }
++
++    obs_source_t* source = source_it->second;
++
++    if (scene) {
++      obs_sceneitem_t *item = obs_scene_find_source(scene, name.c_str());
++
++      if (item) {
++        obs_sceneitem_remove(item);
++      }
++    }
+
+     auto filter_it = filters.find(name);
+
+@@ -992,28 +1201,27 @@ ObsInterface::~ObsInterface() {
+       obs_source_t* filter = filter_it->second;
+       obs_source_filter_remove(source, filter);
+       obs_source_release(filter);
+-      filters.erase(name);
+       blog(LOG_INFO, "Filter removed for source: %s on shutdown", name.c_str());
+     }
+
+     blog(LOG_DEBUG, "Releasing source: %s", name.c_str());
++    obs_source_remove(source);
+     obs_source_release(source);
+-    sources.erase(name);
+   }
++  filters.clear();
++  sources.clear();
++  sizes.clear();
+
+   if (scene) {
+     blog(LOG_DEBUG, "Releasing scene");
+     obs_scene_release(scene);
++    scene = nullptr;
+   }
+
+   if (output) {
+-    if (obs_output_active(output)) {
+-      blog(LOG_DEBUG, "Force stopping output");
+-      obs_output_force_stop(output);
+-    }
+-
+
+     blog(LOG_DEBUG, "Releasing output");
+     obs_output_release(output);
++    output = nullptr;
+   }
+
+
+   // if (video_encoder) {
+@@ -1102,12 +1310,21 @@ void ObsInterface::startRecording(int offset) {
+     calldata_free(&cd);
+
+     if (!success) {
+-      blog(LOG_ERROR, "Failed to call convert procedure handler");
+-      throw std::runtime_error("Failed to call convert procedure handler");
++      blog(LOG_ERROR, "Replay buffer convert procedure handler is unavailable");
++      throw std::runtime_error(
++        "Replay buffer convert procedure handler is unavailable. "
++        "macOS requires a WCR-patched obs-ffmpeg plugin."
++      );
+     }
+   } else {
+     obs_data_t *ffmpeg_settings = obs_data_create();
+-    std::string filename = recording_path + "\\" + get_current_date_time() + "." + file_extension;
++    std::string filename = recording_path
++#ifdef _WIN32
++      + "\\"
++#else
++      + "/"
++#endif
++      + get_current_date_time() + "." + file_extension;
+     obs_data_set_string(ffmpeg_settings,  "path", filename.c_str());
+     obs_output_update(output, ffmpeg_settings);
+     obs_data_release(ffmpeg_settings);
+@@ -1161,6 +1378,35 @@ void ObsInterface::forceStopRecording() {
+   blog(LOG_INFO, "ObsInterface::forceStopRecording exited");
+ }
+
++bool ObsInterface::replayBufferConvertSupported() {
++  blog(LOG_INFO, "Checking replay buffer convert procedure support");
++
++  obs_output_t *probe = obs_output_create(
++    "replay_buffer",
++    "Replay Buffer Convert Probe",
++    NULL,
++    NULL
++  );
++
++  if (!probe) {
++    blog(LOG_WARNING, "Could not create replay_buffer output for convert probe");
++    return false;
++  }
++
++  calldata cd;
++  calldata_init(&cd);
++  calldata_set_int(&cd, "offset_seconds", 0);
++
++  proc_handler_t *ph = obs_output_get_proc_handler(probe);
++  bool supported = proc_handler_call(ph, "convert", &cd);
++
++  calldata_free(&cd);
++  obs_output_release(probe);
++
++  blog(LOG_INFO, "Replay buffer convert procedure support: %d", supported);
++  return supported;
++}
++
+ std::string ObsInterface::getLastRecording() {
+   blog(LOG_INFO, "calling get last replay proc handler");
+   calldata cd;
+diff --git a/node_modules/noobs/src/obs_interface.h b/node_modules/noobs/src/obs_interface.h
+index db2ae64..125e297 100644
+--- a/node_modules/noobs/src/obs_interface.h
++++ b/node_modules/noobs/src/obs_interface.h
+@@ -2,7 +2,11 @@
+
+
+ #include <obs.h>
+ #include <napi.h>
++#ifdef _WIN32
+ #include <windows.h>
++#else
++using HWND = void*;
++#endif
+ #include <map>
+ #include <string>
+ #include <optional>
+@@ -51,6 +55,7 @@ class ObsInterface {
+     void stopRecording(); // Stop the recording.
+     void forceStopRecording(); // Force stop the recording, this will not save the current recording.
+     std::string getLastRecording(); // Get the last recorded file path.
++    bool replayBufferConvertSupported(); // Whether replay_buffer exposes WCR's convert proc.
+     void setBuffering(bool buffer); // Enable or disable buffering.
+     void setRecordingCfg(const std::string& recordingPath, const std::string& fileExtension); // Set the recording path.
+     void setVideoContext(int fps, int width, int height); // Reset video settings.
+@@ -106,6 +111,8 @@ class ObsInterface {
+     std::string recording_path = "";
+     std::string unbuffered_output_filename = "";
+     std::string file_extension = "mp4"; // File extension for recordings.
++    std::string obs_base_path = ""; // OBS app/dist root with trailing separator.
++    std::string obs_log_path = ""; // Log directory owned for the OBS log handler lifetime.
+
+     bool buffering = false; // Whether we are buffering the recording in memory.
+     bool drawSourceOutline = false; // Draw red outline around source
+diff --git a/node_modules/noobs/src/utils.cpp b/node_modules/noobs/src/utils.cpp
+index 72d2fc5..bd66a22 100644
+--- a/node_modules/noobs/src/utils.cpp
++++ b/node_modules/noobs/src/utils.cpp
+@@ -6,7 +6,9 @@
+ #include <sstream>
+ #include <mutex>
+ #include "utils.h"
++#ifdef _WIN32
+ #include <windows.h>
++#endif
+
+
+ void log_handler(int lvl, const char *msg, va_list args, void *p) {
+   static std::mutex logMutex;
+@@ -24,7 +26,11 @@ void log_handler(int lvl, const char *msg, va_list args, void *p) {
+     std::string logDir = static_cast<const char*>(p);
+
+
+     if (!logDir.empty() && logDir.back() != '\\' && logDir.back() != '/') {
++#ifdef _WIN32
+       logDir += '\\';
++#else
++      logDir += '/';
++#endif
+     }
+
+
+     logFileName << logDir << "OBS-" << std::put_time(std::localtime(&t), "%Y-%m-%d") << ".log";
+@@ -388,6 +394,7 @@ std::string get_current_date_time() {
+     return ss.str();
+ }
+
+
++#ifdef _WIN32
+ LRESULT CALLBACK DisplayWndProc(
+   _In_ HWND hwnd,
+   _In_ UINT uMsg,
+
+@@ -425,3 +432,8 @@ void register_preview_window_class() {
+
+   blog(LOG_INFO, "Registered preview window class");
+ }
++#else
++void register_preview_window_class() {
++  blog(LOG_INFO, "Skipping preview window class registration on this platform");
++}
++#endif

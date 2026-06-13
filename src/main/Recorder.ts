@@ -47,6 +47,18 @@ import {
   getObsVideoConfig,
   getOverlayConfig,
 } from '../utils/configUtils';
+import {
+  getAudioSourceType,
+  getGameCaptureSourceType,
+  getMonitorCaptureSourceType,
+  getNoobsRootPath,
+  getOverlaySourceType,
+  getPackagedObsAppPath,
+  getVideoToolboxBitrate,
+  getWindowCaptureSourceType,
+  isAppleH264Encoder,
+  isMacOS,
+} from './obsPlatform';
 import noobs, {
   ObsData,
   SceneItemPosition,
@@ -197,6 +209,8 @@ export default class Recorder extends EventEmitter {
 
   private chatOverlayDefaultImage = getAssetPath('poster', 'chat-overlay.png');
 
+  private replayBufferConvertSupported = true;
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private pushToTalkKeyListener = (e: UiohookKeyboardEvent) => {};
 
@@ -304,8 +318,9 @@ export default class Recorder extends EventEmitter {
       'createAudioSource',
       (event, id: string, type: AudioSourceType) => {
         console.info('[Manager] Creating audio source', id, 'of type', type);
-        const name = noobs.CreateSource(id, type);
+        const name = noobs.CreateSource(id, getAudioSourceType(type));
         console.info('[Manager] Created audio source', name);
+        this.configurePlatformAudioSourceDefaults(name, type);
         noobs.AddSourceToScene(name);
         return name;
       },
@@ -341,8 +356,13 @@ export default class Recorder extends EventEmitter {
         value,
       );
       const settings = noobs.GetSourceSettings(id);
-      settings['window'] = value;
-      settings['priority'] = 2; // Executable matching
+      if (isMacOS) {
+        settings['type'] = 1; // Application audio capture.
+        settings['application'] = value;
+      } else {
+        settings['window'] = value;
+        settings['priority'] = 2; // Executable matching
+      }
       noobs.SetSourceSettings(id, settings);
     });
 
@@ -587,6 +607,12 @@ export default class Recorder extends EventEmitter {
         settings.cqp = Recorder.getCqpFromQuality(encoder, quality);
         break;
 
+      case ESupportedEncoders.APPLE_H264_HARDWARE:
+      case ESupportedEncoders.APPLE_H264_SOFTWARE:
+        settings.bitrate = getVideoToolboxBitrate(quality);
+        settings.limit_bitrate = true;
+        break;
+
       default:
         console.error('[Recorder] Unrecognised encoder type', encoder);
         throw new Error('Unrecognised encoder type');
@@ -633,6 +659,25 @@ export default class Recorder extends EventEmitter {
 
     const overlayCfg = getOverlayConfig(this.cfg);
     this.configureOverlayImageSource(overlayCfg);
+  }
+
+  private configurePlatformAudioSourceDefaults(
+    name: string,
+    type: AudioSourceType,
+  ) {
+    if (!isMacOS) {
+      return;
+    }
+
+    const settings = noobs.GetSourceSettings(name);
+
+    if (type === AudioSourceType.OUTPUT) {
+      settings['type'] = 0; // Desktop audio capture.
+    } else if (type === AudioSourceType.PROCESS) {
+      settings['type'] = 1; // Application audio capture.
+    }
+
+    noobs.SetSourceSettings(name, settings);
   }
 
   /**
@@ -733,11 +778,24 @@ export default class Recorder extends EventEmitter {
       // OBS may have renamed the source if there was a naming conflict,
       // log that for posterity. Use that name going forward even if it
       // doesn't match what we asked for.
-      const name = noobs.CreateSource(src.id, src.type);
+      const name = noobs.CreateSource(src.id, getAudioSourceType(src.type));
       console.info('[Recorder] Created audio source', name);
       const settings = noobs.GetSourceSettings(name);
 
-      if (src.type === AudioSourceType.PROCESS && src.device) {
+      if (isMacOS && src.type === AudioSourceType.OUTPUT) {
+        settings['type'] = 0; // Desktop audio capture.
+        noobs.SetSourceSettings(name, settings);
+        noobs.SetSourceVolume(name, src.volume);
+      } else if (
+        isMacOS &&
+        src.type === AudioSourceType.PROCESS &&
+        src.device
+      ) {
+        settings['type'] = 1; // Application audio capture.
+        settings['application'] = src.device;
+        noobs.SetSourceSettings(name, settings);
+        noobs.SetSourceVolume(name, src.volume);
+      } else if (src.type === AudioSourceType.PROCESS && src.device) {
         settings['window'] = src.device;
         settings['priority'] = 2; // Executable matching
         noobs.SetSourceSettings(name, settings);
@@ -979,6 +1037,14 @@ export default class Recorder extends EventEmitter {
 
     // The native code expects an integer.
     const rounded = Math.round(offset);
+
+    if (!this.replayBufferConvertSupported) {
+      throw new Error(
+        'Replay buffer conversion is unavailable. macOS recording requires ' +
+          'a WCR-patched obs-ffmpeg plugin.',
+      );
+    }
+
     noobs.StartRecording(rounded);
   }
 
@@ -1093,9 +1159,17 @@ export default class Recorder extends EventEmitter {
       ? path.resolve(__dirname, './logs')
       : path.resolve(__dirname, '../../dist/main/logs');
 
-    let noobsPath = devMode
+    const defaultNoobsPath = devMode
       ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
       : path.resolve(__dirname, '../../node_modules/noobs/dist');
+
+    let noobsPath = isMacOS
+      ? getNoobsRootPath(
+          devMode
+            ? '/Applications/OBS.app'
+            : getPackagedObsAppPath(process.resourcesPath),
+        )
+      : defaultNoobsPath;
 
     logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);
@@ -1104,6 +1178,14 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Log path:', logPath);
     noobs.Init(noobsPath, logPath, cb);
     noobs.SetBuffering(true);
+    this.replayBufferConvertSupported = noobs.ReplayBufferConvertSupported();
+
+    if (!this.replayBufferConvertSupported) {
+      console.warn(
+        '[Recorder] Replay buffer convert procedure is unavailable. ' +
+          'macOS recording requires a WCR-patched obs-ffmpeg plugin.',
+      );
+    }
 
     const hwnd = getNativeWindowHandle();
     noobs.InitPreview(hwnd);
@@ -1111,7 +1193,7 @@ export default class Recorder extends EventEmitter {
 
     this.overlaySource = noobs.CreateSource(
       VideoSourceName.OVERLAY,
-      'image_source',
+      getOverlaySourceType(),
     );
 
     this.obsInitialized = true;
@@ -1181,19 +1263,27 @@ export default class Recorder extends EventEmitter {
     this.captureMode = CaptureMode.WINDOW;
     this.captureSource = noobs.CreateSource(
       VideoSourceName.WINDOW,
-      'window_capture',
+      getWindowCaptureSourceType(),
     );
 
     const settings = noobs.GetSourceSettings(this.captureSource);
 
-    noobs.SetSourceSettings(this.captureSource, {
-      ...settings,
-      capture_mode: 'window',
-      force_sdr: forceSdr,
-      cursor: captureCursor, // For some reason is named differently here.
-      method: 2,
-      compatibility: true,
-    });
+    const updatedSettings = isMacOS
+      ? {
+          ...settings,
+          show_empty_names: true,
+          show_shadow: false,
+        }
+      : {
+          ...settings,
+          capture_mode: 'window',
+          force_sdr: forceSdr,
+          cursor: captureCursor, // For some reason is named differently here.
+          method: 2,
+          compatibility: true,
+        };
+
+    noobs.SetSourceSettings(this.captureSource, updatedSettings);
 
     noobs.AddSourceToScene(this.captureSource);
 
@@ -1226,18 +1316,24 @@ export default class Recorder extends EventEmitter {
     this.captureMode = CaptureMode.GAME;
     this.captureSource = noobs.CreateSource(
       VideoSourceName.GAME,
-      'game_capture',
+      getGameCaptureSourceType(),
     );
 
     const defaults = noobs.GetSourceSettings(this.captureSource);
 
-    const settings = {
-      ...defaults,
-      capture_mode: 'window',
-      force_sdr: forceSdr,
-      capture_cursor: captureCursor,
-      priority: 2,
-    };
+    const settings = isMacOS
+      ? {
+          ...defaults,
+          show_empty_names: true,
+          show_shadow: false,
+        }
+      : {
+          ...defaults,
+          capture_mode: 'window',
+          force_sdr: forceSdr,
+          capture_cursor: captureCursor,
+          priority: 2,
+        };
 
     const position = {
       x: videoSourceXPosition,
@@ -1273,13 +1369,14 @@ export default class Recorder extends EventEmitter {
     this.captureMode = CaptureMode.MONITOR;
     this.captureSource = noobs.CreateSource(
       VideoSourceName.MONITOR,
-      'monitor_capture',
+      getMonitorCaptureSourceType(),
     );
 
     const defaults = noobs.GetSourceSettings(this.captureSource);
     const properties = noobs.GetSourceProperties(this.captureSource);
 
-    const monitors = properties.find((p) => p.name === 'monitor_id');
+    const monitorPropertyName = isMacOS ? 'display_uuid' : 'monitor_id';
+    const monitors = properties.find((p) => p.name === monitorPropertyName);
 
     if (!monitors) {
       console.error('[Recorder] No monitors found');
@@ -1315,10 +1412,17 @@ export default class Recorder extends EventEmitter {
 
     const settings = {
       ...defaults,
-      method: 0,
-      monitor_id: monitorId.value,
-      force_sdr: forceSdr,
-      capture_cursor: captureCursor,
+      ...(isMacOS
+        ? {
+            display_uuid: monitorId.value,
+            show_cursor: captureCursor,
+          }
+        : {
+            method: 0,
+            monitor_id: monitorId.value,
+            force_sdr: forceSdr,
+            capture_cursor: captureCursor,
+          }),
     };
 
     const position: SceneItemPosition = {
@@ -1472,12 +1576,37 @@ export default class Recorder extends EventEmitter {
    * Check if the name of the window matches one of the known WoW window names.
    */
   private static windowMatch(item: { name: string; value: string | number }) {
-    return (
+    if (
       item.name.startsWith('[Wow.exe]: ') ||
       item.name.startsWith('[WowT.exe]: ') ||
       item.name.startsWith('[WowB.exe]: ') ||
       item.name.startsWith('[WowClassic.exe]: ') ||
       item.name.startsWith('[WowClassicT.exe]: ')
+    ) {
+      return true;
+    }
+
+    const macOSMatch = item.name.match(/^\[([^\]]+)\]\s+(.+)$/);
+
+    if (!macOSMatch) {
+      return false;
+    }
+
+    const appName = macOSMatch[1].toLowerCase();
+    const windowName = macOSMatch[2].toLowerCase();
+    const wowAppNames = [
+      'wow',
+      'wowt',
+      'wowb',
+      'wowclassic',
+      'wowclassict',
+      'world of warcraft',
+      'world of warcraft classic',
+    ];
+
+    return (
+      wowAppNames.includes(appName) &&
+      windowName.startsWith('world of warcraft')
     );
   }
 
@@ -1770,6 +1899,12 @@ export default class Recorder extends EventEmitter {
     if (highRes) {
       // Just go for the software encoder if high res.
       return ESupportedEncoders.OBS_X264;
+    }
+
+    const appleH264Encoder = encoders.find(isAppleH264Encoder);
+
+    if (appleH264Encoder) {
+      return appleH264Encoder;
     }
 
     if (encoders.includes(ESupportedEncoders.NVENC_H264)) {

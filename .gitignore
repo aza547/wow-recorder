@@ -29,6 +29,8 @@ npm-debug.log.*
 
 # OBS Stuff
 src/main/osn-data/*
+native/macos/build/
+native/macos/artifacts/
 
 # Python crap
 *cpython*
