@@ -1,0 +1,88 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d8af296a3..4b9b2b20f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -26,10 +26,6 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "(Darwin)" OR OBS_CMAKE_VERSION VERSION_GREATE
+   add_subdirectory(libobs-opengl)
+   add_subdirectory(plugins)
+
+-  add_subdirectory(test/test-input)
+-
+-  add_subdirectory(UI)
+-
+   message_configuration()
+   return()
+ endif()
+diff --git a/cmake/macos/buildspec.cmake b/cmake/macos/buildspec.cmake
+index 3927faaf0..ef00e7069 100644
+--- a/cmake/macos/buildspec.cmake
++++ b/cmake/macos/buildspec.cmake
+@@ -18,7 +18,7 @@ function(_check_dependencies_macos)
+   set(qt6_destination "obs-deps-qt6-VERSION-ARCH")
+   set(cef_filename "cef_binary_VERSION_macos_ARCH_REVISION.tar.xz")
+   set(cef_destination "cef_binary_VERSION_macos_ARCH")
+-  set(dependencies_list prebuilt qt6 cef)
++  set(dependencies_list prebuilt cef)
+
+   _check_dependencies()
+
+diff --git a/cmake/macos/compilerconfig.cmake b/cmake/macos/compilerconfig.cmake
+index d193e1fea..7898eead6 100644
+--- a/cmake/macos/compilerconfig.cmake
++++ b/cmake/macos/compilerconfig.cmake
+@@ -26,8 +26,15 @@ set_property(CACHE CMAKE_OSX_ARCHITECTURES PROPERTY STRINGS arm64 x86_64)
+ set(_obs_macos_minimum_sdk 14.2) # Keep in sync with Xcode
+ set(_obs_macos_minimum_xcode 15.1) # Keep in sync with SDK
+ message(DEBUG "macOS SDK Path: ${CMAKE_OSX_SYSROOT}")
+-string(REGEX MATCH ".+/MacOSX.platform/Developer/SDKs/MacOSX([0-9]+\\.[0-9])+\\.sdk$" _ ${CMAKE_OSX_SYSROOT})
+-set(_obs_macos_current_sdk ${CMAKE_MATCH_1})
++if(CMAKE_OSX_SYSROOT MATCHES ".+/MacOSX.platform/Developer/SDKs/MacOSX([0-9]+(\\.[0-9]+)*)\\.sdk$")
++  set(_obs_macos_current_sdk ${CMAKE_MATCH_1})
++else()
++  execute_process(
++    COMMAND xcrun --sdk macosx --show-sdk-version
++    OUTPUT_VARIABLE _obs_macos_current_sdk
++    OUTPUT_STRIP_TRAILING_WHITESPACE
++    COMMAND_ERROR_IS_FATAL ANY)
++endif()
+ message(DEBUG "macOS SDK version: ${_obs_macos_current_sdk}")
+ if(_obs_macos_current_sdk VERSION_LESS _obs_macos_minimum_sdk)
+   message(
+diff --git a/plugins/CMakeLists.txt b/plugins/CMakeLists.txt
+index 8b653b053..9803ddcd7 100644
+--- a/plugins/CMakeLists.txt
++++ b/plugins/CMakeLists.txt
+@@ -10,6 +10,9 @@ if(OBS_CMAKE_VERSION VERSION_GREATER_EQUAL 3.0.0)
+
+   set_property(GLOBAL APPEND PROPERTY OBS_FEATURES_ENABLED "Plugin Support")
+
++  add_obs_plugin(obs-ffmpeg)
++  return()
++
+   macro(check_obs_browser)
+     if((OS_WINDOWS AND CMAKE_GENERATOR_PLATFORM MATCHES "(Win32|x64)")
+        OR OS_MACOS
+diff --git a/plugins/obs-ffmpeg/obs-ffmpeg-mux.c b/plugins/obs-ffmpeg/obs-ffmpeg-mux.c
+index 9230e764c..4152ba074 100644
+--- a/plugins/obs-ffmpeg/obs-ffmpeg-mux.c
++++ b/plugins/obs-ffmpeg/obs-ffmpeg-mux.c
+@@ -1278,7 +1278,7 @@ static void replay_to_recording_save_with_offset(struct ffmpeg_muxer *stream, in
+   // Calculate target time as offset BACK from the end
+   int64_t target_time = end_time - ((int64_t)offset_seconds * 1000000LL);
+   info("end_time %lld usec, target_time %lld usec (offset back %d seconds)",
+-      end_time, target_time, offset_seconds);
++      (long long)end_time, (long long)target_time, offset_seconds);
+
+   // Find the nearest keyframe to our target time
+   size_t best_keyframe_idx = 0;
+@@ -1303,8 +1303,8 @@ static void replay_to_recording_save_with_offset(struct ffmpeg_muxer *stream, in
+   if (found_keyframe) {
+     skip_packets = best_keyframe_idx;
+     struct encoder_packet *best_pkt = deque_data(&stream->packets, best_keyframe_idx * size);
+-    info("Selected keyframe at packet %zu: DTS=%ld (%.1f seconds from end)",
+-        best_keyframe_idx, best_pkt->dts_usec,
++    info("Selected keyframe at packet %zu: DTS=%lld (%.1f seconds from end)",
++        best_keyframe_idx, (long long)best_pkt->dts_usec,
+         (double)(end_time - best_pkt->dts_usec) / 1000000.0);
+   } else {
+     warn("No keyframes found after target time, starting from beginning");
