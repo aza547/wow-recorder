@@ -1,6 +1,13 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
-import { AudioSourceType, RendererVideo, SceneItem } from './types';
+import {
+  AudioSourceType,
+  MacOSPreviewCaptureSourceResult,
+  MacOSPermissionTarget,
+  MacOSPermissions,
+  RendererVideo,
+  SceneItem,
+} from './types';
 import { TChatMessageWithId } from 'types/api';
 
 export type Channels =
@@ -35,6 +42,7 @@ export type Channels =
   | 'setAudioSourceDevice'
   | 'setAudioSourceWindow'
   | 'getDisplayInfo'
+  | 'getMacOSPreviewCaptureSource'
   | 'configurePreview'
   | 'showPreview'
   | 'hidePreview'
@@ -51,6 +59,9 @@ export type Channels =
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
   | 'getSensibleEncoderDefault'
+  | 'getMacOSPermissions'
+  | 'requestMacOSPermission'
+  | 'openMacOSPermissionSettings'
   | 'refreshCloudGuilds';
 
 contextBridge.exposeInMainWorld('electron', {
@@ -90,6 +101,10 @@ contextBridge.exposeInMainWorld('electron', {
       previewHeight: number;
     }> {
       return ipcRenderer.invoke('getDisplayInfo');
+    },
+
+    getMacOSPreviewCaptureSource(): Promise<MacOSPreviewCaptureSourceResult> {
+      return ipcRenderer.invoke('getMacOSPreviewCaptureSource');
     },
 
     // This is async as it's useful to wait for the configuration to complete
@@ -199,6 +214,20 @@ contextBridge.exposeInMainWorld('electron', {
 
     getSensibleEncoderDefault(): Promise<string> {
       return ipcRenderer.invoke('getSensibleEncoderDefault');
+    },
+
+    getMacOSPermissions(): Promise<MacOSPermissions> {
+      return ipcRenderer.invoke('getMacOSPermissions');
+    },
+
+    requestMacOSPermission(
+      target: MacOSPermissionTarget,
+    ): Promise<MacOSPermissions> {
+      return ipcRenderer.invoke('requestMacOSPermission', target);
+    },
+
+    openMacOSPermissionSettings(target: MacOSPermissionTarget): Promise<void> {
+      return ipcRenderer.invoke('openMacOSPermissionSettings', target);
     },
 
     refreshCloudGuilds() {

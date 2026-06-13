@@ -8,7 +8,11 @@ import {
   Tray,
   Menu,
   clipboard,
+  nativeImage,
   protocol,
+  systemPreferences,
+  desktopCapturer,
+  session,
 } from 'electron';
 import os from 'os';
 import { uIOhook } from 'uiohook-napi';
@@ -25,7 +29,12 @@ import {
   runFirstTimeSetupActionsNoObs,
   createDiagsBundle,
 } from './util';
-import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
+import {
+  MacOSPreviewCaptureSourceResult,
+  OurDisplayType,
+  SoundAlerts,
+  VideoPlayerSettings,
+} from './types';
 import ConfigService from '../config/ConfigService';
 import Manager from './Manager';
 import AppUpdater from './AppUpdater';
@@ -33,9 +42,20 @@ import MenuBuilder from './menu';
 import { Phrase } from 'localisation/phrases';
 import CloudClient from 'storage/CloudClient';
 import DiskClient from 'storage/DiskClient';
-import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
+import {
+  getMacOSPermissions,
+  openMacOSPermissionSettings,
+  requestMacOSPermission,
+} from './macOSPermissions';
+
+const userDataPathOverride = process.env.WCR_USER_DATA_DIR;
+
+if (userDataPathOverride) {
+  app.setPath('userData', userDataPathOverride);
+  app.setPath('sessionData', path.join(userDataPathOverride, 'session'));
+}
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -48,9 +68,13 @@ console.info('[Main] Node version', process.versions.node);
 console.info('[Main] ICU version', process.versions.icu);
 console.info('[Main] On OS:', os.platform(), os.release());
 console.info('[Main] In timezone:', tz, tzOffsetStr);
+if (userDataPathOverride) {
+  console.info('[Main] Using overridden userData path:', userDataPathOverride);
+}
 
 let window: BrowserWindow | null = null;
 let tray: Tray | null = null;
+let globalInputHookStarted = false;
 const manager = new Manager();
 
 /**
@@ -86,6 +110,18 @@ if (!hardwareAccelerationAtStartup) {
 
 ipcMain.handle('getHardwareAcceleration', () => {
   return hardwareAccelerationAtStartup;
+});
+
+ipcMain.handle('getMacOSPermissions', () => {
+  return getMacOSPermissions();
+});
+
+ipcMain.handle('requestMacOSPermission', (_event, target) => {
+  return requestMacOSPermission(target);
+});
+
+ipcMain.handle('openMacOSPermissionSettings', (_event, target) => {
+  return openMacOSPermissionSettings(target);
 });
 
 // Register the vod:// protocol as privileged. Required to securely play
@@ -135,11 +171,58 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
+const startGlobalInputHook = () => {
+  if (
+    process.platform === 'darwin' &&
+    !systemPreferences.isTrustedAccessibilityClient(false)
+  ) {
+    console.warn(
+      '[Main] macOS Accessibility permission not granted; global hotkeys disabled',
+    );
+    return false;
+  }
+
+  try {
+    uIOhook.start();
+    console.info('[Main] Global input hook started');
+    return true;
+  } catch (error) {
+    console.error('[Main] Failed to start global input hook', error);
+    return false;
+  }
+};
+
+const stopGlobalInputHook = () => {
+  if (!globalInputHookStarted) return;
+
+  globalInputHookStarted = false;
+  uIOhook.removeAllListeners();
+
+  if (process.platform === 'darwin') {
+    console.info('[Main] Skipping uIOhook stop on macOS shutdown');
+    return;
+  }
+
+  try {
+    uIOhook.stop();
+    console.info('[Main] Global input hook stopped');
+  } catch (error) {
+    console.error('[Main] Failed to stop global input hook', error);
+  }
+};
+
 /**
  * Setup tray icon, menu and event listeners.
  */
 const setupTray = () => {
-  tray = new Tray(getAssetPath('./icon/small-icon.png'));
+  let trayIcon = nativeImage.createFromPath(getAssetPath('./icon/small-icon.png'));
+
+  if (process.platform === 'darwin') {
+    trayIcon = trayIcon.resize({ height: 18, width: 18 });
+    trayIcon.setTemplateImage(true);
+  }
+
+  tray = new Tray(trayIcon);
 
   // This wont update without an app restart but whatever.
   const language = cfg.get<string>('language') as Language;
@@ -248,6 +331,11 @@ const createWindow = async () => {
     ]);
 
     manager.pushAdvancedLoggingStatus();
+
+    if (process.env.WCR_PACKAGED_APP_SMOKE === '1') {
+      console.info('[Main] Packaged app smoke complete');
+      setTimeout(() => app.quit(), 1000);
+    }
   });
 
   window.on('focus', () => {
@@ -271,7 +359,7 @@ const createWindow = async () => {
     return { action: 'deny' };
   });
 
-  uIOhook.start();
+  globalInputHookStarted = startGlobalInputHook();
 
   // Runs the auto-updater, which checks GitHub for new releases
   // and will prompt the user if any are available.
@@ -439,6 +527,85 @@ ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
   return getAvailableDisplays();
 });
 
+const sourceMatchesWow = (source: { name: string }) => {
+  const normalizedName = source.name.toLowerCase();
+  return (
+    normalizedName.includes('world of warcraft') ||
+    normalizedName.includes('[wow]')
+  );
+};
+
+const getMacOSPreviewDesktopSource =
+  async (): Promise<Electron.DesktopCapturerSource | null> => {
+    let sources: Electron.DesktopCapturerSource[];
+
+    try {
+      sources = await desktopCapturer.getSources({
+        fetchWindowIcons: false,
+        thumbnailSize: { height: 1, width: 1 },
+        types: ['window', 'screen'],
+      });
+    } catch (error) {
+      console.warn('[Main] Failed to get macOS preview capture sources', error);
+      return null;
+    }
+
+    const windowSource = sources.find(
+      (source) => source.id.startsWith('window:') && sourceMatchesWow(source),
+    );
+    const screenSource = sources.find((source) =>
+      source.id.startsWith('screen:'),
+    );
+    const source = windowSource ?? screenSource ?? null;
+
+    if (!source) {
+      console.warn('[Main] No macOS preview capture source found');
+      return null;
+    }
+
+    console.info('[Main] Using macOS preview capture source', {
+      id: source.id,
+      name: source.name,
+    });
+
+    return source;
+  };
+
+const setupMacOSPreviewDisplayMediaHandler = () => {
+  if (process.platform !== 'darwin') return;
+
+  session.defaultSession.setDisplayMediaRequestHandler(
+    async (_request, callback) => {
+      const source = await getMacOSPreviewDesktopSource();
+
+      callback(source ? { video: source } : {});
+    },
+  );
+};
+
+ipcMain.handle(
+  'getMacOSPreviewCaptureSource',
+  async (): Promise<MacOSPreviewCaptureSourceResult> => {
+    if (process.platform !== 'darwin') {
+      return { supported: false, source: null };
+    }
+
+    const source = await getMacOSPreviewDesktopSource();
+
+    if (source === null) {
+      return { supported: true, source: null };
+    }
+
+    return {
+      supported: true,
+      source: {
+        id: source.id,
+        name: source.name,
+      },
+    };
+  },
+);
+
 const refreshCloudGuilds = async () => {
   console.info('[Main] Frontend triggered cloud guilds refresh');
   const client = CloudClient.getInstance();
@@ -499,6 +666,8 @@ app.on('window-all-closed', async () => {
  */
 app.on('before-quit', () => {
   console.info('[Main] Running before-quit actions');
+  const shouldForceMacOSExit =
+    process.platform === 'darwin' && globalInputHookStarted;
 
   if (tray) {
     console.info('[Main] Destroy tray icon');
@@ -506,9 +675,16 @@ app.on('before-quit', () => {
     tray = null;
   }
 
-  Poller.getInstance().stop();
-  uIOhook.stop();
+  manager.shutdown();
+  stopGlobalInputHook();
   Recorder.getInstance().shutdownOBS();
+
+  if (shouldForceMacOSExit) {
+    setTimeout(() => {
+      console.info('[Main] Force exiting after macOS uiohook shutdown');
+      app.exit(0);
+    }, 1000);
+  }
 });
 
 /**
@@ -538,6 +714,7 @@ app
 
     // Required by the video player to safely play files from disk.
     protocol.handle('vod', handleSafeVodRequest);
+    setupMacOSPreviewDisplayMediaHandler();
 
     createWindow();
   })
