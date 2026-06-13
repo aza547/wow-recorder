@@ -9,12 +9,20 @@
   "scripts": {
     "electron-rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts",
-    "postinstall": "npm run electron-rebuild && npm run link-modules"
+    "copy-noobs-addon": "node ../../scripts/noobs/copy-rebuilt-addon.js ./node_modules/noobs",
+    "postinstall": "patch-package && npm run electron-rebuild && npm run copy-noobs-addon && npm run link-modules"
   },
   "dependencies": {
     "atomic-queue": "^5.0.4",
     "noobs": "^0.0.187",
     "uiohook-napi": "^1.5.2"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "patch-package": "^8.0.1"
+  },
+  "optionalDependencies": {
+    "@ffmpeg-installer/darwin-arm64": "^4.1.5",
+    "@ffmpeg-installer/darwin-x64": "^4.1.0"
+  }
 }
