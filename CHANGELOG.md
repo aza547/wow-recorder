@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a switch to allow disabling of NTFS checks (at users own risk).
 
 ### Fixed
-
+- Fix boss HP tracking for Alleria and Belo'ren to not rely on English unit names.
 
 ## [7.8.0] - 2026-06-11
 ### Changed
