@@ -8,7 +8,6 @@ import Activity from './Activity';
 import { Phrase } from 'localisation/phrases';
 import { app } from 'electron';
 import LogLine from 'parsing/LogLine';
-import LogHandler from 'parsing/LogHandler';
 
 /**
  * Class representing a raid encounter.
