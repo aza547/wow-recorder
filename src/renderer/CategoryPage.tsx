@@ -2,7 +2,7 @@ import * as React from 'react';
 import { AppState, Pages, RendererVideo } from 'main/types';
 import {
   Dispatch,
-  MutableRefObject,
+  RefObject,
   SetStateAction,
   useCallback,
   useEffect,
@@ -58,8 +58,8 @@ interface IProps {
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
-  persistentProgress: MutableRefObject<number>;
-  playerHeight: MutableRefObject<number>;
+  persistentProgress: RefObject<number>;
+  playerHeight: RefObject<number>;
 }
 
 /**

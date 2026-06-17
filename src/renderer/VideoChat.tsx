@@ -1,7 +1,7 @@
 import { MessageSquare, SendHorizontal, Unplug, X } from 'lucide-react';
 import { Textarea } from './components/TextArea/textarea';
 import { Button } from './components/Button/Button';
-import { MutableRefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import { RendererVideo } from 'main/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircularProgress } from '@mui/material';
@@ -16,7 +16,7 @@ const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   video: RendererVideo;
-  videoPlayerRef: MutableRefObject<VideoPlayerRef | null>;
+  videoPlayerRef: RefObject<VideoPlayerRef | null>;
   language: Language;
   deletePermissions: boolean;
 }

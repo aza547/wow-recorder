@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import { AppState, RawCombatant, RendererVideo } from 'main/types';
 import { Ban, X } from 'lucide-react';
 import { specializationById, WoWCharacterClassType } from 'main/constants';
-import { Dispatch, MutableRefObject, SetStateAction } from 'react';
+import { Dispatch, RefObject, SetStateAction } from 'react';
 import {
   getWoWClassColor,
   stopPropagation,
@@ -20,7 +20,7 @@ interface IProps {
   video: RendererVideo;
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
-  persistentProgress: MutableRefObject<number>;
+  persistentProgress: RefObject<number>;
 }
 
 export default function ViewpointSelection(props: IProps) {

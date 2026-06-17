@@ -8,10 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [7.8.1] - 2026-06-17
+### Added
+- Add a switch to allow disabling of NTFS checks (at users own risk).
+
+### Fixed
+- Fix boss HP tracking for Alleria and Belo'ren to not rely on English unit names.
+- Add new Mythic Flex difficulty ID for Rotmire.
+
+## [7.8.0] - 2026-06-11
+### Changed
+- Upgrade to React 19 and enable the React compiler. In theory this improves UI performance.
+
+### Added
+- Added Lindormi's Guidance affix.
+- Improve the log button to also offer a "create diagnostics bundle" function.
+
+## [7.7.3] - 2026-06-06
+### Fixed
 - [Issue 767](https://github.com/aza547/wow-recorder/issues/767) - Detect if WoW is on non-NTFS filesystem during configuration. Other filesystems, in particular exFAT are known not to work correctly with the Node watch API, which is used as the mechanism for reading combat log events.
 - [Issue 690](https://github.com/aza547/wow-recorder/issues/690) - Adds Holy priest guardian deaths to video metadata and video progress bar tracking.
 - Improve the disk space check error message to accurately reflect the space requirement when accounting for stored videos.
 - Add warning when delete selection contains locked videos.
+- Fixed a bug where classic arenas were being miscut.
 
 ## [7.7.2] - 2026-05-24
 ### Fixed

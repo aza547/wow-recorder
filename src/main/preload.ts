@@ -266,5 +266,13 @@ contextBridge.exposeInMainWorld('electron', {
     getHardwareAcceleration() {
       return ipcRenderer.invoke('getHardwareAcceleration');
     },
+
+    createDiagsBundle(): Promise<string> {
+      return ipcRenderer.invoke('createDiagsBundle');
+    },
+
+    openSystemExplorer(path: string) {
+      ipcRenderer.send('systemExplorer', path);
+    },
   },
 });

@@ -119,6 +119,7 @@ export const getSettings = (): ConfigurationSchema => {
     validateLogPaths: getConfigValue<boolean>('validateLogPaths'),
     hevcTranscodeEnabled: getConfigValue<boolean>('hevcTranscodeEnabled'),
     hevcTranscodeCacheSizeGb: getConfigValue<number>('hevcTranscodeCacheSizeGb'),
+    validateNtfs: getConfigValue<boolean>('validateNtfs'),
     /* eslint-enable prettier/prettier */
   };
 

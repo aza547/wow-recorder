@@ -16,21 +16,21 @@ jobs:
 
     steps:
     - name: Checkout noobs
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: sepdotgg/noobs
         ref: linux-pr-wip
         path: noobs
 
     - name: Checkout wow-recorder
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: wow-recorder
 
     - name: Setup Node JS
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
-        node-version: '22.12.0'
+        node-version: 24
         cache: 'npm'
         cache-dependency-path: wow-recorder/package-lock.json
 
@@ -74,21 +74,21 @@ jobs:
 
     steps:
     - name: Checkout noobs
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: sepdotgg/noobs
         ref: linux-pr-wip
         path: noobs
 
     - name: Checkout wow-recorder
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: wow-recorder
 
     - name: Setup Node JS
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
-        node-version: '22.12.0'
+        node-version: 24
         cache: 'npm'
         cache-dependency-path: wow-recorder/package-lock.json
 

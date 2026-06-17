@@ -101,6 +101,7 @@ export type ConfigurationSchema = {
   validateLogPaths: boolean;
   hevcTranscodeEnabled: boolean;
   hevcTranscodeCacheSizeGb: number;
+  validateNtfs: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -632,5 +633,10 @@ export const configSchema = {
     type: 'integer',
     default: 10,
     minimum: 1,
+  },
+  validateNtfs: {
+    description: Phrase.ValidateNtfsDescription,
+    type: 'boolean',
+    default: true,
   },
 };

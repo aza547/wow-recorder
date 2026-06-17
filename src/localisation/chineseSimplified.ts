@@ -506,6 +506,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ChatDeleteMessageTooltip]: '删除此聊天消息',
   [Phrase.ValidateLogPathLabel]: '验证日志路径',
   [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder 会检查你设置的日志路径是否指向受支持的 WoW 安装。你可以禁用此检查以允许设置不受支持的游戏模式。禁用此功能需自行承担风险。',
+  [Phrase.ValidateNtfsLabel]: '验证 NTFS',
+  [Phrase.ValidateNtfsDescription]: 'Warcraft Recorder 会检查日志路径是否位于 NTFS 文件系统上。您可以禁用此检查以允许设置不受支持的文件系统。禁用此功能需自行承担风险。',
   [Phrase.StartManualRecordingTooltip]: '开始手动录制',
   [Phrase.StopManualRecordingTooltip]: '停止手动录制',
   [Phrase.AdvancedCombatLoggingDisabledWarning]: '高级战斗日志未启用。请在魔兽世界中启用：系统 > 网络 > 高级战斗日志。注意：启用后需完全关闭魔兽世界 - 该设置仅在退出时写入 Config.wtf。',
@@ -538,6 +540,13 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.CodecDescriptionH265]:'H265/HEVC 是一种专有编码格式，在相同画质下通常可以比 H264 提供更小的文件体积，但设备和软件兼容性相对较差。',
   [Phrase.CodecDescriptionAV1]:'AV1 是一种免版税的视频编码格式，相比 H265 可以提供更高的压缩效率，但设备支持情况可能有所不同。',
   [Phrase.CodecNeedsHardwareRendering]: '所选编码器需要硬件渲染才能播放。请在应用设置中启用硬件渲染并重新启动应用，或选择其他编码器。',
+  [Phrase.DiagnosticsDialogDescription]: '访问应用日志。如果你遇到问题，在 Discord 中分享诊断包可以帮助我们定位并修复问题。',
+  [Phrase.DiagnosticsOpenLogButton]: '打开日志文件夹',
+  [Phrase.DiagnosticsCreateBundleButton]: '创建诊断包',
+  [Phrase.DiagnosticsZippingInProgress]: '正在打包日志...',
+  [Phrase.DiagnosticsOpenBundleCreated]: '打开包文件夹',
+  [Phrase.StatusTitleMigrated]: '已迁移',
+  [Phrase.StatusDescrMigrated]: '此公会已迁移。', // TODO: add more details here.
 };
 
 export default CHINESE_SIMPLIFIED;

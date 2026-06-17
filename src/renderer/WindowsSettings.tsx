@@ -6,7 +6,7 @@ import { Info } from 'lucide-react';
 import { setConfigValues } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Input } from './components/Input/Input';
 import { Phrase } from 'localisation/phrases';
@@ -21,12 +21,14 @@ interface IProps {
 
 const WindowsSettings = (props: IProps) => {
   const { appState, config, setConfig } = props;
-  const initialRender = React.useRef(true);
 
-  React.useEffect(() => {
+  const effect1 = useRef(false);
+  const effect2 = useRef(false);
+
+  useEffect(() => {
     // Don't fire on the initial render.
-    if (initialRender.current) {
-      initialRender.current = false;
+    if (!effect1.current) {
+      effect1.current = true;
       return;
     }
 
@@ -50,6 +52,18 @@ const WindowsSettings = (props: IProps) => {
     config.hevcTranscodeEnabled,
     config.hevcTranscodeCacheSizeGb,
   ]);
+
+  useEffect(() => {
+    // Seperate effect here as we need to reconfigure base after changing
+    // the validateNtfs option to avoid the user needing to restart.
+    if (!effect2.current) {
+      effect2.current = true;
+      return;
+    }
+
+    setConfigValues({ validateNtfs: config.validateNtfs });
+    ipc.reconfigureBase();
+  }, [config.validateNtfs]);
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
@@ -151,6 +165,15 @@ const WindowsSettings = (props: IProps) => {
     });
   };
 
+  const setValidateNtfs = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        validateNtfs: checked,
+       };
+     });
+   };
+
   const setHevcTranscodeCacheSizeGb = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -228,7 +251,7 @@ const WindowsSettings = (props: IProps) => {
     );
   };
 
-  return (
+    return (
     <div className="flex flex-row flex-wrap gap-x-8 gap-y-4">
       {getSwitchForm('startUp', Phrase.RunOnStartupLabel, setRunOnStartup)}
       {getSwitchForm(
@@ -253,6 +276,12 @@ const WindowsSettings = (props: IProps) => {
         Phrase.HardwareAccelerationDescription,
       )}
       {renderHevcTranscodeControls()}
+      {getSwitchForm(
+        'validateNtfs',
+        Phrase.ValidateNtfsLabel,
+        setValidateNtfs,
+        Phrase.ValidateNtfsDescription,
+      )}
     </div>
   );
 };

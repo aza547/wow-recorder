@@ -1123,6 +1123,7 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
   159: 'Oblivion',
   160: 'Devour',
   162: 'Pulsar',
+  165: "Lindormi's Guidance",
 };
 
 /**
@@ -1236,7 +1237,12 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
     partyType: 'raid',
     phrase: Phrase.LFR,
   },
-
+  22: {
+    difficultyID: 'mythic', // Mythic flex (Rotmire)
+    difficulty: 'M',
+    partyType: 'raid',
+    phrase: Phrase.Mythic,
+  },
   23: {
     difficultyID: 'mythic',
     difficulty: 'M',

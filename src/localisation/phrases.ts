@@ -506,6 +506,8 @@ enum Phrase {
   ChatDeleteMessageTooltip,
   ValidateLogPathLabel,
   ValidateLogPathsDescription,
+  ValidateNtfsLabel,
+  ValidateNtfsDescription,
   StartManualRecordingTooltip,
   StopManualRecordingTooltip,
   RecordedAt,
@@ -538,6 +540,13 @@ enum Phrase {
   CodecDescriptionH265,
   CodecDescriptionAV1,
   CodecNeedsHardwareRendering,
+  DiagnosticsDialogDescription,
+  DiagnosticsOpenLogButton,
+  DiagnosticsCreateBundleButton,
+  DiagnosticsZippingInProgress,
+  DiagnosticsOpenBundleCreated,
+  StatusTitleMigrated,
+  StatusDescrMigrated,
 }
 
 enum Language {

@@ -85,6 +85,7 @@ import affix5 from '../../assets/affixes/5.jpg';
 import affix7 from '../../assets/affixes/7.jpg';
 import affix9 from '../../assets/affixes/9.jpg';
 import affix162 from '../../assets/affixes/162.jpg';
+import affix165 from '../../assets/affixes/165.jpg';
 
 import deathknight from '../../assets/class/deathknight.png';
 import druid from '../../assets/class/druid.png';
@@ -190,6 +191,7 @@ const affixImages = {
   7: affix7,
   9: affix9,
   162: affix162,
+  165: affix165,
 };
 
 const classImages: Record<WoWCharacterClassType, string> = {

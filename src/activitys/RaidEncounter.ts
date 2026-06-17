@@ -23,11 +23,17 @@ export default class RaidEncounter extends Activity {
 
   private maxHp = 1;
 
-  private bossUnitName = '';
+  private bossUnitId = -1;
 
   private bossUnitActive = true;
 
   private static minRetailBossHp = 100 * 10 ** 6;
+
+  private static alleriaNpcId = 244300;
+
+  private static belorenNpcId = 240387;
+
+  private static belorenRebirthSpellId = 1241313;
 
   constructor(
     startDate: Date,
@@ -43,12 +49,11 @@ export default class RaidEncounter extends Activity {
     this.overrun = 3; // Even for wipes it's nice to have some overrun.
 
     if (this.encounterID === 3182) {
-      // Belo'ren starts in normal phase.
-      this.bossUnitName = "Belo'ren";
-      this.bossUnitActive = false;
+      this.bossUnitId = RaidEncounter.belorenNpcId;
+      this.bossUnitActive = false; // Starts in normal phase.
     } else if (this.encounterID === 3181) {
-      // Ignores all the adds in P1.
-      this.bossUnitName = 'Alleria Windrunner';
+      // Alleria Windrunner (Voidspire)
+      this.bossUnitId = RaidEncounter.alleriaNpcId;
     }
   }
 
@@ -183,6 +188,15 @@ export default class RaidEncounter extends Activity {
   }
 
   /**
+   * Get the NPC ID from a GUID. GUID looks like:
+   *  "Creature-0-4244-2913-38715-240387-000073A7B0"
+   * The stable encounter ID is the 5th hypen seperated element.
+   */
+  private getNpcIdFromGuid(guid: string): number {
+    return parseInt(guid.split('-')[5], 10);
+  }
+
+  /**
    * Update the max and current HP of the boss. Used to calculate the
    * boss HP percent at the end of the fight.
    */
@@ -192,10 +206,11 @@ export default class RaidEncounter extends Activity {
       return;
     }
 
-    if (this.bossUnitName) {
-      const unitName = spellDamageEvent.arg(6);
+    if (this.bossUnitId > 0) {
+      const guid = spellDamageEvent.arg(5);
+      const unitId = this.getNpcIdFromGuid(guid);
 
-      if (unitName !== this.bossUnitName) {
+      if (unitId !== this.bossUnitId) {
         // We know the boss unit and it's not it.
         return;
       }
@@ -245,12 +260,9 @@ export default class RaidEncounter extends Activity {
       return;
     }
 
-    const srcName = line.arg(2);
-    const spellName = line.arg(10);
+    const spellId = parseInt(line.arg(9), 10);
 
-    if (srcName === "Belo'ren" && spellName === 'Rebirth') {
-      // When Belo'ren casts Rebirth he enters the egg phase and
-      // we should count damage.
+    if (spellId === RaidEncounter.belorenRebirthSpellId) {
       this.bossUnitActive = event === 'SPELL_CAST_START';
       return;
     }

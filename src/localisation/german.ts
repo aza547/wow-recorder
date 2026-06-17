@@ -506,6 +506,8 @@ const GERMAN: Translations = {
   [Phrase.ChatDeleteMessageTooltip]: 'Diese Chat-Nachricht löschen',
   [Phrase.ValidateLogPathLabel]: 'Logpfade überprüfen',
   [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder überprüft, ob die von Ihnen festgelegten Logpfade auf eine unterstützte WoW-Installation verweisen. Sie können diese Überprüfung deaktivieren, um nicht unterstützte Spielmodi festzulegen. Deaktivieren Sie dies auf eigenes Risiko.',
+  [Phrase.ValidateNtfsLabel]: 'NTFS überprüfen',
+  [Phrase.ValidateNtfsDescription]: 'Warcraft Recorder überprüft, ob die Logpfade auf einem NTFS-Dateisystem liegen. Sie können diese Überprüfung deaktivieren, um nicht unterstützte Dateisysteme festzulegen. Deaktivieren Sie dies auf eigenes Risiko.',
   [Phrase.StartManualRecordingTooltip]: 'Starte eine manuelle Aufnahme',
   [Phrase.StopManualRecordingTooltip]: 'Beende die manuelle Aufnahme',
   [Phrase.RecordedAt]: 'Aufgenommen am',
@@ -538,6 +540,13 @@ const GERMAN: Translations = {
   [Phrase.CodecDescriptionH265]: 'H265/HEVC ist ein proprietärer Codec, der bei vergleichbarer Qualität deutlich kleinere Dateigrößen als H264 ermöglichen kann, jedoch eine eingeschränktere Geräte- und Softwarekompatibilität besitzt.',
   [Phrase.CodecDescriptionAV1]: 'AV1 ist ein lizenzfreier Codec, der eine noch bessere Komprimierungseffizienz als H265 bieten kann. Die Geräteunterstützung kann jedoch variieren.',
   [Phrase.CodecNeedsHardwareRendering]: 'Der ausgewählte Encoder benötigt Hardwarebeschleunigung für die Wiedergabe. Aktiviere diese in den Anwendungseinstellungen und starte die App neu oder wähle einen anderen Encoder.',
+  [Phrase.DiagnosticsDialogDescription]: 'Zugriff auf die Anwendungsprotokolle. Wenn du ein Problem hast, kann das Teilen eines Diagnosepakets in Discord helfen, die Ursache zu finden und zu beheben.',
+  [Phrase.DiagnosticsOpenLogButton]: 'Protokollordner öffnen',
+  [Phrase.DiagnosticsCreateBundleButton]: 'Diagnosepaket erstellen',
+  [Phrase.DiagnosticsZippingInProgress]: 'Protokolle werden gepackt...',
+  [Phrase.DiagnosticsOpenBundleCreated]: 'Paketordner öffnen',
+  [Phrase.StatusTitleMigrated]: 'Migriert',
+  [Phrase.StatusDescrMigrated]: 'Diese Gilde wurde migriert.', // TODO: add more details here.
 };
 
 export default GERMAN;

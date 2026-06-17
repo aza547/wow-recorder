@@ -1,7 +1,11 @@
 import ElectronStore from 'electron-store';
-import { QualityPresets } from 'main/obsEnums';
 import { Channels } from 'main/preload';
-import { AudioSourceType, KillVideoSegment, RendererVideo, SceneItem } from 'main/types';
+import {
+  AudioSourceType,
+  KillVideoSegment,
+  RendererVideo,
+  SceneItem,
+} from 'main/types';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 import { TChatMessageWithId } from 'types/api';
 
@@ -93,6 +97,8 @@ declare global {
 
         clipVideo(video: RendererVideo, offset: number, duration: number): void;
         getHardwareAcceleration(): boolean;
+        createDiagsBundle(): Promise<string>;
+        openSystemExplorer(path: string): void;
       };
     };
   }

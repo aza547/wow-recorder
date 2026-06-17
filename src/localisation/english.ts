@@ -508,6 +508,8 @@ const ENGLISH: Translations = {
   [Phrase.ChatDeleteMessageTooltip]: 'Delete this chat message',
   [Phrase.ValidateLogPathLabel]: 'Validate Log Paths',
   [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder checks the log paths you set point to a supported WoW installation. You can disable this checking to allow you to set unsupported game modes. Disable this at your own risk.',
+  [Phrase.ValidateNtfsLabel]: 'Validate NTFS',
+  [Phrase.ValidateNtfsDescription]: 'Warcraft Recorder checks if the log paths are on an NTFS file system. You can disable this checking to allow you to set unsupported file systems. Disable this at your own risk.',
   [Phrase.StartManualRecordingTooltip]: 'Start a manual recording.',
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
@@ -542,6 +544,13 @@ const ENGLISH: Translations = {
   [Phrase.CodecDescriptionH265]: 'H265 (HEVC) is a proprietary codec that can provide significantly smaller file sizes than H264 at similar quality, but has more limited playback compatibility.',
   [Phrase.CodecDescriptionAV1]: 'AV1 is a royalty-free codec that can provide even better compression efficiency than H265, but like H265 has more limited playback compatibility.',
   [Phrase.CodecNeedsHardwareRendering]: 'Selected encoder requires hardware rendering for playback. Enable it in the Application settings and restart the app, or select a different encoder.',
+  [Phrase.DiagnosticsDialogDescription]: 'If you are experiencing an issue, sharing a diagnostics bundle can help us identify and fix the problem.',
+  [Phrase.DiagnosticsOpenLogButton]: 'Open Log Folder',
+  [Phrase.DiagnosticsCreateBundleButton]: 'Create Diagnostics Bundle',
+  [Phrase.DiagnosticsZippingInProgress]: 'Zipping Up Logs...',
+  [Phrase.DiagnosticsOpenBundleCreated]: 'Open Bundle Location',
+  [Phrase.StatusTitleMigrated]: 'Migrated',
+  [Phrase.StatusDescrMigrated]: 'This guild has been migrated.', // TODO: add more details here.
 };
 
 export default ENGLISH;
