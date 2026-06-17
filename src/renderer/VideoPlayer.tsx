@@ -797,19 +797,19 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         height="100%"
         width="100%"
         key={src}
-        url={src}
+        src={src}
         style={style}
         playing={playing}
         volume={volume}
         muted={primary ? muted : true}
         playbackRate={playbackRate}
-        progressInterval={progressInterval}
-        onProgress={primary ? onProgress : undefined}
+        onDurationChange={primary ? onDurationChange : undefined}
         onClick={togglePlaying}
         onDoubleClick={toggleFullscreen}
-        onPlay={primary ? () => setPlaying(true) : undefined}
-        onPause={primary ? () => setPlaying(false) : undefined}
+        onPlay={() => onPlay(primary)}
+        onPause={() => onPause(primary)}
         onReady={onReady}
+        onSeeked={onReady}
         onError={onError}
       />
     );
