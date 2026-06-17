@@ -20,6 +20,16 @@ const getLegacyParentVideoName = (clip: RendererVideo) => {
   return parentVideoName === clipVideoName ? undefined : parentVideoName;
 };
 
+const getClipParentOffset = (clip: RendererVideo) => {
+  const offset = clip.parentOffset;
+
+  if (offset === undefined || !Number.isFinite(offset) || offset < 0) {
+    return 0;
+  }
+
+  return offset;
+};
+
 const getVideoStartTime = (video: RendererVideo) => {
   if (!video.start) return undefined;
 
@@ -94,6 +104,12 @@ const findClipParent = (
     if (legacyParent) return legacyParent;
   }
 
+  if (!clip.parentVideoName && !legacyParentVideoName) {
+    // Generated clips, such as kill videos, can share the source uniqueHash but
+    // do not have a single trusted source recording or offset to jump to.
+    return undefined;
+  }
+
   if (!clip.uniqueHash) {
     return undefined;
   }
@@ -148,4 +164,4 @@ const findClipParent = (
   return fallbackParents[0]?.candidate;
 };
 
-export { findClipParent };
+export { findClipParent, getClipParentOffset };

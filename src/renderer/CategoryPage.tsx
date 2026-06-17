@@ -50,7 +50,7 @@ import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
 import VideoChat from './VideoChat';
 import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
-import { findClipParent } from './ClipParent';
+import { findClipParent, getClipParentOffset } from './ClipParent';
 
 interface IProps {
   category: VideoCategory;
@@ -117,7 +117,7 @@ const CategoryPage = (props: IProps) => {
     if (!parent) return;
 
     // Start source playback at the offset captured when the clip was created.
-    persistentProgress.current = clip.parentOffset ?? 0;
+    persistentProgress.current = getClipParentOffset(clip);
 
     setAppState((prevState) => ({
       ...prevState,

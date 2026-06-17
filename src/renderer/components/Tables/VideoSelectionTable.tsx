@@ -30,11 +30,15 @@ interface IProps {
 const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, persistentProgress, table } = props;
   const {
+    category,
     videoFilterTags,
     dateRangeFilter,
     storageFilter,
     preferredViewpoint,
   } = appState;
+  const selectedVideo = appState.selectedVideos[0];
+  const { pageIndex, pageSize } = table.getState().pagination;
+  const selectedRowRef = React.useRef<HTMLTableRowElement>(null);
 
   /**
    * Mark the row as selected and update the video player to play the first
@@ -175,6 +179,41 @@ const VideoSelectionTable = (props: IProps) => {
     };
   }, [table, onRowClick, videoFilterTags, dateRangeFilter, storageFilter]);
 
+  useEffect(() => {
+    if (!selectedVideo) return undefined;
+
+    const sortedRows = table.getSortedRowModel().rows;
+    const selectedIndex = sortedRows.findIndex((row) =>
+      [row.original, ...row.original.multiPov].some((video) =>
+        videoMatch(video, selectedVideo),
+      ),
+    );
+
+    if (selectedIndex === -1) return undefined;
+
+    const selectedPageIndex = Math.floor(selectedIndex / pageSize);
+
+    if (selectedPageIndex !== pageIndex) {
+      table.setPageIndex(selectedPageIndex);
+      return undefined;
+    }
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      selectedRowRef.current?.scrollIntoView({ block: 'center' });
+    });
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [
+    category,
+    selectedVideo,
+    table,
+    pageIndex,
+    pageSize,
+    videoFilterTags,
+    dateRangeFilter,
+    storageFilter,
+  ]);
+
   /**
    * Render an individual header.
    */
@@ -253,6 +292,7 @@ const VideoSelectionTable = (props: IProps) => {
   const renderBaseRow = (
     row: Row<RendererVideo>,
     selected: boolean,
+    appStateSelected: boolean,
     sortedIndex: number,
   ) => {
     const cells = row.getVisibleCells();
@@ -267,6 +307,7 @@ const VideoSelectionTable = (props: IProps) => {
     return (
       <tr
         key={row.id}
+        ref={appStateSelected ? selectedRowRef : undefined}
         className={className}
         onClick={(event) => onRowClick(event, row)}
       >
@@ -279,7 +320,6 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>, sortedIndex: number) => {
-    const selectedVideo = appState.selectedVideos[0];
     // Programmatic navigation, such as jumping from a clip to its source,
     // updates appState before react-table has a selected row in the new view.
     const appStateSelected =
@@ -297,7 +337,7 @@ const VideoSelectionTable = (props: IProps) => {
 
     return (
       <Fragment key={row.id}>
-        {renderBaseRow(row, selected, sortedIndex)}
+        {renderBaseRow(row, selected, appStateSelected, sortedIndex)}
       </Fragment>
     );
   };

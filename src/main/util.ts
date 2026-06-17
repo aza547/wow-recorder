@@ -645,7 +645,7 @@ const buildClipMetadata = (
   // fields are the trusted source navigation data added at clipping time.
   final.parentCategory = initial.category;
   final.parentVideoName = parentVideoName;
-  final.parentOffset = offset;
+  final.parentOffset = Number.isFinite(offset) && offset > 0 ? offset : 0;
   final.category = VideoCategory.Clips;
   final.protected = true;
   final.clippedAt = date.getTime();
