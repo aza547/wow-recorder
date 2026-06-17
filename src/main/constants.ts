@@ -1211,7 +1211,6 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
     partyType: 'raid',
     phrase: Phrase.Normal,
   },
-
   // Retail raids
   14: {
     difficultyID: 'normal',
@@ -1236,12 +1235,6 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
     difficulty: 'LFR',
     partyType: 'raid',
     phrase: Phrase.LFR,
-  },
-  22: {
-    difficultyID: 'mythic', // Mythic flex (Rotmire)
-    difficulty: 'M',
-    partyType: 'raid',
-    phrase: Phrase.Mythic,
   },
   23: {
     difficultyID: 'mythic',
@@ -1334,6 +1327,12 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
     difficulty: 'N',
     partyType: 'raid',
     phrase: Phrase.Normal,
+  },
+  233: {
+    difficultyID: 'mythic', // Mythic flex (Rotmire)
+    difficulty: 'M',
+    partyType: 'raid',
+    phrase: Phrase.Mythic,
   },
 };
 
