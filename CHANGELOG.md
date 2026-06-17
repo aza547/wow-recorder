@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [7.8.1] - 2026-06-17
+### Added
 - Add a switch to allow disabling of NTFS checks (at users own risk).
 
 ### Fixed
 - Fix boss HP tracking for Alleria and Belo'ren to not rely on English unit names.
+- Add new Mythic Flex difficulty ID for Rotmire.
 
 ## [7.8.0] - 2026-06-11
 ### Changed
@@ -19,11 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added Lindormi's Guidance affix.
 - Improve the log button to also offer a "create diagnostics bundle" function.
-
-
-## [7.7.4] - 2026-06-17
-### Fixed
-- Add new Mythic Flex difficulty ID for Rotmire.
 
 ## [7.7.3] - 2026-06-06
 ### Fixed
