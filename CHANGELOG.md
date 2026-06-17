@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve the log button to also offer a "create diagnostics bundle" function.
 
 
+## [7.7.4] - 2026-06-17
+### Fixed
+- Add new Mythic Flex difficulty ID for Rotmire.
+
 ## [7.7.3] - 2026-06-06
 ### Fixed
 - [Issue 767](https://github.com/aza547/wow-recorder/issues/767) - Detect if WoW is on non-NTFS filesystem during configuration. Other filesystems, in particular exFAT are known not to work correctly with the Node watch API, which is used as the mechanism for reading combat log events.

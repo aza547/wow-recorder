@@ -1237,7 +1237,12 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
     partyType: 'raid',
     phrase: Phrase.LFR,
   },
-
+  22: {
+    difficultyID: 'mythic', // Mythic flex (Rotmire)
+    difficulty: 'M',
+    partyType: 'raid',
+    phrase: Phrase.Mythic,
+  },
   23: {
     difficultyID: 'mythic',
     difficulty: 'M',
