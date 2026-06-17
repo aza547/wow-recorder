@@ -27,6 +27,7 @@ import {
   populateActivityCell,
   populateAffixesCell,
   populateCreatorCell,
+  populateSourceCell,
 } from './Cells';
 import {
   EncounterHeader,
@@ -347,19 +348,12 @@ const useTable = (
     () => [
       {
         id: 'Details',
-        size: 120,
+        size: 80,
         accessorFn: (v) => v,
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
-          populateDetailsCell(
-            ctx,
-            language,
-            cloudStatus,
-            setVideoState,
-            getClipParent,
-            goToClipParent,
-          ),
+          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
       },
       {
         id: 'Type',
@@ -397,6 +391,15 @@ const useTable = (
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
         sortingFn: viewPointCountSort,
+      },
+      {
+        id: 'Source',
+        size: 50,
+        accessorFn: (v) => v,
+        enableSorting: false,
+        header: DetailsHeader,
+        cell: (ctx) =>
+          populateSourceCell(ctx, language, getClipParent, goToClipParent),
       },
     ],
     [appState, setVideoState, getClipParent, goToClipParent],

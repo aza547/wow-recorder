@@ -179,6 +179,15 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   // We show a progress spinner until the video is ready to play.
   const [spinner, setSpinner] = useState<boolean>(true);
 
+  // Capture the requested starting point for this player instance. This is
+  // used when jumping from a clip to its source, where URL fragments alone are
+  // not reliable enough to seek the custom vod:// source.
+  const initialSeek = useRef<number>(persistentProgress.current);
+  const initialSeekApplied = useRef<boolean>(
+    !Number.isFinite(persistentProgress.current) ||
+      persistentProgress.current <= 0,
+  );
+
   // On the initial seek we will attempt to resume playback from the
   // persistentProgress prop. The ideas is that when switching between
   // different POVs of the same activity we want to play from the same
@@ -516,13 +525,35 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     progressBarSyncRef.current = null;
   };
 
+  const applyInitialSeek = () => {
+    if (initialSeekApplied.current || !player1.current) {
+      return false;
+    }
+
+    const maxSeek = player1.current.duration;
+    if (!Number.isFinite(maxSeek) || maxSeek <= 0) {
+      return false;
+    }
+
+    const seconds = Math.min(Math.max(0, initialSeek.current), maxSeek);
+    player1.current.currentTime = seconds;
+    persistentProgress.current = seconds;
+    setProgress(seconds);
+    initialSeekApplied.current = true;
+    return true;
+  };
+
   const onDurationChange = () => {
     if (!player1.current || Number.isNaN(player1.current.duration)) {
       return;
     }
 
-    persistentProgress.current = player1.current.currentTime;
+    const didSeek = applyInitialSeek();
     setDuration(player1.current.duration);
+
+    if (!didSeek) {
+      persistentProgress.current = player1.current.currentTime;
+    }
   };
 
   // By default the window hijacks media keys even when
