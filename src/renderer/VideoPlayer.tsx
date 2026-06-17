@@ -734,6 +734,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     return (
       <ReactPlayer
         id="react-player"
+        preload={'auto'}
         ref={player}
         height="100%"
         width="100%"
