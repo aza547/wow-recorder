@@ -375,6 +375,9 @@ const currentRetailEncounters = [
   // Midnight - The Dreamrift
   3306, // Chimaerus the Undreamt God
 
+  // Midnight - Sporefall
+  3159, // Rotmire
+
   // Test Encounter
   9999, // Saves having to update the test button data.
 ];

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Add Rotmire to list of current encounters.
 
 ## [7.8.1] - 2026-06-17
 ### Added
