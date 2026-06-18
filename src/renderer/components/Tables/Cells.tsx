@@ -225,6 +225,9 @@ export const populateDetailsCell = (
 export const populateCreatorCell = (
   ctx: CellContext<RendererVideo, unknown>,
   language: Language,
+  isLinux: boolean,
+  hevcTranscodeEnabled: boolean,
+  onOpenSettings: () => void,
 ) => {
   const video = ctx.getValue() as RendererVideo;
   const cloud = [video, ...video.multiPov].filter((rv) => rv.cloud);
@@ -249,7 +252,13 @@ export const populateCreatorCell = (
     <Box className="inline-flex">
       <Tooltip content={tooltip}>
         <div onClick={(e) => e.stopPropagation()}>
-          <KillVideoDialog sources={disk} language={language}>
+          <KillVideoDialog
+            sources={disk}
+            language={language}
+            isLinux={isLinux}
+            hevcTranscodeEnabled={hevcTranscodeEnabled}
+            onOpenSettings={onOpenSettings}
+          >
             <Button variant="ghost" size="xs" disabled={disabled}>
               <Clapperboard size={18} />
             </Button>

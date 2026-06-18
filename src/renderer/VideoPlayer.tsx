@@ -1,6 +1,7 @@
 import {
   AppState,
   DeathMarkers,
+  Pages,
   RendererVideo,
   SliderMark,
   StorageFilter,
@@ -41,6 +42,7 @@ import {
   getOwnDeathMarkers,
   getRoundMarkers,
   isClip,
+  isHevcEncoder,
   isMythicPlusUtil,
   isSoloShuffleUtil,
   secToMmSs,
@@ -61,6 +63,7 @@ import CloudOffIcon from '@mui/icons-material/CloudOff';
 import Separator from './components/Separator/Separator';
 import { toast } from './components/Toast/useToast';
 import { Phrase } from 'localisation/phrases';
+import { useLinuxTranscodedSources } from './useLinuxTranscodedSources';
 
 interface IProps {
   videos: RendererVideo[];
@@ -198,10 +201,27 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const diskVideo = nameMatches.find((v) => !v.cloud);
   const clippable = !multiPlayerMode;
 
-  // Deliberatly don't update the source when the timestamp changes. That's
-  // just the initial playhead position. We only care to change sources when
-  // the videos we are meant to be playing changes.
+  // Video source path when transcoding is disabled (Windows, Linux+Disabled)
   const srcs = videos.map((rv) => useRef<string>(rv.videoSource + timestamp));
+
+  const { isLinux } = appState;
+  const useTranscoder = isLinux && config.hevcTranscodeEnabled;
+
+  // Cells that will mount a <video>. Disabled-HEVC cells never emit onReady.
+  const playableCount =
+    !useTranscoder && isLinux
+      ? videos.filter((v) => !isHevcEncoder(v.encoder)).length
+      : videos.length;
+
+  const linuxTranscode = useLinuxTranscodedSources(
+    useTranscoder
+      ? videos.map((v) => ({
+          source: v.videoSource + timestamp,
+          cacheKey: v.uniqueId,
+          isHevc: isHevcEncoder(v.encoder),
+        }))
+      : [],
+  );
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
@@ -631,7 +651,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const onReady = () => {
     numReady.current++;
 
-    if (numReady.current < videos.length) {
+    // Disabled-HEVC cells never emit onReady
+    if (numReady.current < playableCount) {
       // Don't react until all the players have emitted a ready event.
       return;
     }
@@ -740,6 +761,45 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         width="100%"
         key={src.current}
         src={safe}
+        style={style}
+        playing={playing}
+        volume={volume}
+        muted={primary ? muted : true}
+        playbackRate={playbackRate}
+        onDurationChange={primary ? onDurationChange : undefined}
+        onClick={togglePlaying}
+        onDoubleClick={toggleFullscreen}
+        onPlay={() => onPlay(primary)}
+        onPause={() => onPause(primary)}
+        onReady={onReady}
+        onSeeked={onReady}
+        onError={onError}
+      />
+    );
+  };
+
+  /**
+   * Linux-only render variant withou vod:// wrapping
+   * since the video player path has already been processed.
+   */
+  const renderLinuxPlayer = (src: string, index: number) => {
+    const primary = index === 0;
+    const player = players[index];
+
+    if (!player) {
+      // Protect against stupid programmer errors.
+      throw new Error('No player reference');
+    }
+
+    return (
+      <ReactPlayer
+        id="react-player"
+        preload={'auto'}
+        ref={player}
+        height="100%"
+        width="100%"
+        key={src}
+        src={src}
         style={style}
         playing={playing}
         volume={volume}
@@ -1382,13 +1442,103 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     );
   };
 
+  // In-cell "cannot play" for HEVC on Linux when transcoding is disabled.
+  const renderHevcUnsupportedCell = (i: number) => {
+    return (
+      <div
+        key={`hevc-unsupported-${i}`}
+        className="flex flex-col items-center justify-center w-full h-full bg-background-higher text-foreground p-6 text-center gap-3"
+      >
+        <Box sx={{ fontWeight: 600, fontSize: '16px' }}>
+          {getLocalePhrase(language, Phrase.HevcUnsupportedTitle)}
+        </Box>
+        <Box sx={{ fontSize: '14px', maxWidth: '40rem' }}>
+          {getLocalePhrase(language, Phrase.HevcUnsupportedBody)}
+        </Box>
+        <Button
+          onClick={() => {
+            setAppState((prev) => ({ ...prev, page: Pages.Settings }));
+          }}
+        >
+          {getLocalePhrase(language, Phrase.HevcUnsupportedEnableButton)}
+        </Button>
+      </div>
+    );
+  };
+
+  /**
+   * Overlay shown while playback is being is probing/transcoding the source
+   * for playback. Linux/HVEC/H265 only.
+   */
+  const renderPrepareOverlay = () => {
+    if (linuxTranscode.allReady) return null;
+    const percent = linuxTranscode.progress?.percent;
+    const isTranscoding = linuxTranscode.progress !== null;
+    return (
+      <Backdrop
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 2,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          flexDirection: 'column',
+          gap: '12px',
+          color: 'white',
+        }}
+        open
+      >
+        <CircularProgress
+          color="inherit"
+          variant={
+            isTranscoding && typeof percent === 'number'
+              ? 'determinate'
+              : 'indeterminate'
+          }
+          value={typeof percent === 'number' ? percent : undefined}
+        />
+        <Box sx={{ fontSize: '14px', textAlign: 'center' }}>
+          {isTranscoding ? (
+            <>
+              {getLocalePhrase(language, Phrase.TranscodingVideoForPlayback)}
+              &hellip;
+              {typeof percent === 'number' && <> {Math.floor(percent)}%</>}
+            </>
+          ) : (
+            <>
+              {getLocalePhrase(language, Phrase.PreparingVideoForPlayback)}
+              &hellip;
+            </>
+          )}
+        </Box>
+      </Backdrop>
+    );
+  };
+
   return (
     <div id="player-and-controls" className="w-full h-full">
       <div style={{ height: 'calc(100% - 40px)' }}>
         <div className="w-full h-full relative">
-          <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
+          <div className={playerDivClass}>
+            {useTranscoder
+              ? linuxTranscode.allReady &&
+                linuxTranscode.srcs.map((s, i) =>
+                  renderLinuxPlayer(s as string, i),
+                )
+              : videos.map((v, i) =>
+                  isLinux && isHevcEncoder(v.encoder)
+                    ? renderHevcUnsupportedCell(i)
+                    : renderPlayer(srcs[i], i),
+                )}
+          </div>
           {isDrawingEnabled && renderDrawingOverlay()}
-          {renderLoadingSpinner()}
+          {/* Avoid double spinner during transcode. Skip when no <video> mounts. */}
+          {(!useTranscoder || linuxTranscode.allReady) &&
+            playableCount > 0 &&
+            renderLoadingSpinner()}
+          {useTranscoder && renderPrepareOverlay()}
         </div>
       </div>
 

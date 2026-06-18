@@ -18,6 +18,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import { ESupportedEncoders } from '../main/obsEnums';
 import { Language, Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
+import { isWindows } from 'main/platform';
 import {
   checkDisk,
   exists,
@@ -212,6 +213,7 @@ const getObsVideoConfig = (cfg: ConfigService): ObsVideoConfig => {
     obsCaptureMode: cfg.get<string>('obsCaptureMode'),
     monitorIndex: cfg.get<number>('monitorIndex'),
     captureCursor: cfg.get<boolean>('captureCursor'),
+    pipewireRestoreToken: cfg.get<string | null>('pipewireRestoreToken'),
     forceSdr: cfg.get<boolean>('forceSdr'),
     videoSourceScale: cfg.get<number>('videoSourceScale'),
     videoSourceXPosition: cfg.get<number>('videoSourceXPosition'),
@@ -265,6 +267,12 @@ const validateLogPathFilesystem = async (
   logPath: string,
   logPathLabel: Phrase,
 ) => {
+  // The NTFS check only applies to Windows. On Linux, inotify operates at
+  // the VFS layer and works reliably on all common filesystems, including FAT/exFAT.
+  if (!isWindows) {
+    return;
+  }
+
   if (!ConfigService.getInstance().get<boolean>('validateNtfs')) {
     console.warn('[Util] Skipping NTFS filesystem check for', logPath);
     return;
@@ -281,7 +289,7 @@ const validateLogPathFilesystem = async (
   }
 
   // NTFS is the only supported filesystem for reading the combat log due
-  // to our reliance on the Node watch API.
+  // to our reliance on the Node watch API on Windows.
   if (driveFormat.toLowerCase() !== 'ntfs') {
     console.error(
       '[Util] Unsupported filesystem for WoW log path',
