@@ -387,7 +387,7 @@ const encountersTbcSunwell: NumberKeyToStringValueMapType = {
   726: 'Felmyst',
   727: 'Eredar Twins',
   728: "M'uru",
-  729: "Kil’jaeden",
+  729: "Kil'jaeden",
 };
 
 /**
