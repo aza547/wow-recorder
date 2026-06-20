@@ -202,6 +202,8 @@ const getBaseConfig = (cfg: ConfigService): BaseConfig => {
     retailLogPath: cfg.get<string>('retailLogPath'),
     recordEra: cfg.get<boolean>('recordEra'),
     eraLogPath: cfg.get<string>('eraLogPath'),
+    recordTbc: cfg.get<boolean>('recordTbc'),
+    tbcLogPath: cfg.get<string>('tbcLogPath'),
     retailPtrLogPath: cfg.get<string>('retailPtrLogPath'),
     validateLogPaths: cfg.get<boolean>('validateLogPaths'),
   };
@@ -312,6 +314,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
     classicPtrLogPath,
     recordEra,
     eraLogPath,
+    recordTbc,
+    tbcLogPath,
     validateLogPaths,
   } = config;
 
@@ -478,6 +482,25 @@ const validateBaseConfig = async (config: BaseConfig) => {
     }
 
     await validateLogPathFilesystem(eraLogPath, Phrase.ClassicEraLogPathLabel);
+  }
+
+  if (recordTbc) {
+    const validTbcFlavours = ['wow_anniversary'];
+
+    const validFlavour = validateLogPaths
+      ? validTbcFlavours.includes(getWowFlavour(tbcLogPath))
+      : true;
+
+    const validPath = path.basename(tbcLogPath) === 'Logs';
+    const valid = validFlavour && validPath;
+
+    if (!valid) {
+      console.error('[Util] Invalid TBC Anniversary log path', tbcLogPath);
+      const error = getLocaleError(Phrase.InvalidTbcLogPath);
+      throw new Error(error);
+    }
+
+    await validateLogPathFilesystem(tbcLogPath, Phrase.TbcLogPathLabel);
   }
 };
 

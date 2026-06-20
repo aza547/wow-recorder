@@ -93,6 +93,11 @@ const Status = ({
       flavours.push(s);
     }
 
+    if (config.recordTbc) {
+      const s = getLocalePhrase(language, Phrase.Tbc);
+      flavours.push(s);
+    }
+
     if (config.recordRetailPtr) {
       const s = getLocalePhrase(language, Phrase.RetailPtr);
       flavours.push(s);
@@ -277,6 +282,29 @@ const Status = ({
                 </Tooltip>
               )}
               <code>{config.eraLogPath}</code>
+            </li>
+          )}
+          {config.recordTbc && (
+            <li>
+              <span className="font-bold">
+                {getLocalePhrase(language, Phrase.Tbc)}
+                {': '}
+              </span>
+              {!advancedLoggingStatus.tbc && (
+                <Tooltip
+                  content={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
+              )}
+              <code>{config.tbcLogPath}</code>
             </li>
           )}
           {config.recordRetailPtr && (

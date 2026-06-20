@@ -187,6 +187,28 @@ const classicArenas: NumberKeyToStringValueMapType = {
 };
 
 /**
+ * TBC Anniversary arenas by ID.
+ * TBC had three arenas: Nagrand (559), Blade's Edge (562), Ruins of Lordaeron (572).
+ */
+const tbcArenas: NumberKeyToStringValueMapType = {
+  559: 'Nagrand',
+  562: "Blade's Edge",
+  572: 'Ruins of Lordaeron',
+};
+
+/**
+ * TBC Anniversary battlegrounds by ID.
+ * Eye of the Storm (566) was introduced in TBC.
+ * Strand of the Ancients (607) was WotLK, not included here.
+ */
+const tbcBattlegrounds: NumberKeyToStringValueMapType = {
+  30: 'Alterac Valley',
+  529: 'Arathi Basin',
+  566: 'Eye of the Storm',
+  489: 'Warsong Gulch',
+};
+
+/**
  * Shadowlands Tier 1
  */
 const encountersNathria: NumberKeyToStringValueMapType = {
@@ -262,6 +284,110 @@ const encountersAberrus: NumberKeyToStringValueMapType = {
   2683: 'Magmorax',
   2684: 'Echo of Neltharion',
   2685: 'Scalecommander Sarkareth',
+};
+
+/**
+ * TBC Anniversary - Karazhan (zoneId 532)
+ */
+const encountersTbcKarazhan: NumberKeyToStringValueMapType = {
+  652: 'Attumen the Huntsman',
+  653: 'Moroes',
+  654: 'Maiden of Virtue',
+  655: 'Opera Hall',
+  656: 'Curator',
+  657: 'Terestian Illhoof',
+  658: 'Shade of Aran',
+  659: 'Netherspite',
+  660: 'Chess Event',
+  661: 'Prince Malchezaar',
+  662: 'Nightbane',
+};
+
+/**
+ * TBC Anniversary - Gruul's Lair (zoneId 565)
+ */
+const encountersTbcGruul: NumberKeyToStringValueMapType = {
+  649: 'High King Maulgar',
+  650: 'Gruul the Dragonkiller',
+};
+
+/**
+ * TBC Anniversary - Magtheridon's Lair (zoneId 544)
+ */
+const encountersTbcMagtheridon: NumberKeyToStringValueMapType = {
+  651: 'Magtheridon',
+};
+
+/**
+ * TBC Anniversary - Serpentshrine Cavern (zoneId 548)
+ */
+const encountersTbcSSC: NumberKeyToStringValueMapType = {
+  623: 'Hydross the Unstable',
+  624: 'The Lurker Below',
+  625: 'Leotheras the Blind',
+  626: 'Fathom-Lord Karathress',
+  627: 'Morogrim Tidewalker',
+  628: 'Lady Vashj',
+};
+
+/**
+ * TBC Anniversary - Tempest Keep: The Eye (zoneId 550)
+ */
+const encountersTbcTheEye: NumberKeyToStringValueMapType = {
+  730: "Al'ar",
+  731: 'Void Reaver',
+  732: 'High Astromancer Solarian',
+  733: "Kael'thas Sunstrider",
+};
+
+/**
+ * TBC Anniversary - Mount Hyjal (zoneId 534)
+ */
+const encountersTbcHyjal: NumberKeyToStringValueMapType = {
+  618: 'Rage Winterchill',
+  619: 'Anetheron',
+  620: "Kaz'rogal",
+  621: 'Azgalor',
+  622: 'Archimonde',
+};
+
+/**
+ * TBC Anniversary - Black Temple (zoneId 564)
+ */
+const encountersTbcBlackTemple: NumberKeyToStringValueMapType = {
+  601: "High Warlord Naj'entus",
+  602: 'Supremus',
+  603: 'Shade of Akama',
+  604: 'Teron Gorefiend',
+  605: 'Gurtogg Bloodboil',
+  606: 'Reliquary of Souls',
+  607: 'Mother Shahraz',
+  608: 'Illidari Council',
+  609: 'Illidan Stormrage',
+};
+
+/**
+ * TBC Anniversary - Zul'Aman (zoneId 568)
+ */
+const encountersTbcZulAman: NumberKeyToStringValueMapType = {
+  1189: "Akil'zon",
+  1190: 'Nalorakk',
+  1191: "Jan'alai",
+  1192: 'Halazzi',
+  1193: 'Hex Lord Malacrass',
+  1194: "Zul'jin",
+};
+
+/**
+ * TBC Anniversary - Sunwell Plateau (zoneId 580)
+ */
+const encountersTbcSunwell: NumberKeyToStringValueMapType = {
+  724: 'Kalecgos',
+  725: 'Brutallus',
+  726: 'Felmyst',
+  727: 'Eredar Twins',
+  728: "M'uru",
+  729: "Kil’jaeden",
 };
 
 /**
@@ -349,6 +475,15 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersClassicVault,
   ...encountersClassicUlduar,
   ...encountersClassicTOC,
+  ...encountersTbcKarazhan,
+  ...encountersTbcGruul,
+  ...encountersTbcMagtheridon,
+  ...encountersTbcSSC,
+  ...encountersTbcTheEye,
+  ...encountersTbcHyjal,
+  ...encountersTbcBlackTemple,
+  ...encountersTbcZulAman,
+  ...encountersTbcSunwell,
 };
 
 /**
@@ -454,6 +589,61 @@ const raidInstances: RaidInstanceType[] = [
     name: 'Trial of the Crusader',
     shortName: 'ToC',
     encounters: encountersClassicTOC,
+  },
+  // TBC Anniversary raids
+  {
+    zoneId: 532,
+    name: 'Karazhan',
+    shortName: 'Kara',
+    encounters: encountersTbcKarazhan,
+  },
+  {
+    zoneId: 565,
+    name: "Gruul's Lair",
+    shortName: 'Gruul',
+    encounters: encountersTbcGruul,
+  },
+  {
+    zoneId: 544,
+    name: "Magtheridon's Lair",
+    shortName: 'Mag',
+    encounters: encountersTbcMagtheridon,
+  },
+  {
+    zoneId: 548,
+    name: 'Serpentshrine Cavern',
+    shortName: 'SSC',
+    encounters: encountersTbcSSC,
+  },
+  {
+    zoneId: 550,
+    name: 'Tempest Keep',
+    shortName: 'TK',
+    encounters: encountersTbcTheEye,
+  },
+  {
+    zoneId: 534,
+    name: 'Mount Hyjal',
+    shortName: 'Hyjal',
+    encounters: encountersTbcHyjal,
+  },
+  {
+    zoneId: 564,
+    name: 'Black Temple',
+    shortName: 'BT',
+    encounters: encountersTbcBlackTemple,
+  },
+  {
+    zoneId: 568,
+    name: "Zul'Aman",
+    shortName: 'ZA',
+    encounters: encountersTbcZulAman,
+  },
+  {
+    zoneId: 580,
+    name: 'Sunwell Plateau',
+    shortName: 'Sunwell',
+    encounters: encountersTbcSunwell,
   },
 ];
 
@@ -1861,9 +2051,11 @@ export {
   zones,
   retailArenas,
   classicArenas,
+  tbcArenas,
   raidEncountersById,
   retailBattlegrounds,
   classicBattlegrounds,
+  tbcBattlegrounds,
   dungeonsByMapId,
   dungeonsByZoneId,
   instanceNamesByZoneId,

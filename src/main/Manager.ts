@@ -16,6 +16,7 @@ import {
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
 import ClassicLogHandler from '../parsing/ClassicLogHandler';
+import TbcLogHandler from '../parsing/TbcLogHandler';
 import RetailLogHandler from '../parsing/RetailLogHandler';
 import Recorder from './Recorder';
 import ConfigService from '../config/ConfigService';
@@ -68,6 +69,7 @@ export default class Manager {
   private classicLogHandler: ClassicLogHandler | undefined;
   private classicPtrLogHandler: ClassicLogHandler | undefined;
   private eraLogHandler: EraLogHandler | undefined;
+  private tbcLogHandler: TbcLogHandler | undefined;
 
   /**
    * If the config is valid or not.
@@ -114,6 +116,7 @@ export default class Manager {
     era: true,
     retailPtr: true,
     classicPtr: true,
+    tbc: true,
   };
 
   /**
@@ -338,6 +341,11 @@ export default class Manager {
         (await checkAdvancedCombatLogging(
           this.cfg.get<string>('classicPtrLogPath'),
         )),
+      tbc:
+        !this.cfg.get<boolean>('recordTbc') ||
+        (await checkAdvancedCombatLogging(
+          this.cfg.get<string>('tbcLogPath'),
+        )),
     };
 
     this.pushAdvancedLoggingStatus();
@@ -482,6 +490,7 @@ export default class Manager {
         this.classicLogHandler,
         this.classicPtrLogHandler,
         this.eraLogHandler,
+        this.tbcLogHandler,
       ];
 
       logHandlers
@@ -493,6 +502,7 @@ export default class Manager {
       this.classicLogHandler = undefined;
       this.classicPtrLogHandler = undefined;
       this.eraLogHandler = undefined;
+      this.tbcLogHandler = undefined;
     }
 
     if (config.recordRetail) {
@@ -509,6 +519,10 @@ export default class Manager {
 
     if (config.recordEra) {
       this.eraLogHandler = new EraLogHandler(config.eraLogPath);
+    }
+
+    if (config.recordTbc) {
+      this.tbcLogHandler = new TbcLogHandler(config.tbcLogPath);
     }
 
     if (config.recordRetailPtr) {

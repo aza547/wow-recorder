@@ -45,6 +45,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       classicPtrLogPath: config.classicPtrLogPath,
       recordEra: config.recordEra,
       eraLogPath: config.eraLogPath,
+      recordTbc: config.recordTbc,
+      tbcLogPath: config.tbcLogPath,
       validateLogPaths: config.validateLogPaths,
     });
 
@@ -58,6 +60,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     config.classicPtrLogPath,
     config.recordEra,
     config.eraLogPath,
+    config.recordTbc,
+    config.tbcLogPath,
     config.recordRetailPtr,
     config.retailPtrLogPath,
     config.validateLogPaths,
@@ -377,6 +381,100 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const setRecordTbc = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        recordTbc: checked,
+      };
+    });
+  };
+
+  const setTbcLogPath = async () => {
+    if (isComponentDisabled()) {
+      return;
+    }
+
+    const newPath = await pathSelect();
+
+    if (newPath === '') {
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        tbcLogPath: newPath,
+      };
+    });
+  };
+
+  const getTbcSettings = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-row gap-x-6">
+        <div className="flex flex-col w-[160px]">
+          <Label htmlFor="recordTbc" className="flex items-center">
+            {getLocalePhrase(appState.language, Phrase.RecordTbcLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                appState.language,
+                configSchema.recordTbc.description,
+              )}
+              side="top"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex h-10 items-center">
+            {getSwitch('recordTbc', setRecordTbc)}
+          </div>
+        </div>
+        {config.recordTbc && (
+          <div className="flex flex-col w-1/2">
+            <Label htmlFor="tbcLogPath" className="flex items-center">
+              {getLocalePhrase(appState.language, Phrase.TbcLogPathLabel)}
+              <Tooltip
+                content={getLocalePhrase(
+                  appState.language,
+                  configSchema.tbcLogPath.description,
+                )}
+                side="top"
+              >
+                <Info size={20} className="inline-flex ml-2" />
+              </Tooltip>
+            </Label>
+            <Input
+              value={config.tbcLogPath}
+              onClick={setTbcLogPath}
+              readOnly
+              required
+            />
+            {config.tbcLogPath === '' && (
+              <span className="text-error text-xs font-semibold mt-1">
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.InvalidTbcLogPathText,
+                )}
+              </span>
+            )}
+            {!advancedLoggingStatus.tbc && (
+              <span className="text-error text-sm">
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.AdvancedCombatLoggingDisabledWarning,
+                )}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const setRecordRetailPtr = (checked: boolean) => {
     setConfig((prevState) => {
       return {
@@ -613,6 +711,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       {getRetailSettings()}
       {getClassicSettings()}
       {getEraSettings()}
+      {getTbcSettings()}
       {getRetailPtrSettings()}
       {getClassicPtrSettings()}
       {getValidateLogPathSwitch()}

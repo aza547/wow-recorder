@@ -113,10 +113,11 @@ export default class Poller extends EventEmitter {
     const recordClassic = this.cfg.get<boolean>('recordClassic');
     const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
     const recordEra = this.cfg.get<boolean>('recordEra');
+    const recordTbc = this.cfg.get<boolean>('recordTbc');
 
     const running =
       ((recordRetail || recordRetailPtr) && Retail) ||
-      ((recordClassic || recordClassicPtr || recordEra) && Classic);
+      ((recordClassic || recordClassicPtr || recordEra || recordTbc) && Classic);
 
     if (this.wowRunning === running) {
       // Nothing to emit.

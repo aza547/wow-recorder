@@ -5,9 +5,9 @@ import {
   classicUniqueSpecSpells,
   mopChallengeModes,
 } from '../main/constants';
+import { Flavour, NumberKeyToStringValueMapType } from '../main/types';
 
 import LogHandler from './LogHandler';
-import { Flavour } from '../main/types';
 import ArenaMatch from '../activitys/ArenaMatch';
 import { isUnitFriendly, isUnitPlayer, isUnitSelf } from './logutils';
 import Battleground from '../activitys/Battleground';
@@ -21,6 +21,13 @@ import ConfigService from 'config/ConfigService';
  * Classic log handler class.
  */
 export default class ClassicLogHandler extends LogHandler {
+  protected readonly flavour: Flavour = Flavour.Classic;
+
+  protected readonly arenas: NumberKeyToStringValueMapType = classicArenas;
+
+  protected readonly battlegrounds: NumberKeyToStringValueMapType =
+    classicBattlegrounds;
+
   constructor(logPath: string) {
     super(logPath, 2);
 
@@ -46,7 +53,7 @@ export default class ClassicLogHandler extends LogHandler {
       return;
     }
 
-    await super.handleEncounterStartLine(line, Flavour.Classic);
+    await super.handleEncounterStartLine(line, this.flavour);
   }
 
   private handleSpellAuraAppliedLine(line: LogLine) {
@@ -92,7 +99,7 @@ export default class ClassicLogHandler extends LogHandler {
     }
   }
 
-  private async handleZoneChange(line: LogLine) {
+  protected async handleZoneChange(line: LogLine) {
     console.info('[ClassicLogHandler] Handling ZONE_CHANGE line:', line);
 
     if (this.isManual()) {
@@ -103,12 +110,12 @@ export default class ClassicLogHandler extends LogHandler {
     const zoneID = parseInt(line.arg(1), 10);
 
     const isZoneArena = Object.prototype.hasOwnProperty.call(
-      classicArenas,
+      this.arenas,
       zoneID,
     );
 
     const isZoneBG = Object.prototype.hasOwnProperty.call(
-      classicBattlegrounds,
+      this.battlegrounds,
       zoneID,
     );
 
@@ -217,7 +224,7 @@ export default class ClassicLogHandler extends LogHandler {
       startDate,
       category,
       zoneID,
-      Flavour.Classic,
+      this.flavour,
     );
 
     await LogHandler.startActivity(activity);
@@ -381,7 +388,7 @@ export default class ClassicLogHandler extends LogHandler {
       startTime,
       category,
       zoneID,
-      Flavour.Classic,
+      this.flavour,
     );
 
     await LogHandler.startActivity(activity);

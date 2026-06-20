@@ -132,7 +132,7 @@ export default class ArenaMatch extends Activity {
   addCombatant(combatant: Combatant) {
     super.addCombatant(combatant);
 
-    if (this.flavour === Flavour.Classic) {
+    if (this.flavour === Flavour.Classic || this.flavour === Flavour.Tbc) {
       // For classic, we need to determine the arena category based on the
       // number of combatants. So update it now.
       const combatantMapSize = this.combatantMap.size;
