@@ -138,9 +138,37 @@ export default class DiskClient implements StorageClient {
   }
 
   public async protectVideos(videoPaths: string[], protect: boolean) {
-    videoPaths.forEach((videoPath) =>
-      this.protectVideoDisk(protect, videoPath),
+    await Promise.all(
+      videoPaths.map((videoPath) => this.protectVideoDisk(protect, videoPath)),
     );
+  }
+
+  private async protectVideosWithResults(
+    videoPaths: string[],
+    protect: boolean,
+  ) {
+    const results = await Promise.allSettled(
+      videoPaths.map(async (videoPath) => {
+        await this.protectVideoDisk(protect, videoPath);
+        return videoPath;
+      }),
+    );
+
+    results.forEach((result) => {
+      if (result.status === 'rejected') {
+        console.error(
+          '[DiskClient] Failed to persist video protection',
+          result.reason,
+        );
+      }
+    });
+
+    return results
+      .filter(
+        (result): result is PromiseFulfilledResult<string> =>
+          result.status === 'fulfilled',
+      )
+      .map((result) => result.value);
   }
 
   /**
@@ -157,7 +185,7 @@ export default class DiskClient implements StorageClient {
         err,
       );
 
-      return;
+      throw err;
     }
 
     if (protect) {
@@ -219,6 +247,40 @@ export default class DiskClient implements StorageClient {
     }
   }
 
+  private async handleVideoButton(args: unknown[]) {
+    const action = args[0] as string;
+
+    if (action === 'open') {
+      // Open only called for disk based video, see openURL for cloud version.
+      const src = args[1] as string;
+      const cloud = args[2] as boolean;
+      assert(!cloud);
+      openSystemExplorer(src);
+    }
+
+    if (action === 'protect') {
+      const protect = args[1] as boolean;
+      const videos = args[2] as RendererVideo[];
+      const disk = videos.filter((v) => !v.cloud);
+      const toProtect = disk.map((v) => v.videoSource);
+      const protectedPaths = await this.protectVideosWithResults(
+        toProtect,
+        protect,
+      );
+      return disk.filter((video) => protectedPaths.includes(video.videoSource));
+    }
+
+    if (action === 'tag') {
+      const tag = args[1] as string;
+      const videos = args[2] as RendererVideo[];
+      const disk = videos.filter((v) => !v.cloud);
+      const toTag = disk.map((v) => v.videoSource);
+      this.tagVideos(toTag, tag);
+    }
+
+    return undefined;
+  }
+
   private setupListeners() {
     ipcMain.on('deleteVideosDisk', async (_event, args) => {
       const videos = args as RendererVideo[];
@@ -227,32 +289,14 @@ export default class DiskClient implements StorageClient {
       this.deleteVideos(toDelete);
     });
 
+    ipcMain.handle('videoButtonDisk', async (_event, args) => {
+      return this.handleVideoButton(args);
+    });
+
     ipcMain.on('videoButtonDisk', async (_event, args) => {
-      const action = args[0] as string;
-
-      if (action === 'open') {
-        // Open only called for disk based video, see openURL for cloud version.
-        const src = args[1] as string;
-        const cloud = args[2] as boolean;
-        assert(!cloud);
-        openSystemExplorer(src);
-      }
-
-      if (action === 'protect') {
-        const protect = args[1] as boolean;
-        const videos = args[2] as RendererVideo[];
-        const disk = videos.filter((v) => !v.cloud);
-        const toProtect = disk.map((v) => v.videoSource);
-        this.protectVideos(toProtect, protect);
-      }
-
-      if (action === 'tag') {
-        const tag = args[1] as string;
-        const videos = args[2] as RendererVideo[];
-        const disk = videos.filter((v) => !v.cloud);
-        const toTag = disk.map((v) => v.videoSource);
-        this.tagVideos(toTag, tag);
-      }
+      this.handleVideoButton(args).catch((error) => {
+        console.error('[DiskClient] Failed to process video button', error);
+      });
     });
   }
 }

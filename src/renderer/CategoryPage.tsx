@@ -30,6 +30,12 @@ import {
   getVideoStorageFilter,
   povDiskFirstNameSort,
 } from './rendererutils';
+import {
+  canChangeVideoProtection,
+  getNextVideoGroupsProtected,
+  getVideoGroup,
+  withMatchedVideoProtection,
+} from 'renderer/videoProtection';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
 import VideoSelectionTable from './components/Tables/VideoSelectionTable';
@@ -50,6 +56,7 @@ import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
 import VideoChat from './VideoChat';
 import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
+import { protectVideosWithStorage } from './videoProtectionActions';
 
 interface IProps {
   category: VideoCategory;
@@ -341,22 +348,21 @@ const CategoryPage = (props: IProps) => {
     );
   };
 
-  const getAllSelectedViewpoints = () => {
+  const getSelectedViewpointGroups = () => {
     const { rows } = table.getSelectedRowModel();
 
     if (rows.length > 0) {
-      const parents = rows.map((r) => r.original);
-      const children = parents.flatMap((v) => v.multiPov);
-      return parents.concat(children);
+      return rows.map((r) => getVideoGroup(r.original));
     }
 
     const first = filteredState[0] ? filteredState[0] : categoryState[0];
-    return [first, ...first.multiPov];
+    return first ? [getVideoGroup(first)] : [];
   };
 
   const getVideoSelection = () => {
     const selectedRows = table.getSelectedRowModel().rows;
-    const selectedViewpoints = getAllSelectedViewpoints();
+    const selectedViewpointGroups = getSelectedViewpointGroups();
+    const selectedViewpoints = selectedViewpointGroups.flat();
 
     // We don't want multi player mode to be accessible if there isn't
     // multiple viewpoints, so check for that. Important to filter by
@@ -377,10 +383,8 @@ const CategoryPage = (props: IProps) => {
 
     const multiPlayerOpts = (
       selectedRow
-        ? [selectedRow.original, ...selectedRow.original.multiPov]
-        : filteredState[0]
-          ? [filteredState[0], ...filteredState[0].multiPov]
-          : [categoryState[0], ...categoryState[0].multiPov]
+        ? getVideoGroup(selectedRow.original)
+        : selectedViewpointGroups[0] || []
     )
       .sort(povDiskFirstNameSort)
       .filter(dedup);
@@ -389,66 +393,51 @@ const CategoryPage = (props: IProps) => {
     const unique = [...new Set(names)];
     const allowMultiPlayer = unique.length > 1;
 
-    const protectVideo = (
+    const protectVideo = async (
       _event: React.SyntheticEvent,
-      protect: boolean,
+      protectedState: boolean,
       videos: RendererVideo[],
     ) => {
-      const toProtectDisk = videos.filter((v) => !v.cloud);
-      const toProtectCloud = videos.filter((v) => v.cloud);
+      const updated = await protectVideosWithStorage(
+        window.electron.ipcRenderer,
+        videos,
+        protectedState,
+      );
 
-      window.electron.ipcRenderer.sendMessage('videoButtonDisk', [
-        'protect',
-        protect,
-        toProtectDisk,
-      ]);
-
-      window.electron.ipcRenderer.sendMessage('videoButtonCloud', [
-        'protect',
-        protect,
-        toProtectCloud,
-      ]);
-
-      setVideoState((prev) => {
-        const state = [...prev];
-
-        state.forEach((rv) => {
-          // A video is uniquely identified by its name and storage type.
-          const match = videos.find(
-            (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
-          );
-
-          if (match) {
-            rv.isProtected = protect;
-          }
-        });
-
-        return state;
-      });
+      setVideoState((prev) =>
+        prev.map((rv) =>
+          withMatchedVideoProtection(rv, updated, protectedState),
+        ),
+      );
     };
 
     const renderProtectButton = () => {
       const toProtect = selectedViewpoints;
 
-      // If any videos in our selection are not protected, then the button's
-      // action is to protect.
-      const lock = !toProtect.every((v) => v.isProtected);
+      const nextProtected = getNextVideoGroupsProtected(
+        selectedViewpointGroups,
+      );
 
       // Disable the protect button if there are no selected viewpoints, if we
       // don't have write permissions, or if the action is to unprotect and we
       // don't have delete permissions.
-      const noPermission =
-        (!write && toProtect.some((v) => v.cloud)) || // Some in the selection are cloud videos and no write permission.
-        (!del && !lock && toProtect.some((v) => v.cloud)); // Some in the selection are locked cloud videos no delete permission.
+      const noPermission = !canChangeVideoProtection(toProtect, nextProtected, {
+        write,
+        del,
+      });
 
       const disabled = noPermission || toProtect.length < 1;
-      const icon = lock ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
+      const icon = nextProtected ? (
+        <LockKeyhole size={18} />
+      ) : (
+        <LockOpen size={18} />
+      );
 
       let tooltip = '';
 
       if (noPermission) {
         tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
-      } else if (lock) {
+      } else if (nextProtected) {
         tooltip = getLocalePhrase(language, Phrase.StarSelected);
       } else {
         tooltip = getLocalePhrase(language, Phrase.UnstarSelected);
@@ -461,7 +450,7 @@ const CategoryPage = (props: IProps) => {
               variant="secondary"
               size="sm"
               disabled={disabled}
-              onClick={(e) => protectVideo(e, lock, toProtect)}
+              onClick={(e) => protectVideo(e, nextProtected, toProtect)}
               className="border border-background"
             >
               {icon}
