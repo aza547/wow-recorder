@@ -176,7 +176,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@electron/rebuild": "^4.0.1",
+    "@electron/rebuild": "^4.0.4",
     "@eslint/js": "^9.17.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
     "@svgr/webpack": "^8.1.0",
