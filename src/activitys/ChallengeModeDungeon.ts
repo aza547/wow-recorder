@@ -56,7 +56,7 @@ export default class ChallengeModeDungeon extends Activity {
     } else {
       // Programmer error.
       console.error('[ChallengeModeDungeon] Unknown flavour', flavor);
-      throw new Error('[ChallengeModeDungeon] Unknown flavour: ' + flavor);
+      throw new Error('Unknown flavour: ' + flavor);
     }
 
     this.overrun = 0;
