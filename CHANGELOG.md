@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Update to Electron 42 and related packages.
 ### Added
 ### Fixed
 - Accept `wow_anniversary` as a classic combat log path. Support for anniversary realms is still best effort but should just work in most cases.
