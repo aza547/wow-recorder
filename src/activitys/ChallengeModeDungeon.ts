@@ -46,12 +46,16 @@ export default class ChallengeModeDungeon extends Activity {
     this._level = level;
     this.affixes = affixes;
 
-    this._timings = dungeonTimersByMapId[this.mapID];
-    this.getKeystoneTimers();
-
-    if (flavor === Flavour.Classic) {
+    if (flavor === Flavour.Retail) {
+      console.info('[ChallengeModeDungeon] Using Retail timers for', mapID);
+      this._timings = dungeonTimersByMapId[this.mapID];
+      this.getKeystoneTimers();
+    } else if (flavor === Flavour.Classic) {
       console.info('[ChallengeModeDungeon] Using Classic timers for', mapID);
       this._timings = mopChallengeModesTimers[mapID];
+    } else {
+      // Programmer error.
+      throw new Error('[ChallengeModeDungeon] Unknown flavour: ' + flavor);
     }
 
     this.overrun = 0;
