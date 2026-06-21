@@ -21,6 +21,7 @@ import {
   getAvailableDisplays,
   getAssetPath,
   handleSafeVodRequest,
+  handleLiveRequest,
   runFirstTimeSetupActionsObs,
   runFirstTimeSetupActionsNoObs,
   createDiagsBundle,
@@ -93,6 +94,17 @@ ipcMain.handle('getHardwareAcceleration', () => {
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'vod',
+    privileges: {
+      bypassCSP: true,
+      standard: true,
+      stream: true,
+      supportFetchAPI: true,
+    },
+  },
+  {
+    // live:// is used for streaming the in-progress MKV recording directly to
+    // the renderer without any remuxing, enabling the live replay feature.
+    scheme: 'live',
     privileges: {
       bypassCSP: true,
       standard: true,
@@ -538,6 +550,7 @@ app
 
     // Required by the video player to safely play files from disk.
     protocol.handle('vod', handleSafeVodRequest);
+    protocol.handle('live', handleLiveRequest);
 
     createWindow();
   })

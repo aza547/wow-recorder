@@ -1,6 +1,6 @@
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
-import { HardDriveDownload, TriangleAlert } from 'lucide-react';
+import { HardDriveDownload, Radio, TriangleAlert } from 'lucide-react';
 import { ConfigurationSchema } from 'config/configSchema';
 import {
   ActivityStatus,
@@ -23,6 +23,7 @@ import StatusLight, {
 } from 'renderer/components/StatusLight/StatusLight';
 import { cn } from 'renderer/components/utils';
 import { secToMmSs } from 'renderer/rendererutils';
+import LiveReplayDialog from 'renderer/LiveReplayDialog';
 
 type StatusInfo = {
   statusTitle: string;
@@ -165,8 +166,16 @@ const Status = ({
         <p className="text-xs text-popover-foreground/60">
           {getLocalePhrase(language, Phrase.StatusDescriptionForceEnd)}
         </p>
-        <div className="flex w-full justify-end">
-          <Button size="sm" onClick={stopRecording} className="mt-2 w-1/3">
+        <div className="flex w-full justify-end gap-2">
+          {activityStatus && (
+            <LiveReplayDialog activityStatus={activityStatus}>
+              <Button size="sm" variant="outline" className="mt-2">
+                <Radio size={12} className="mr-1.5 text-red-500" />
+                Live Replay
+              </Button>
+            </LiveReplayDialog>
+          )}
+          <Button size="sm" onClick={stopRecording} className="mt-2">
             {getLocalePhrase(language, Phrase.StatusButtonForceEndLabel)}
           </Button>
         </div>

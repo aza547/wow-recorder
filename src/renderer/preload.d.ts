@@ -96,6 +96,7 @@ declare global {
         clipVideo(video: RendererVideo, offset: number, duration: number): void;
         getHardwareAcceleration(): boolean;
         createDiagsBundle(): Promise<string>;
+        getLiveRecordingPath(): Promise<string | null>;
         openSystemExplorer(path: string): void;
       };
     };

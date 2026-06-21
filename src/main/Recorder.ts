@@ -46,6 +46,7 @@ import {
   getObsAudioConfig,
   getObsVideoConfig,
   getOverlayConfig,
+  getBaseConfig,
 } from '../utils/configUtils';
 import noobs, {
   ObsData,
@@ -173,6 +174,13 @@ export default class Recorder extends EventEmitter {
    * The last file output by OBS.
    */
   public lastFile: string | null = null;
+
+  /**
+   * Wall-clock timestamp (ms) of when the current dungeon recording started,
+   * i.e. when convertObsBuffer() was called. Set to null when no activity
+   * recording is in progress. Used to locate the live MKV file in obsPath.
+   */
+  private liveRecordingStartedAt: number | null = null;
 
   /**
    * Timer that keeps the mic on briefly after you release the Push To Talk key.
@@ -397,6 +405,10 @@ export default class Recorder extends EventEmitter {
 
     ipcMain.handle('getSensibleEncoderDefault', (): string => {
       return this.getSensibleEncoderDefault();
+    });
+
+    ipcMain.handle('getLiveRecordingPath', async (): Promise<string | null> => {
+      return this.getLiveRecordingFile();
     });
   }
 
@@ -935,7 +947,39 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Start OBS, no-op if already started.
+   * Returns the path of the MKV file currently being written by OBS for the
+   * active dungeon recording, or null if no activity recording is in progress.
+   *
+   * OBS creates a new MKV file in obsPath the moment StartRecording() is
+   * called. Since the buffer directory is cleaned up between recordings, the
+   * newest MKV present during an active recording is always the right file.
+   */
+  public async getLiveRecordingFile(): Promise<string | null> {
+    if (!this.liveRecordingStartedAt) {
+      console.info('[Recorder] getLiveRecordingFile: no recording in progress');
+      return null;
+    }
+
+    const { obsPath } = getBaseConfig(this.cfg);
+
+    const files = await getSortedFiles(
+      obsPath,
+      '.*\\.mkv',
+      FileSortDirection.NewestFirst,
+    );
+
+    if (files.length === 0) {
+      console.warn('[Recorder] getLiveRecordingFile: no MKV found in obsPath');
+      return null;
+    }
+
+    // The buffer dir is cleaned between recordings so the newest MKV is
+    // always the current one.
+    console.info('[Recorder] getLiveRecordingFile:', files[0].name);
+    return files[0].name;
+  }
+
+  /**
    */
   private async startObsBuffer() {
     console.info('[Recorder] Start');
@@ -976,6 +1020,8 @@ export default class Recorder extends EventEmitter {
       console.error('[Recorder] Buffer not started');
       throw new Error('Buffer not started');
     }
+
+    this.liveRecordingStartedAt = Date.now();
 
     // The native code expects an integer.
     const rounded = Math.round(offset);
@@ -1026,6 +1072,7 @@ export default class Recorder extends EventEmitter {
     // Now that we record in MKV we can still attempt to save
     // a recording here even if we failed to stop cleanly.
     this.lastFile = noobs.GetLastRecording();
+    this.liveRecordingStartedAt = null;
   }
 
   /**
@@ -1066,6 +1113,7 @@ export default class Recorder extends EventEmitter {
     }
 
     this.lastFile = null;
+    this.liveRecordingStartedAt = null;
   }
 
   /**

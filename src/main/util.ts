@@ -1134,6 +1134,107 @@ const handleSafeVodRequest = async (request: Request) => {
   }
 };
 
+/**
+ * Custom protocol that streams a live in-progress MKV recording to the
+ * renderer for the live replay feature. Unlike vod://, this handler keeps
+ * the HTTP response open and continuously pushes new bytes as OBS writes
+ * them, so the browser treats the feed as a live stream with no known
+ * duration. No remuxing is performed — the raw MKV bytes are forwarded
+ * directly.
+ */
+const handleLiveRequest = async (request: Request) => {
+  try {
+    const sliced = request.url.toString().slice('live://wcr/'.length);
+    const requestUrl = decodeURIComponent(sliced);
+
+    if (!requestUrl) {
+      console.error('[Util] Bad live URL:', requestUrl);
+      return new Response('', { status: 400, statusText: 'Bad URL' });
+    }
+
+    const filePath = Buffer.from(requestUrl).toString('utf-8').split('#')[0];
+
+    if (!filePath.endsWith('.mkv')) {
+      console.error('[Util] Live request is not an MKV file:', filePath);
+      return new Response('', { status: 400, statusText: 'Must be MKV' });
+    }
+
+    try {
+      await fspromise.stat(filePath);
+    } catch (err) {
+      console.error('[Util] Live MKV file not found:', filePath);
+      return new Response('', { status: 404, statusText: 'File Not Found' });
+    }
+
+    console.info('[Util] Opening live stream for:', filePath);
+
+    let offset = 0;
+    let pollTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        const pump = async () => {
+          // Stop pumping if the client has gone away.
+          if (request.signal.aborted) {
+            controller.close();
+            return;
+          }
+
+          try {
+            const stats = await fspromise.stat(filePath);
+
+            if (stats.size > offset) {
+              // Read only the bytes written since the last poll.
+              await new Promise<void>((resolve, reject) => {
+                const chunk = createReadStream(filePath, {
+                  start: offset,
+                  end: stats.size - 1,
+                });
+
+                chunk.on('data', (data: Buffer) => controller.enqueue(data));
+                chunk.on('end', () => {
+                  offset = stats.size;
+                  resolve();
+                });
+                chunk.on('error', reject);
+              });
+            }
+          } catch {
+            // File was deleted (dungeon ended and the buffer was cleaned up).
+            // Close the stream cleanly — the video element will reach end-of-stream.
+            console.info('[Util] Live MKV removed, closing stream');
+            controller.close();
+            return;
+          }
+
+          pollTimer = setTimeout(pump, 500);
+        };
+
+        pump();
+      },
+
+      cancel() {
+        // Called when the browser closes the response (dialog closed, etc.).
+        if (pollTimer) clearTimeout(pollTimer);
+        console.info('[Util] Live stream cancelled by client');
+      },
+    });
+
+    // No Content-Length intentionally — the browser treats this as a live
+    // stream, setting video.duration = Infinity.
+    return new Response(stream, {
+      status: 200,
+      headers: {
+        'Content-Type': 'video/x-matroska',
+        'Cache-Control': 'no-cache',
+      },
+    });
+  } catch (err) {
+    console.error('[Util] Error handling live request:', err);
+    return new Response('', { status: 500, statusText: 'Internal Error' });
+  }
+};
+
 const runFirstTimeSetupActionsObs = () => {
   const cfg = ConfigService.getInstance();
 
@@ -1277,6 +1378,7 @@ export {
   delayedDeleteVideo,
   logAxiosError,
   handleSafeVodRequest,
+  handleLiveRequest,
   runFirstTimeSetupActionsObs,
   runFirstTimeSetupActionsNoObs,
   checkAdvancedCombatLogging,

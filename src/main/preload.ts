@@ -51,7 +51,8 @@ export type Channels =
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
   | 'getSensibleEncoderDefault'
-  | 'refreshCloudGuilds';
+  | 'refreshCloudGuilds'
+  | 'getLiveRecordingPath';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -256,6 +257,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     createDiagsBundle(): Promise<string> {
       return ipcRenderer.invoke('createDiagsBundle');
+    },
+
+    getLiveRecordingPath(): Promise<string | null> {
+      return ipcRenderer.invoke('getLiveRecordingPath');
     },
 
     openSystemExplorer(path: string) {
