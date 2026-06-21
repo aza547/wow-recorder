@@ -313,6 +313,8 @@ export default abstract class LogHandler {
     }
 
     try {
+      // Let activities settle async state before metadata and filename are derived.
+      await lastActivity.prepareMetadata();
       const metadata = lastActivity.getMetadata();
       const { duration } = metadata;
       const suffix = lastActivity.getFileName();

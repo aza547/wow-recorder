@@ -42,6 +42,10 @@ export default abstract class Activity {
   abstract getMetadata(): Metadata;
   abstract getFileName(): string;
 
+  prepareMetadata(): Promise<void> {
+    return Promise.resolve();
+  }
+
   get zoneID() {
     return this._zoneID;
   }

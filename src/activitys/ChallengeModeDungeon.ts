@@ -20,6 +20,8 @@ import CloudClient from 'storage/CloudClient';
 export default class ChallengeModeDungeon extends Activity {
   private static readonly TIMER_GRACE_SECONDS = 1;
 
+  private static readonly REMOTE_TIMER_FINALIZATION_TIMEOUT_MS = 3000;
+
   private _mapID: number;
 
   private _level: number;
@@ -31,6 +33,10 @@ export default class ChallengeModeDungeon extends Activity {
   private _timeline: ChallengeModeTimelineSegment[] = [];
 
   private affixes: number[] = [];
+
+  private keystoneTimersPromise?: Promise<void>;
+
+  private keystoneTimersFinalized = false;
 
   constructor(
     startDate: Date,
@@ -46,22 +52,36 @@ export default class ChallengeModeDungeon extends Activity {
     this._level = level;
     this.affixes = affixes;
 
-    this._timings = dungeonTimersByMapId[this.mapID];
-    this.getKeystoneTimers();
-
+    // Classic challenge mode timers are local-only; the remote endpoint is for Retail.
     if (flavor === Flavour.Classic) {
       console.info('[ChallengeModeDungeon] Using Classic timers for', mapID);
       this._timings = mopChallengeModesTimers[mapID];
+    } else {
+      this._timings = dungeonTimersByMapId[this.mapID];
+      this.keystoneTimersPromise = this.getKeystoneTimers();
     }
 
     this.overrun = 0;
   }
 
   private async getKeystoneTimers() {
+    if (this.flavour !== Flavour.Retail) {
+      return;
+    }
+
     try {
       const timings = await CloudClient.getInstance().getKeystoneTimers(
         this.mapID,
       );
+
+      if (this.keystoneTimersFinalized) {
+        console.info(
+          '[ChallengeModeDungeon] Ignoring keystone timings received after metadata finalization for map',
+          this.mapID,
+        );
+        return;
+      }
+
       this._timings = [timings[3], timings[2], timings[1]];
 
       console.info(
@@ -77,6 +97,34 @@ export default class ChallengeModeDungeon extends Activity {
         'using local fallback',
       );
     }
+  }
+
+  override async prepareMetadata(): Promise<void> {
+    if (this.keystoneTimersFinalized) {
+      return;
+    }
+
+    if (!this.keystoneTimersPromise) {
+      return;
+    }
+
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    const finalizationTimeout = new Promise<void>((resolve) => {
+      timeout = setTimeout(
+        resolve,
+        ChallengeModeDungeon.REMOTE_TIMER_FINALIZATION_TIMEOUT_MS,
+      );
+    });
+
+    // Lock in either remote timers or local fallback before metadata reads upgradeLevel.
+    await Promise.race([this.keystoneTimersPromise, finalizationTimeout]);
+
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    this.keystoneTimersFinalized = true;
   }
 
   get endDate() {
