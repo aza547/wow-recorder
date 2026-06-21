@@ -78,6 +78,7 @@
       "deleteAppDataOnUninstall": true
     },
     "win": {
+      "icon": "assets/icon.png",
       "signtoolOptions": {
         "certificateSubjectName": "Warcraft Recorder LTD"
       },
