@@ -55,6 +55,7 @@ export default class ChallengeModeDungeon extends Activity {
       this._timings = mopChallengeModesTimers[mapID];
     } else {
       // Programmer error.
+      console.error('[ChallengeModeDungeon] Unknown flavour', flavor);
       throw new Error('[ChallengeModeDungeon] Unknown flavour: ' + flavor);
     }
 
