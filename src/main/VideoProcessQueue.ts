@@ -823,7 +823,7 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Prepare and return the audio map for a kill video.
+   * Prepare and return the output path for a kill video.
    */
   private static prepareKillVideoPath(video: RendererVideo) {
     const videoDate = video.start ?? video.mtime;
@@ -841,6 +841,9 @@ export default class VideoProcessQueue {
     }
 
     videoName += ` - Rendered at ${getOBSFormattedDate(new Date())}`;
+    // Encounter metadata can contain characters Windows rejects in filenames,
+    // so apply the same sanitizer used for normal video cuts.
+    videoName = VideoProcessQueue.sanitizeFilename(videoName);
     const storageDir = ConfigService.getInstance().get<string>('storagePath');
     const videoPath = path.join(storageDir, `${videoName}.mp4`);
 
