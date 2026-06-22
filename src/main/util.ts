@@ -1141,6 +1141,11 @@ const handleSafeVodRequest = async (request: Request) => {
  * them, so the browser treats the feed as a live stream with no known
  * duration. No remuxing is performed — the raw MKV bytes are forwarded
  * directly.
+ *
+ * Range requests (sent by the browser on seek) are honoured: the handler
+ * parses `Range: bytes=X-`, starts streaming from byte X, and returns a 206
+ * response with an open-ended Content-Range so the browser places the data
+ * at the correct position in its media buffer.
  */
 const handleLiveRequest = async (request: Request) => {
   try {
@@ -1159,24 +1164,55 @@ const handleLiveRequest = async (request: Request) => {
       return new Response('', { status: 400, statusText: 'Must be MKV' });
     }
 
+    let initialStats: import('fs').Stats;
+
     try {
-      await fspromise.stat(filePath);
+      initialStats = await fspromise.stat(filePath);
     } catch (err) {
       console.error('[Util] Live MKV file not found:', filePath);
       return new Response('', { status: 404, statusText: 'File Not Found' });
     }
 
-    console.info('[Util] Opening live stream for:', filePath);
+    // Parse Range header so seeks re-stream from the requested byte offset
+    // instead of restarting from 0.
+    const rangeHeader = request.headers.get('Range');
+    let initialOffset = 0;
 
-    let offset = 0;
+    if (rangeHeader) {
+      const match = rangeHeader.match(/bytes=(\d+)-/);
+      if (match) {
+        initialOffset = parseInt(match[1], 10);
+      }
+    }
+
+    console.info(
+      '[Util] Opening live stream for:',
+      filePath,
+      'offset:',
+      initialOffset,
+    );
+
+    // Hoist `cancelled` outside the ReadableStream constructor so that both
+    // `start()` and `cancel()` share a single flag.  Without this, a `pump()`
+    // invocation that is already inside a `createReadStream` callback when
+    // `cancel()` fires will attempt to enqueue data onto an already-closed
+    // controller, throwing ERR_INVALID_STATE.
+    let cancelled = false;
+    let activeChunk: import('fs').ReadStream | undefined;
+    let offset = initialOffset;
     let pollTimer: ReturnType<typeof setTimeout> | undefined;
 
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
         const pump = async () => {
-          // Stop pumping if the client has gone away.
-          if (request.signal.aborted) {
-            controller.close();
+          if (cancelled || request.signal.aborted) {
+            if (!cancelled) {
+              try {
+                controller.close();
+              } catch {
+                /* already closed */
+              }
+            }
             return;
           }
 
@@ -1191,37 +1227,108 @@ const handleLiveRequest = async (request: Request) => {
                   end: stats.size - 1,
                 });
 
-                chunk.on('data', (data: Buffer) => controller.enqueue(data));
+                activeChunk = chunk;
+
+                chunk.on('data', (data: Buffer) => {
+                  if (cancelled) {
+                    chunk.destroy();
+                    return;
+                  }
+
+                  try {
+                    controller.enqueue(data);
+                  } catch {
+                    // Controller was closed concurrently (browser cancelled
+                    // the response mid-read). Destroy the stream and bail out.
+                    chunk.destroy();
+                  }
+                });
+
                 chunk.on('end', () => {
+                  activeChunk = undefined;
                   offset = stats.size;
                   resolve();
                 });
-                chunk.on('error', reject);
+
+                chunk.on('error', (err) => {
+                  activeChunk = undefined;
+
+                  if (cancelled) {
+                    resolve(); // Suppress errors that race with cancellation.
+                  } else {
+                    reject(err);
+                  }
+                });
+
+                chunk.on('close', () => {
+                  activeChunk = undefined;
+                });
               });
             }
           } catch {
+            if (cancelled) return;
+
             // File was deleted (dungeon ended and the buffer was cleaned up).
             // Close the stream cleanly — the video element will reach end-of-stream.
             console.info('[Util] Live MKV removed, closing stream');
-            controller.close();
+
+            try {
+              controller.close();
+            } catch {
+              /* already closed */
+            }
+
             return;
           }
 
-          pollTimer = setTimeout(pump, 500);
+          if (!cancelled) {
+            pollTimer = setTimeout(pump, 500);
+          }
         };
 
         pump();
       },
 
       cancel() {
-        // Called when the browser closes the response (dialog closed, etc.).
-        if (pollTimer) clearTimeout(pollTimer);
+        // Called when the browser closes the response (dialog closed, seek, etc.).
+        cancelled = true;
+
+        if (pollTimer) {
+          clearTimeout(pollTimer);
+        }
+
+        if (activeChunk) {
+          activeChunk.destroy();
+          activeChunk = undefined;
+        }
+
         console.info('[Util] Live stream cancelled by client');
       },
     });
 
-    // No Content-Length intentionally — the browser treats this as a live
-    // stream, setting video.duration = Infinity.
+    // When the browser sought to a specific byte offset, return 206 with a
+    // Content-Range that tells it exactly where to place the data in its
+    // media buffer.  The total length is unknown (`*`) because the file is
+    // still growing.  We declare the range end as the current file size - 1;
+    // Chromium's media pipeline continues consuming data past that boundary
+    // until the connection is closed.
+    //
+    // For initial (non-Range) requests, return plain 200 with no
+    // Content-Length so the browser treats the feed as a live stream
+    // (video.duration === Infinity).
+    if (initialOffset > 0) {
+      const currentEnd = initialStats.size - 1;
+
+      return new Response(stream, {
+        status: 206,
+        headers: {
+          'Content-Type': 'video/x-matroska',
+          'Cache-Control': 'no-cache',
+          'Content-Range': `bytes ${initialOffset}-${currentEnd}/*`,
+        },
+      });
+    }
+
     return new Response(stream, {
       status: 200,
       headers: {

@@ -54,6 +54,10 @@ const Status = ({
 }: StatusProps) => {
   const { language } = appState;
   const [recTimerSec, setRecTimerSec] = useState(0);
+  // Controlled open state for the live replay dialog.  Kept here rather than
+  // inside the HoverCard subtree so the Dialog component is never unmounted
+  // by the HoverCard closing (which would kill the video stream).
+  const [liveReplayOpen, setLiveReplayOpen] = useState(false);
 
   useEffect(() => {
     if (!activityStatus) return;
@@ -168,12 +172,17 @@ const Status = ({
         </p>
         <div className="flex w-full justify-end gap-2">
           {activityStatus && (
-            <LiveReplayDialog activityStatus={activityStatus}>
-              <Button size="sm" variant="outline" className="mt-2">
-                <Radio size={12} className="mr-1.5 text-red-500" />
-                Live Replay
-              </Button>
-            </LiveReplayDialog>
+            // Plain button — the Dialog itself is rendered outside the
+            // HoverCard so it survives the HoverCard closing.
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2"
+              onClick={() => setLiveReplayOpen(true)}
+            >
+              <Radio size={12} className="mr-1.5 text-red-500" />
+              Live Replay
+            </Button>
           )}
           <Button size="sm" onClick={stopRecording} className="mt-2">
             {getLocalePhrase(language, Phrase.StatusButtonForceEndLabel)}
@@ -384,49 +393,65 @@ const Status = ({
   const isSaving = savingStatus === SaveStatus.Saving;
 
   return (
-    <HoverCard
-      openDelay={300}
-      onOpenChange={(open) => {
-        if (statusDescription) setPreviewEnabled(!open);
-      }}
-    >
-      <HoverCardTrigger>
-        <div className="w-full h-full flex relative rounded-md border-t border-[rgba(255,255,255,10%)] hover:cursor-pointer">
-          <StatusLight
-            wrapperClasses={`${statusLightsClasses}`}
-            foregroundClasses={`border-none ${statusLightsClasses}`}
-            variant={statusIndicatorVariant}
-          />
-          <div className="ml-4 py-2 font-sans flex flex-col justify-around">
-            <span className="text-foreground-lighter font-bold text-xs drop-shadow-sm opacity-60 hover:text-foreground-lighter">
-              {getLocalePhrase(language, Phrase.StatusTitleRec)}
-            </span>
+    <>
+      <HoverCard
+        openDelay={300}
+        onOpenChange={(open) => {
+          if (statusDescription) setPreviewEnabled(!open);
+        }}
+      >
+        <HoverCardTrigger>
+          <div className="w-full h-full flex relative rounded-md border-t border-[rgba(255,255,255,10%)] hover:cursor-pointer">
+            <StatusLight
+              wrapperClasses={`${statusLightsClasses}`}
+              foregroundClasses={`border-none ${statusLightsClasses}`}
+              variant={statusIndicatorVariant}
+            />
+            <div className="ml-4 py-2 font-sans flex flex-col justify-around">
+              <span className="text-foreground-lighter font-bold text-xs drop-shadow-sm opacity-60 hover:text-foreground-lighter">
+                {getLocalePhrase(language, Phrase.StatusTitleRec)}
+              </span>
 
-            <div
-              className={cn(
-                'flex items-center text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground',
-                { '': !!statusDescription },
-              )}
-            >
-              {statusTitle}
-              {recTimerSec > 0 && (
-                <div className="mx-2 text-foreground">
-                  {secToMmSs(recTimerSec)}
-                </div>
-              )}
-              {isSaving && (
-                <HardDriveDownload size={14} className="mx-1 animate-pulse" />
-              )}
+              <div
+                className={cn(
+                  'flex items-center text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground',
+                  { '': !!statusDescription },
+                )}
+              >
+                {statusTitle}
+                {recTimerSec > 0 && (
+                  <div className="mx-2 text-foreground">
+                    {secToMmSs(recTimerSec)}
+                  </div>
+                )}
+                {isSaving && (
+                  <HardDriveDownload size={14} className="mx-1 animate-pulse" />
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        {!!statusDescription && (
-          <HoverCardContent className="w-[500px]  mx-4">
-            {statusDescription}
-          </HoverCardContent>
-        )}
-      </HoverCardTrigger>
-    </HoverCard>
+          {!!statusDescription && (
+            <HoverCardContent className="w-[500px]  mx-4">
+              {statusDescription}
+            </HoverCardContent>
+          )}
+        </HoverCardTrigger>
+      </HoverCard>
+
+      {/*
+       * LiveReplayDialog is intentionally rendered OUTSIDE the HoverCard so
+       * its lifecycle is not tied to the HoverCard's open state.  If it were
+       * inside HoverCardContent, moving the mouse away would unmount the
+       * Dialog component and close the video stream.
+       */}
+      {activityStatus && (
+        <LiveReplayDialog
+          open={liveReplayOpen}
+          onOpenChange={setLiveReplayOpen}
+          activityStatus={activityStatus}
+        />
+      )}
+    </>
   );
 };
 

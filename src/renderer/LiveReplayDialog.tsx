@@ -3,10 +3,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from './components/Dialog/Dialog';
 import { ActivityStatus, VideoPlayerSettings } from 'main/types';
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Slider } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -23,7 +22,8 @@ import { secToMmSs } from './rendererutils';
 import Spinner from './components/Spinner/Spinner';
 
 const ipc = window.electron.ipcRenderer;
-const playbackRates = [0.25, 0.5, 1, 2];
+// >1x makes no sense for a live stream — you'd overtake the recording.
+const playbackRates = [0.25, 0.5, 1];
 
 // Mirrors VideoPlayer.tsx's sliderBaseSx exactly.
 const sliderBaseSx = {
@@ -38,7 +38,13 @@ const sliderBaseSx = {
 };
 
 type IProps = {
-  children: ReactNode;
+  /**
+   * Controlled open state — managed by the parent so the dialog's lifecycle
+   * is independent of any HoverCard or popover that contains the trigger
+   * button.  If the parent unmounts the trigger, the dialog stays open.
+   */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   activityStatus: ActivityStatus;
 };
 
@@ -48,15 +54,25 @@ type IProps = {
  * VideoPlayer.tsx in visual style (same MUI components, same sizing) so the
  * two can be unified when VideoPlayer is later refactored to accept an
  * arbitrary source URL.
+ *
+ * The component is intentionally controlled (open / onOpenChange props) rather
+ * than self-contained so that the Dialog is mounted at a stable point in the
+ * component tree and is not torn down when the HoverCard that contains the
+ * trigger button closes.
  */
-const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
-  const [open, setOpen] = useState(false);
+const LiveReplayDialog = ({ open, onOpenChange, activityStatus }: IProps) => {
   const [liveUrl, setLiveUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  // liveMax tracks buffered.end() — the true seekable ceiling for a live
+  // stream.  It is kept separate from `elapsed` (wall-clock activity
+  // duration) because the MKV timestamps and activity-start time are not
+  // guaranteed to be perfectly aligned.  Using the buffered end as the
+  // slider max means "Live" always puts the thumb at 100 %.
+  const [liveMax, setLiveMax] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [spinner, setSpinner] = useState(true);
 
@@ -76,13 +92,44 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
 
   // ---- Side effects ----
 
-  // Wall-clock elapsed timer. This is the source of truth for the scrubber
-  // max — not video.duration, which is Infinity for a live stream.
+  // Fetch the live URL when the dialog opens; clean up resources when it
+  // closes.  Using a useEffect here (rather than an onOpenChange callback)
+  // means the logic is co-located with the state it touches and runs after
+  // the render that sets open=true, which is the correct time to start
+  // fetching.
+  useEffect(() => {
+    if (open) {
+      fetchLiveUrl();
+    } else {
+      stopProgressSync();
+
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = '';
+        videoRef.current.load();
+      }
+
+      setLiveUrl(null);
+      setPlaying(false);
+      setCurrentTime(0);
+      setLiveMax(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  // Wall-clock elapsed timer. Drives the header "X:XX elapsed" label and
+  // provides a fallback slider max before any data has been buffered.
+  // Also refreshes liveMax every second so the scrubber extends while paused.
   useEffect(() => {
     if (!open) return;
 
-    const tick = () =>
+    const tick = () => {
       setElapsed(Math.floor((Date.now() - activityStatus.start) / 1000));
+      const video = videoRef.current;
+      if (video && video.buffered.length > 0) {
+        setLiveMax(video.buffered.end(video.buffered.length - 1));
+      }
+    };
 
     tick();
     const id = setInterval(tick, 1000);
@@ -105,8 +152,11 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
   const startProgressSync = () => {
     if (progressSyncRef.current) return;
     progressSyncRef.current = window.setInterval(() => {
-      if (videoRef.current && !isDragging.current && !videoRef.current.seeking) {
-        setCurrentTime(videoRef.current.currentTime);
+      const video = videoRef.current;
+      if (!video || isDragging.current || video.seeking) return;
+      setCurrentTime(video.currentTime);
+      if (video.buffered.length > 0) {
+        setLiveMax(video.buffered.end(video.buffered.length - 1));
       }
     }, 100);
   };
@@ -117,7 +167,7 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
     progressSyncRef.current = null;
   };
 
-  // ---- Dialog open/close ----
+  // ---- Fetch live URL ----
 
   const fetchLiveUrl = async () => {
     setLoading(true);
@@ -139,28 +189,6 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
       setError('Failed to retrieve the recording path.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const onOpenChange = (next: boolean) => {
-    setOpen(next);
-
-    if (next) {
-      fetchLiveUrl();
-    } else {
-      stopProgressSync();
-
-      // Clear the src so the browser cancels the live:// request, which stops
-      // the 500 ms polling loop in the main process.
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.src = '';
-        videoRef.current.load();
-      }
-
-      setLiveUrl(null);
-      setPlaying(false);
-      setCurrentTime(0);
     }
   };
 
@@ -201,6 +229,9 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
    * We use video.buffered.end() rather than video.seekable.end() because
    * seekable.end() returns Infinity on a live stream, which throws a
    * non-finite DOMException when assigned to currentTime.
+   *
+   * play() is called unconditionally so the video resumes if it was paused
+   * or had stalled at the buffer boundary waiting for more data.
    */
   const jumpToLive = () => {
     const video = videoRef.current;
@@ -213,6 +244,7 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
       if (Number.isFinite(liveEdge)) {
         video.currentTime = liveEdge;
         setCurrentTime(liveEdge);
+        video.play().catch(() => {});
       }
     }
   };
@@ -243,11 +275,17 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Clamp to the furthest buffered byte, same logic as jumpToLive.
+    // Clamp to liveMax (buffered end) so the seek never overshoots what the
+    // browser actually has.  Fall back to video.buffered if liveMax is stale.
     const { buffered } = video;
-    const cap = buffered.length > 0 ? buffered.end(buffered.length - 1) : 0;
-    const target = Math.min(value, cap);
+    const cap =
+      liveMax > 0
+        ? liveMax
+        : buffered.length > 0
+          ? buffered.end(buffered.length - 1)
+          : 0;
 
+    const target = Math.min(value, cap);
     video.currentTime = target;
     setCurrentTime(target);
   };
@@ -275,9 +313,17 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-
-      <DialogContent className="max-w-4xl w-full p-0 gap-0 overflow-hidden">
+      {/*
+       * onInteractOutside: belt-and-suspenders guard in case Radix ever
+       * fires a dismiss from a pointer or focus event outside the content.
+       * The primary protection is structural — this component is rendered
+       * outside the HoverCard that contains the trigger button, so the
+       * HoverCard closing can never unmount this Dialog.
+       */}
+      <DialogContent
+        className="max-w-4xl w-full p-0 gap-0 overflow-hidden"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <div id="live-player-container" className="w-full bg-black flex flex-col">
           <DialogHeader className="px-4 pt-3 pb-2">
             <DialogTitle className="flex items-center gap-2 text-sm">
@@ -324,7 +370,7 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
           {/*
            * Control bar — intentionally matches VideoPlayer.tsx's renderControls()
            * in layout, sizing and component choices. Differences are live-specific:
-           *   - Progress slider max is `elapsed` (wall clock), not video.duration.
+           *   - Progress slider max is the buffered live edge, not video.duration.
            *   - "Live" button instead of clip / cloud / folder buttons.
            */}
           <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2 rounded-br-sm">
@@ -350,11 +396,13 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
               onKeyDown={(e) => e.preventDefault()}
             />
 
-            {/* Progress — max is elapsed, not Infinity */}
+            {/* Progress — max is the live buffered edge, not elapsed wall-clock
+                time. This keeps the Live button at 100 % and prevents the
+                slider from looking "behind" due to timestamp misalignment. */}
             <Slider
               sx={{ mx: 1, flex: 1, ...sliderBaseSx }}
               value={currentTime}
-              max={Math.max(elapsed, 1)}
+              max={liveMax > 0 ? liveMax : Math.max(elapsed, 1)}
               step={0.1}
               valueLabelFormat={secToMmSs}
               valueLabelDisplay="auto"
@@ -366,10 +414,11 @@ const LiveReplayDialog = ({ children, activityStatus }: IProps) => {
               onKeyDown={(e) => e.preventDefault()}
             />
 
-            {/* Time: current / total elapsed */}
+            {/* Time: current / live edge (both in video-time seconds) */}
             <div className="mx-1 flex">
               <span className="whitespace-nowrap text-foreground-lighter text-[11px] font-semibold font-mono">
-                {secToMmSs(Math.floor(currentTime))} / {secToMmSs(elapsed)}
+                {secToMmSs(Math.floor(currentTime))} /{' '}
+                {secToMmSs(Math.ceil(liveMax > 0 ? liveMax : elapsed))}
               </span>
             </div>
 
