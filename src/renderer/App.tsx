@@ -508,6 +508,7 @@ const WarcraftRecorder = () => {
                 advancedLoggingStatus={advancedLoggingStatus}
                 previewEnabled={previewEnabled}
                 setPreviewEnabled={setPreviewEnabled}
+                activityStatus={activityStatus}
               />
             </div>
           </TooltipProvider>

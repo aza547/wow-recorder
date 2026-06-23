@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+  ActivityStatus,
   AdvancedLoggingStatus,
   Pages,
   RecStatus,
@@ -11,6 +12,7 @@ import { ConfigurationSchema } from 'config/configSchema';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';
+import LiveReplayPage from './LiveReplayPage';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -25,6 +27,7 @@ interface IProps {
   advancedLoggingStatus: AdvancedLoggingStatus;
   previewEnabled: boolean;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
+  activityStatus: ActivityStatus | null;
 }
 
 /**
@@ -44,6 +47,7 @@ const Layout = (props: IProps) => {
     advancedLoggingStatus,
     previewEnabled,
     setPreviewEnabled,
+    activityStatus,
   } = props;
   const { page, category } = appState;
 
@@ -88,7 +92,7 @@ const Layout = (props: IProps) => {
   };
 
   const renderLiveReplay = () => {
-    return <div className="w-full h-full bg-background-higher"></div>;
+    return <LiveReplayPage activityStatus={activityStatus} />;
   };
 
   return (
