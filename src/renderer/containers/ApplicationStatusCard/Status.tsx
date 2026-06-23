@@ -23,7 +23,6 @@ import StatusLight, {
 } from 'renderer/components/StatusLight/StatusLight';
 import { cn } from 'renderer/components/utils';
 import { secToMmSs } from 'renderer/rendererutils';
-import LiveReplayDialog from 'renderer/LiveReplayDialog';
 
 type StatusInfo = {
   statusTitle: string;
@@ -171,19 +170,6 @@ const Status = ({
           {getLocalePhrase(language, Phrase.StatusDescriptionForceEnd)}
         </p>
         <div className="flex w-full justify-end gap-2">
-          {activityStatus && (
-            // Plain button — the Dialog itself is rendered outside the
-            // HoverCard so it survives the HoverCard closing.
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-2"
-              onClick={() => setLiveReplayOpen(true)}
-            >
-              <Radio size={12} className="mr-1.5 text-red-500" />
-              Live Replay
-            </Button>
-          )}
           <Button size="sm" onClick={stopRecording} className="mt-2">
             {getLocalePhrase(language, Phrase.StatusButtonForceEndLabel)}
           </Button>
@@ -437,20 +423,6 @@ const Status = ({
           )}
         </HoverCardTrigger>
       </HoverCard>
-
-      {/*
-       * LiveReplayDialog is intentionally rendered OUTSIDE the HoverCard so
-       * its lifecycle is not tied to the HoverCard's open state.  If it were
-       * inside HoverCardContent, moving the mouse away would unmount the
-       * Dialog component and close the video stream.
-       */}
-      {activityStatus && (
-        <LiveReplayDialog
-          open={liveReplayOpen}
-          onOpenChange={setLiveReplayOpen}
-          activityStatus={activityStatus}
-        />
-      )}
     </>
   );
 };

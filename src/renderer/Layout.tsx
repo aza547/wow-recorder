@@ -87,10 +87,15 @@ const Layout = (props: IProps) => {
     );
   };
 
+  const renderLiveReplay = () => {
+    return <div className="w-full h-full bg-background-higher"></div>;
+  };
+
   return (
     <>
       {page === Pages.Settings && renderSettingsPage()}
       {page === Pages.SceneEditor && renderSceneEditor()}
+      {page === Pages.LiveReplay && renderLiveReplay()}
       {page === Pages.None && renderCategoryPage()}
     </>
   );
