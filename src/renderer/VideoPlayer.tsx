@@ -31,6 +31,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import ReactPlayer from 'react-player';
 import screenfull from 'screenfull';
 import { ConfigurationSchema } from 'config/configSchema';
+import { setConfigValue } from './useSettings';
 import { getLocalePhrase } from 'localisation/translations';
 import DeathIcon from '../../assets/icon/death.png';
 import { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
@@ -55,6 +56,7 @@ import {
   FolderOpen,
   Link,
   Pencil,
+  Timer,
 } from 'lucide-react';
 import {
   Dialog,
@@ -65,6 +67,14 @@ import {
   DialogTitle,
 } from './components/Dialog/Dialog';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from './components/Popover/Popover';
+import {
+  FLASH_WINDOW_MAX_SECONDS,
+  FLASH_WINDOW_MIN_SECONDS,
+  FLASH_WINDOW_SECONDS,
   Keyframe,
   activeFlashKeyframe,
   keyframeTimes,
@@ -231,6 +241,26 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
 
+  // How long (seconds) an annotation keyframe stays shown during playback.
+  // User-adjustable via the duration slider; applies live to existing
+  // annotations. Clamped in case of a stale stored value.
+  const [flashWindow, setFlashWindow] = useState<number>(() =>
+    Math.min(
+      FLASH_WINDOW_MAX_SECONDS,
+      Math.max(
+        FLASH_WINDOW_MIN_SECONDS,
+        config.annotationFlashSeconds ?? FLASH_WINDOW_SECONDS,
+      ),
+    ),
+  );
+
+  // Mirror into a ref so the memoized change handler reads the latest value.
+  const flashWindowRef = useRef<number>(flashWindow);
+
+  useEffect(() => {
+    flashWindowRef.current = flashWindow;
+  }, [flashWindow]);
+
   const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
 
   // VOD markup is a time-ordered list of keyframes (see ./annotations). The ref
@@ -301,13 +331,19 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       // or to a new keyframe at the playhead if none is visible. Using the live
       // playhead means edits land on the exact moment you're looking at.
       const now = player1.current?.currentTime ?? 0;
-      const active = activeFlashKeyframe(current, now);
+      const active = activeFlashKeyframe(current, now, flashWindowRef.current);
       const t = active ? active.t : now;
+
+      // Excalidraw soft-deletes: the eraser marks elements isDeleted but keeps
+      // them in the array. Persist and compare only VISIBLE elements, so erasing
+      // a keyframe's contents empties it — and upsertKeyframe drops the now-empty
+      // keyframe — rather than leaving an invisible tombstone keyframe behind.
+      const visible = elements.filter((el) => !el.isDeleted);
 
       // Change-detect against only the affected keyframe, not the whole record,
       // so this stays cheap with many keyframes. onChange fires many times per
       // second while a stroke is being drawn.
-      const incoming = JSON.stringify(elements);
+      const incoming = JSON.stringify(visible);
       const existing = active ? JSON.stringify(active.elements) : '[]';
 
       if (incoming === existing) {
@@ -315,7 +351,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         return;
       }
 
-      const next = upsertKeyframe(current, t, elements);
+      const next = upsertKeyframe(current, t, visible);
       keyframesRef.current = next;
 
       const times = keyframeTimes(next);
@@ -1451,6 +1487,49 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   );
 
   /**
+   * Returns the annotation display-duration control: a bounded slider (in a
+   * popover off a timer glyph) for how long a keyframe stays shown during
+   * playback. Changes apply live to existing annotations.
+   */
+  const renderAnnotationDurationControl = () => (
+    <Popover>
+      <Tooltip content="Annotation display duration">
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="xs">
+            <Timer size={20} color="white" />
+          </Button>
+        </PopoverTrigger>
+      </Tooltip>
+      <PopoverContent side="top" className="w-56">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between text-xs font-semibold text-foreground-lighter">
+            <span>Annotation duration</span>
+            <span className="tabular-nums">{flashWindow}s</span>
+          </div>
+          <Slider
+            size="small"
+            value={flashWindow}
+            min={FLASH_WINDOW_MIN_SECONDS}
+            max={FLASH_WINDOW_MAX_SECONDS}
+            step={1}
+            valueLabelDisplay="auto"
+            valueLabelFormat={(v) => `${v}s`}
+            onChange={(_event, v) => {
+              if (typeof v === 'number') setFlashWindow(v);
+            }}
+            onChangeCommitted={(_event, v) => {
+              // Persist once on release rather than on every drag tick.
+              if (typeof v === 'number') {
+                setConfigValue('annotationFlashSeconds', v);
+              }
+            }}
+          />
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  /**
    * Returns the entire video control component.
    */
   const renderControls = () => {
@@ -1471,8 +1550,11 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         {!multiPlayerMode && !clipMode && renderOpenFolderButton()}
         {!multiPlayerMode && !clipMode && renderGetLinkButton()}
         <Separator className="mx-2" orientation="vertical" />
-        {renderDrawingButton()}
-        {renderClearAnnotationsButton()}
+        {!multiPlayerMode && renderDrawingButton()}
+        {!multiPlayerMode && renderClearAnnotationsButton()}
+        {!multiPlayerMode &&
+          (isDrawingEnabled || keyframeMarks.length > 0) &&
+          renderAnnotationDurationControl()}
         {!clipMode && !isClip(videos[0]) && renderClipButton()}
         {!multiPlayerMode && !clipMode && (
           <Separator className="mx-2" orientation="vertical" />
@@ -1598,7 +1680,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     // displaying as you pan around the timeline even while drawing. Edit mode
     // simply makes the shown keyframe interactive; the canvas re-seeds only when
     // the active keyframe actually changes (so a paused stroke is never wiped).
-    const active = activeFlashKeyframe(keyframes, progress);
+    const active = activeFlashKeyframe(keyframes, progress, flashWindow);
     const elements = active ? active.elements : [];
     const sceneKey = `${mode}:${active ? active.t.toFixed(2) : 'none'}`;
 
@@ -1642,7 +1724,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       <div style={{ height: 'calc(100% - 40px)' }}>
         <div className="w-full h-full relative">
           <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
-          {(isDrawingEnabled || keyframeMarks.length > 0) &&
+          {!multiPlayerMode &&
+            (isDrawingEnabled || keyframeMarks.length > 0) &&
             renderDrawingOverlay()}
           {renderLoadingSpinner()}
         </div>

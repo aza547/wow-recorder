@@ -26,6 +26,10 @@ type AnnotationRecord = {
  */
 export const FLASH_WINDOW_SECONDS = 5;
 
+/** Bounds for the user-adjustable flash window (the duration slider). */
+export const FLASH_WINDOW_MIN_SECONDS = 1;
+export const FLASH_WINDOW_MAX_SECONDS = 30;
+
 /**
  * Edits within this many seconds of an existing keyframe update that keyframe
  * in place rather than spawning a new one, so a burst of strokes at one spot
@@ -50,16 +54,25 @@ export const parseKeyframes = (raw: string | null | undefined): Keyframe[] => {
 
     if (Array.isArray(data)) {
       // Legacy format: a bare element array applied to the whole VOD. Anchor it
-      // as a single keyframe at the start so old annotations still show.
-      return data.length
-        ? [{ t: 0, elements: data as ExcalidrawElement[] }]
-        : [];
+      // as a single keyframe at the start so old annotations still show. Drop
+      // soft-deleted (isDeleted) tombstones.
+      const visible = (data as ExcalidrawElement[]).filter(
+        (el) => !el.isDeleted,
+      );
+
+      return visible.length ? [{ t: 0, elements: visible }] : [];
     }
 
     if (data && Array.isArray(data.keyframes)) {
+      // Drop soft-deleted tombstones, then drop any keyframe left empty.
       return (data.keyframes as Keyframe[])
-        .filter((k) => Array.isArray(k.elements) && k.elements.length > 0)
-        .map((k) => ({ t: Number(k.t) || 0, elements: k.elements }))
+        .map((k) => ({
+          t: Number(k.t) || 0,
+          elements: Array.isArray(k.elements)
+            ? k.elements.filter((el) => !el.isDeleted)
+            : [],
+        }))
+        .filter((k) => k.elements.length > 0)
         .sort((a, b) => a.t - b.t);
     }
   } catch {
