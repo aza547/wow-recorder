@@ -76,36 +76,45 @@ export default class DiskClient implements StorageClient {
   }
 
   /**
-   * Get the videos and set them on the frontend.
+   * Get the videos and set them on the frontend. Pass reconcile=false to
+   * rebuild the list straight from the in-memory metadata index WITHOUT
+   * re-scanning the storage dir — used after an annotation write, where the
+   * index write hook has already updated the affected entry (keyed by its own
+   * path) and no files were added or removed, so a storage round-trip is wasted.
    */
-  public async refreshVideos() {
-    const videos = await this.getVideos();
+  public async refreshVideos(reconcile = true) {
+    const videos = await this.getVideos(reconcile);
     send('setDiskVideos', videos);
   }
 
   /**
-   * Get the videos.
+   * Get the videos. When reconcile is false the storage dir is NOT re-scanned;
+   * the list is built from the in-memory index as-is.
    */
-  private async getVideos() {
-    const rdy = await this.ready();
-
-    if (!rdy) {
-      console.warn('[DiskClient] Not ready, no videos');
-      return [];
-    }
-
-    console.info('[DiskClient] Getting videos from disk');
-
+  private async getVideos(reconcile = true) {
     const cfg = ConfigService.getInstance();
     const storageDir = cfg.get<string>('storagePath');
     const stagingDir = getStagingDir(cfg);
-
-    // Reconcile the in-memory metadata index with the storage dir. This is
-    // delta-only: a single readdir, reading just the files new since last time.
-    // The bulk of refreshes (after a record/clip/delete) change nothing and so
-    // cost only the readdir, instead of re-stat'ing and re-parsing every video.
     const index = MetadataIndex.getInstance();
-    await index.reconcile(storageDir);
+
+    if (reconcile) {
+      const rdy = await this.ready();
+
+      if (!rdy) {
+        console.warn('[DiskClient] Not ready, no videos');
+        return [];
+      }
+
+      console.info('[DiskClient] Getting videos from disk');
+
+      // Reconcile the in-memory metadata index with the storage dir. This is
+      // delta-only: a single readdir, reading just the files new since last
+      // time. The bulk of refreshes (after a record/clip/delete) change nothing
+      // and so cost only the readdir, instead of re-stat'ing and re-parsing
+      // every video.
+      await index.reconcile(storageDir);
+    }
+
     const storageVideos = index.list();
 
     // When the "review locally while relocating" feature is active, also surface
@@ -336,7 +345,13 @@ export default class DiskClient implements StorageClient {
         // remounts the player and re-seeds from videos[0].annotations) would
         // show an empty overlay. The currently-playing player isn't disrupted
         // (its videos come from selectedVideos, and its key is unchanged).
-        this.refreshVideos();
+        //
+        // reconcile=false: annotateVideoDisk just wrote the metadata, which the
+        // index write hook already folded into this video's index entry. No
+        // files changed, so rebuild from the index without re-scanning storage
+        // (the storage dir is typically a NAS, so this skips a round-trip on
+        // every save).
+        this.refreshVideos(false);
       }
     });
   }

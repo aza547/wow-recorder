@@ -240,7 +240,7 @@ type Metadata = {
   overrun: number;
   affixes?: number[];
   tag?: string;
-  annotations?: string; // serialized Excalidraw drawing elements (JSON string)
+  annotations?: string; // serialized time-keyed drawing record (see renderer/annotations.ts); legacy values are a bare Excalidraw element array
   delete?: boolean; // signals video should be deleted when possible
   uniqueHash?: string; // used for cloud video grouping
   bossPercent?: number;
