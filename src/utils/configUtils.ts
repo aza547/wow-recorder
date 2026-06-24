@@ -400,7 +400,7 @@ const validateBaseConfig = async (config: BaseConfig) => {
   }
 
   if (recordRetailPtr) {
-    const validRetailPtrFlavours = ['wowxptr', 'wow_beta'];
+    const validRetailPtrFlavours = ['wowxptr', 'wow_beta', 'wowt'];
 
     const validFlavor = validateLogPaths
       ? validRetailPtrFlavours.includes(getWowFlavour(retailPtrLogPath))

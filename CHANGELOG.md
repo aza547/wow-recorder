@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Accept `wow_anniversary` as a classic combat log path. Support for anniversary realms is still best effort but should just work in most cases.
 - Fix a bug where classic raids did not correctly calculate the boss HP.
+- Add 12.1.0 PTR flavor ('wowt') to valid retail PTR log paths.
 
 ## [7.8.2] - 2026-06-17
 ### Fixed
