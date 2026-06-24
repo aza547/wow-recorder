@@ -40,3 +40,13 @@ buffer
 
 # Some stuff OBS window capture creates at runtime?
 win-capture/
+
+# Local agent, planning, and editor artifacts
+.claude/
+.vs/
+AGENTS.md
+CLAUDE.md
+EXECUTION.md
+PLAN.md
+PLAN-*.md
+Stop-Node.ps1
