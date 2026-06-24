@@ -51,10 +51,27 @@ import { DrawingOverlay } from './components/DrawingOverlay/DrawingOverlay';
 import {
   CloudDownload,
   CloudUpload,
+  Eraser,
   FolderOpen,
   Link,
   Pencil,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './components/Dialog/Dialog';
+import {
+  Keyframe,
+  activeFlashKeyframe,
+  keyframeTimes,
+  parseKeyframes,
+  serializeKeyframes,
+  upsertKeyframe,
+} from './annotations';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
@@ -216,37 +233,26 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
 
-  // Parse a serialized Excalidraw scene (JSON array of elements).
-  const parseAnnotations = (
-    raw: string | null | undefined,
-  ): readonly ExcalidrawElement[] => {
-    if (!raw) return [];
+  // VOD markup is a time-ordered list of keyframes (see ./annotations). The ref
+  // is the authoritative live copy; we mirror just the keyframe *times* into
+  // state to drive the timeline markers without re-rendering on every stroke.
+  const keyframesRef = useRef<Keyframe[] | null>(null);
 
-    try {
-      return JSON.parse(raw) as ExcalidrawElement[];
-    } catch {
-      console.error('Failed to parse stored annotations');
-      return [];
-    }
-  };
-
-  // Latest drawing scene as a serialized string. Seeded from the primary video's
-  // persisted annotations and updated on every change. We deliberately keep the
-  // *serialized* form rather than Excalidraw's live element array (which it
-  // mutates/empties on unmount), so the overlay can be re-seeded with fresh
-  // element objects when drawing mode is toggled off and back on.
-  const liveAnnotationsRef = useRef<string | null>(null);
-
-  if (liveAnnotationsRef.current === null) {
-    liveAnnotationsRef.current = videos[0]?.annotations ?? '[]';
+  if (keyframesRef.current === null) {
+    keyframesRef.current = parseKeyframes(videos[0]?.annotations);
   }
 
-  // The last serialized scene we persisted, used to skip redundant writes.
-  const lastSavedAnnotationsRef = useRef<string>('');
+  const [keyframeMarks, setKeyframeMarks] = useState<number[]>(() =>
+    keyframeTimes(keyframesRef.current ?? []),
+  );
 
-  // Excalidraw fires onChange once on mount echoing the seeded scene. We use the
-  // first event to establish a normalized baseline rather than persisting it.
-  const annotationsInitRef = useRef<boolean>(false);
+  // Confirmation dialog for the destructive "clear all" control.
+  const [clearDialogOpen, setClearDialogOpen] = useState<boolean>(false);
+
+  // The last serialized record we persisted, used to skip redundant writes.
+  const lastSavedAnnotationsRef = useRef<string>(
+    serializeKeyframes(keyframesRef.current ?? []),
+  );
 
   // Debounce timer for persisting annotations.
   const annotationsSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(
@@ -254,51 +260,112 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   );
 
   /**
-   * Handle a change to the drawing overlay. Persists the serialized elements to
-   * the primary video's metadata on disk, debounced, and only when changed.
+   * Persist the current keyframe record to the primary video's metadata on
+   * disk, debounced, and only when it actually changed.
    */
-  const onDrawingChange = useCallback(
-    (elements: readonly ExcalidrawElement[]) => {
-      const serialized = JSON.stringify(elements);
-      liveAnnotationsRef.current = serialized;
+  const persistKeyframes = useCallback(() => {
+    // Coalesce rapid edits: the whole-record serialize and disk write happen at
+    // most once per quiet period, inside the debounced callback, rather than on
+    // every onChange.
+    if (annotationsSaveTimer.current) {
+      clearTimeout(annotationsSaveTimer.current);
+    }
 
-      if (!annotationsInitRef.current) {
-        // First event after mount is Excalidraw echoing the seeded scene.
-        // Record it as the baseline; don't persist.
-        annotationsInitRef.current = true;
-        lastSavedAnnotationsRef.current = serialized;
-        return;
-      }
+    annotationsSaveTimer.current = setTimeout(() => {
+      const serialized = serializeKeyframes(keyframesRef.current ?? []);
 
       if (serialized === lastSavedAnnotationsRef.current) {
-        // Nothing meaningful changed (e.g. selection / pointer move).
         return;
       }
 
       lastSavedAnnotationsRef.current = serialized;
 
-      if (annotationsSaveTimer.current) {
-        clearTimeout(annotationsSaveTimer.current);
+      ipc.sendMessage('videoButtonDisk', [
+        'annotations',
+        serialized,
+        [videos[0]],
+      ]);
+    }, 500);
+  }, [videos]);
+
+  /**
+   * Handle a change to the drawing overlay (edit mode only). Snapshots the full
+   * scene into the keyframe at the current edit time, then persists. Erasing a
+   * moment's drawing entirely removes that keyframe.
+   */
+  const onDrawingChange = useCallback(
+    (elements: readonly ExcalidrawElement[]) => {
+      const current = keyframesRef.current ?? [];
+
+      // Snapshot to the keyframe currently shown at the playhead (refining it),
+      // or to a new keyframe at the playhead if none is visible. Using the live
+      // playhead means edits land on the exact moment you're looking at.
+      const now = player1.current?.currentTime ?? 0;
+      const active = activeFlashKeyframe(current, now);
+      const t = active ? active.t : now;
+
+      // Change-detect against only the affected keyframe, not the whole record,
+      // so this stays cheap with many keyframes. onChange fires many times per
+      // second while a stroke is being drawn.
+      const incoming = JSON.stringify(elements);
+      const existing = active ? JSON.stringify(active.elements) : '[]';
+
+      if (incoming === existing) {
+        // Nothing meaningful changed for this keyframe (selection move, etc.).
+        return;
       }
 
-      annotationsSaveTimer.current = setTimeout(() => {
+      const next = upsertKeyframe(current, t, elements);
+      keyframesRef.current = next;
+
+      const times = keyframeTimes(next);
+      setKeyframeMarks((prev) =>
+        prev.length === times.length && prev.every((v, i) => v === times[i])
+          ? prev
+          : times,
+      );
+
+      persistKeyframes();
+    },
+    [persistKeyframes],
+  );
+
+  /**
+   * Wipe the entire annotation record for this VOD.
+   */
+  const clearAnnotations = useCallback(() => {
+    keyframesRef.current = [];
+    setKeyframeMarks([]);
+    persistKeyframes();
+    setClearDialogOpen(false);
+  }, [persistKeyframes]);
+
+  // Flush any pending annotation save when unmounting (e.g. the user switches
+  // VOD/POV within the debounce window). The player remounts on any such switch,
+  // so this closure's keyframesRef and videos[0] still both belong to THIS VOD —
+  // we write the final edits to the correct file rather than dropping them.
+  useEffect(() => {
+    return () => {
+      if (!annotationsSaveTimer.current) {
+        return;
+      }
+
+      clearTimeout(annotationsSaveTimer.current);
+      annotationsSaveTimer.current = null;
+
+      const serialized = serializeKeyframes(keyframesRef.current ?? []);
+
+      if (serialized !== lastSavedAnnotationsRef.current) {
+        lastSavedAnnotationsRef.current = serialized;
         ipc.sendMessage('videoButtonDisk', [
           'annotations',
           serialized,
           [videos[0]],
         ]);
-      }, 500);
-    },
-    [videos],
-  );
-
-  // Flush any pending annotation save when unmounting.
-  useEffect(() => {
-    return () => {
-      if (annotationsSaveTimer.current) {
-        clearTimeout(annotationsSaveTimer.current);
       }
     };
+    // videos[0] is stable for this instance's lifetime (a switch remounts), so
+    // the empty dep list is correct — we want the teardown of THIS mount only.
   }, []);
 
   /**
@@ -343,24 +410,51 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Get the video timeline markers appropriate for the current video and
    * configuration.
    */
+  /**
+   * Return a slider marker for an annotation keyframe at the given time.
+   */
+  const getAnnotationMark = (time: number): SliderMark => {
+    return {
+      value: time,
+      label: (
+        <Tooltip content="Annotation">
+          <Box
+            sx={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '9999px',
+              backgroundColor: '#bb4420',
+              border: '1px solid rgba(0,0,0,0.4)',
+            }}
+          />
+        </Tooltip>
+      ),
+    };
+  };
+
   const getMarks = () => {
     const marks: SliderMark[] = [];
 
-    if (duration === 0 || isClip(videos[0])) {
+    if (duration === 0) {
       return marks;
     }
 
-    const deathMarkerConfig = convertNumToDeathMarkers(config.deathMarkers);
+    if (!isClip(videos[0])) {
+      const deathMarkerConfig = convertNumToDeathMarkers(config.deathMarkers);
 
-    if (deathMarkerConfig === DeathMarkers.ALL) {
-      getAllDeathMarkers(videos[0], language)
-        .map(getDeathMark)
-        .forEach((m) => marks.push(m));
-    } else if (deathMarkerConfig === DeathMarkers.OWN) {
-      getOwnDeathMarkers(videos[0], language)
-        .map(getDeathMark)
-        .forEach((m) => marks.push(m));
+      if (deathMarkerConfig === DeathMarkers.ALL) {
+        getAllDeathMarkers(videos[0], language)
+          .map(getDeathMark)
+          .forEach((m) => marks.push(m));
+      } else if (deathMarkerConfig === DeathMarkers.OWN) {
+        getOwnDeathMarkers(videos[0], language)
+          .map(getDeathMark)
+          .forEach((m) => marks.push(m));
+      }
     }
+
+    // Keyframe markers make the time-indexed nature of the markup visible.
+    keyframeMarks.forEach((t) => marks.push(getAnnotationMark(t)));
 
     return marks;
   };
@@ -1308,6 +1402,55 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   );
 
   /**
+   * Returns the "clear all annotations" button. Disabled when there is nothing
+   * to clear; opens a confirmation dialog as the action is destructive.
+   */
+  const renderClearAnnotationsButton = () => {
+    const hasAnnotations = keyframeMarks.length > 0;
+
+    return (
+      <Tooltip content="Clear all annotations">
+        <div>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={() => setClearDialogOpen(true)}
+            disabled={!hasAnnotations}
+          >
+            <Eraser
+              size={20}
+              color={hasAnnotations ? 'white' : 'rgba(255,255,255,0.35)'}
+            />
+          </Button>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  /**
+   * Confirmation dialog for clearing the whole annotation record.
+   */
+  const renderClearAnnotationsDialog = () => (
+    <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Clear all annotations?</DialogTitle>
+          <DialogDescription>
+            This permanently removes every drawing keyframe from this VOD. This
+            cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setClearDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={clearAnnotations}>Clear all</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  /**
    * Returns the entire video control component.
    */
   const renderControls = () => {
@@ -1329,6 +1472,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         {!multiPlayerMode && !clipMode && renderGetLinkButton()}
         <Separator className="mx-2" orientation="vertical" />
         {renderDrawingButton()}
+        {renderClearAnnotationsButton()}
         {!clipMode && !isClip(videos[0]) && renderClipButton()}
         {!multiPlayerMode && !clipMode && (
           <Separator className="mx-2" orientation="vertical" />
@@ -1447,13 +1591,28 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   }
 
   const renderDrawingOverlay = () => {
+    const keyframes = keyframesRef.current ?? [];
+    const mode: 'edit' | 'view' = isDrawingEnabled ? 'edit' : 'view';
+
+    // Existing markup flashes near its timestamp in BOTH modes, so it keeps
+    // displaying as you pan around the timeline even while drawing. Edit mode
+    // simply makes the shown keyframe interactive; the canvas re-seeds only when
+    // the active keyframe actually changes (so a paused stroke is never wiped).
+    const active = activeFlashKeyframe(keyframes, progress);
+    const elements = active ? active.elements : [];
+    const sceneKey = `${mode}:${active ? active.t.toFixed(2) : 'none'}`;
+
     return (
-      <div className="absolute top-0 left-0 w-full h-full">
+      <div
+        className="absolute top-0 left-0 w-full h-full"
+        style={{ pointerEvents: isDrawingEnabled ? 'auto' : 'none' }}
+      >
         <DrawingOverlay
-          isDrawingEnabled={isDrawingEnabled}
+          mode={mode}
+          elements={elements}
+          sceneKey={sceneKey}
           onDrawingChange={onDrawingChange}
           appState={appState}
-          initialElements={parseAnnotations(liveAnnotationsRef.current)}
         />
       </div>
     );
@@ -1483,12 +1642,14 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       <div style={{ height: 'calc(100% - 40px)' }}>
         <div className="w-full h-full relative">
           <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
-          {isDrawingEnabled && renderDrawingOverlay()}
+          {(isDrawingEnabled || keyframeMarks.length > 0) &&
+            renderDrawingOverlay()}
           {renderLoadingSpinner()}
         </div>
       </div>
 
       {renderControls()}
+      {renderClearAnnotationsDialog()}
     </div>
   );
 });

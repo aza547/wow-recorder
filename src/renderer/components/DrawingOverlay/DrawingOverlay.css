@@ -19,3 +19,9 @@
 .excalidraw .sidebar-trigger__label-element {
     display: none !important;
 }
+
+/* In read-only "view" mode (flash playback) hide all Excalidraw UI chrome so
+   only the drawing itself is shown over the video. */
+.drawing-overlay.view-mode .excalidraw .layer-ui__wrapper {
+    display: none !important;
+}
