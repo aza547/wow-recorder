@@ -10,3 +10,5 @@
 *.ttf   binary
 *.woff  binary
 *.woff2 binary
+
+native/macos/patches/*.patch text eol=lf whitespace=-space-before-tab

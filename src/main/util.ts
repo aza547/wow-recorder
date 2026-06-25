@@ -1,5 +1,6 @@
 import { URL } from 'url';
 import path from 'path';
+import os from 'os';
 import fs, {
   createReadStream,
   existsSync,
@@ -162,7 +163,7 @@ const getMetadataFileNameForVideo = (video: string) => {
 const convertKoreanVideoCategory = (
   metadata: Metadata | CloudSignedMetadata,
 ) => {
-  const raw = metadata as any;
+  const raw = metadata as Metadata & { category: VideoCategory | string };
 
   if (raw.category === '연습전투') {
     raw.category = VideoCategory.Skirmish;
@@ -381,7 +382,7 @@ const getAvailableDisplays = (): OurDisplayType[] => {
 
 const deferredPromiseHelper = <T>() => {
   let resolveHelper!: (value: T | PromiseLike<T>) => void;
-  let rejectHelper!: (reason?: any) => void;
+  let rejectHelper!: (reason?: unknown) => void;
 
   const promise = new Promise<T>((resolve, reject) => {
     resolveHelper = resolve;
@@ -855,7 +856,7 @@ const markForVideoForDelete = async (videoPath: string) => {
  * videos from cloud to disk.
  */
 const rendererVideoToMetadata = (video: RendererVideo) => {
-  const data = video as any;
+  const data: Partial<RendererVideo> = { ...video };
   delete data.videoSource;
   delete data.videoName;
   delete data.mtime;
@@ -871,19 +872,15 @@ const rendererVideoToMetadata = (video: RendererVideo) => {
  */
 const cloudSignedMetadataToRendererVideo = (metadata: CloudSignedMetadata) => {
   // For cloud videos, the signed URLs are the sources.
-  const videoSource = metadata.signedVideoKey;
+  const { signedVideoKey: videoSource, ...metadataWithoutSignature } = metadata;
   const uniqueId = `${metadata.videoName}-cloud`;
 
-  // We don't want the signed properties themselves.
-  const mutable: any = metadata;
-  delete mutable.signedVideoKey;
-
   const video: RendererVideo = {
-    ...mutable,
+    ...metadataWithoutSignature,
     videoSource,
     multiPov: [],
     cloud: true,
-    isProtected: Boolean(mutable.protected),
+    isProtected: Boolean(metadataWithoutSignature.protected),
     mtime: 0,
     uniqueId,
   };
@@ -1153,6 +1150,14 @@ const runFirstTimeSetupActionsObs = () => {
 
 const runFirstTimeSetupActionsNoObs = () => {
   const cfg = ConfigService.getInstance();
+  const installSearchPaths =
+    process.platform === 'darwin'
+      ? [
+          '/Applications/World of Warcraft',
+          path.join(os.homedir(), 'Applications', 'World of Warcraft'),
+          ...wowInstallSearchPaths,
+        ]
+      : wowInstallSearchPaths;
 
   const isRetailConfigured =
     cfg.get<boolean>('recordRetail') && cfg.get<string>('retailLogPath');
@@ -1160,8 +1165,8 @@ const runFirstTimeSetupActionsNoObs = () => {
   if (!isRetailConfigured) {
     console.info('[Util] Attempt to first time configure retail installation');
 
-    for (let i = 0; i < wowInstallSearchPaths.length; i++) {
-      const installPath = wowInstallSearchPaths[i] + '\\_retail_\\Logs';
+    for (let i = 0; i < installSearchPaths.length; i++) {
+      const installPath = path.join(installSearchPaths[i], '_retail_', 'Logs');
       const installExists = existsSync(installPath);
 
       if (installExists) {
@@ -1179,8 +1184,8 @@ const runFirstTimeSetupActionsNoObs = () => {
   if (!isClassicConfigured) {
     console.info('[Util] Attempt to first time configure classic installation');
 
-    for (let i = 0; i < wowInstallSearchPaths.length; i++) {
-      const installPath = wowInstallSearchPaths[i] + '\\_classic_\\Logs';
+    for (let i = 0; i < installSearchPaths.length; i++) {
+      const installPath = path.join(installSearchPaths[i], '_classic_', 'Logs');
       const installExists = existsSync(installPath);
 
       if (installExists) {

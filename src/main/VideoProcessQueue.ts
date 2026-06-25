@@ -34,15 +34,42 @@ const atomicQueue = require('atomic-queue');
 const devMode = process.env.NODE_ENV === 'development';
 const isDebug = devMode || process.env.DEBUG_PROD === 'true';
 
-// Use the dynamically linked ffmpeg.exe we package with OBS in noobs. This
-// allows us to avoid including a static ffmpeg.exe which is an extra 60MB.
-const ffmpegPathRel = 'node_modules/noobs/dist/bin/ffmpeg.exe';
+type AtomicQueuePool = {
+  on: (event: string, handler: (...args: unknown[]) => void) => AtomicQueuePool;
+};
 
-let ffmpegPathAbs = devMode
-  ? path.resolve(__dirname, '../../release/app/', ffmpegPathRel)
-  : path.resolve(__dirname, '../../', ffmpegPathRel);
+type AtomicQueue = {
+  write: (item: unknown) => void;
+  on: (event: string, handler: (...args: unknown[]) => void) => AtomicQueue;
+  pool: AtomicQueuePool;
+};
 
-ffmpegPathAbs = fixPathWhenPackaged(ffmpegPathAbs);
+const getBundledFfmpegPath = (ffmpegPathRel: string) => {
+  const ffmpegPathAbs = devMode
+    ? path.resolve(__dirname, '../../release/app/', ffmpegPathRel)
+    : path.resolve(__dirname, '../../', ffmpegPathRel);
+
+  return fixPathWhenPackaged(ffmpegPathAbs);
+};
+
+const getFfmpegPath = () => {
+  if (process.platform === 'darwin') {
+    return getBundledFfmpegPath(
+      path.join(
+        'node_modules',
+        '@ffmpeg-installer',
+        `darwin-${process.arch}`,
+        'ffmpeg',
+      ),
+    );
+  }
+
+  return getBundledFfmpegPath(
+    path.join('node_modules', 'noobs', 'dist', 'bin', 'ffmpeg.exe'),
+  );
+};
+
+const ffmpegPathAbs = getFfmpegPath();
 ffmpeg.setFfmpegPath(ffmpegPathAbs);
 
 /**
@@ -65,25 +92,25 @@ export default class VideoProcessQueue {
   /**
    * Atomic queue object for queueing cutting of videos.
    */
-  private videoQueue: any;
+  private videoQueue: AtomicQueue;
 
   /**
    * Atomic queue object for queuing upload of videos, seperated from the
    * video queue as this can take a long time and we don't want to block further
    * video cuts behind uploads.
    */
-  private uploadQueue: any;
+  private uploadQueue: AtomicQueue;
 
   /**
    * Atomic queue object for queuing download of videos.
    */
-  private downloadQueue: any;
+  private downloadQueue: AtomicQueue;
 
   /**
    * The kill video queue re-encoder a video from multiple perspectives into a
    * single video file. This is naturally computationally expensive.
    */
-  private killVideoQueue: any;
+  private killVideoQueue: AtomicQueue;
 
   /**
    * Config service handle.
@@ -185,7 +212,7 @@ export default class VideoProcessQueue {
       .on('idle', () => { this.videoQueueEmpty() });
 
     queue.pool
-      .on('start', (item: KillVideoQueueItem) => { this.startedProcessingKillVideo(item) })
+      .on('start', () => { this.startedProcessingKillVideo() })
       .on('finish', (_: unknown, item: KillVideoQueueItem) => { this.finishProcessingKillVideo(item) });
     /* eslint-enable prettier/prettier */
 
@@ -543,7 +570,7 @@ export default class VideoProcessQueue {
   /**
    * Actions on starting the processing of a kill video.
    */
-  private startedProcessingKillVideo(item: KillVideoQueueItem) {
+  private startedProcessingKillVideo() {
     console.info('[VideoProcessQueue] Now processing kill video');
 
     const status: KillVideoStatus = {

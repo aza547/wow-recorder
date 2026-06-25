@@ -697,6 +697,10 @@ const getFriendlyEncoderName = (enc: ESupportedEncoders) => {
       return 'Intel H.264';
     case ESupportedEncoders.QSV_AV1:
       return 'Intel AV1';
+    case ESupportedEncoders.APPLE_H264_HARDWARE:
+      return 'Apple VideoToolbox H.264';
+    case ESupportedEncoders.APPLE_H264_SOFTWARE:
+      return 'Apple VideoToolbox H.264 Software';
     default:
       throw new Error('Unknown Encoder: ' + enc);
   }
@@ -708,6 +712,8 @@ const getFriendlyCodecName = (enc: string) => {
     case ESupportedEncoders.NVENC_H264:
     case ESupportedEncoders.AMD_H264:
     case ESupportedEncoders.QSV_H264:
+    case ESupportedEncoders.APPLE_H264_HARDWARE:
+    case ESupportedEncoders.APPLE_H264_SOFTWARE:
       return 'H264';
     case ESupportedEncoders.NVENC_H265:
     case ESupportedEncoders.AMD_H265:
@@ -802,7 +808,10 @@ const getManualRecordHotKeyFromConfig = (
   };
 };
 
-const getKeyByValue = (object: any, value: any) => {
+const getKeyByValue = (
+  object: Record<string, string | number>,
+  value: string | number,
+) => {
   return Object.keys(object).find((key) => object[key] === value);
 };
 
@@ -1096,7 +1105,10 @@ const getAudioSourceChoices = async (src: AudioSource) => {
   const properties = await ipc.getAudioSourceProperties(src.id);
 
   const devices = properties.find(
-    (prop) => prop.name === 'device_id' || prop.name === 'window',
+    (prop) =>
+      prop.name === 'device_id' ||
+      prop.name === 'window' ||
+      prop.name === 'application',
   );
 
   if (!devices || devices.type !== 'list') {

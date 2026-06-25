@@ -1,5 +1,7 @@
 import { Menu, MenuItemConstructorOptions } from 'electron';
 
+const APP_MENU_LABEL = 'Warcraft Recorder';
+
 export default class MenuBuilder {
   constructor() {}
 
@@ -51,8 +53,28 @@ export default class MenuBuilder {
         enabled: true,
       },
     ];
-    return [
+
+    const template: MenuItemConstructorOptions[] = [
       { label: 'View', submenu: developSubmenu, visible: false, enabled: true },
     ];
+
+    if (process.platform === 'darwin') {
+      template.unshift({
+        label: APP_MENU_LABEL,
+        submenu: [
+          { label: `About ${APP_MENU_LABEL}`, role: 'about' },
+          { type: 'separator' },
+          { role: 'services' },
+          { type: 'separator' },
+          { label: `Hide ${APP_MENU_LABEL}`, role: 'hide' },
+          { role: 'hideOthers' },
+          { role: 'unhide' },
+          { type: 'separator' },
+          { label: `Quit ${APP_MENU_LABEL}`, role: 'quit' },
+        ],
+      });
+    }
+
+    return template;
   }
 }

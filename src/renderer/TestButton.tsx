@@ -24,6 +24,7 @@ interface IProps {
 
 const TestButton: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, appState } = props;
+  const [open, setOpen] = React.useState(false);
 
   const testCategories = [
     VideoCategory.TwoVTwo,
@@ -42,6 +43,7 @@ const TestButton: React.FC<IProps> = (props: IProps) => {
     // 'Ctrl-Alt-Click' will initiate a test but won't finish it
     // and requires a force stop of the recording.
     const endTest = !(event.ctrlKey && event.altKey);
+    setOpen(false);
     ipc.sendMessage('test', [category, endTest]);
   };
 
@@ -81,7 +83,7 @@ const TestButton: React.FC<IProps> = (props: IProps) => {
   };
 
   return (
-    <HoverCard openDelay={300}>
+    <HoverCard open={open} onOpenChange={setOpen} openDelay={300}>
       <HoverCardTrigger>
         <Button variant="ghost" size="icon">
           <FlaskConical size={20} />

@@ -67,6 +67,7 @@
     "appId": "org.WarcraftRecorder",
     "asar": true,
     "asarUnpack": "**\\**",
+    "afterPack": "scripts/macos/after-pack.js",
     "files": [
       "dist",
       "node_modules",
@@ -85,6 +86,21 @@
       "artifactName": "WarcraftRecorder-Setup-${version}.exe",
       "target": [
         "nsis"
+      ]
+    },
+    "mac": {
+      "category": "public.app-category.video",
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist",
+      "extendInfo": {
+        "NSAudioCaptureUsageDescription": "Warcraft Recorder records game and system audio so saved clips include sound.",
+        "NSMicrophoneUsageDescription": "Warcraft Recorder records microphone audio when microphone sources or push-to-talk are enabled."
+      },
+      "hardenedRuntime": true,
+      "icon": "assets/icon/large-icon.png",
+      "target": [
+        "dmg",
+        "zip"
       ]
     },
     "directories": {
