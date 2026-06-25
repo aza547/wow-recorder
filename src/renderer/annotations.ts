@@ -13,8 +13,30 @@ export type Keyframe = {
   elements: ExcalidrawElement[];
 };
 
+/**
+ * The video's capture resolution that a record's element coordinates are
+ * expressed in. Element coords live in this fixed reference space (Excalidraw
+ * "scene" units); on playback the overlay only changes `zoom` to map this space
+ * onto the live (resized/letterboxed) video rect — so the same coords render
+ * correctly at any window/frame size. See DrawingOverlay.
+ */
+export type AnnotationRef = { w: number; h: number };
+
+/**
+ * Persisted shape. `version: 3` records carry `ref` (resolution-independent).
+ * Legacy `version: 2` records and the even older bare-array format have no
+ * `ref`; their coords are in draw-time canvas pixels and load best-effort.
+ */
 type AnnotationRecord = {
-  version: 2;
+  version: 3;
+  ref?: AnnotationRef;
+  keyframes: Keyframe[];
+};
+
+/** Result of parsing a stored annotation string: the keyframes plus the
+ *  reference resolution their coords are in (null for legacy records). */
+export type ParsedAnnotations = {
+  ref: AnnotationRef | null;
   keyframes: Keyframe[];
 };
 
@@ -44,9 +66,11 @@ const EMPTY: ExcalidrawElement[] = [];
  * both the current keyframe-record format and the legacy single-scene format (a
  * bare Excalidraw element array), which is migrated to one keyframe at t=0.
  */
-export const parseKeyframes = (raw: string | null | undefined): Keyframe[] => {
+export const parseAnnotations = (
+  raw: string | null | undefined,
+): ParsedAnnotations => {
   if (!raw) {
-    return [];
+    return { ref: null, keyframes: [] };
   }
 
   try {
@@ -55,17 +79,20 @@ export const parseKeyframes = (raw: string | null | undefined): Keyframe[] => {
     if (Array.isArray(data)) {
       // Legacy format: a bare element array applied to the whole VOD. Anchor it
       // as a single keyframe at the start so old annotations still show. Drop
-      // soft-deleted (isDeleted) tombstones.
+      // soft-deleted (isDeleted) tombstones. No `ref` — pre-resolution-independent.
       const visible = (data as ExcalidrawElement[]).filter(
         (el) => !el.isDeleted,
       );
 
-      return visible.length ? [{ t: 0, elements: visible }] : [];
+      return {
+        ref: null,
+        keyframes: visible.length ? [{ t: 0, elements: visible }] : [],
+      };
     }
 
     if (data && Array.isArray(data.keyframes)) {
       // Drop soft-deleted tombstones, then drop any keyframe left empty.
-      return (data.keyframes as Keyframe[])
+      const keyframes = (data.keyframes as Keyframe[])
         .map((k) => ({
           t: Number(k.t) || 0,
           elements: Array.isArray(k.elements)
@@ -74,26 +101,52 @@ export const parseKeyframes = (raw: string | null | undefined): Keyframe[] => {
         }))
         .filter((k) => k.elements.length > 0)
         .sort((a, b) => a.t - b.t);
+
+      // `ref` is present from v3 on; v2 records lack it (legacy pixel coords).
+      const r = data.ref;
+      const ref =
+        r && Number(r.w) > 0 && Number(r.h) > 0
+          ? { w: Number(r.w), h: Number(r.h) }
+          : null;
+
+      return { ref, keyframes };
     }
   } catch {
     console.error('[Annotations] Failed to parse stored annotations');
   }
 
-  return [];
+  return { ref: null, keyframes: [] };
 };
 
 /**
- * Serialize keyframes for persistence. Returns '[]' when there is nothing to
- * keep, which the disk layer already treats as "clear annotations".
+ * Back-compat convenience: just the keyframes from a stored annotation string.
+ * Prefer `parseAnnotations` when the reference resolution is needed.
  */
-export const serializeKeyframes = (keyframes: Keyframe[]): string => {
+export const parseKeyframes = (raw: string | null | undefined): Keyframe[] =>
+  parseAnnotations(raw).keyframes;
+
+/**
+ * Serialize keyframes for persistence. Returns '[]' when there is nothing to
+ * keep, which the disk layer already treats as "clear annotations". `ref` (the
+ * capture resolution the coords are in) is written when known so the record is
+ * resolution-independent on reload.
+ */
+export const serializeKeyframes = (
+  keyframes: Keyframe[],
+  ref?: AnnotationRef | null,
+): string => {
   const nonEmpty = keyframes.filter((k) => k.elements.length > 0);
 
   if (nonEmpty.length === 0) {
     return '[]';
   }
 
-  const record: AnnotationRecord = { version: 2, keyframes: nonEmpty };
+  const record: AnnotationRecord = { version: 3, keyframes: nonEmpty };
+
+  if (ref && ref.w > 0 && ref.h > 0) {
+    record.ref = { w: ref.w, h: ref.h };
+  }
+
   return JSON.stringify(record);
 };
 

@@ -75,10 +75,11 @@ import {
   FLASH_WINDOW_MAX_SECONDS,
   FLASH_WINDOW_MIN_SECONDS,
   FLASH_WINDOW_SECONDS,
+  AnnotationRef,
   Keyframe,
   activeFlashKeyframe,
   keyframeTimes,
-  parseKeyframes,
+  parseAnnotations,
   serializeKeyframes,
   upsertKeyframe,
 } from './annotations';
@@ -268,9 +269,42 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   // state to drive the timeline markers without re-rendering on every stroke.
   const keyframesRef = useRef<Keyframe[] | null>(null);
 
+  // The capture resolution the keyframe coords are expressed in. Authoritative
+  // copy for serialization closures; mirrored into state below so the overlay
+  // re-renders once it becomes known. Null until a stored ref is loaded or the
+  // video's intrinsic size is captured (see captureRefResolution).
+  const refResolutionRef = useRef<AnnotationRef | null>(null);
+
   if (keyframesRef.current === null) {
-    keyframesRef.current = parseKeyframes(videos[0]?.annotations);
+    const parsed = parseAnnotations(videos[0]?.annotations);
+    keyframesRef.current = parsed.keyframes;
+    refResolutionRef.current = parsed.ref;
   }
+
+  // Mirror of refResolutionRef for rendering the overlay (which needs the ref to
+  // compute its zoom). Starts from any stored ref; filled in on metadata load.
+  const [refResolution, setRefResolution] = useState<AnnotationRef | null>(
+    () => refResolutionRef.current,
+  );
+
+  // Capture the primary video's intrinsic (capture) resolution as the reference
+  // space for NEW annotation records. No-op once a ref is known (stored records
+  // keep their original ref; the live size matches it for the same file anyway).
+  const captureRefResolution = useCallback(() => {
+    if (refResolutionRef.current) {
+      return;
+    }
+
+    const v = player1.current;
+
+    if (!v || !v.videoWidth || !v.videoHeight) {
+      return;
+    }
+
+    const ref = { w: v.videoWidth, h: v.videoHeight };
+    refResolutionRef.current = ref;
+    setRefResolution(ref);
+  }, []);
 
   const [keyframeMarks, setKeyframeMarks] = useState<number[]>(() =>
     keyframeTimes(keyframesRef.current ?? []),
@@ -281,7 +315,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   // The last serialized record we persisted, used to skip redundant writes.
   const lastSavedAnnotationsRef = useRef<string>(
-    serializeKeyframes(keyframesRef.current ?? []),
+    serializeKeyframes(keyframesRef.current ?? [], refResolutionRef.current),
   );
 
   // Debounce timer for persisting annotations.
@@ -302,7 +336,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     }
 
     annotationsSaveTimer.current = setTimeout(() => {
-      const serialized = serializeKeyframes(keyframesRef.current ?? []);
+      const serialized = serializeKeyframes(
+        keyframesRef.current ?? [],
+        refResolutionRef.current,
+      );
 
       if (serialized === lastSavedAnnotationsRef.current) {
         return;
@@ -389,7 +426,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       clearTimeout(annotationsSaveTimer.current);
       annotationsSaveTimer.current = null;
 
-      const serialized = serializeKeyframes(keyframesRef.current ?? []);
+      const serialized = serializeKeyframes(
+        keyframesRef.current ?? [],
+        refResolutionRef.current,
+      );
 
       if (serialized !== lastSavedAnnotationsRef.current) {
         lastSavedAnnotationsRef.current = serialized;
@@ -734,6 +774,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     if (!player1.current || Number.isNaN(player1.current.duration)) {
       return;
     }
+
+    // Metadata is loaded by now, so the intrinsic frame size is available —
+    // capture it as the reference space for new annotation records.
+    captureRefResolution();
 
     persistentProgress.current = player1.current.currentTime;
     setDuration(player1.current.duration);
@@ -1694,6 +1738,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
           mode={mode}
           elements={elements}
           sceneKey={sceneKey}
+          refResolution={refResolution}
           onDrawingChange={onDrawingChange}
           appState={appState}
         />
