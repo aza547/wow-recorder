@@ -1931,6 +1931,14 @@ const wowInstallSearchPaths = [
   'E:\\Program Files (x86)\\World of Warcraft',
 ];
 
+// PTR dummy dome encounters. Just added these in-case we want
+// to do something with them one day. Not actually used them yet.
+//   - '6/26/2026 22:56:59.0091 ENCOUNTER_START,3590,"Diabolical Duo",3,10,3105',
+//   - '6/26/2026 22:58:06.5911 ENCOUNTER_START,3591,"Sinister Single",3,10,3105',
+//   - '6/26/2026 22:59:29.1651 ENCOUNTER_START,3593,"Fearsome Five",3,10,3105',
+//   - '6/26/2026 22:59:54.4311 ENCOUNTER_START,3594,"Hazardous Healer",3,10,3105',
+const dummyDomeEncounterIds = [3590, 3591, 3593, 3594];
+
 export {
   months,
   categoryTabSx,
@@ -1965,4 +1973,5 @@ export {
   mopChallengeModes,
   mopChallengeModesTimers,
   wowInstallSearchPaths,
+  dummyDomeEncounterIds,
 };
