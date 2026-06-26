@@ -378,6 +378,19 @@ const currentRetailEncounters = [
   // Midnight - Sporefall
   3159, // Rotmire
 
+  // Midnight - The Venomous Abyss
+  3470, // Nek'zali the Soulcoiler
+  3445, // Entombed Sentinels
+  3455, // Vashnik the Malignant
+  3497, // The Lost Explorers
+  3420, // Sszorak
+  3421, // The Twin Fangs
+  3429, // The Coiled Altar
+  3492, // Ula'tek
+
+  // Midnight - The Tidebound Grotto
+  3379, // Nymrissa Wavecaller
+
   // Test Encounter
   9999, // Saves having to update the test button data.
 ];
@@ -478,7 +491,6 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   2441: 'Tazavesh the Veiled Market',
 
   // Dragonflight S1
-  2521: 'Ruby Life Pools',
   2516: 'The Nokhud Offensive',
   2515: 'The Azure Vault',
   2526: "Algeth'ar Academy",
@@ -532,14 +544,22 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   // Taken from https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua#L487.
   2805: 'Windrunner Spire',
   2811: "Magisters' Terrace",
-  2813: 'Murder Row',
-  2825: 'Den of Nalorakk',
-  2859: 'The Blinding Vale',
   2874: 'Maisara Caverns',
   2915: 'Nexus-Point Xenas',
   658: 'Pit of Saron',
   1209: 'Skyreach',
   1753: 'Seat of the Triumvirate',
+
+  // Midnight S2.
+  // Taken from https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua#L487.
+  2521: 'Ruby Life Pools',
+  2813: 'Murder Row',
+  2825: 'Den of Nalorakk',
+  2859: 'The Blinding Vale',
+  2923: 'Voidscar Arena',
+  2993: 'Altar of Fangs',
+  1877: 'Temple of Sethraliss',
+  1762: "Kings' Rest",
 };
 
 /**
@@ -567,7 +587,6 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   392: 'Tazavesh: Gambit',
 
   // Dragonflight S1
-  399: 'Ruby Life Pools',
   400: 'The Nokhud Offensive',
   401: 'The Azure Vault',
   402: "Algeth'ar Academy",
@@ -596,7 +615,7 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   168: 'The Everbloom',
   456: 'Throne of the Tides',
 
-  // TWW S1 - taken from WoWhead, searching for "set keystone map X".
+  // TWW S1 - taken from WoWhead, searching for "set keystone map: X".
   353: 'Siege of Boralus',
   501: 'The Stonevault',
   502: 'City of Threads',
@@ -604,7 +623,7 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   505: 'The Dawnbreaker',
   507: 'Grim Batol',
 
-  // TWW S2 - taken from WoWhead, searching for "set keystone map X".
+  // TWW S2 - taken from WoWhead, searching for "set keystone map: X".
   499: 'Priory of the Sacred Flame',
   504: 'Darkflame Cleft',
   500: 'The Rookery',
@@ -612,10 +631,10 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   247: 'THE MOTHERLODE!!',
   525: 'Operation: Floodgate',
 
-  // TWW S3 - taken from WoWhead, searching for "set keystone map X".
+  // TWW S3 - taken from WoWhead, searching for "set keystone map: X".
   542: "Eco-Dome Al'Dani",
 
-  // Midnight Season 1 - taken from WoWhead, searching for "set keystone map X".
+  // Midnight Season 1 - taken from WoWhead, searching for "set keystone map: X".
   558: "Magister's Terrace",
   560: 'Maisara Caverns',
   559: 'Nexus-Point Xenas',
@@ -623,6 +642,16 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   556: 'Pit of Saron',
   239: 'Seat of the Triumvirate',
   161: 'Skyreach',
+
+  // Midnight Season 2 - taken from WoWhead, searching for "set keystone map: X".
+  399: 'Ruby Life Pools',
+  587: 'Murder Row',
+  586: 'Den of Nalorakk',
+  584: 'The Blinding Vale',
+  585: 'Voidscar Arena',
+  588: 'Altar of Fangs',
+  250: 'Temple of Sethraliss',
+  249: "Kings' Rest",
 };
 
 /**
@@ -655,7 +684,6 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   166: [30 * 60, 24 * 60, 18 * 60],
 
   // Dragonflight S1
-  399: [30 * 60, 24 * 60, 18 * 60],
   400: [40 * 60, 32 * 60, 24 * 60],
   401: [37 * 60 + 30, 30 * 60, 22 * 60 + 30],
   200: [38 * 60, 30 * 60 + 24, 22 * 60 + 48],
@@ -717,6 +745,17 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   556: [30 * 60, 24 * 60, 18 * 60], // Pit of Saron
   239: [34 * 60, 27 * 60 + 12, 20 * 60 + 24], // Seat of the Triumvirate
   161: [28 * 60, 22 * 60 + 36, 16 * 60 + 42], // Skyreach
+
+  // Midnight S2
+  // Placeholder values for now. Needs updated before season starts.
+  399: [30 * 60, 24 * 60, 18 * 60], // Ruby Life Pools
+  587: [30 * 60, 24 * 60, 18 * 60], // Murder Row
+  586: [30 * 60, 24 * 60, 18 * 60], // Den of Nalorakk
+  584: [30 * 60, 24 * 60, 18 * 60], // The Blinding Vale
+  585: [30 * 60, 24 * 60, 18 * 60], // Voidscar Arena
+  588: [30 * 60, 24 * 60, 18 * 60], // Altar of Fangs
+  250: [30 * 60, 24 * 60, 18 * 60], // Temple of Sethraliss
+  249: [30 * 60, 24 * 60, 18 * 60], // Kings' Rest
 };
 
 // Useful database for grabbing this stuff:
@@ -1073,6 +1112,45 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1701: 'High Sage Viryx',
   1698: 'Ranjit',
   1700: 'Rukhran',
+
+  // Murder Row
+  3101: 'Kystia Manaheart',
+  3102: 'Zaen Bladesorrow',
+  3103: 'Xathuux the Annihilator',
+  3105: 'Lithiel Cinderfury',
+
+  // Den of Nalorakk
+  3207: 'The Hoardmonger',
+  3208: 'Sentinel of Winter',
+  3209: 'Nalorakk',
+
+  // The Blinding Vale
+  3199: 'Lightblossom Trinity',
+  3200: 'Ikuzz the Light Hunter',
+  3201: 'Lightwarden Ruia',
+  3202: 'Ziekket',
+
+  // Voidscar Arena
+  3285: "Taz'Rah",
+  3286: 'Atroxus',
+  3287: 'Charonus',
+
+  // Altar of Fangs
+  3456: "Rav'i",
+  3457: 'The Writhing Coil',
+  3458: "Zul'jan",
+
+  // Temple of Sethraliss
+  2124: 'Adderis and Aspix',
+  2125: 'Merektha',
+  2126: 'Galvazzt',
+  2127: 'Avatar of Sethraliss',
+
+  // Kings' Rest
+  2139: 'The Golden Serpent',
+  2142: 'Mchimba the Embalmer',
+  2140: 'The Council of Tribes',
+  2143: 'Dazar, The First King',
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
