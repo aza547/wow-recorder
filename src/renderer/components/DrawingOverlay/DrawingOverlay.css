@@ -4,6 +4,17 @@
     background-color: transparent;
 }
 
+/* Excalidraw's dark theme runs every canvas through
+   `filter: invert(93%) hue-rotate(180deg)` so its light-mode scene looks right
+   on a dark UI. Over our transparent video overlay that just desaturates/shifts
+   the user's colours (pure red -> muted pink). Neutralise the theme filter
+   variable inside the overlay so strokes — and the colour-picker swatches /
+   eyedropper, which reference the same variable — render in true sRGB, while the
+   dark UI chrome (styled via colour tokens, not this filter) stays dark. */
+.drawing-overlay .excalidraw.theme--dark {
+    --theme-filter: none;
+}
+
 /* Hide only the main menu button */
 .excalidraw .main-menu-trigger {
     display: none !important;
