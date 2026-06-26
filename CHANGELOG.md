@@ -6,8 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [7.9.0] - 2026-06-26
+### Changed
 - Update to Electron 42 and related packages.
 ### Added
+- Midnight Season 2 dungeon and raid support.
 ### Fixed
 - Accept `wow_anniversary` as a classic combat log path. Support for anniversary realms is still best effort but should just work in most cases.
 - Fix a bug where classic raids did not correctly calculate the boss HP.
