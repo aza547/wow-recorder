@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add 12.1.0 PTR flavor ('wowt') to valid retail PTR log paths.
 - Accept "Wowt.exe" as a process name in addition to "WowT.exe" for PTR clients.
 - Tooltips now don't close if clicked.
+- Fix issue where the diagnostics dialog could be hidden behind the preview on the scene tab.
 
 ## [7.8.2] - 2026-06-17
 ### Fixed

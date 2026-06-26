@@ -43,7 +43,6 @@ import { setConfigValue } from './useSettings';
 import { getCategoryIndex } from './rendererutils';
 import Menu from './components/Menu';
 import Separator from './components/Separator/Separator';
-import LogsButton from './LogButton';
 import TestButton from './TestButton';
 import DiscordButton from './DiscordButton';
 import ApplicationStatusCard from './containers/ApplicationStatusCard/ApplicationStatusCard';
@@ -311,7 +310,10 @@ const SideMenu = (props: IProps) => {
             updateAvailable={updateAvailable}
             appState={appState}
           />
-          <DiagnosticsDialog appState={appState}>
+          <DiagnosticsDialog
+            appState={appState}
+            setPreviewEnabled={setPreviewEnabled}
+          >
             <Button variant="ghost" size="icon">
               <FileText size={20} />
             </Button>
