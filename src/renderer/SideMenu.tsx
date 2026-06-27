@@ -9,6 +9,7 @@ import {
   HardHat,
   MonitorCog,
   Play,
+  Radio,
   Square,
   Sword,
   Swords,
@@ -220,8 +221,37 @@ const SideMenu = (props: IProps) => {
     );
   };
 
-  const handleChangeCategory = (newCategory: VideoCategory) => {
-    const index = getCategoryIndex(newCategory);
+  const renderLiveTab = () => {
+    return (
+      <Menu.Item value={Pages.LiveReplay} className="py-1.5">
+        <Menu.Item.Icon>
+          <Radio className="text-[#bb4420]" />
+        </Menu.Item.Icon>
+
+        <span className="font-semibold text-[#bb4420] drop-shadow-[0_0_6px_rgba(187,68,32,0.35)] animate-pulse">
+          Live Replay
+        </span>
+      </Menu.Item>
+    );
+  };
+
+  const handleChangeCategory = (value: VideoCategory | Pages.LiveReplay) => {
+    if (value === Pages.LiveReplay) {
+      setAppState((prev) => {
+        return {
+          ...prev,
+          videoFilterTags: [],
+          page: Pages.LiveReplay,
+          selectedVideos: [],
+          multiPlayerMode: false,
+          playing: false,
+        };
+      });
+
+      return;
+    }
+
+    const index = getCategoryIndex(value);
     setConfigValue('selectedCategory', index);
     persistentProgress.current = 0;
 
@@ -230,7 +260,7 @@ const SideMenu = (props: IProps) => {
         ...prevState,
         videoFilterTags: [],
         page: Pages.None,
-        category: newCategory,
+        category: value,
         selectedVideos: [],
         multiPlayerMode: false,
         playing: false,
@@ -290,6 +320,7 @@ const SideMenu = (props: IProps) => {
           {renderCategoryTab(VideoCategory.Battlegrounds, <Goal />)}
           {renderCategoryTab(VideoCategory.Manual, <HardHat />)}
           {renderCategoryTab(VideoCategory.Clips, <Clapperboard />)}
+          {recorderStatus === RecStatus.Recording && renderLiveTab()}
         </Menu>
         <Separator className="my-5" />
         <Menu

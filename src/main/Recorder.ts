@@ -534,11 +534,11 @@ export default class Recorder extends EventEmitter {
     await Recorder.createRecordingDirs(outputPath);
     await this.cleanup(outputPath);
 
-    // Record in MKV to avoid file corruption on crashes. MP4 cannot be
+    // Record in fragmented MP4 to avoid file corruption on crashes. MP4 cannot be
     // recovered in that event but MKV can. We will remux to MP4 for browser
     // player compatibility in the VideoProcessQueue.
     console.info('[Recorder] Set recording directory', outputPath);
-    noobs.SetRecordingCfg(outputPath, 'mkv');
+    noobs.SetRecordingCfg(outputPath, 'mp4');
 
     // Configure the encoder. It's possible that a user has replaced their
     // GPU since we last ran, so double check the encoder is still valid.
@@ -1104,6 +1104,7 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Log path:', logPath);
     noobs.Init(noobsPath, logPath, cb);
     noobs.SetBuffering(true);
+    noobs.SetFragmentation(true);
 
     const hwnd = getNativeWindowHandle();
     noobs.InitPreview(hwnd);
