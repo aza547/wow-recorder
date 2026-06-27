@@ -221,36 +221,21 @@ const SideMenu = (props: IProps) => {
     );
   };
 
-  const renderLiveTab = () => {
+  const renderInstantReplayTab = () => {
     return (
-      <Menu.Item value={Pages.LiveReplay} className="py-1.5">
+      <Menu.Item value={Pages.LiveReplay} className="py-1.5 my-2">
         <Menu.Item.Icon>
           <Radio className="text-[#bb4420]" />
         </Menu.Item.Icon>
 
         <span className="font-semibold text-[#bb4420] drop-shadow-[0_0_6px_rgba(187,68,32,0.35)] animate-pulse">
-          Live Replay
+          Instant Replay
         </span>
       </Menu.Item>
     );
   };
 
-  const handleChangeCategory = (value: VideoCategory | Pages.LiveReplay) => {
-    if (value === Pages.LiveReplay) {
-      setAppState((prev) => {
-        return {
-          ...prev,
-          videoFilterTags: [],
-          page: Pages.LiveReplay,
-          selectedVideos: [],
-          multiPlayerMode: false,
-          playing: false,
-        };
-      });
-
-      return;
-    }
-
+  const handleChangeCategory = (value: VideoCategory) => {
     const index = getCategoryIndex(value);
     setConfigValue('selectedCategory', index);
     persistentProgress.current = 0;
@@ -298,15 +283,22 @@ const SideMenu = (props: IProps) => {
         appState={appState}
         setPreviewEnabled={setPreviewEnabled}
       />
-      <Separator className="mb-4" />
+      <Separator />
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
       >
         <Menu
+          initialValue={appState.page !== Pages.None ? appState.page : false}
+          onChange={handleChangePage}
+        >
+          {recorderStatus === RecStatus.Recording && renderInstantReplayTab()}
+        </Menu>
+        <Menu
           initialValue={appState.page === Pages.None ? category : false}
           onChange={handleChangeCategory}
         >
+          <Separator className="mb-4" />
           <Menu.Label>
             {getLocalePhrase(language, Phrase.RecordingsHeading)}
           </Menu.Label>
@@ -320,7 +312,6 @@ const SideMenu = (props: IProps) => {
           {renderCategoryTab(VideoCategory.Battlegrounds, <Goal />)}
           {renderCategoryTab(VideoCategory.Manual, <HardHat />)}
           {renderCategoryTab(VideoCategory.Clips, <Clapperboard />)}
-          {recorderStatus === RecStatus.Recording && renderLiveTab()}
         </Menu>
         <Separator className="my-5" />
         <Menu

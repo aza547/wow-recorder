@@ -11,6 +11,7 @@ import { ConfigurationSchema } from 'config/configSchema';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';
+import InstantReplay from './InstantReplay';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -87,10 +88,17 @@ const Layout = (props: IProps) => {
     );
   };
 
+  const renderInstantReplay = () => {
+    return (
+      <InstantReplay appState={appState} recorderStatus={recorderStatus} />
+    );
+  };
+
   return (
     <>
       {page === Pages.Settings && renderSettingsPage()}
       {page === Pages.SceneEditor && renderSceneEditor()}
+      {page === Pages.LiveReplay && renderInstantReplay()}
       {page === Pages.None && renderCategoryPage()}
     </>
   );

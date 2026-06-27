@@ -43,6 +43,7 @@ import {
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
 import {
+  getBaseConfig,
   getObsAudioConfig,
   getObsVideoConfig,
   getOverlayConfig,
@@ -397,6 +398,26 @@ export default class Recorder extends EventEmitter {
 
     ipcMain.handle('getSensibleEncoderDefault', (): string => {
       return this.getSensibleEncoderDefault();
+    });
+
+    ipcMain.handle('getRecordingFilePath', async (): Promise<string | null> => {
+      if (this.obsState !== ERecordingState.Recording) {
+        return null;
+      }
+
+      const { obsPath } = getBaseConfig(this.cfg);
+
+      try {
+        const files = await getSortedFiles(
+          obsPath,
+          '.*\\.mp4',
+          FileSortDirection.NewestFirst,
+        );
+
+        return files.length > 0 ? files[0].name : null;
+      } catch {
+        return null;
+      }
     });
   }
 
