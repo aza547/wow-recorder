@@ -96,7 +96,7 @@ const SideMenu = (props: IProps) => {
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
-  const { category, language } = appState;
+  const { category, language, inProgressRecordingPath, page } = appState;
   const lastManualStartStopClickRef = useRef(0);
 
   useEffect(() => {
@@ -111,6 +111,21 @@ const SideMenu = (props: IProps) => {
     // If the recording status changes, reset the last manual start/stop click time.
     lastManualStartStopClickRef.current = 0;
   }, [recorderStatus]);
+
+  useEffect(() => {
+    // Navigate away from the Instant Replay page if there is no
+    // in-progress recording.
+    if (inProgressRecordingPath || page !== Pages.InstantReplay) {
+      return;
+    }
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        page: Pages.None,
+      };
+    });
+  }, [inProgressRecordingPath, page]);
 
   const renderManualStopStartButton = () => {
     const recordingOrReady =
@@ -223,7 +238,7 @@ const SideMenu = (props: IProps) => {
 
   const renderInstantReplayTab = () => {
     return (
-      <Menu.Item value={Pages.LiveReplay} className="py-1.5 my-2">
+      <Menu.Item value={Pages.InstantReplay} className="py-1.5 my-2">
         <Menu.Item.Icon>
           <Radio className="text-[#bb4420]" />
         </Menu.Item.Icon>
@@ -283,17 +298,25 @@ const SideMenu = (props: IProps) => {
         appState={appState}
         setPreviewEnabled={setPreviewEnabled}
       />
-      <Separator />
+
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
       >
-        <Menu
-          initialValue={appState.page !== Pages.None ? appState.page : false}
-          onChange={handleChangePage}
-        >
-          {recorderStatus === RecStatus.Recording && renderInstantReplayTab()}
-        </Menu>
+        {inProgressRecordingPath && (
+          <>
+            <Separator />
+            <Menu
+              initialValue={
+                appState.page !== Pages.None ? appState.page : false
+              }
+              onChange={handleChangePage}
+            >
+              {renderInstantReplayTab()}
+            </Menu>
+          </>
+        )}
+
         <Menu
           initialValue={appState.page === Pages.None ? category : false}
           onChange={handleChangeCategory}

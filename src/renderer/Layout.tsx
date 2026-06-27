@@ -98,7 +98,7 @@ const Layout = (props: IProps) => {
     <>
       {page === Pages.Settings && renderSettingsPage()}
       {page === Pages.SceneEditor && renderSceneEditor()}
-      {page === Pages.LiveReplay && renderInstantReplay()}
+      {page === Pages.InstantReplay && renderInstantReplay()}
       {page === Pages.None && renderCategoryPage()}
     </>
   );

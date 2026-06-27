@@ -324,7 +324,7 @@ enum Pages {
   'None',
   'SceneEditor',
   'Settings',
-  'LiveReplay',
+  'InstantReplay',
 }
 
 /**
@@ -355,6 +355,7 @@ type AppState = {
   diskStatus: DiskStatus;
   chatOpen: boolean;
   preferredViewpoint: string;
+  inProgressRecordingPath: string;
 };
 
 type AdvancedLoggingStatus = {

@@ -127,6 +127,9 @@ const WarcraftRecorder = () => {
     // This is updated when a user switches viewpoint to in the viewpoint
     // selector to remember their preference when changing rows in the table.
     preferredViewpoint: '',
+
+    // For instant replay.
+    inProgressRecordingPath: '',
   });
 
   // The video state contains most of the frontend state.
