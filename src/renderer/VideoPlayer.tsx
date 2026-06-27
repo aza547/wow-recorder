@@ -1264,14 +1264,19 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * such events, so instead we do this.
    */
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (!player1.current) {
+    if (e.key === 'k' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (player1.current && !e.repeat) {
+        togglePlaying();
+      }
+
       return;
     }
 
-    if (e.key === 'k' || e.key === ' ') {
-      togglePlaying();
-      e.preventDefault();
-      e.stopPropagation();
+    if (!player1.current) {
+      return;
     }
 
     if (e.key === 'j' || e.key === 'ArrowLeft') {
