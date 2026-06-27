@@ -1,4 +1,4 @@
-import LogHandler from './LogHandler';
+import LogHandler, { LogHandlerSource } from './LogHandler';
 import { Flavour } from '../main/types';
 import { isUnitPlayer } from './logutils';
 import LogLine from './LogLine';
@@ -10,7 +10,7 @@ import { classicUniqueSpecSpells } from '../main/constants';
  */
 export default class EraLogHandler extends LogHandler {
   constructor(logPath: string) {
-    super(logPath, 2);
+    super(logPath, 2, LogHandlerSource.Era);
 
     /* eslint-disable prettier/prettier */
     this.combatLogWatcher
@@ -49,6 +49,10 @@ export default class EraLogHandler extends LogHandler {
       return;
     }
 
+    if (this.shouldIgnoreActiveActivity('combatant info')) {
+      return;
+    }
+
     const GUID = line.arg(1);
     const teamID = parseInt(line.arg(2), 10);
 
@@ -71,7 +75,11 @@ export default class EraLogHandler extends LogHandler {
   }
 
   private handleSpellAuraAppliedLine(line: LogLine) {
-    if (!LogHandler.activity || this.isManual()) {
+    if (
+      !LogHandler.activity ||
+      this.isManual() ||
+      this.shouldIgnoreActiveActivity('spell aura')
+    ) {
       // Deliberately don't log anything here as we hit this a lot
       return;
     }
@@ -83,7 +91,11 @@ export default class EraLogHandler extends LogHandler {
   }
 
   private handleSpellCastSuccess(line: LogLine) {
-    if (!LogHandler.activity || this.isManual()) {
+    if (
+      !LogHandler.activity ||
+      this.isManual() ||
+      this.shouldIgnoreActiveActivity('spell cast')
+    ) {
       // Deliberately don't log anything here as we hit this a lot
       return;
     }
@@ -121,6 +133,10 @@ export default class EraLogHandler extends LogHandler {
       return undefined;
     }
 
+    if (this.shouldIgnoreActiveActivity('era combatant processing')) {
+      return undefined;
+    }
+
     const combatant = super.processCombatant(
       srcGUID,
       srcNameRealm,
@@ -145,6 +161,10 @@ export default class EraLogHandler extends LogHandler {
 
     if (!LogHandler.activity) {
       console.info('[EraLogHandler] Ignoring line as no activity in progress');
+      return;
+    }
+
+    if (this.shouldIgnoreActiveActivity('unit death')) {
       return;
     }
 

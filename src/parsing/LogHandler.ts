@@ -42,6 +42,14 @@ import { ESupportedEncoders } from 'main/obsEnums';
  * typically have up to 4 child classes, we don't want multiple concurrent
  * activities.
  */
+export enum LogHandlerSource {
+  Retail = 'retail',
+  RetailPtr = 'retailPtr',
+  Classic = 'classic',
+  ClassicPtr = 'classicPtr',
+  Era = 'era',
+}
+
 export default abstract class LogHandler {
   public static activity: Activity | undefined;
 
@@ -50,6 +58,11 @@ export default abstract class LogHandler {
   public combatLogWatcher: CombatLogWatcher;
 
   protected player: Combatant | undefined;
+
+  protected readonly source: LogHandlerSource;
+
+  // The active activity is shared, so remember which watcher is allowed to mutate it.
+  private static activitySource: LogHandlerSource | undefined;
 
   private static stateChangeCallback: () => void;
 
@@ -60,7 +73,8 @@ export default abstract class LogHandler {
    */
   protected logProcessQueue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
 
-  constructor(logPath: string, dataTimeout: number) {
+  constructor(logPath: string, dataTimeout: number, source: LogHandlerSource) {
+    this.source = source;
     this.combatLogWatcher = new CombatLogWatcher(logPath, dataTimeout);
     this.combatLogWatcher.watch();
     const lpq = this.logProcessQueue;
@@ -71,7 +85,7 @@ export default abstract class LogHandler {
 
     // For ease of testing force stop.
     this.combatLogWatcher.on('WARCRAFT_RECORDER_FORCE_STOP', () => {
-      lpq.add(async () => LogHandler.forceEndActivity());
+      lpq.add(async () => LogHandler.forceEndActivity(0, this.source));
     });
   }
 
@@ -124,7 +138,7 @@ export default abstract class LogHandler {
       flavour,
     );
 
-    await LogHandler.startActivity(activity);
+    await this.startActivity(activity);
   }
 
   protected async handleEncounterEndLine(line: LogLine) {
@@ -137,6 +151,16 @@ export default abstract class LogHandler {
 
     if (!LogHandler.activity) {
       console.info('[LogHandler] Encounter stop with no active encounter');
+      return;
+    }
+
+    if (!this.ownsActiveActivity()) {
+      console.info(
+        '[LogHandler] Ignoring encounter end from source',
+        this.source,
+        'for active source',
+        LogHandler.activitySource,
+      );
       return;
     }
 
@@ -163,6 +187,10 @@ export default abstract class LogHandler {
 
   protected handleUnitDiedLine(line: LogLine): void {
     if (!LogHandler.activity) {
+      return;
+    }
+
+    if (this.shouldIgnoreActiveActivity('unit death')) {
       return;
     }
 
@@ -208,12 +236,33 @@ export default abstract class LogHandler {
     LogHandler.activity.addDeath(playerDeath);
   }
 
-  protected static async startActivity(activity: Activity) {
+  protected async startActivity(activity: Activity) {
+    await LogHandler.startActivity(activity, this.source);
+  }
+
+  protected static async startActivity(
+    activity: Activity,
+    source?: LogHandlerSource,
+  ) {
     const { category } = activity;
     const allowed = allowRecordCategory(ConfigService.getInstance(), category);
 
     if (!allowed) {
       console.info('[LogHandler] Not configured to record', category);
+      return;
+    }
+
+    if (
+      LogHandler.activity &&
+      !LogHandler.activeActivityMatchesSource(source)
+    ) {
+      // Another log source may emit starts while a recording is active.
+      console.info(
+        '[LogHandler] Ignoring activity start from source',
+        source,
+        'for active source',
+        LogHandler.activitySource,
+      );
       return;
     }
 
@@ -230,11 +279,13 @@ export default abstract class LogHandler {
 
     try {
       LogHandler.activity = activity;
+      LogHandler.activitySource = source;
       await Recorder.getInstance().startRecording(offset);
       LogHandler.stateChangeCallback();
     } catch (error) {
       console.error('[LogHandler] Error starting activity', String(error));
       LogHandler.activity = undefined;
+      LogHandler.activitySource = undefined;
     }
   }
 
@@ -258,6 +309,7 @@ export default abstract class LogHandler {
     const lastActivity = LogHandler.activity;
     LogHandler.overrunning = true;
     LogHandler.activity = undefined;
+    LogHandler.activitySource = undefined;
 
     const { overrun } = lastActivity;
 
@@ -365,13 +417,69 @@ export default abstract class LogHandler {
     );
 
     if (LogHandler.activity) {
-      await LogHandler.forceEndActivity(-ms / 1000);
+      await LogHandler.forceEndActivity(-ms / 1000, this.source);
     }
   }
 
-  public static async forceEndActivity(timedelta = 0) {
+  protected ownsActiveActivity() {
+    return LogHandler.activeActivityMatchesSource(this.source);
+  }
+
+  // Use before parser events mutate metadata on the shared active activity.
+  protected shouldIgnoreActiveActivity(reason: string) {
+    if (!LogHandler.activity || this.ownsActiveActivity()) {
+      return false;
+    }
+
+    console.info(
+      `[LogHandler] Ignoring ${reason} from source`,
+      this.source,
+      'for active source',
+      LogHandler.activitySource,
+    );
+    return true;
+  }
+
+  protected async endActivityForSource(reason: string) {
+    if (!this.ownsActiveActivity()) {
+      console.info(
+        `[LogHandler] Ignoring ${reason} from source`,
+        this.source,
+        'for active source',
+        LogHandler.activitySource,
+      );
+      return;
+    }
+
+    await LogHandler.endActivity();
+  }
+
+  private static activeActivityMatchesSource(source?: LogHandlerSource) {
+    if (source === undefined) {
+      // Manual/global controls intentionally operate across all sources.
+      return true;
+    }
+
+    return LogHandler.activitySource === source;
+  }
+
+  public static async forceEndActivity(
+    timedelta = 0,
+    source?: LogHandlerSource,
+  ) {
     if (!LogHandler.activity) {
       console.error('[LogHandler] forceEndActivity called but no activity');
+      return;
+    }
+
+    if (!LogHandler.activeActivityMatchesSource(source)) {
+      // Timeouts and force-stops are per watcher, not global.
+      console.info(
+        '[LogHandler] Ignoring force end from source',
+        source,
+        'for active source',
+        LogHandler.activitySource,
+      );
       return;
     }
 
@@ -382,12 +490,12 @@ export default abstract class LogHandler {
 
     LogHandler.activity.end(endDate, false);
     await LogHandler.endActivity();
-    LogHandler.activity = undefined;
   }
 
   public static dropActivity() {
     LogHandler.overrunning = false;
     LogHandler.activity = undefined;
+    LogHandler.activitySource = undefined;
   }
 
   protected async zoneChangeStop(line: LogLine) {
@@ -397,13 +505,23 @@ export default abstract class LogHandler {
       return;
     }
 
+    if (!this.ownsActiveActivity()) {
+      console.info(
+        '[LogHandler] Ignoring zone change stop from source',
+        this.source,
+        'for active source',
+        LogHandler.activitySource,
+      );
+      return;
+    }
+
     const endDate = line.date();
     LogHandler.activity.end(endDate, false);
     await LogHandler.endActivity();
   }
 
   protected isArena() {
-    if (!LogHandler.activity) {
+    if (!LogHandler.activity || !this.ownsActiveActivity()) {
       return false;
     }
 
@@ -419,7 +537,7 @@ export default abstract class LogHandler {
   }
 
   protected isBattleground() {
-    if (!LogHandler.activity) {
+    if (!LogHandler.activity || !this.ownsActiveActivity()) {
       return false;
     }
 
@@ -428,7 +546,7 @@ export default abstract class LogHandler {
   }
 
   protected isMythicPlus() {
-    if (!LogHandler.activity) {
+    if (!LogHandler.activity || !this.ownsActiveActivity()) {
       return false;
     }
 
@@ -442,7 +560,7 @@ export default abstract class LogHandler {
   }
 
   protected isRaid() {
-    if (!LogHandler.activity) return false;
+    if (!LogHandler.activity || !this.ownsActiveActivity()) return false;
     return LogHandler.activity.category === VideoCategory.Raids;
   }
 
@@ -455,6 +573,10 @@ export default abstract class LogHandler {
     let combatant: Combatant | undefined;
 
     if (!LogHandler.activity) {
+      return combatant;
+    }
+
+    if (this.shouldIgnoreActiveActivity('combatant processing')) {
       return combatant;
     }
 
@@ -502,6 +624,10 @@ export default abstract class LogHandler {
   }
 
   protected handleSpellDamage(line: LogLine) {
+    if (this.shouldIgnoreActiveActivity('spell damage')) {
+      return;
+    }
+
     if (!this.isRaid()) {
       return;
     }

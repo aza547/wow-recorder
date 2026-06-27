@@ -44,7 +44,7 @@ import {
   runRetailRecordingTest,
 } from '../utils/testButtonUtils';
 import VideoProcessQueue from './VideoProcessQueue';
-import LogHandler from 'parsing/LogHandler';
+import LogHandler, { LogHandlerSource } from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
@@ -504,7 +504,7 @@ export default class Manager {
     }
 
     if (config.recordClassicPtr) {
-      this.classicPtrLogHandler = new ClassicLogHandler(config.classicPtrLogPath);
+      this.classicPtrLogHandler = new ClassicLogHandler(config.classicPtrLogPath, LogHandlerSource.ClassicPtr);
     }
 
     if (config.recordEra) {
@@ -512,7 +512,7 @@ export default class Manager {
     }
 
     if (config.recordRetailPtr) {
-      this.retailPtrLogHandler = new RetailLogHandler(config.retailPtrLogPath);
+      this.retailPtrLogHandler = new RetailLogHandler(config.retailPtrLogPath, LogHandlerSource.RetailPtr);
       this.retailPtrLogHandler.setIsPtr();
     }
   }

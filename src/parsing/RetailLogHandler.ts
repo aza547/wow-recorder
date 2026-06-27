@@ -11,7 +11,7 @@ import {
 } from '../main/constants';
 
 import ArenaMatch from '../activitys/ArenaMatch';
-import LogHandler from './LogHandler';
+import LogHandler, { LogHandlerSource } from './LogHandler';
 import Battleground from '../activitys/Battleground';
 import ChallengeModeDungeon from '../activitys/ChallengeModeDungeon';
 
@@ -34,8 +34,8 @@ import RaidEncounter from 'activitys/RaidEncounter';
 export default class RetailLogHandler extends LogHandler {
   private isPtr = false;
 
-  constructor(logPath: string) {
-    super(logPath, 10);
+  constructor(logPath: string, source = LogHandlerSource.Retail) {
+    super(logPath, 10, source);
 
     /* eslint-disable prettier/prettier */
     this.combatLogWatcher
@@ -74,7 +74,7 @@ export default class RetailLogHandler extends LogHandler {
       // Important we don't end an activity if we're in a Solo Shuffle,
       // we use the ARENA_MATCH_START events to keep track of the rounds.
       console.warn('[RetailLogHandler] Active activity on ARENA_START');
-      await LogHandler.forceEndActivity();
+      await LogHandler.forceEndActivity(0, this.source);
     }
 
     const startTime = line.date();
@@ -102,10 +102,19 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
+    if (LogHandler.activity && !this.ownsActiveActivity()) {
+      console.info(
+        '[RetailLogHandler] Ignoring arena start from source',
+        this.source,
+        'for active source owned by another handler',
+      );
+      return;
+    }
+
     if (!LogHandler.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] Fresh Solo Shuffle game starting');
       const activity = new SoloShuffle(startTime, zoneID);
-      await LogHandler.startActivity(activity);
+      await this.startActivity(activity);
     } else if (LogHandler.activity && category === VideoCategory.SoloShuffle) {
       console.info(
         '[RetailLogHandler] New round of existing Solo Shuffle starting',
@@ -122,7 +131,7 @@ export default class RetailLogHandler extends LogHandler {
         Flavour.Retail,
       );
 
-      await LogHandler.startActivity(activity);
+      await this.startActivity(activity);
     }
   }
 
@@ -139,16 +148,21 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
+    if (!this.ownsActiveActivity()) {
+      await this.endActivityForSource('arena end');
+      return;
+    }
+
     if (LogHandler.activity.category === VideoCategory.SoloShuffle) {
       const soloShuffle = LogHandler.activity as SoloShuffle;
       soloShuffle.endGame(line.date());
-      await LogHandler.endActivity();
+      await this.endActivityForSource('arena end');
     } else {
       const arenaMatch = LogHandler.activity as ArenaMatch;
       const endTime = line.date();
       const winningTeamID = parseInt(line.arg(1), 10);
       arenaMatch.endArena(endTime, winningTeamID);
-      await LogHandler.endActivity();
+      await this.endActivityForSource('arena end');
     }
   }
 
@@ -160,6 +174,10 @@ export default class RetailLogHandler extends LogHandler {
 
     if (this.isManual()) {
       console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
+    if (this.shouldIgnoreActiveActivity('challenge mode start')) {
       return;
     }
 
@@ -223,7 +241,7 @@ export default class RetailLogHandler extends LogHandler {
     );
 
     activity.addTimelineSegment(initialSegment);
-    await LogHandler.startActivity(activity);
+    await this.startActivity(activity);
   }
 
   private async handleChallengeModeEndLine(line: LogLine) {
@@ -238,6 +256,11 @@ export default class RetailLogHandler extends LogHandler {
       console.error(
         '[RetailLogHandler] Challenge mode stop with no active ChallengeModeDungeon',
       );
+      return;
+    }
+
+    if (!this.ownsActiveActivity()) {
+      await this.endActivityForSource('challenge mode end');
       return;
     }
 
@@ -257,7 +280,7 @@ export default class RetailLogHandler extends LogHandler {
     }
 
     challengeModeActivity.endChallengeMode(endDate, CMDuration, result);
-    await LogHandler.endActivity();
+    await this.endActivityForSource('challenge mode end');
   }
 
   protected async handleEncounterStartLine(line: LogLine) {
@@ -265,6 +288,10 @@ export default class RetailLogHandler extends LogHandler {
 
     if (this.isManual()) {
       console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
+    if (this.shouldIgnoreActiveActivity('encounter start')) {
       return;
     }
 
@@ -289,7 +316,7 @@ export default class RetailLogHandler extends LogHandler {
       // if you abandon a key mid-pull and quickly start a raid boss
       // before WCR has realized the M+ is over.
       console.info('[RetailLogHandler] Active M+ but not a dungeon encounter');
-      await LogHandler.forceEndActivity();
+      await LogHandler.forceEndActivity(0, this.source);
     }
 
     if (!LogHandler.activity) {
@@ -372,6 +399,10 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
+    if (this.shouldIgnoreActiveActivity('encounter end')) {
+      return;
+    }
+
     const { category } = LogHandler.activity;
     const isChallengeMode = category === VideoCategory.MythicPlus;
 
@@ -414,6 +445,10 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
+    if (this.shouldIgnoreActiveActivity('zone change')) {
+      return;
+    }
+
     const zoneID = parseInt(line.arg(1), 10);
 
     const isZoneBG = Object.prototype.hasOwnProperty.call(
@@ -447,7 +482,7 @@ export default class RetailLogHandler extends LogHandler {
           '[RetailLogHandler] Zoned into BG but in a different activity',
         );
 
-        await LogHandler.forceEndActivity();
+        await LogHandler.forceEndActivity(0, this.source);
         await this.battlegroundStart(line);
       } else {
         console.info(
@@ -478,6 +513,10 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
+    if (this.shouldIgnoreActiveActivity('combatant info')) {
+      return;
+    }
+
     const GUID = line.arg(1);
 
     // In Mythic+ we see COMBANTANT_INFO events for each encounter.
@@ -503,7 +542,11 @@ export default class RetailLogHandler extends LogHandler {
   }
 
   private handleSpellAuraAppliedLine(line: LogLine) {
-    if (!LogHandler.activity || this.isManual()) {
+    if (
+      !LogHandler.activity ||
+      this.isManual() ||
+      this.shouldIgnoreActiveActivity('spell aura')
+    ) {
       // Deliberately don't log anything here as we can hit this a lot
       return;
     }
@@ -550,7 +593,11 @@ export default class RetailLogHandler extends LogHandler {
   }
 
   private handleSpellCastSuccess(line: LogLine) {
-    if (!LogHandler.activity || this.isManual()) {
+    if (
+      !LogHandler.activity ||
+      this.isManual() ||
+      this.shouldIgnoreActiveActivity('spell cast')
+    ) {
       // Deliberately don't log anything here as we can hit this a lot
       return;
     }
@@ -636,7 +683,7 @@ export default class RetailLogHandler extends LogHandler {
       Flavour.Retail,
     );
 
-    await LogHandler.startActivity(activity);
+    await this.startActivity(activity);
   }
 
   private async battlegroundEnd(line: LogLine) {
@@ -647,8 +694,13 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
+    if (!this.ownsActiveActivity()) {
+      await this.endActivityForSource('battleground end');
+      return;
+    }
+
     const endTime = line.date();
     LogHandler.activity.end(endTime, false);
-    await LogHandler.endActivity();
+    await this.endActivityForSource('battleground end');
   }
 }
