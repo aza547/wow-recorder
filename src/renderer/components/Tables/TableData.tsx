@@ -27,6 +27,7 @@ import {
   populateActivityCell,
   populateAffixesCell,
   populateCreatorCell,
+  populateSourceCell,
 } from './Cells';
 import {
   EncounterHeader,
@@ -58,6 +59,8 @@ const useTable = (
   videoState: RendererVideo[],
   appState: AppState,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
+  getClipParent: (clip: RendererVideo) => RendererVideo | undefined,
+  goToClipParent: (clip: RendererVideo) => void,
 ) => {
   const {
     category,
@@ -389,8 +392,17 @@ const useTable = (
         cell: (v) => populateViewpointCell(v),
         sortingFn: viewPointCountSort,
       },
+      {
+        id: 'Source',
+        size: 50,
+        accessorFn: (v) => v,
+        enableSorting: false,
+        header: DetailsHeader,
+        cell: (ctx) =>
+          populateSourceCell(ctx, language, getClipParent, goToClipParent),
+      },
     ],
-    [appState, setVideoState],
+    [appState, setVideoState, getClipParent, goToClipParent],
   );
 
   const manualColumns = useMemo<ColumnDef<RendererVideo>[]>(

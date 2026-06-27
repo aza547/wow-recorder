@@ -217,9 +217,7 @@ export default abstract class LogHandler {
       return;
     }
 
-    console.info(
-      `[LogHandler] Start recording a video for category: ${category}`,
-    );
+    console.info(`[LogHandler] Start an activity for category: ${category}`);
 
     // Offset is the number of seconds to cut back into the buffer. That way
     // the buffer length is irrelevant. It is physically impossible to have

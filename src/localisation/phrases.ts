@@ -225,6 +225,8 @@ enum Phrase {
   PlaybackSpeedTooltip,
   ClipTooltip,
   ClipUnavailableTooltip,
+  ClipSourceTooltip,
+  ClipSourceUnavailableTooltip,
   ConfirmTooltip,
   CancelTooltip,
   TagButtonTooltip,

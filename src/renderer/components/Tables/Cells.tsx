@@ -28,6 +28,7 @@ import {
   LockOpen,
   MessageSquare,
   MessageSquareMore,
+  ExternalLink,
 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
@@ -218,6 +219,42 @@ export const populateDetailsCell = (
     <Box className="inline-flex">
       {renderProtectedIcon()}
       {renderTagIcon()}
+    </Box>
+  );
+};
+
+export const populateSourceCell = (
+  ctx: CellContext<RendererVideo, unknown>,
+  language: Language,
+  getClipParent: (clip: RendererVideo) => RendererVideo | undefined,
+  goToClipParent: (clip: RendererVideo) => void,
+) => {
+  const video = ctx.getValue() as RendererVideo;
+  const parent = getClipParent(video);
+  const disabled = parent === undefined;
+  const tooltip = disabled
+    ? getLocalePhrase(language, Phrase.ClipSourceUnavailableTooltip)
+    : getLocalePhrase(language, Phrase.ClipSourceTooltip);
+
+  const goToSource = (e: React.MouseEvent<HTMLButtonElement>) => {
+    stopPropagation(e);
+    goToClipParent(video);
+  };
+
+  return (
+    <Box className="inline-flex">
+      <Tooltip content={tooltip}>
+        <div onClick={stopPropagation}>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={goToSource}
+            disabled={disabled}
+          >
+            <ExternalLink size={18} />
+          </Button>
+        </div>
+      </Tooltip>
     </Box>
   );
 };

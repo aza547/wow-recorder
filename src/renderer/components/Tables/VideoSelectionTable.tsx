@@ -1,12 +1,7 @@
 import { AppState, RendererVideo } from 'main/types';
 
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
-import React, {
-  Fragment,
-  RefObject,
-  useCallback,
-  useEffect,
-} from 'react';
+import React, { Fragment, RefObject, useCallback, useEffect } from 'react';
 import {
   ArrowDown,
   ArrowUp,
@@ -15,7 +10,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from 'lucide-react';
-import { povDiskFirstNameSort } from '../../rendererutils';
+import { povDiskFirstNameSort, videoMatch } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { getLocalePhrase } from 'localisation/translations';
 import { ScrollArea } from '../ScrollArea/ScrollArea';
@@ -35,11 +30,15 @@ interface IProps {
 const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, persistentProgress, table } = props;
   const {
+    category,
     videoFilterTags,
     dateRangeFilter,
     storageFilter,
     preferredViewpoint,
   } = appState;
+  const selectedVideo = appState.selectedVideos[0];
+  const { pageIndex, pageSize } = table.getState().pagination;
+  const selectedRowRef = React.useRef<HTMLTableRowElement>(null);
 
   /**
    * Mark the row as selected and update the video player to play the first
@@ -177,6 +176,41 @@ const VideoSelectionTable = (props: IProps) => {
     };
   }, [table, onRowClick, videoFilterTags, dateRangeFilter, storageFilter]);
 
+  useEffect(() => {
+    if (!selectedVideo) return undefined;
+
+    const sortedRows = table.getSortedRowModel().rows;
+    const selectedIndex = sortedRows.findIndex((row) =>
+      [row.original, ...row.original.multiPov].some((video) =>
+        videoMatch(video, selectedVideo),
+      ),
+    );
+
+    if (selectedIndex === -1) return undefined;
+
+    const selectedPageIndex = Math.floor(selectedIndex / pageSize);
+
+    if (selectedPageIndex !== pageIndex) {
+      table.setPageIndex(selectedPageIndex);
+      return undefined;
+    }
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      selectedRowRef.current?.scrollIntoView({ block: 'center' });
+    });
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [
+    category,
+    selectedVideo,
+    table,
+    pageIndex,
+    pageSize,
+    videoFilterTags,
+    dateRangeFilter,
+    storageFilter,
+  ]);
+
   /**
    * Render an individual header.
    */
@@ -255,6 +289,7 @@ const VideoSelectionTable = (props: IProps) => {
   const renderBaseRow = (
     row: Row<RendererVideo>,
     selected: boolean,
+    appStateSelected: boolean,
     sortedIndex: number,
   ) => {
     const cells = row.getVisibleCells();
@@ -269,6 +304,7 @@ const VideoSelectionTable = (props: IProps) => {
     return (
       <tr
         key={row.id}
+        ref={appStateSelected ? selectedRowRef : undefined}
         className={className}
         onClick={(event) => onRowClick(event, row)}
       >
@@ -281,13 +317,24 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>, sortedIndex: number) => {
+    // Programmatic navigation, such as jumping from a clip to its source,
+    // updates appState before react-table has a selected row in the new view.
+    const appStateSelected =
+      selectedVideo !== undefined &&
+      [row.original, ...row.original.multiPov].some((video) =>
+        videoMatch(video, selectedVideo),
+      );
+
     const selected =
       row.getIsSelected() ||
-      (!table.getIsSomeRowsSelected() && row.index === 0);
+      appStateSelected ||
+      (!table.getIsSomeRowsSelected() &&
+        appState.selectedVideos.length === 0 &&
+        row.index === 0);
 
     return (
       <Fragment key={row.id}>
-        {renderBaseRow(row, selected, sortedIndex)}
+        {renderBaseRow(row, selected, appStateSelected, sortedIndex)}
       </Fragment>
     );
   };
