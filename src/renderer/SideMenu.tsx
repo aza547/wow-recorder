@@ -74,6 +74,7 @@ interface IProps {
   activityStatus: ActivityStatus | null;
   advancedLoggingStatus: AdvancedLoggingStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
+  instantReplayPath: string;
 }
 
 const SideMenu = (props: IProps) => {
@@ -93,10 +94,11 @@ const SideMenu = (props: IProps) => {
     activityStatus,
     advancedLoggingStatus,
     setPreviewEnabled,
+    instantReplayPath,
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
-  const { category, language, inProgressRecordingPath, page } = appState;
+  const { category, language } = appState;
   const lastManualStartStopClickRef = useRef(0);
 
   useEffect(() => {
@@ -111,21 +113,6 @@ const SideMenu = (props: IProps) => {
     // If the recording status changes, reset the last manual start/stop click time.
     lastManualStartStopClickRef.current = 0;
   }, [recorderStatus]);
-
-  useEffect(() => {
-    // Navigate away from the Instant Replay page if there is no
-    // in-progress recording.
-    if (inProgressRecordingPath || page !== Pages.InstantReplay) {
-      return;
-    }
-
-    setAppState((prevState) => {
-      return {
-        ...prevState,
-        page: Pages.None,
-      };
-    });
-  }, [inProgressRecordingPath, page]);
 
   const renderManualStopStartButton = () => {
     const recordingOrReady =
@@ -303,7 +290,7 @@ const SideMenu = (props: IProps) => {
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
       >
-        {inProgressRecordingPath && (
+        {(instantReplayPath || appState.page === Pages.InstantReplay) && (
           <>
             <Separator />
             <Menu

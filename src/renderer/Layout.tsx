@@ -26,6 +26,7 @@ interface IProps {
   advancedLoggingStatus: AdvancedLoggingStatus;
   previewEnabled: boolean;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
+  instantReplayPath: string;
 }
 
 /**
@@ -45,6 +46,7 @@ const Layout = (props: IProps) => {
     advancedLoggingStatus,
     previewEnabled,
     setPreviewEnabled,
+    instantReplayPath,
   } = props;
   const { page, category } = appState;
 
@@ -90,10 +92,13 @@ const Layout = (props: IProps) => {
 
   const renderInstantReplay = () => {
     return (
-      <InstantReplay appState={appState} recorderStatus={recorderStatus} />
+      <InstantReplay
+        instantReplayPath={instantReplayPath}
+        recorderStatus={recorderStatus}
+      />
     );
   };
-
+  console.log('page', page);
   return (
     <>
       {page === Pages.Settings && renderSettingsPage()}

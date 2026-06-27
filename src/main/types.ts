@@ -355,7 +355,6 @@ type AppState = {
   diskStatus: DiskStatus;
   chatOpen: boolean;
   preferredViewpoint: string;
-  inProgressRecordingPath: string;
 };
 
 type AdvancedLoggingStatus = {

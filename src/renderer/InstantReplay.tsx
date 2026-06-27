@@ -9,7 +9,7 @@ import VolumeMuteIcon from '@mui/icons-material/VolumeMute';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import screenfull from 'screenfull';
-import { AppState, RecStatus, VideoPlayerSettings } from 'main/types';
+import { RecStatus, VideoPlayerSettings } from 'main/types';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Separator from './components/Separator/Separator';
@@ -23,30 +23,19 @@ const sliderSx = {
     color: 'white',
     width: '10px',
     height: '10px',
-    '&:hover': {
-      color: '#bb4220',
-      boxShadow: 'none',
-    },
+    '&:hover': { color: '#bb4220', boxShadow: 'none' },
   },
-  '& .MuiSlider-track': {
-    color: '#bb4220',
-    height: '4px',
-  },
-  '& .MuiSlider-rail': {
-    color: '#bb4220',
-    height: '4px',
-  },
-  '& .MuiSlider-active': {
-    color: '#bb4220',
-  },
+  '& .MuiSlider-track': { color: '#bb4220', height: '4px' },
+  '& .MuiSlider-rail': { color: '#bb4220', height: '4px' },
+  '& .MuiSlider-active': { color: '#bb4220' },
 };
 
 interface IProps {
-  appState: AppState;
+  instantReplayPath: string;
   recorderStatus: RecStatus;
 }
 
-const InstantReplay = ({ appState, recorderStatus }: IProps) => {
+const InstantReplay = ({ instantReplayPath, recorderStatus }: IProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const videoPlayerSettings = ipc.sendSync('videoPlayerSettings', [
@@ -56,15 +45,12 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
   const [volume, setVolume] = useState(videoPlayerSettings.volume);
   const [muted, setMuted] = useState(videoPlayerSettings.muted);
   const [playing, setPlaying] = useState(false);
-  const [filePath, setFilePath] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [spinner, setSpinner] = useState(true);
+  const [spinner, setSpinner] = useState(false);
 
   const isDragging = useRef(false);
   const progressSyncRef = useRef<number | null>(null);
-  // Tracks whether we've done the initial seek-to-end after the first load.
-  const hasAutoSeekedRef = useRef(false);
 
   const isRecording = recorderStatus === RecStatus.Recording;
 
@@ -87,42 +73,18 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
   };
 
   // ------------------------------------------------------------------
-  // Refresh: reload the source to pick up newly written fragments.
-  // Cache-bust so the VOD handler doesn't serve a stale response.
+  // Load the video when instantReplayPath changes
   // ------------------------------------------------------------------
 
-  const doRefresh = useCallback(() => {
-    if (!videoRef.current || !filePath) return;
-    hasAutoSeekedRef.current = false;
+  useEffect(() => {
+    if (!instantReplayPath || !videoRef.current) return;
     setSpinner(true);
-    videoRef.current.src = `vod://wcr/${filePath}`;
+    setProgress(0);
+    setDuration(0);
+    videoRef.current.src = `vod://wcr/${instantReplayPath}`;
     videoRef.current.load();
-  }, [filePath]);
-
-  // ------------------------------------------------------------------
-  // On mount: resolve the recording file path
-  // ------------------------------------------------------------------
-
-  useEffect(() => {
-    ipc.getRecordingFilePath().then((path) => {
-      setFilePath(path ?? null);
-      if (!path) setSpinner(false);
-    });
-
-    return () => {
-      stopProgressSync();
-    };
-  }, []);
-
-  // ------------------------------------------------------------------
-  // Load the video once we know the file path
-  // ------------------------------------------------------------------
-
-  useEffect(() => {
-    if (!filePath || !videoRef.current) return;
-    videoRef.current.src = `vod://wcr/${filePath}`;
-    videoRef.current.load();
-  }, [filePath]);
+    return () => stopProgressSync();
+  }, [instantReplayPath]);
 
   // ------------------------------------------------------------------
   // Sync volume / muted to the video element
@@ -162,13 +124,11 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
   }, []);
 
   // ------------------------------------------------------------------
-  // Pause when the app is minimized to tray
+  // Pause when minimized to tray
   // ------------------------------------------------------------------
 
   useEffect(() => {
-    ipc.on('pausePlayer', () => {
-      videoRef.current?.pause();
-    });
+    ipc.on('pausePlayer', () => videoRef.current?.pause());
     return () => ipc.removeAllListeners('pausePlayer');
   }, []);
 
@@ -182,20 +142,14 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
       const video = videoRef.current;
 
       if (e.key === 'k' || e.key === ' ') {
-        if (video.paused) {
-          video.play().catch(console.error);
-        } else {
-          video.pause();
-        }
+        video.paused ? video.play().catch(console.error) : video.pause();
         e.preventDefault();
         e.stopPropagation();
       }
-
       if (e.key === 'j' || e.key === 'ArrowLeft') {
         video.currentTime = Math.max(0, video.currentTime - 5);
         setProgress(video.currentTime);
       }
-
       if (e.key === 'l' || e.key === 'ArrowRight') {
         video.currentTime = Math.min(video.currentTime + 5, video.duration);
         setProgress(video.currentTime);
@@ -212,21 +166,9 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
 
   const handleCanPlay = () => {
     if (!videoRef.current) return;
-    const video = videoRef.current;
-    const dur = video.duration;
-    const validDuration = isFinite(dur) && !isNaN(dur);
-
-    if (validDuration) setDuration(dur);
+    const dur = videoRef.current.duration;
+    if (isFinite(dur) && !isNaN(dur)) setDuration(dur);
     setSpinner(false);
-
-    // On the first load (or after a manual refresh), jump to the end
-    // so the user sees the most recent content.
-    if (!hasAutoSeekedRef.current && validDuration && dur > 0) {
-      hasAutoSeekedRef.current = true;
-      video.currentTime = Math.max(0, dur - 0.5);
-      setProgress(video.currentTime);
-      video.play().catch(console.error);
-    }
   };
 
   const handleDurationChange = () => {
@@ -239,14 +181,13 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
     setPlaying(true);
     startProgressSync();
   };
-
   const handlePause = () => {
     setPlaying(false);
     stopProgressSync();
   };
 
   const handleError = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    console.error('[LiveReplay] Video error:', e);
+    console.error('[InstantReplay] Video error:', e);
     setSpinner(false);
   };
 
@@ -256,19 +197,26 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
 
   const togglePlaying = () => {
     if (!videoRef.current) return;
-    if (videoRef.current.paused) {
-      videoRef.current.play().catch(console.error);
-    } else {
-      videoRef.current.pause();
-    }
+    videoRef.current.paused
+      ? videoRef.current.play().catch(console.error)
+      : videoRef.current.pause();
   };
 
   const toggleMuted = () => setMuted((v) => !v);
 
   const toggleFullscreen = () => {
-    const el = document.getElementById('live-player-and-controls');
+    const el = document.getElementById('instant-replay-player');
     if (el) screenfull.toggle(el);
   };
+
+  const doRefresh = useCallback(() => {
+    if (!videoRef.current || !instantReplayPath) return;
+    setSpinner(true);
+    setProgress(0);
+    setDuration(0);
+    videoRef.current.src = `vod://wcr/${instantReplayPath}?t=${Date.now()}`;
+    videoRef.current.load();
+  }, [instantReplayPath]);
 
   const handleProgressChange = (_e: Event, value: number | number[]) => {
     if (typeof value === 'number') setProgress(value);
@@ -290,10 +238,6 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
     }
   };
 
-  // ------------------------------------------------------------------
-  // Render helpers
-  // ------------------------------------------------------------------
-
   const getVolumeIcon = () => {
     if (muted)
       return <VolumeOffIcon sx={{ color: 'white', fontSize: '22px' }} />;
@@ -304,108 +248,31 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
     return <VolumeUpIcon sx={{ color: 'white', fontSize: '22px' }} />;
   };
 
-  const renderTimeDisplay = () => {
-    const currentStr = secToMmSs(progress);
-    const totalStr =
-      duration > 0 && isFinite(duration) ? secToMmSs(duration) : '--:--';
-
-    return (
-      <div className="mx-1 flex">
-        <span className="whitespace-nowrap text-foreground-lighter text-[11px] font-semibold font-mono">
-          {currentStr} / {totalStr}
-        </span>
-      </div>
-    );
-  };
-
-  const renderControls = () => (
-    <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2 rounded-br-sm">
-      {/* Play / Pause */}
-      <Button variant="ghost" size="xs" onClick={togglePlaying}>
-        {playing ? (
-          <PauseIcon sx={{ color: 'white', fontSize: '22px' }} />
-        ) : (
-          <PlayArrowIcon sx={{ color: 'white', fontSize: '22px' }} />
-        )}
-      </Button>
-
-      {/* Volume */}
-      <Button variant="ghost" size="xs" onClick={toggleMuted}>
-        {getVolumeIcon()}
-      </Button>
-
-      <Slider
-        sx={{ m: 1, width: '75px', ...sliderSx }}
-        value={muted ? 0 : volume * 100}
-        onChange={handleVolumeChange}
-        valueLabelFormat={Math.round}
-        valueLabelDisplay="auto"
-        onKeyDown={(e) => e.preventDefault()}
-      />
-
-      {/* Progress */}
-      <Slider
-        sx={{ ...sliderSx, m: 2, width: '100%' }}
-        value={progress}
-        onChange={handleProgressChange}
-        onChangeCommitted={handleProgressCommitted}
-        onMouseDown={() => {
-          isDragging.current = true;
-        }}
-        onKeyDown={(e) => e.preventDefault()}
-        max={duration > 0 ? duration : 1}
-        step={0.01}
-      />
-
-      {renderTimeDisplay()}
-
-      <Separator className="mx-2" orientation="vertical" />
-      {/* Manual refresh */}
-      <Tooltip content="Reload to pick up new content">
-        <Button variant="ghost" size="xs" onClick={doRefresh}>
-          <RefreshIcon sx={{ color: 'white', fontSize: '20px' }} />
-        </Button>
-      </Tooltip>
-
-      {/* Fullscreen */}
-      <Button variant="ghost" size="xs" onClick={toggleFullscreen}>
-        <FullscreenIcon sx={{ color: 'white' }} />
-      </Button>
-    </div>
-  );
-
   // ------------------------------------------------------------------
-  // No-recording placeholder
+  // No-file placeholder
   // ------------------------------------------------------------------
 
-  const renderNoRecording = () => (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-black">
-      <Radio size={48} className="text-muted-foreground opacity-40" />
-      <p className="text-foreground text-base font-semibold opacity-60">
-        No active recording
-      </p>
-      <p className="text-foreground-lighter text-sm opacity-40">
-        Live Replay is available while a recording is in progress.
-      </p>
-    </div>
-  );
-
-  if (!filePath) {
+  if (!instantReplayPath) {
     return (
-      <div id="live-player-and-controls" className="w-full h-full">
-        {spinner ? (
-          <div className="w-full h-full bg-black flex items-center justify-center">
-            <CircularProgress color="inherit" />
-          </div>
-        ) : (
-          renderNoRecording()
-        )}
+      <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-black">
+        <Radio size={48} className="text-muted-foreground opacity-40" />
+        <p className="text-foreground text-base font-semibold opacity-60">
+          No active recording
+        </p>
+        <p className="text-foreground-lighter text-sm opacity-40">
+          Instant Replay is available while a recording is in progress.
+        </p>
       </div>
     );
   }
 
+  // ------------------------------------------------------------------
+  // Player
+  // ------------------------------------------------------------------
+
   return (
-    <div id="live-player-and-controls" className="w-full h-full">
+    <div id="instant-replay-player" className="w-full h-full">
+      {/* Video */}
       <div
         className="relative"
         style={{ height: 'calc(100% - 40px)', backgroundColor: 'black' }}
@@ -423,7 +290,6 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
           onDoubleClick={toggleFullscreen}
         />
 
-        {/* Banner when recording has stopped */}
         {!isRecording && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm font-semibold px-4 py-2 rounded-full border border-white/20 whitespace-nowrap">
             Recording stopped — showing last captured content
@@ -446,7 +312,61 @@ const InstantReplay = ({ appState, recorderStatus }: IProps) => {
         </Backdrop>
       </div>
 
-      {renderControls()}
+      {/* Controls */}
+      <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2 rounded-br-sm">
+        <Button variant="ghost" size="xs" onClick={togglePlaying}>
+          {playing ? (
+            <PauseIcon sx={{ color: 'white', fontSize: '22px' }} />
+          ) : (
+            <PlayArrowIcon sx={{ color: 'white', fontSize: '22px' }} />
+          )}
+        </Button>
+
+        <Button variant="ghost" size="xs" onClick={toggleMuted}>
+          {getVolumeIcon()}
+        </Button>
+
+        <Slider
+          sx={{ m: 1, width: '75px', ...sliderSx }}
+          value={muted ? 0 : volume * 100}
+          onChange={handleVolumeChange}
+          valueLabelFormat={Math.round}
+          valueLabelDisplay="auto"
+          onKeyDown={(e) => e.preventDefault()}
+        />
+
+        <Slider
+          sx={{ ...sliderSx, m: 2, width: '100%' }}
+          value={progress}
+          onChange={handleProgressChange}
+          onChangeCommitted={handleProgressCommitted}
+          onMouseDown={() => {
+            isDragging.current = true;
+          }}
+          onKeyDown={(e) => e.preventDefault()}
+          max={duration > 0 ? duration : 1}
+          step={0.01}
+        />
+
+        <div className="mx-1 flex">
+          <span className="whitespace-nowrap text-foreground-lighter text-[11px] font-semibold font-mono">
+            {secToMmSs(progress)} /{' '}
+            {duration > 0 && isFinite(duration) ? secToMmSs(duration) : '--:--'}
+          </span>
+        </div>
+
+        <Separator className="mx-2" orientation="vertical" />
+
+        <Tooltip content="Reload to pick up new content">
+          <Button variant="ghost" size="xs" onClick={doRefresh}>
+            <RefreshIcon sx={{ color: 'white', fontSize: '20px' }} />
+          </Button>
+        </Tooltip>
+
+        <Button variant="ghost" size="xs" onClick={toggleFullscreen}>
+          <FullscreenIcon sx={{ color: 'white' }} />
+        </Button>
+      </div>
     </div>
   );
 };

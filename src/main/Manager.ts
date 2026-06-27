@@ -8,6 +8,7 @@ import {
   getConfigWtfPath,
   getMetadataForVideo,
   getOBSFormattedDate,
+  getSortedFiles,
   isManualRecordHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
@@ -30,6 +31,7 @@ import {
   KillVideoQueueItem,
   RendererVideo,
   KillVideoSegment,
+  FileSortDirection,
 } from './types';
 import {
   getObsVideoConfig,
@@ -307,6 +309,22 @@ export default class Manager {
 
     this.refreshMicStatus(this.recorder.obsMicState);
     this.redrawPreview();
+
+    const { obsPath } = getBaseConfig(this.cfg);
+    setTimeout(() => {
+      getSortedFiles(obsPath, '.*\\.mp4', FileSortDirection.NewestFirst).then(
+        (files) => {
+          console.log(
+            'SET INSTANT REPLAY PATH',
+            files.length > 0 ? files[0].name : null,
+          );
+          send(
+            'updateInstantReplayPath',
+            files.length > 0 ? files[0].name : null,
+          );
+        },
+      );
+    }, 2000);
   }
 
   /**
@@ -504,7 +522,9 @@ export default class Manager {
     }
 
     if (config.recordClassicPtr) {
-      this.classicPtrLogHandler = new ClassicLogHandler(config.classicPtrLogPath);
+      this.classicPtrLogHandler = new ClassicLogHandler(
+        config.classicPtrLogPath,
+      );
     }
 
     if (config.recordEra) {
