@@ -97,7 +97,6 @@ declare global {
         getHardwareAcceleration(): boolean;
         createDiagsBundle(): Promise<string>;
         openSystemExplorer(path: string): void;
-        getRecordingFilePath(): Promise<string | null>;
       };
     };
   }

@@ -261,9 +261,5 @@ contextBridge.exposeInMainWorld('electron', {
     openSystemExplorer(path: string) {
       ipcRenderer.send('systemExplorer', path);
     },
-
-    getRecordingFilePath(): Promise<string | null> {
-      return ipcRenderer.invoke('getRecordingFilePath');
-    },
   },
 });
