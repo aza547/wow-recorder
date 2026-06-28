@@ -53,6 +53,7 @@ export type ConfigurationSchema = {
   deathMarkers: number;
   encounterMarkers: boolean;
   roundMarkers: boolean;
+  annotationFlashSeconds: number;
   pushToTalk: boolean;
   pushToTalkKey: number;
   pushToTalkMouseButton: number;
@@ -428,6 +429,14 @@ export const configSchema = {
     default: 5,
     minimum: 0,
     maximum: 60,
+  },
+  annotationFlashSeconds: {
+    // Set via the in-player annotation duration slider, not the Settings UI, so
+    // no description Phrase is needed.
+    type: 'integer',
+    default: 5,
+    minimum: 1,
+    maximum: 30,
   },
   cloudStorage: {
     description: Phrase.CloudStorageDescription,

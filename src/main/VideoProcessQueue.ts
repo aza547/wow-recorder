@@ -1,5 +1,10 @@
 import path from 'path';
-import { getBaseConfig, shouldUpload } from '../utils/configUtils';
+import { ipcMain } from 'electron';
+import {
+  getBaseConfig,
+  getStagingDir,
+  shouldUpload,
+} from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from '../config/ConfigService';
 import {
@@ -7,6 +12,8 @@ import {
   DiskStatus,
   KillVideoQueueItem,
   KillVideoStatus,
+  RelocateQueueItem,
+  RelocateStatus,
   RendererVideo,
   SaveStatus,
   UploadQueueItem,
@@ -15,6 +22,10 @@ import {
 import {
   writeMetadataFile,
   getMetadataForVideo,
+  getMetadataFileNameForVideo,
+  getSortedVideos,
+  deleteVideoDisk,
+  exists,
   rendererVideoToMetadata,
   getFileInfo,
   fixPathWhenPackaged,
@@ -86,6 +97,14 @@ export default class VideoProcessQueue {
   private killVideoQueue: any;
 
   /**
+   * Atomic queue for relocating freshly cut videos from the local staging dir
+   * to the final storage path (e.g. a NAS). Kept separate so the slow network
+   * copy doesn't block further video cuts. Used by the "review locally while
+   * relocating to storage" feature.
+   */
+  private relocateQueue: any;
+
+  /**
    * Config service handle.
    */
   private cfg = ConfigService.getInstance();
@@ -111,6 +130,25 @@ export default class VideoProcessQueue {
   private inProgressKillVideos: string[] = [];
 
   /**
+   * Count of videos currently queued or in-flight for relocation to storage.
+   * Drives the queued count on the relocate progress indicator.
+   */
+  private inProgressRelocations = 0;
+
+  /**
+   * Resolved paths of the video sources currently loaded in the frontend
+   * player(s). Reported by the renderer. Used so we never delete a local
+   * staging copy that is currently being reviewed.
+   */
+  private activeSources = new Set<string>();
+
+  /**
+   * Staging copies that have been relocated to storage but couldn't be deleted
+   * yet because they were in use. Cleaned up once playback moves off them.
+   */
+  private pendingStagingDeletes = new Set<string>();
+
+  /**
    * Constructor.
    */
   private constructor() {
@@ -118,6 +156,18 @@ export default class VideoProcessQueue {
     this.uploadQueue = this.createUploadQueue();
     this.downloadQueue = this.createDownloadQueue();
     this.killVideoQueue = this.createKillVideoQueue();
+    this.relocateQueue = this.createRelocateQueue();
+    this.registerListeners();
+  }
+
+  /**
+   * Register IPC listeners.
+   */
+  private registerListeners() {
+    ipcMain.on('activeVideoSources', (_event, args) => {
+      const sources = (args as string[]) ?? [];
+      this.setActiveVideoSources(sources);
+    });
   }
 
   private createVideoQueue() {
@@ -192,6 +242,20 @@ export default class VideoProcessQueue {
     return queue;
   }
 
+  private createRelocateQueue() {
+    const worker = this.processRelocateQueueItem.bind(this);
+    const settings = { concurrency: 1 };
+    const queue = atomicQueue(worker, settings);
+
+    /* eslint-disable prettier/prettier */
+    queue
+      .on('error', VideoProcessQueue.errorRelocatingVideo)
+      .on('idle', () => { this.relocateQueueEmpty() });
+    /* eslint-enable prettier/prettier */
+
+    return queue;
+  }
+
   /**
    * Add a video to the queue for processing, the processing it undergoes is
    * dictated by the input. This is the only public method on this class.
@@ -250,6 +314,129 @@ export default class VideoProcessQueue {
   };
 
   /**
+   * Queue a freshly cut video for relocation from the local staging dir to the
+   * final storage path.
+   */
+  public queueRelocate = async (item: RelocateQueueItem) => {
+    console.info(
+      '[VideoProcessQueue] Queuing video for relocation',
+      item.stagingPath,
+    );
+
+    this.inProgressRelocations += 1;
+    this.relocateQueue.write(item);
+
+    // Surface the newly queued relocation (perc 0) so the indicator appears
+    // promptly, even before the copy of the current item makes progress.
+    this.emitRelocateStatus(0);
+  };
+
+  /**
+   * Push the current relocation status to the frontend. perc is the copy
+   * progress of the in-flight item (0-100), or -1 for an indeterminate state.
+   */
+  private emitRelocateStatus(perc: number) {
+    const queued = Math.max(0, this.inProgressRelocations);
+    const status: RelocateStatus = { queued, perc };
+    send('updateRelocateStatus', status);
+  }
+
+  /**
+   * Reconcile the local staging dir on startup. For each staged video: if it
+   * already exists in storage, delete the now-redundant local copy; otherwise
+   * (e.g. the app closed mid-relocation) re-queue it for relocation.
+   *
+   * This is a startup backstop. During a session, relocated staging copies are
+   * cleaned up promptly by disposeStagingCopy once they're no longer being
+   * reviewed (tracked via activeSources). Running at startup is always safe as
+   * nothing can be open in the player yet.
+   */
+  public reconcileStaging = async () => {
+    const stagingDir = getStagingDir(this.cfg);
+
+    if (!stagingDir || !(await exists(stagingDir))) {
+      return;
+    }
+
+    const storageDir = this.cfg.get<string>('storagePath');
+    const staged = await getSortedVideos(stagingDir);
+
+    await Promise.all(
+      staged.map(async (file) => {
+        const name = path.basename(file.name); // "<name>.mp4"
+        const onStorage = await exists(path.join(storageDir, name));
+
+        if (onStorage) {
+          console.info(
+            '[VideoProcessQueue] Removing relocated staging copy',
+            file.name,
+          );
+          await deleteVideoDisk(file.name);
+        } else {
+          console.info(
+            '[VideoProcessQueue] Re-queuing orphaned staging video',
+            file.name,
+          );
+          this.queueRelocate({ stagingPath: file.name, storageDir });
+        }
+      }),
+    );
+  };
+
+  /**
+   * Record which video sources are currently loaded in the frontend player(s),
+   * then clean up any deferred staging deletions that are no longer in use.
+   */
+  public setActiveVideoSources(sources: string[]) {
+    this.activeSources = new Set(sources.map((s) => path.resolve(s)));
+    this.cleanPendingStaging();
+  }
+
+  /**
+   * Dispose of a staging copy once it has been relocated to storage. If it's
+   * currently being reviewed, defer deletion until playback moves off it.
+   */
+  private async disposeStagingCopy(stagingPath: string) {
+    if (this.activeSources.has(path.resolve(stagingPath))) {
+      console.info(
+        '[VideoProcessQueue] Staging copy in use, deferring cleanup',
+        stagingPath,
+      );
+
+      this.pendingStagingDeletes.add(stagingPath);
+      return;
+    }
+
+    console.info(
+      '[VideoProcessQueue] Removing relocated staging copy',
+      stagingPath,
+    );
+
+    await deleteVideoDisk(stagingPath);
+  }
+
+  /**
+   * Delete any deferred staging copies that are no longer in use.
+   */
+  private cleanPendingStaging() {
+    this.pendingStagingDeletes.forEach((stagingPath) => {
+      if (this.activeSources.has(path.resolve(stagingPath))) {
+        // Still being reviewed; leave it for now.
+        return;
+      }
+
+      this.pendingStagingDeletes.delete(stagingPath);
+
+      console.info(
+        '[VideoProcessQueue] Removing deferred staging copy',
+        stagingPath,
+      );
+
+      deleteVideoDisk(stagingPath);
+    });
+  }
+
+  /**
    * Process a video by cutting it to size and saving it to disk, also
    * writes out the metadata JSON file.
    */
@@ -258,7 +445,18 @@ export default class VideoProcessQueue {
     done: () => void,
   ): Promise<void> {
     try {
-      const outputDir = this.cfg.get<string>('storagePath');
+      const storagePath = this.cfg.get<string>('storagePath');
+      const stagingDir = getStagingDir(this.cfg);
+
+      // When a separate local buffer is configured we cut into a local staging
+      // dir so the video can be reviewed immediately, then relocate it to the
+      // (possibly slow) storage path in the background. Otherwise we cut
+      // straight to storage as before.
+      const outputDir = stagingDir ?? storagePath;
+
+      if (stagingDir) {
+        await fspromise.mkdir(stagingDir, { recursive: true });
+      }
 
       // In a lot of cases this is basically just a copy. But this also
       // covers the cases where we're cutting a section off the end of
@@ -278,6 +476,13 @@ export default class VideoProcessQueue {
       if (upload) {
         const item: UploadQueueItem = { path: videoPath };
         this.queueUpload(item);
+      }
+
+      if (stagingDir) {
+        // The cut MP4 now lives on the local disk and becomes reviewable as
+        // soon as the frontend refreshes (finishProcessingVideo). Relocate it
+        // to the final storage path in the background.
+        this.queueRelocate({ stagingPath: videoPath, storageDir: storagePath });
       }
     } catch (error) {
       console.error(
@@ -484,6 +689,149 @@ export default class VideoProcessQueue {
   }
 
   /**
+   * Relocate a freshly cut video from the local staging dir to the final
+   * storage path. Publishes atomically: the MP4/JSON are first copied into a
+   * hidden ".relocating" temp dir on the storage volume, then renamed into
+   * place (rename is atomic on the same filesystem) so a refresh never sees a
+   * half-written file. The local staging copy is left in place and cleaned up
+   * at next startup (reconcileStaging) so we never delete a file mid-review.
+   */
+  private async processRelocateQueueItem(
+    item: RelocateQueueItem,
+    done: () => void,
+  ): Promise<void> {
+    const { stagingPath, storageDir } = item;
+    const name = path.basename(stagingPath); // "<name>.mp4"
+    const stagingJson = getMetadataFileNameForVideo(stagingPath);
+
+    const tmpDir = path.join(storageDir, '.relocating');
+    const tmpMp4 = path.join(tmpDir, name);
+    const tmpJson = getMetadataFileNameForVideo(tmpMp4);
+
+    const destMp4 = path.join(storageDir, name);
+    const destJson = getMetadataFileNameForVideo(destMp4);
+
+    // Timer that watches the growing temp MP4 to report copy progress. It is a
+    // read-only observer (a periodic stat) running alongside the proven
+    // copyFile; it cannot affect the copy itself.
+    let progressTimer: ReturnType<typeof setInterval> | undefined;
+
+    try {
+      await fspromise.mkdir(tmpDir, { recursive: true });
+
+      // The JSON sidecar is tiny; copy it directly.
+      await fspromise.copyFile(stagingJson, tmpJson);
+
+      // Source size is the denominator for progress. The MP4 is the slow
+      // (network) part, so we poll the temp file's size against this while
+      // copyFile runs.
+      const total = await fspromise
+        .stat(stagingPath)
+        .then((s) => s.size)
+        .catch(() => 0);
+
+      let lastPerc = -1;
+      let indeterminate = false;
+      let statInFlight = false;
+
+      progressTimer = setInterval(() => {
+        if (total <= 0 || statInFlight) {
+          return;
+        }
+
+        statInFlight = true;
+
+        fspromise
+          .stat(tmpMp4)
+          .then(({ size }) => {
+            const perc = Math.min(99, Math.round((size / total) * 100));
+
+            // If the very first observation is already "complete", the target
+            // likely preallocates the file rather than growing it; fall back to
+            // an indeterminate (activity-only) display instead of a fake bar.
+            if (lastPerc === -1 && size >= total) {
+              indeterminate = true;
+            }
+
+            if (perc !== lastPerc) {
+              lastPerc = perc;
+              this.emitRelocateStatus(indeterminate ? -1 : perc);
+            }
+          })
+          .catch(() => {
+            // Temp file not created yet, or a transient stat error; ignore.
+          })
+          .finally(() => {
+            statInFlight = false;
+          });
+      }, 300);
+
+      // Copy the MP4 into the temp dir (the slow network part).
+      await fspromise.copyFile(stagingPath, tmpMp4);
+
+      clearInterval(progressTimer);
+      progressTimer = undefined;
+
+      // Sanity check the copied video size matches the source.
+      const [srcStat, dstStat] = await Promise.all([
+        fspromise.stat(stagingPath),
+        fspromise.stat(tmpMp4),
+      ]);
+
+      if (srcStat.size !== dstStat.size) {
+        throw new Error(
+          `Relocated size mismatch ${srcStat.size} != ${dstStat.size} for ${name}`,
+        );
+      }
+
+      // Publish: rename the JSON first, then the MP4. getSortedVideos only
+      // lists .mp4 files, so the video only becomes visible on storage once
+      // its metadata is already in place.
+      await fspromise.rename(tmpJson, destJson);
+      await fspromise.rename(tmpMp4, destMp4);
+
+      console.info('[VideoProcessQueue] Relocated video to storage', destMp4);
+
+      // Tell the frontend the source moved staging -> storage so any open
+      // player swaps its reference to the permanent copy (and the relocating
+      // badge clears). Combined with the vod:// storage fallback, this makes
+      // the cutover seamless: the live media keeps streaming while state
+      // catches up to the permanent path.
+      send('videoSourceRelocated', { from: stagingPath, to: destMp4 });
+
+      // Refresh so the frontend now resolves the video from storage. Any
+      // in-progress playback of the local staging copy is unaffected.
+      DiskClient.getInstance().refreshVideos();
+
+      // Remove the local staging copy now it's safely in storage, unless it's
+      // currently being reviewed (in which case it's cleaned up once playback
+      // moves on).
+      await this.disposeStagingCopy(stagingPath);
+    } catch (error) {
+      console.error(
+        '[VideoProcessQueue] Error relocating video:',
+        String(error),
+      );
+
+      // Best effort: remove any partial temp files (deletes the temp mp4 and
+      // its json sibling). The staging copy remains, so the video is still
+      // reviewable and reconcileStaging will retry on the next startup.
+      await deleteVideoDisk(tmpMp4);
+    } finally {
+      if (progressTimer) {
+        clearInterval(progressTimer);
+      }
+
+      // This relocation is done (success or failure). Drop the queued count and
+      // push status so the indicator advances to the next item or hides.
+      this.inProgressRelocations = Math.max(0, this.inProgressRelocations - 1);
+      this.emitRelocateStatus(0);
+    }
+
+    done();
+  }
+
+  /**
    * Push kill video encoding progress to the frontend.
    */
   private onKillVideoProgress(progress: number) {
@@ -519,6 +867,13 @@ export default class VideoProcessQueue {
    */
   private static errorKillVideo(err: unknown) {
     console.error('[VideoProcessQueue] Error creating kill video', String(err));
+  }
+
+  /**
+   * Log an error relocating a video.
+   */
+  private static errorRelocatingVideo(err: unknown) {
+    console.error('[VideoProcessQueue] Error relocating video', String(err));
   }
 
   /**
@@ -658,6 +1013,18 @@ export default class VideoProcessQueue {
    */
   private async uploadQueueEmpty() {
     console.info('[VideoProcessQueue] Upload processing queue empty');
+  }
+
+  /**
+   * Run actions on the relocate queue being empty.
+   */
+  private async relocateQueueEmpty() {
+    console.info('[VideoProcessQueue] Relocate processing queue empty');
+
+    // Backstop: the queue is drained, so nothing is in flight. Reset the count
+    // and hide the indicator in case the per-item bookkeeping ever drifted.
+    this.inProgressRelocations = 0;
+    this.emitRelocateStatus(0);
   }
 
   /**

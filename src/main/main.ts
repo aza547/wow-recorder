@@ -36,6 +36,7 @@ import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
+import VideoProcessQueue from './VideoProcessQueue';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -238,6 +239,12 @@ const createWindow = async () => {
     // which may not reflect reality.
     const disk = DiskClient.getInstance();
     const cloud = CloudClient.getInstance();
+
+    // Reconcile the local staging dir before the first video refresh: relocate
+    // any videos orphaned by a previous unclean shutdown, and drop local copies
+    // that already made it to storage. Safe to run only at startup, before any
+    // review session could hold a staging file open.
+    await VideoProcessQueue.getInstance().reconcileStaging();
 
     await Promise.all([
       manager.refreshStatus(),

@@ -23,6 +23,7 @@ import StatusLight, {
 } from 'renderer/components/StatusLight/StatusLight';
 import { cn } from 'renderer/components/utils';
 import { secToMmSs } from 'renderer/rendererutils';
+import RelocateProgress from 'renderer/RelocateProgress';
 
 type StatusInfo = {
   statusTitle: string;
@@ -409,6 +410,7 @@ const Status = ({
                 <HardDriveDownload size={14} className="mx-1 animate-pulse" />
               )}
             </div>
+            <RelocateProgress />
           </div>
         </div>
         {!!statusDescription && (

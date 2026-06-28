@@ -1,4 +1,6 @@
+import path from 'path';
 import ConfigService from 'config/ConfigService';
+import { getStagingDir } from 'utils/configUtils';
 import StorageClient from './StorageClient';
 import {
   delayedDeleteVideo,
@@ -13,6 +15,7 @@ import {
 } from 'main/util';
 import { DiskStatus, RendererVideo } from 'main/types';
 import DiskSizeMonitor from './DiskSizeMonitor';
+import MetadataIndex from './MetadataIndex';
 import { ipcMain } from 'electron';
 import assert from 'assert';
 import { send } from 'main/main';
@@ -37,6 +40,11 @@ export default class DiskClient implements StorageClient {
   private constructor() {
     console.info('[DiskClient] Creating disk client');
     this.setupListeners();
+
+    // Construct the metadata index now so its storage hooks
+    // (writeMetadataFile / deleteVideoDisk) are registered before any video is
+    // written, keeping the index coherent from the very first write.
+    MetadataIndex.getInstance();
   }
 
   public async ready() {
@@ -68,52 +76,89 @@ export default class DiskClient implements StorageClient {
   }
 
   /**
-   * Get the videos and set them on the frontend.
+   * Get the videos and set them on the frontend. Pass reconcile=false to
+   * rebuild the list straight from the in-memory metadata index WITHOUT
+   * re-scanning the storage dir — used after an annotation write, where the
+   * index write hook has already updated the affected entry (keyed by its own
+   * path) and no files were added or removed, so a storage round-trip is wasted.
    */
-  public async refreshVideos() {
-    const videos = await this.getVideos();
+  public async refreshVideos(reconcile = true) {
+    const videos = await this.getVideos(reconcile);
     send('setDiskVideos', videos);
   }
 
   /**
-   * Get the videos.
+   * Get the videos. When reconcile is false the storage dir is NOT re-scanned;
+   * the list is built from the in-memory index as-is.
    */
-  private async getVideos() {
-    const rdy = await this.ready();
+  private async getVideos(reconcile = true) {
+    const cfg = ConfigService.getInstance();
+    const storageDir = cfg.get<string>('storagePath');
+    const stagingDir = getStagingDir(cfg);
+    const index = MetadataIndex.getInstance();
 
-    if (!rdy) {
-      console.warn('[DiskClient] Not ready, no videos');
-      return [];
+    if (reconcile) {
+      const rdy = await this.ready();
+
+      if (!rdy) {
+        console.warn('[DiskClient] Not ready, no videos');
+        return [];
+      }
+
+      console.info('[DiskClient] Getting videos from disk');
+
+      // Reconcile the in-memory metadata index with the storage dir. This is
+      // delta-only: a single readdir, reading just the files new since last
+      // time. The bulk of refreshes (after a record/clip/delete) change nothing
+      // and so cost only the readdir, instead of re-stat'ing and re-parsing
+      // every video.
+      await index.reconcile(storageDir);
     }
 
-    console.info('[DiskClient] Getting videos from disk');
+    const storageVideos = index.list();
 
-    const storageDir = ConfigService.getInstance().get<string>('storagePath');
-    const videos = await getSortedVideos(storageDir);
+    // When the "review locally while relocating" feature is active, also surface
+    // videos that currently only exist in the local staging dir. The index's
+    // write hook catches staging videos cut this session, but not ones left over
+    // from a previous session (e.g. a restart mid-relocation), so scan for those
+    // here. Dedupe by name against what's already listed so nothing appears
+    // twice, and tag the survivors as relocating.
+    let stagingVideos: RendererVideo[] = [];
 
-    if (videos.length === 0) {
-      return [];
+    if (stagingDir && (await exists(stagingDir))) {
+      const alreadyListed = new Set(
+        storageVideos.map((v) => path.basename(v.videoSource, '.mp4')),
+      );
+
+      const staged = await getSortedVideos(stagingDir);
+
+      const stagingOnly = staged.filter(
+        (v) => !alreadyListed.has(path.basename(v.name, '.mp4')),
+      );
+
+      const loaded = await Promise.all(
+        stagingOnly.map((v) => loadVideoDetailsDisk(v).catch((e) => e)),
+      );
+
+      stagingVideos = loaded
+        .filter((r): r is RendererVideo => !(r instanceof Error))
+        .map((rv) => ({ ...rv, relocating: true }));
     }
 
-    // Windows has a 16k file handle limit per process. Load in batches
-    // of 1000 to be safe. The real fix here would be to have a local database
-    // for managing this stuff rather than reading many thousand files here.
-    const batchSize = 1000;
-    const videoDetails: RendererVideo[] = [];
+    const videoDetails = [...storageVideos, ...stagingVideos];
 
-    for (let i = 0; i < videos.length; i += batchSize) {
-      console.info('[DiskClient] Batch loading videos', i, 'to', i + batchSize);
-      const batch = videos.slice(i, i + batchSize);
+    // Tag any videos still being served from the local staging dir, so the
+    // frontend can optionally indicate they're mid-relocation to storage. This
+    // catches staging videos that ARE in the index (cut this session via the
+    // write hook); restart-only staging videos are already tagged above.
+    if (stagingDir) {
+      const resolvedStaging = path.resolve(stagingDir);
 
-      const batchPromises = batch.map((video) =>
-        loadVideoDetailsDisk(video).catch((e) => e),
-      );
-
-      const batchResults = await Promise.all(batchPromises);
-
-      videoDetails.push(
-        ...batchResults.filter((result) => !(result instanceof Error)),
-      );
+      videoDetails.forEach((video) => {
+        if (path.resolve(path.dirname(video.videoSource)) === resolvedStaging) {
+          video.relocating = true;
+        }
+      });
     }
 
     // Any details marked for deletion do it now. We allow for this flag to be
@@ -140,6 +185,14 @@ export default class DiskClient implements StorageClient {
   public async protectVideos(videoPaths: string[], protect: boolean) {
     videoPaths.forEach((videoPath) =>
       this.protectVideoDisk(protect, videoPath),
+    );
+  }
+
+  public async annotateVideos(videoPaths: string[], annotations: string) {
+    await Promise.all(
+      videoPaths.map((videoPath) =>
+        this.annotateVideoDisk(videoPath, annotations),
+      ),
     );
   }
 
@@ -191,6 +244,32 @@ export default class DiskClient implements StorageClient {
     } else {
       console.info('[Util] User tagged', videoPath, 'with', tag);
       metadata.tag = tag;
+    }
+
+    await writeMetadataFile(videoPath, metadata);
+  }
+
+  private async annotateVideoDisk(videoPath: string, annotations: string) {
+    let metadata;
+
+    try {
+      metadata = await getMetadataForVideo(videoPath);
+    } catch (err) {
+      console.error(
+        `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
+        err,
+      );
+
+      return;
+    }
+
+    if (!annotations || annotations === '[]') {
+      // No elements; clear any existing annotations.
+      console.info('[Util] User cleared annotations on', videoPath);
+      metadata.annotations = undefined;
+    } else {
+      console.info('[Util] User annotated', videoPath);
+      metadata.annotations = annotations;
     }
 
     await writeMetadataFile(videoPath, metadata);
@@ -252,6 +331,27 @@ export default class DiskClient implements StorageClient {
         const disk = videos.filter((v) => !v.cloud);
         const toTag = disk.map((v) => v.videoSource);
         this.tagVideos(toTag, tag);
+      }
+
+      if (action === 'annotations') {
+        const annotations = args[1] as string;
+        const videos = args[2] as RendererVideo[];
+        const disk = videos.filter((v) => !v.cloud);
+        const toAnnotate = disk.map((v) => v.videoSource);
+        await this.annotateVideos(toAnnotate, annotations);
+
+        // Refresh so the in-memory video state reflects the saved annotations.
+        // Without this, reopening the VOD later in the same session (which
+        // remounts the player and re-seeds from videos[0].annotations) would
+        // show an empty overlay. The currently-playing player isn't disrupted
+        // (its videos come from selectedVideos, and its key is unchanged).
+        //
+        // reconcile=false: annotateVideoDisk just wrote the metadata, which the
+        // index write hook already folded into this video's index entry. No
+        // files changed, so rebuild from the index without re-scanning storage
+        // (the storage dir is typically a NAS, so this skips a round-trip on
+        // every save).
+        this.refreshVideos(false);
       }
     });
   }

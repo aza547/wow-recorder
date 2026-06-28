@@ -41,6 +41,7 @@ import {
   secToMmSs,
 } from 'renderer/rendererutils';
 import { ZipArchive } from 'archiver';
+import { getStagingDir } from 'utils/configUtils';
 
 /**
  * When packaged, we need to fix some paths
@@ -88,6 +89,29 @@ export const resolveHtmlPath = getResolvedHtmlPath();
 /**
  * Return information about a file needed for various parts of the application
  */
+/**
+ * Hooks used by the storage metadata index (src/storage/MetadataIndex.ts) to
+ * stay coherent as videos are written and deleted. The index registers these
+ * via setStorageIndexHooks so that util does NOT import the index (which would
+ * create a circular import). They are no-ops until registered.
+ */
+type MetadataWriteHook = (
+  videoPath: string,
+  metadata: Metadata,
+) => void | Promise<void>;
+type VideoDeleteHook = (videoPath: string) => void;
+
+let metadataWriteHook: MetadataWriteHook | null = null;
+let videoDeleteHook: VideoDeleteHook | null = null;
+
+const setStorageIndexHooks = (
+  write: MetadataWriteHook,
+  del: VideoDeleteHook,
+) => {
+  metadataWriteHook = write;
+  videoDeleteHook = del;
+};
+
 export const getFileInfo = async (pathSpec: string): Promise<FileInfo> => {
   const filePath = path.resolve(pathSpec);
   const fstats = await fspromise.stat(filePath);
@@ -233,6 +257,11 @@ const deleteVideoDisk = async (videoPath: string) => {
     return false;
   }
 
+  // Evict from the metadata index now the video file is gone.
+  if (videoDeleteHook) {
+    videoDeleteHook(videoPath);
+  }
+
   const metadataPath = getMetadataFileNameForVideo(videoPath);
   const deletedJson = await tryUnlink(metadataPath);
 
@@ -303,6 +332,11 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
   await fspromise.writeFile(metadataFileName, jsonString, {
     encoding: 'utf-8',
   });
+
+  // Keep the metadata index coherent with this write.
+  if (metadataWriteHook) {
+    await metadataWriteHook(videoPath, metadata);
+  }
 };
 
 /**
@@ -1046,6 +1080,39 @@ const logAxiosError = (msg: string, error: AxiosError) => {
 };
 
 /**
+ * If the given path points at a local staging copy (the "review while
+ * relocating" feature), return the equivalent permanent storage path, else
+ * null. The staging and storage copies are byte-identical, so this lets the
+ * vod:// handler transparently fall back to the storage copy when a staging
+ * file is removed mid-playback after its relocation completes. This is what
+ * keeps seeking and playback seamless across the relocation cutover.
+ */
+const resolveRelocatedStoragePath = (filePath: string): string | null => {
+  const cfg = ConfigService.getInstance();
+  const stagingDir = getStagingDir(cfg);
+
+  if (!stagingDir) {
+    return null;
+  }
+
+  const resolved = path.resolve(filePath);
+  const resolvedStaging = path.resolve(stagingDir);
+
+  if (!resolved.startsWith(resolvedStaging + path.sep)) {
+    // Not a staging path; nothing to fall back to.
+    return null;
+  }
+
+  const storageDir = cfg.get<string>('storagePath');
+
+  if (!storageDir) {
+    return null;
+  }
+
+  return path.join(storageDir, path.basename(filePath));
+};
+
+/**
  * Custom protocol that enables the frontend to request MP4 files from disk.
  */
 const handleSafeVodRequest = async (request: Request) => {
@@ -1062,7 +1129,7 @@ const handleSafeVodRequest = async (request: Request) => {
       });
     }
 
-    const filePath = Buffer.from(requestUrl).toString('utf-8').split('#')[0]; // Remove any timestamps, the frontend handles those.
+    let filePath = Buffer.from(requestUrl).toString('utf-8').split('#')[0]; // Remove any timestamps, the frontend handles those.
 
     if (!filePath.endsWith('.mp4')) {
       console.error('[Util] Not an MP4 file:', filePath);
@@ -1079,12 +1146,37 @@ const handleSafeVodRequest = async (request: Request) => {
       // This will throw if the file doesn't exist.
       stats = await fspromise.stat(filePath);
     } catch (err) {
-      console.error('[Util] Error stating file:', err, filePath);
+      // The staging copy may have just been relocated to permanent storage
+      // and deleted out from under an open player. Transparently fall back to
+      // the (byte-identical) storage copy so seeking/playback don't break.
+      const fallback = resolveRelocatedStoragePath(filePath);
 
-      return new Response('', {
-        status: 404,
-        statusText: 'File Not Found',
-      });
+      if (fallback) {
+        try {
+          stats = await fspromise.stat(fallback);
+
+          console.info(
+            '[Util] Staging file gone, serving relocated storage copy',
+            fallback,
+          );
+
+          filePath = fallback;
+        } catch {
+          console.error('[Util] Error stating file:', err, filePath);
+
+          return new Response('', {
+            status: 404,
+            statusText: 'File Not Found',
+          });
+        }
+      } else {
+        console.error('[Util] Error stating file:', err, filePath);
+
+        return new Response('', {
+          status: 404,
+          statusText: 'File Not Found',
+        });
+      }
     }
 
     const fileSize = stats.size;
@@ -1241,6 +1333,7 @@ export {
   setupApplicationLogging,
   writeMetadataFile,
   deleteVideoDisk,
+  setStorageIndexHooks,
   openSystemExplorer,
   fixPathWhenPackaged,
   getSortedVideos,

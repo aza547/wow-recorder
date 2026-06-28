@@ -70,6 +70,7 @@ export const getSettings = (): ConfigurationSchema => {
     deathMarkers: getConfigValue<number>('deathMarkers'),
     encounterMarkers: getConfigValue<boolean>('encounterMarkers'),
     roundMarkers: getConfigValue<boolean>('roundMarkers'),
+    annotationFlashSeconds: getConfigValue<number>('annotationFlashSeconds'),
     pushToTalk: getConfigValue<boolean>('pushToTalk'),
     pushToTalkKey: getConfigValue<number>('pushToTalkKey'),
     pushToTalkMouseButton: getConfigValue<number>('pushToTalkMouseButton'),
