@@ -91,12 +91,7 @@ const Layout = (props: IProps) => {
   };
 
   const renderInstantReplay = () => {
-    return (
-      <InstantReplay
-        instantReplayPath={instantReplayPath}
-        recorderStatus={recorderStatus}
-      />
-    );
+    return <InstantReplay instantReplayPath={instantReplayPath} />;
   };
   console.log('page', page);
   return (

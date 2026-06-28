@@ -226,12 +226,14 @@ const SideMenu = (props: IProps) => {
   const renderInstantReplayTab = () => {
     return (
       <Menu.Item value={Pages.InstantReplay} className="py-1.5 my-2">
-        <Menu.Item.Icon>
-          <Radio className="text-[#bb4420]" />
-        </Menu.Item.Icon>
+        <span className="inline-flex items-center animate-pulse">
+          <Menu.Item.Icon>
+            <Radio className="text-[#bb4420] " />
+          </Menu.Item.Icon>
 
-        <span className="font-semibold text-[#bb4420] drop-shadow-[0_0_6px_rgba(187,68,32,0.35)] animate-pulse">
-          Instant Replay
+          <span className="font-semibold text-[#bb4420] drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]">
+            Instant Replay
+          </span>
         </span>
       </Menu.Item>
     );

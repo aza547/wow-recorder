@@ -9,7 +9,7 @@ import VolumeMuteIcon from '@mui/icons-material/VolumeMute';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import screenfull from 'screenfull';
-import { RecStatus, VideoPlayerSettings } from 'main/types';
+import { VideoPlayerSettings } from 'main/types';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Separator from './components/Separator/Separator';
@@ -32,10 +32,10 @@ const sliderSx = {
 
 interface IProps {
   instantReplayPath: string;
-  recorderStatus: RecStatus;
 }
 
-const InstantReplay = ({ instantReplayPath, recorderStatus }: IProps) => {
+const InstantReplay = (props: IProps) => {
+  const { instantReplayPath } = props;
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const videoPlayerSettings = ipc.sendSync('videoPlayerSettings', [
@@ -51,8 +51,6 @@ const InstantReplay = ({ instantReplayPath, recorderStatus }: IProps) => {
 
   const isDragging = useRef(false);
   const progressSyncRef = useRef<number | null>(null);
-
-  const isRecording = recorderStatus === RecStatus.Recording;
 
   // ------------------------------------------------------------------
   // Progress bar sync
@@ -81,7 +79,7 @@ const InstantReplay = ({ instantReplayPath, recorderStatus }: IProps) => {
     setSpinner(true);
     setProgress(0);
     setDuration(0);
-    videoRef.current.src = `vod://wcr/${instantReplayPath}`;
+    videoRef.current.src = `vod://wcr/${instantReplayPath}?${Date.now()}`;
     videoRef.current.load();
     return () => stopProgressSync();
   }, [instantReplayPath]);
@@ -191,10 +189,6 @@ const InstantReplay = ({ instantReplayPath, recorderStatus }: IProps) => {
     setSpinner(false);
   };
 
-  // ------------------------------------------------------------------
-  // Control actions
-  // ------------------------------------------------------------------
-
   const togglePlaying = () => {
     if (!videoRef.current) return;
     videoRef.current.paused
@@ -211,11 +205,20 @@ const InstantReplay = ({ instantReplayPath, recorderStatus }: IProps) => {
 
   const doRefresh = useCallback(() => {
     if (!videoRef.current || !instantReplayPath) return;
+    const video = videoRef.current;
+    video.pause();
+    // video.load() aborts playback without firing onPause, so we must reset
+    // the playing state and progress sync manually before reloading.
+    setPlaying(false);
+    if (progressSyncRef.current) {
+      window.clearInterval(progressSyncRef.current);
+      progressSyncRef.current = null;
+    }
     setSpinner(true);
     setProgress(0);
     setDuration(0);
-    videoRef.current.src = `vod://wcr/${instantReplayPath}?t=${Date.now()}`;
-    videoRef.current.load();
+    video.src = `vod://wcr/${instantReplayPath}?${Date.now()}`;
+    video.load();
   }, [instantReplayPath]);
 
   const handleProgressChange = (_e: Event, value: number | number[]) => {
@@ -266,13 +269,8 @@ const InstantReplay = ({ instantReplayPath, recorderStatus }: IProps) => {
     );
   }
 
-  // ------------------------------------------------------------------
-  // Player
-  // ------------------------------------------------------------------
-
   return (
     <div id="instant-replay-player" className="w-full h-full">
-      {/* Video */}
       <div
         className="relative"
         style={{ height: 'calc(100% - 40px)', backgroundColor: 'black' }}
@@ -289,13 +287,6 @@ const InstantReplay = ({ instantReplayPath, recorderStatus }: IProps) => {
           onClick={togglePlaying}
           onDoubleClick={toggleFullscreen}
         />
-
-        {!isRecording && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm font-semibold px-4 py-2 rounded-full border border-white/20 whitespace-nowrap">
-            Recording stopped — showing last captured content
-          </div>
-        )}
-
         <Backdrop
           open={spinner}
           sx={{
@@ -312,7 +303,6 @@ const InstantReplay = ({ instantReplayPath, recorderStatus }: IProps) => {
         </Backdrop>
       </div>
 
-      {/* Controls */}
       <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2 rounded-br-sm">
         <Button variant="ghost" size="xs" onClick={togglePlaying}>
           {playing ? (
