@@ -1242,45 +1242,58 @@ export default class CloudClient implements StorageClient {
       this.deleteVideos(toDelete);
     });
 
+    ipcMain.handle('videoButtonCloud', async (_event, args) => {
+      return this.handleVideoButton(args);
+    });
+
     // VideoButton event listeners.
     ipcMain.on('videoButtonCloud', async (_event, args) => {
-      const ready = await this.ready();
-      const action = args[0] as string;
-
-      if (!ready) {
-        console.warn('[Manager] Cannot process event', action, args);
-        return;
-      }
-
-      if (action === 'protect') {
-        const protect = args[1] as boolean;
-        const videos = args[2] as RendererVideo[];
-        const cloud = videos.filter((v) => v.cloud);
-        const toProtect = cloud.map((v) => v.videoName);
-        if (toProtect.length < 1) return;
-        this.protectVideos(toProtect, protect);
-      }
-
-      if (action === 'tag') {
-        const tag = args[1] as string;
-        const videos = args[2] as RendererVideo[];
-        const cloud = videos.filter((v) => v.cloud);
-        const toTag = cloud.map((v) => v.videoName);
-        if (toTag.length < 1) return;
-        this.tagVideos(toTag, tag);
-      }
-
-      if (action === 'download') {
-        const video = args[1] as RendererVideo;
-        VideoProcessQueue.getInstance().queueDownload(video);
-      }
-
-      if (action === 'upload') {
-        const src = args[1] as string;
-        const item: UploadQueueItem = { path: src };
-        VideoProcessQueue.getInstance().queueUpload(item);
-      }
+      this.handleVideoButton(args).catch((error) => {
+        console.error('[CloudClient] Failed to process video button', error);
+      });
     });
+  }
+
+  private async handleVideoButton(args: unknown[]) {
+    const ready = await this.ready();
+    const action = args[0] as string;
+
+    if (!ready) {
+      console.warn('[Manager] Cannot process event', action, args);
+      throw new Error(`Cloud client is not ready for ${action}`);
+    }
+
+    if (action === 'protect') {
+      const protect = args[1] as boolean;
+      const videos = args[2] as RendererVideo[];
+      const cloud = videos.filter((v) => v.cloud);
+      const toProtect = cloud.map((v) => v.videoName);
+      if (toProtect.length < 1) return;
+      await this.protectVideos(toProtect, protect);
+      return cloud;
+    }
+
+    if (action === 'tag') {
+      const tag = args[1] as string;
+      const videos = args[2] as RendererVideo[];
+      const cloud = videos.filter((v) => v.cloud);
+      const toTag = cloud.map((v) => v.videoName);
+      if (toTag.length < 1) return;
+      this.tagVideos(toTag, tag);
+    }
+
+    if (action === 'download') {
+      const video = args[1] as RendererVideo;
+      VideoProcessQueue.getInstance().queueDownload(video);
+    }
+
+    if (action === 'upload') {
+      const src = args[1] as string;
+      const item: UploadQueueItem = { path: src };
+      VideoProcessQueue.getInstance().queueUpload(item);
+    }
+
+    return undefined;
   }
 
   /**

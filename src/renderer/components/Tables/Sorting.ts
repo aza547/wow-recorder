@@ -10,6 +10,7 @@ import {
   isRaidUtil,
   raidResultToPercent,
 } from 'renderer/rendererutils';
+import { getVideoGroup, isVideoGroupProtected } from 'renderer/videoProtection';
 
 export const resultSort = (
   a: Row<RendererVideo>,
@@ -78,8 +79,8 @@ export const viewPointCountSort = (
 };
 
 export const detailSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
-  const aProtected = a.original.isProtected;
-  const bProtected = b.original.isProtected;
+  const aProtected = isVideoGroupProtected(getVideoGroup(a.original));
+  const bProtected = isVideoGroupProtected(getVideoGroup(b.original));
 
   const aTag = a.original.tag;
   const bTag = b.original.tag;

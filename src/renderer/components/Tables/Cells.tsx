@@ -16,6 +16,14 @@ import {
   isMythicPlusUtil,
   getDungeonName,
 } from 'renderer/rendererutils';
+import {
+  canChangeVideoProtection,
+  getNextVideoGroupProtected,
+  getVideoGroup,
+  isVideoGroupProtected,
+  withMatchedVideoProtection,
+} from 'renderer/videoProtection';
+import { protectVideosWithStorage } from 'renderer/videoProtectionActions';
 import { Box, Checkbox } from '@mui/material';
 import { affixImages, specImages } from 'renderer/images';
 import { Language, Phrase } from 'localisation/phrases';
@@ -108,52 +116,47 @@ export const populateDetailsCell = (
   const { write, del } = cloudStatus;
 
   const renderProtectedIcon = () => {
-    // If any videos in our selection are not protected, then the button's
-    // action is to protect.
-    const toProtect = [video, ...video.multiPov];
-    const lock = !toProtect.every((v) => v.isProtected);
+    const toProtect = getVideoGroup(video);
+    const groupProtected = isVideoGroupProtected(toProtect);
+    const nextProtected = getNextVideoGroupProtected(toProtect);
 
     // Disable the protect button if there are no selected viewpoints, or if
     // the action is to unprotect and we don't have delete permissions.
-    const noPermission = !del && !lock && toProtect.some((v) => v.cloud);
+    const noPermission = !canChangeVideoProtection(toProtect, nextProtected, {
+      write,
+      del,
+    });
     const disabled = noPermission || toProtect.length < 1;
 
-    const icon = lock ? <LockOpen size={20} /> : <LockKeyhole size={20} />;
+    const icon = groupProtected ? (
+      <LockKeyhole size={20} />
+    ) : (
+      <LockOpen size={20} />
+    );
 
     let tooltip = '';
 
     if (noPermission) {
       tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
-    } else if (lock) {
+    } else if (nextProtected) {
       tooltip = getLocalePhrase(language, Phrase.StarSelected);
     } else {
       tooltip = getLocalePhrase(language, Phrase.UnstarSelected);
     }
 
-    const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const toggleProtected = async (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);
-      const toProtectDisk = toProtect.filter((v) => !v.cloud);
-      const toProtectCloud = toProtect.filter((v) => v.cloud);
+      const updated = await protectVideosWithStorage(
+        ipc,
+        toProtect,
+        nextProtected,
+      );
 
-      ipc.sendMessage('videoButtonDisk', ['protect', lock, toProtectDisk]);
-      ipc.sendMessage('videoButtonCloud', ['protect', lock, toProtectCloud]);
-
-      setVideoState((prev) => {
-        const state = [...prev];
-
-        state.forEach((rv) => {
-          // A video is uniquely identified by its name and storage type.
-          const match = toProtect.find(
-            (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
-          );
-
-          if (match) {
-            rv.isProtected = lock;
-          }
-        });
-
-        return state;
-      });
+      setVideoState((prev) =>
+        prev.map((rv) =>
+          withMatchedVideoProtection(rv, updated, nextProtected),
+        ),
+      );
     };
 
     return (

@@ -25,6 +25,7 @@ import {
   videoMatch,
   videoMatchName,
 } from './rendererutils';
+import { getVideoGroup, withMatchedVideoProtection } from './videoProtection';
 import { TooltipProvider } from './components/Tooltip/Tooltip';
 import Toaster from './components/Toast/Toaster';
 import SideMenu from './SideMenu';
@@ -347,19 +348,15 @@ const WarcraftRecorder = () => {
   const displayProtectCloudVideos = (videoNames: unknown) => {
     const names = videoNames as string[];
 
-    setVideoState((prev) => {
-      const matches = prev.filter(
-        (rv) => rv.cloud && names.includes(rv.videoName),
-      );
+    setVideoState((prev) =>
+      prev.map((rv) => {
+        const matches = getVideoGroup(rv).filter(
+          (video) => video.cloud && names.includes(video.videoName),
+        );
 
-      matches.forEach((match) => {
-        // Pretty sure only one of these matters.
-        match.protected = true;
-        match.isProtected = true;
-      });
-
-      return prev;
-    });
+        return withMatchedVideoProtection(rv, matches, true);
+      }),
+    );
 
     setAppState((prevState) => {
       return {
@@ -374,19 +371,15 @@ const WarcraftRecorder = () => {
   const displayUnprotectCloudVideos = (videoNames: unknown) => {
     const names = videoNames as string[];
 
-    setVideoState((prev) => {
-      const matches = prev.filter(
-        (rv) => rv.cloud && names.includes(rv.videoName),
-      );
+    setVideoState((prev) =>
+      prev.map((rv) => {
+        const matches = getVideoGroup(rv).filter(
+          (video) => video.cloud && names.includes(video.videoName),
+        );
 
-      matches.forEach((match) => {
-        // Pretty sure only one of these matters.
-        match.protected = false;
-        match.isProtected = false;
-      });
-
-      return prev;
-    });
+        return withMatchedVideoProtection(rv, matches, false);
+      }),
+    );
 
     setAppState((prevState) => {
       return {
