@@ -74,7 +74,7 @@ interface IProps {
 }
 
 const ipc = window.electron.ipcRenderer;
-const playbackRates = [2, 1, 0.5, 0.25];
+const playbackRates = [2, 1, 0.25, 0.5];
 const style = { backgroundColor: 'black' };
 
 const sliderBaseSx = {
