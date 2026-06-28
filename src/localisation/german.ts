@@ -538,6 +538,9 @@ const GERMAN: Translations = {
   [Phrase.DiagnosticsOpenBundleCreated]: 'Paketordner öffnen',
   [Phrase.StatusTitleMigrated]: 'Migriert',
   [Phrase.StatusDescrMigrated]: 'Diese Gilde wurde migriert.', // TODO: add more details here.
+  [Phrase.InstantReplayEnded]: 'Die Sofortwiedergabe ist beendet.',
+  [Phrase.InstantReplayEndedDescr]: 'Die Aufnahme ist beendet und die Sofortwiedergabe-Funktion ist nicht mehr verfügbar.',
+  [Phrase.InstantReplayRefresh]: 'Aktualisieren',
 };
 
 export default GERMAN;

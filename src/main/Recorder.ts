@@ -170,9 +170,15 @@ export default class Recorder extends EventEmitter {
   private queue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
 
   /**
+   * The current file being recorded by OBS.
+   */
+  public currentFile: string | null = null;
+  private instantReplayTimer?: NodeJS.Timeout;
+
+  /**
    * The last file output by OBS.
    */
-  public lastFile: string | null = null;
+  private lastFile: string | null = null;
 
   /**
    * Timer that keeps the mic on briefly after you release the Push To Talk key.
@@ -534,11 +540,11 @@ export default class Recorder extends EventEmitter {
     await Recorder.createRecordingDirs(outputPath);
     await this.cleanup(outputPath);
 
-    // Record in MKV to avoid file corruption on crashes. MP4 cannot be
+    // Record in fragmented MP4 to avoid file corruption on crashes. MP4 cannot be
     // recovered in that event but MKV can. We will remux to MP4 for browser
     // player compatibility in the VideoProcessQueue.
     console.info('[Recorder] Set recording directory', outputPath);
-    noobs.SetRecordingCfg(outputPath, 'mkv');
+    noobs.SetRecordingCfg(outputPath, 'mp4');
 
     // Configure the encoder. It's possible that a user has replaced their
     // GPU since we last ran, so double check the encoder is still valid.
@@ -1104,6 +1110,7 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Log path:', logPath);
     noobs.Init(noobsPath, logPath, cb);
     noobs.SetBuffering(true);
+    noobs.SetFragmentation(true);
 
     const hwnd = getNativeWindowHandle();
     noobs.InitPreview(hwnd);
@@ -1142,10 +1149,13 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
+    clearTimeout(this.instantReplayTimer);
+
     switch (signal.id) {
       case EOBSOutputSignal.Start:
         this.startQueue.push(signal);
         this.obsState = ERecordingState.Recording;
+        this.currentFile = null;
         this.emit('state-change');
         console.info('[Recorder] State is now:', this.obsState);
         break;
@@ -1153,8 +1163,23 @@ export default class Recorder extends EventEmitter {
       case EOBSOutputSignal.Deactivate:
         this.stopQueue.push(signal);
         this.obsState = ERecordingState.None;
+        this.currentFile = null;
         this.emit('state-change');
         console.info('[Recorder] State is now:', this.obsState);
+        break;
+
+      case EOBSOutputSignal.Converted:
+        console.info('[Recorder] Converted buffer to disk:', signal.path);
+        this.currentFile = signal.path ?? null;
+
+        // The fragmented MP4 we are now writing to is playable as it's
+        // being written, but give it some time to write the initial
+        // contents else the player can run into errors.
+        this.instantReplayTimer = setTimeout(() => {
+          console.info('[Recorder] Enabling instant replay:', signal.path);
+          this.emit('state-change');
+        }, 10000);
+
         break;
 
       default:

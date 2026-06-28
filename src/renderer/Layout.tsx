@@ -11,6 +11,7 @@ import { ConfigurationSchema } from 'config/configSchema';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';
+import InstantReplay from './InstantReplay';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -25,6 +26,7 @@ interface IProps {
   advancedLoggingStatus: AdvancedLoggingStatus;
   previewEnabled: boolean;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
+  instantReplayPath: string | null;
 }
 
 /**
@@ -44,6 +46,7 @@ const Layout = (props: IProps) => {
     advancedLoggingStatus,
     previewEnabled,
     setPreviewEnabled,
+    instantReplayPath,
   } = props;
   const { page, category } = appState;
 
@@ -87,10 +90,22 @@ const Layout = (props: IProps) => {
     );
   };
 
+  const renderInstantReplay = () => {
+    return (
+      <InstantReplay
+        instantReplayPath={instantReplayPath}
+        appState={appState}
+        setAppState={setAppState}
+        persistentProgress={persistentProgress}
+      />
+    );
+  };
+
   return (
     <>
       {page === Pages.Settings && renderSettingsPage()}
       {page === Pages.SceneEditor && renderSceneEditor()}
+      {page === Pages.InstantReplay && renderInstantReplay()}
       {page === Pages.None && renderCategoryPage()}
     </>
   );

@@ -10,6 +10,7 @@ export const enum EOBSOutputSignal {
   Stop = 'stop',
   Activate = 'activate',
   Deactivate = 'deactivate',
+  Converted = 'converted',
 }
 
 export enum ESupportedEncoders {

@@ -132,6 +132,11 @@ const WarcraftRecorder = () => {
   // The video state contains most of the frontend state.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
 
+  // Fragmented MP4 path.
+  const [instantReplayPath, setInstantReplayPath] = useState<string | null>(
+    null,
+  );
+
   // The counters for display on the side menu. It's convient to keep these
   // seperate to the video state so we can apply filtering without changing the
   // counters.
@@ -421,6 +426,10 @@ const WarcraftRecorder = () => {
     });
   };
 
+  const updateInstantReplayPath = (value: unknown) => {
+    setInstantReplayPath(value as string | null);
+  };
+
   useEffect(() => {
     ipc.on('updateRecStatus', updateRecStatus);
     ipc.on('updateActivityStatus', updateActivityStatus);
@@ -439,6 +448,7 @@ const WarcraftRecorder = () => {
     ipc.on('displayUnprotectCloudVideos', displayUnprotectCloudVideos);
     ipc.on('displayTagCloudVideo', displayTagCloudVideo);
     ipc.on('updateAdvancedLoggingStatus', updateAdvancedLogging);
+    ipc.on('updateInstantReplayPath', updateInstantReplayPath);
 
     return () => {
       ipc.removeAllListeners('updateRecStatus');
@@ -458,6 +468,7 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('displayUnprotectCloudVideos');
       ipc.removeAllListeners('displayTagCloudVideo');
       ipc.removeAllListeners('updateAdvancedLoggingStatus');
+      ipc.removeAllListeners('updateInstantReplayPath');
     };
   }, []);
 
@@ -494,6 +505,7 @@ const WarcraftRecorder = () => {
                 activityStatus={activityStatus}
                 advancedLoggingStatus={advancedLoggingStatus}
                 setPreviewEnabled={setPreviewEnabled}
+                instantReplayPath={instantReplayPath}
               />
               <Layout
                 recorderStatus={recorderStatus}
@@ -508,6 +520,7 @@ const WarcraftRecorder = () => {
                 advancedLoggingStatus={advancedLoggingStatus}
                 previewEnabled={previewEnabled}
                 setPreviewEnabled={setPreviewEnabled}
+                instantReplayPath={instantReplayPath}
               />
             </div>
           </TooltipProvider>

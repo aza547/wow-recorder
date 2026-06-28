@@ -212,7 +212,7 @@ export default class VideoProcessQueue {
       return;
     }
 
-    console.log('[VideoProcessQueue] Queuing video for upload', item.path);
+    console.info('[VideoProcessQueue] Queuing video for upload', item.path);
     this.inProgressUploads.push(item.path);
     this.uploadQueue.write(item);
 
@@ -232,7 +232,7 @@ export default class VideoProcessQueue {
       return;
     }
 
-    console.log('[VideoProcessQueue] Queuing video for download', videoName);
+    console.info('[VideoProcessQueue] Queuing video for download', videoName);
     this.inProgressDownloads.push(videoName);
     this.downloadQueue.write(video);
 
@@ -244,7 +244,7 @@ export default class VideoProcessQueue {
    * Queue up a kill video for creation.
    */
   public queueCreateKillVideo = async (item: KillVideoQueueItem) => {
-    console.log('[VideoProcessQueue] Queue kill video for processing');
+    console.info('[VideoProcessQueue] Queue kill video for processing');
     this.inProgressKillVideos.push(item.uuid);
     this.killVideoQueue.write(item);
   };
@@ -434,7 +434,7 @@ export default class VideoProcessQueue {
 
     const fn = ffmpeg()
       .complexFilter(filter)
-      .outputOption('-movflags +faststart')
+      .outputOption('-movflags frag_keyframe+empty_moov') // Fragmented MP4.
       .outputOption('-map [v]')
       .outputOption(audioMap)
       .outputOption('-shortest')
@@ -745,9 +745,8 @@ export default class VideoProcessQueue {
       // some players, but does extend the video slightly depending on
       // the keyframe alignment.
       .outputOption('-avoid_negative_ts make_zero')
-      // Move the moov atom to the start of the file for faster playback start.
-      // This means R2 doesn't need to seek to the end to start playback.
-      .outputOption('-movflags +faststart')
+      // Fragmented MP4.
+      .outputOption('-movflags frag_keyframe+empty_moov')
       .output(outputPath);
 
     console.time('[VideoProcessQueue] Video cut took:');

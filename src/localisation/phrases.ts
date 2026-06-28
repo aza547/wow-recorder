@@ -534,6 +534,9 @@ enum Phrase {
   DiagnosticsOpenBundleCreated,
   StatusTitleMigrated,
   StatusDescrMigrated,
+  InstantReplayEnded,
+  InstantReplayEndedDescr,
+  InstantReplayRefresh,
 }
 
 enum Language {

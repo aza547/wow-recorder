@@ -523,7 +523,6 @@ export default class RetailLogHandler extends LogHandler {
     const id = parseInt(line.arg(9), 10);
 
     if (id === 211319) {
-      console.log("SAW REST", id);
       // This is the Holy priest "Restitution" debuff being applied, count
       // that as a death (https://www.wowhead.com/spell=211319).
       const deathDate = (line.date().getTime() - 2) / 1000;

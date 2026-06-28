@@ -8,6 +8,7 @@ import {
   getConfigWtfPath,
   getMetadataForVideo,
   getOBSFormattedDate,
+  getSortedFiles,
   isManualRecordHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
@@ -30,6 +31,7 @@ import {
   KillVideoQueueItem,
   RendererVideo,
   KillVideoSegment,
+  FileSortDirection,
 } from './types';
 import {
   getObsVideoConfig,
@@ -307,6 +309,7 @@ export default class Manager {
 
     this.refreshMicStatus(this.recorder.obsMicState);
     this.redrawPreview();
+    this.refreshInstantReplay(this.recorder.currentFile);
   }
 
   /**
@@ -409,6 +412,13 @@ export default class Manager {
   }
 
   /**
+   * Send a message to the frontend to update the instant replay path.
+   */
+  private refreshInstantReplay(path: string | null) {
+    send('updateInstantReplayPath', path);
+  }
+
+  /**
    * Trigger the frontend to redraw the preview if it's open.
    */
   private redrawPreview() {
@@ -504,7 +514,9 @@ export default class Manager {
     }
 
     if (config.recordClassicPtr) {
-      this.classicPtrLogHandler = new ClassicLogHandler(config.classicPtrLogPath);
+      this.classicPtrLogHandler = new ClassicLogHandler(
+        config.classicPtrLogPath,
+      );
     }
 
     if (config.recordEra) {

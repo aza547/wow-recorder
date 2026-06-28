@@ -538,6 +538,10 @@ const ENGLISH: Translations = {
   [Phrase.DiagnosticsOpenBundleCreated]: 'Open Bundle Location',
   [Phrase.StatusTitleMigrated]: 'Migrated',
   [Phrase.StatusDescrMigrated]: 'This guild has been migrated.', // TODO: add more details here.
+  [Phrase.InstantReplayEnded]: 'Instant Replay Has Ended.',
+  [Phrase.InstantReplayEndedDescr]: 'The recording has ended and the instant replay feature is no longer available.', 
+  [Phrase.InstantReplayRefresh]: 'Refresh',
+
 };
 
 export default ENGLISH;

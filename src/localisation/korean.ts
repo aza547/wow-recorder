@@ -538,6 +538,9 @@ const KOREAN: Translations = {
   [Phrase.DiagnosticsOpenBundleCreated]: '번들 폴더 열기',
   [Phrase.StatusTitleMigrated]: '마이그레이션 완료',
   [Phrase.StatusDescrMigrated]: '이 길드는 마이그레이션되었습니다.', // TODO: add more details here.
+  [Phrase.InstantReplayEnded]: '인스턴트 리플레이가 종료되었습니다.',
+  [Phrase.InstantReplayEndedDescr]: '녹화가 종료되어 인스턴트 리플레이 기능을 더 이상 사용할 수 없습니다.',
+  [Phrase.InstantReplayRefresh]: '새로고침',
 };
 
 export default KOREAN;

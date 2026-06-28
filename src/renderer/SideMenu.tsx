@@ -9,6 +9,7 @@ import {
   HardHat,
   MonitorCog,
   Play,
+  Radio,
   Square,
   Sword,
   Swords,
@@ -73,6 +74,7 @@ interface IProps {
   activityStatus: ActivityStatus | null;
   advancedLoggingStatus: AdvancedLoggingStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
+  instantReplayPath: string | null;
 }
 
 const SideMenu = (props: IProps) => {
@@ -92,6 +94,7 @@ const SideMenu = (props: IProps) => {
     activityStatus,
     advancedLoggingStatus,
     setPreviewEnabled,
+    instantReplayPath,
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
@@ -220,8 +223,24 @@ const SideMenu = (props: IProps) => {
     );
   };
 
-  const handleChangeCategory = (newCategory: VideoCategory) => {
-    const index = getCategoryIndex(newCategory);
+  const renderInstantReplayTab = () => {
+    return (
+      <Menu.Item value={Pages.InstantReplay} className="py-1.5 my-2">
+        <span className="inline-flex items-center animate-pulse">
+          <Menu.Item.Icon>
+            <Radio className="text-[#bb4420] " />
+          </Menu.Item.Icon>
+
+          <span className="font-semibold text-[#bb4420] drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]">
+            Instant Replay
+          </span>
+        </span>
+      </Menu.Item>
+    );
+  };
+
+  const handleChangeCategory = (value: VideoCategory) => {
+    const index = getCategoryIndex(value);
     setConfigValue('selectedCategory', index);
     persistentProgress.current = 0;
 
@@ -230,7 +249,7 @@ const SideMenu = (props: IProps) => {
         ...prevState,
         videoFilterTags: [],
         page: Pages.None,
-        category: newCategory,
+        category: value,
         selectedVideos: [],
         multiPlayerMode: false,
         playing: false,
@@ -268,15 +287,30 @@ const SideMenu = (props: IProps) => {
         appState={appState}
         setPreviewEnabled={setPreviewEnabled}
       />
-      <Separator className="mb-4" />
+
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
       >
+        {(instantReplayPath || appState.page === Pages.InstantReplay) && (
+          <>
+            <Separator />
+            <Menu
+              initialValue={
+                appState.page !== Pages.None ? appState.page : false
+              }
+              onChange={handleChangePage}
+            >
+              {renderInstantReplayTab()}
+            </Menu>
+          </>
+        )}
+
         <Menu
           initialValue={appState.page === Pages.None ? category : false}
           onChange={handleChangeCategory}
         >
+          <Separator className="mb-4" />
           <Menu.Label>
             {getLocalePhrase(language, Phrase.RecordingsHeading)}
           </Menu.Label>
