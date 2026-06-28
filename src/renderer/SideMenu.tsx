@@ -74,7 +74,7 @@ interface IProps {
   activityStatus: ActivityStatus | null;
   advancedLoggingStatus: AdvancedLoggingStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
-  instantReplayPath: string;
+  instantReplayPath: string | null;
 }
 
 const SideMenu = (props: IProps) => {

@@ -434,7 +434,7 @@ export default class VideoProcessQueue {
 
     const fn = ffmpeg()
       .complexFilter(filter)
-      .outputOption('-movflags +faststart')
+      .outputOption('-movflags frag_keyframe+empty_moov') // Fragmented MP4.
       .outputOption('-map [v]')
       .outputOption(audioMap)
       .outputOption('-shortest')
@@ -745,9 +745,8 @@ export default class VideoProcessQueue {
       // some players, but does extend the video slightly depending on
       // the keyframe alignment.
       .outputOption('-avoid_negative_ts make_zero')
-      // Move the moov atom to the start of the file for faster playback start.
-      // This means R2 doesn't need to seek to the end to start playback.
-      .outputOption('-movflags +faststart')
+      // Fragmented MP4.
+      .outputOption('-movflags frag_keyframe+empty_moov')
       .output(outputPath);
 
     console.time('[VideoProcessQueue] Video cut took:');

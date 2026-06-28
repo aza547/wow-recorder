@@ -538,6 +538,9 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.DiagnosticsOpenBundleCreated]: '打开包文件夹',
   [Phrase.StatusTitleMigrated]: '已迁移',
   [Phrase.StatusDescrMigrated]: '此公会已迁移。', // TODO: add more details here.
+  [Phrase.InstantReplayEnded]: '即时回放已结束。',
+  [Phrase.InstantReplayEndedDescr]: '录制已结束，即时回放功能已不再可用。',
+  [Phrase.InstantReplayRefresh]: '刷新',
 };
 
 export default CHINESE_SIMPLIFIED;

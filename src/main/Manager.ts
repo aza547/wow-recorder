@@ -309,22 +309,7 @@ export default class Manager {
 
     this.refreshMicStatus(this.recorder.obsMicState);
     this.redrawPreview();
-
-    const { obsPath } = getBaseConfig(this.cfg);
-    setTimeout(() => {
-      getSortedFiles(obsPath, '.*\\.mp4', FileSortDirection.NewestFirst).then(
-        (files) => {
-          console.log(
-            'SET INSTANT REPLAY PATH',
-            files.length > 0 ? files[0].name : null,
-          );
-          send(
-            'updateInstantReplayPath',
-            files.length > 0 ? files[0].name : null,
-          );
-        },
-      );
-    }, 2000);
+    this.refreshInstantReplay(this.recorder.currentFile);
   }
 
   /**
@@ -424,6 +409,13 @@ export default class Manager {
    */
   private refreshMicStatus(status: MicStatus) {
     send('updateMicStatus', status);
+  }
+
+  /**
+   * Send a message to the frontend to update the instant replay path.
+   */
+  private refreshInstantReplay(path: string | null) {
+    send('updateInstantReplayPath', path);
   }
 
   /**

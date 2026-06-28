@@ -133,7 +133,9 @@ const WarcraftRecorder = () => {
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
 
   // Fragmented MP4 path.
-  const [instantReplayPath, setInstantReplayPath] = useState<string>('');
+  const [instantReplayPath, setInstantReplayPath] = useState<string | null>(
+    null,
+  );
 
   // The counters for display on the side menu. It's convient to keep these
   // seperate to the video state so we can apply filtering without changing the
@@ -425,7 +427,7 @@ const WarcraftRecorder = () => {
   };
 
   const updateInstantReplayPath = (value: unknown) => {
-    setInstantReplayPath(value as string);
+    setInstantReplayPath(value as string | null);
   };
 
   useEffect(() => {

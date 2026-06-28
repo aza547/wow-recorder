@@ -21,16 +21,17 @@ type IProps = {
 
 const ipc = window.electron.ipcRenderer;
 
-const openLogPath = () => {
-  ipc.sendMessage('logPath', ['open']);
-};
-
 const DiagnosticsDialog = (props: IProps) => {
   const { children, appState, setPreviewEnabled } = props;
   const { language } = appState;
   const [open, setOpen] = useState(false);
   const [zipping, setZipping] = useState(false);
   const [bundlePath, setBundlePath] = useState('');
+
+  const openLogPath = () => {
+    ipc.sendMessage('logPath', ['open']);
+    setOpen(false);
+  };
 
   const renderOpenLogFolder = () => {
     return (
@@ -62,6 +63,7 @@ const DiagnosticsDialog = (props: IProps) => {
 
   const openBundleLocation = () => {
     ipc.openSystemExplorer(bundlePath);
+    setOpen(false);
   };
 
   const renderCreateDiagsBundle = () => {
