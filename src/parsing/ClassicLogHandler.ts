@@ -5,7 +5,7 @@ import {
   classicUniqueSpecSpells,
   mopChallengeModes,
 } from '../main/constants';
-import LogHandler from './LogHandler';
+import LogHandler, { type LogHandlerSource } from './LogHandler';
 import { Flavour } from '../main/types';
 import ArenaMatch from '../activitys/ArenaMatch';
 import { isUnitFriendly, isUnitPlayer, isUnitSelf } from './logutils';
@@ -20,8 +20,8 @@ import ConfigService from 'config/ConfigService';
  * Classic log handler class.
  */
 export default class ClassicLogHandler extends LogHandler {
-  constructor(logPath: string) {
-    super(logPath, 2);
+  constructor(logPath: string, source: LogHandlerSource = 'classic') {
+    super(logPath, 2, source);
 
     /* eslint-disable prettier/prettier */
     this.combatLogWatcher
@@ -217,7 +217,7 @@ export default class ClassicLogHandler extends LogHandler {
       Flavour.Classic,
     );
 
-    await LogHandler.startActivity(activity);
+    await this.startActivity(activity);
   }
 
   private static calculateArenaResult(arenaMatch: ArenaMatch) {
@@ -381,7 +381,7 @@ export default class ClassicLogHandler extends LogHandler {
       Flavour.Classic,
     );
 
-    await LogHandler.startActivity(activity);
+    await this.startActivity(activity);
   }
 
   private async battlegroundEnd(line: LogLine) {
@@ -489,7 +489,7 @@ export default class ClassicLogHandler extends LogHandler {
       Flavour.Classic,
     );
 
-    await LogHandler.startActivity(activity);
+    await this.startActivity(activity);
   }
 
   private async handleChallengeModeEndLine(line: LogLine) {

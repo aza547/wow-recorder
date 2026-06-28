@@ -11,7 +11,7 @@ import {
 } from '../main/constants';
 
 import ArenaMatch from '../activitys/ArenaMatch';
-import LogHandler from './LogHandler';
+import LogHandler, { type LogHandlerSource } from './LogHandler';
 import Battleground from '../activitys/Battleground';
 import ChallengeModeDungeon from '../activitys/ChallengeModeDungeon';
 
@@ -34,8 +34,8 @@ import RaidEncounter from 'activitys/RaidEncounter';
 export default class RetailLogHandler extends LogHandler {
   private isPtr = false;
 
-  constructor(logPath: string) {
-    super(logPath, 10);
+  constructor(logPath: string, source: LogHandlerSource = 'retail') {
+    super(logPath, 10, source);
 
     /* eslint-disable prettier/prettier */
     this.combatLogWatcher
@@ -105,7 +105,7 @@ export default class RetailLogHandler extends LogHandler {
     if (!LogHandler.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] Fresh Solo Shuffle game starting');
       const activity = new SoloShuffle(startTime, zoneID);
-      await LogHandler.startActivity(activity);
+      await this.startActivity(activity);
     } else if (LogHandler.activity && category === VideoCategory.SoloShuffle) {
       console.info(
         '[RetailLogHandler] New round of existing Solo Shuffle starting',
@@ -122,7 +122,7 @@ export default class RetailLogHandler extends LogHandler {
         Flavour.Retail,
       );
 
-      await LogHandler.startActivity(activity);
+      await this.startActivity(activity);
     }
   }
 
@@ -223,7 +223,7 @@ export default class RetailLogHandler extends LogHandler {
     );
 
     activity.addTimelineSegment(initialSegment);
-    await LogHandler.startActivity(activity);
+    await this.startActivity(activity);
   }
 
   private async handleChallengeModeEndLine(line: LogLine) {
@@ -635,7 +635,7 @@ export default class RetailLogHandler extends LogHandler {
       Flavour.Retail,
     );
 
-    await LogHandler.startActivity(activity);
+    await this.startActivity(activity);
   }
 
   private async battlegroundEnd(line: LogLine) {

@@ -10,7 +10,7 @@ import { classicUniqueSpecSpells } from '../main/constants';
  */
 export default class EraLogHandler extends LogHandler {
   constructor(logPath: string) {
-    super(logPath, 2);
+    super(logPath, 2, 'era');
 
     /* eslint-disable prettier/prettier */
     this.combatLogWatcher
