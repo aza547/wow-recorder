@@ -1,12 +1,7 @@
 import { AppState, RendererVideo } from 'main/types';
 
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
-import React, {
-  Fragment,
-  RefObject,
-  useCallback,
-  useEffect,
-} from 'react';
+import React, { Fragment, RefObject, useCallback, useEffect } from 'react';
 import {
   ArrowDown,
   ArrowUp,
@@ -122,10 +117,13 @@ const VideoSelectionTable = (props: IProps) => {
    */
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const sortedRows = table.getSortedRowModel().rows;
-      const selectedRows = table.getSelectedRowModel().rows;
+      if (event.repeat) {
+        return;
+      }
 
       if (event.key === 'a' && event.ctrlKey) {
+        const sortedRows = table.getSortedRowModel().rows;
+
         sortedRows.forEach((row) => {
           if (!row.getIsSelected()) {
             row.getToggleSelectedHandler()(event);
@@ -137,10 +135,10 @@ const VideoSelectionTable = (props: IProps) => {
         return;
       }
 
-      if (
-        (event.key === 'ArrowDown' || event.key === 'ArrowUp') &&
-        !event.repeat
-      ) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        const sortedRows = table.getSortedRowModel().rows;
+        const selectedRows = table.getSelectedRowModel().rows;
+
         if (selectedRows.length === 0) return;
 
         const currentRow =
