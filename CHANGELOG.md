@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Toggling playback rate now descends the options rather than ascends.
+
 ### Added
 - Added the instant replay feature. You can now view a recording, as it is recording, without interrupting it.
 ### Fixed
