@@ -132,7 +132,7 @@ const installExtensions = async () => {
       extensions.map((name) => installer[name]),
       forceDownload,
     )
-    .catch(console.log);
+    .catch(console.info);
 };
 
 /**
@@ -214,7 +214,7 @@ const createWindow = async () => {
 
   // This gets hit on a user triggering refresh with CTRL-R.
   window.on('ready-to-show', async () => {
-    console.log('[Main] Ready to show');
+    console.info('[Main] Ready to show');
 
     const status = app.getGPUFeatureStatus();
     const info = await app.getGPUInfo('complete');

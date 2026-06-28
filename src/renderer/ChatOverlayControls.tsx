@@ -205,8 +205,6 @@ const ChatOverlayControls = (props: IProps) => {
   };
 
   const getChatOverlayCropSliders = () => {
-    const { chatOverlayCropX, chatOverlayCropY } = config;
-    console.log({ chatOverlayCropX, chatOverlayCropY });
     return (
       <div className="flex flex-col gap-y-4 w-full mt-2">
         <div className="flex gap-x-3 items-center">

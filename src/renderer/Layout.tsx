@@ -100,7 +100,7 @@ const Layout = (props: IProps) => {
       />
     );
   };
-  console.log('page', page);
+
   return (
     <>
       {page === Pages.Settings && renderSettingsPage()}

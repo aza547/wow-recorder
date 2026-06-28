@@ -212,7 +212,7 @@ export default class VideoProcessQueue {
       return;
     }
 
-    console.log('[VideoProcessQueue] Queuing video for upload', item.path);
+    console.info('[VideoProcessQueue] Queuing video for upload', item.path);
     this.inProgressUploads.push(item.path);
     this.uploadQueue.write(item);
 
@@ -232,7 +232,7 @@ export default class VideoProcessQueue {
       return;
     }
 
-    console.log('[VideoProcessQueue] Queuing video for download', videoName);
+    console.info('[VideoProcessQueue] Queuing video for download', videoName);
     this.inProgressDownloads.push(videoName);
     this.downloadQueue.write(video);
 
@@ -244,7 +244,7 @@ export default class VideoProcessQueue {
    * Queue up a kill video for creation.
    */
   public queueCreateKillVideo = async (item: KillVideoQueueItem) => {
-    console.log('[VideoProcessQueue] Queue kill video for processing');
+    console.info('[VideoProcessQueue] Queue kill video for processing');
     this.inProgressKillVideos.push(item.uuid);
     this.killVideoQueue.write(item);
   };

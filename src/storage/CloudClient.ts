@@ -1225,7 +1225,7 @@ export default class CloudClient implements StorageClient {
 
   private setupListeners() {
     ipcMain.on('reconfigureCloud', async () => {
-      console.log('[CloudClient] Reconfiguring cloud client');
+      console.info('[CloudClient] Reconfiguring cloud client');
       this.configure();
     });
 
