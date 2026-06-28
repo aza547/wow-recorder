@@ -516,6 +516,7 @@ export default class Manager {
     if (config.recordClassicPtr) {
       this.classicPtrLogHandler = new ClassicLogHandler(
         config.classicPtrLogPath,
+        'classicPtr',
       );
     }
 
@@ -524,7 +525,10 @@ export default class Manager {
     }
 
     if (config.recordRetailPtr) {
-      this.retailPtrLogHandler = new RetailLogHandler(config.retailPtrLogPath);
+      this.retailPtrLogHandler = new RetailLogHandler(
+        config.retailPtrLogPath,
+        'retailPtr',
+      );
       this.retailPtrLogHandler.setIsPtr();
     }
   }

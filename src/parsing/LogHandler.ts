@@ -42,12 +42,27 @@ import { ESupportedEncoders } from 'main/obsEnums';
  * typically have up to 4 child classes, we don't want multiple concurrent
  * activities.
  */
+export type LogHandlerSource =
+  | 'retail'
+  | 'retailPtr'
+  | 'classic'
+  | 'classicPtr'
+  | 'era';
+
 export default abstract class LogHandler {
   public static activity: Activity | undefined;
+
+  // Tracks which watcher started the shared activity so only that watcher's
+  // timeout can end it. Global force stops deliberately ignore this.
+  private static activitySource: LogHandlerSource | undefined;
 
   public static overrunning = false;
 
   public combatLogWatcher: CombatLogWatcher;
+
+  protected readonly flavour: Flavour;
+
+  protected readonly source: LogHandlerSource;
 
   protected player: Combatant | undefined;
 
@@ -60,7 +75,14 @@ export default abstract class LogHandler {
    */
   protected logProcessQueue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
 
-  constructor(logPath: string, dataTimeout: number) {
+  constructor(
+    logPath: string,
+    dataTimeout: number,
+    flavour: Flavour,
+    source: LogHandlerSource,
+  ) {
+    this.flavour = flavour;
+    this.source = source;
     this.combatLogWatcher = new CombatLogWatcher(logPath, dataTimeout);
     this.combatLogWatcher.watch();
     const lpq = this.logProcessQueue;
@@ -124,7 +146,7 @@ export default abstract class LogHandler {
       flavour,
     );
 
-    await LogHandler.startActivity(activity);
+    await this.startActivity(activity);
   }
 
   protected async handleEncounterEndLine(line: LogLine) {
@@ -208,7 +230,15 @@ export default abstract class LogHandler {
     LogHandler.activity.addDeath(playerDeath);
   }
 
-  protected static async startActivity(activity: Activity) {
+  // Instance starts tag the shared activity with this watcher's source.
+  protected async startActivity(activity: Activity) {
+    await LogHandler.startActivity(activity, this.source);
+  }
+
+  protected static async startActivity(
+    activity: Activity,
+    source?: LogHandlerSource,
+  ) {
     const { category } = activity;
     const allowed = allowRecordCategory(ConfigService.getInstance(), category);
 
@@ -230,11 +260,13 @@ export default abstract class LogHandler {
 
     try {
       LogHandler.activity = activity;
+      LogHandler.activitySource = source;
       await Recorder.getInstance().startRecording(offset);
       LogHandler.stateChangeCallback();
     } catch (error) {
       console.error('[LogHandler] Error starting activity', String(error));
       LogHandler.activity = undefined;
+      LogHandler.activitySource = undefined;
     }
   }
 
@@ -258,6 +290,7 @@ export default abstract class LogHandler {
     const lastActivity = LogHandler.activity;
     LogHandler.overrunning = true;
     LogHandler.activity = undefined;
+    LogHandler.activitySource = undefined;
 
     const { overrun } = lastActivity;
 
@@ -364,9 +397,26 @@ export default abstract class LogHandler {
       } seconds.`,
     );
 
-    if (LogHandler.activity) {
-      await LogHandler.forceEndActivity(-ms / 1000);
+    if (!LogHandler.activity) {
+      return;
     }
+
+    // Timeouts belong to one combat log watcher, while activity is shared
+    // globally. Ignore stale timeouts from another watcher/source.
+    if (
+      LogHandler.activitySource &&
+      LogHandler.activitySource !== this.source
+    ) {
+      console.info(
+        '[LogHandler] Ignoring timeout from',
+        this.source,
+        'log while recording',
+        LogHandler.activitySource,
+      );
+      return;
+    }
+
+    await LogHandler.forceEndActivity(-ms / 1000);
   }
 
   public static async forceEndActivity(timedelta = 0) {
@@ -388,6 +438,7 @@ export default abstract class LogHandler {
   public static dropActivity() {
     LogHandler.overrunning = false;
     LogHandler.activity = undefined;
+    LogHandler.activitySource = undefined;
   }
 
   protected async zoneChangeStop(line: LogLine) {
