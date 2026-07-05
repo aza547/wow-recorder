@@ -231,7 +231,7 @@ export default class Recorder extends EventEmitter {
       data.includes(moof) &&
       data.includes(mdat)
     ) {
-      console.log('[Recorder] Enable instant replay for', this.currentFile);
+      console.info('[Recorder] Enable instant replay for', this.currentFile);
       this.instantReplayFile = this.currentFile;
       this.emit('state-change');
     }
