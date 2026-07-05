@@ -21,6 +21,7 @@ import {
   AdvancedLoggingStatus,
   AppState,
   ErrorReport,
+  InstantReplayState,
   MicStatus,
   Pages,
   RecStatus,
@@ -74,7 +75,8 @@ interface IProps {
   activityStatus: ActivityStatus | null;
   advancedLoggingStatus: AdvancedLoggingStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
-  instantReplayPath: string | null;
+  instantReplayState: InstantReplayState;
+  setInstantReplayState: Dispatch<SetStateAction<InstantReplayState>>;
 }
 
 const SideMenu = (props: IProps) => {
@@ -94,7 +96,8 @@ const SideMenu = (props: IProps) => {
     activityStatus,
     advancedLoggingStatus,
     setPreviewEnabled,
-    instantReplayPath,
+    instantReplayState,
+    setInstantReplayState,
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
@@ -258,6 +261,15 @@ const SideMenu = (props: IProps) => {
   };
 
   const handleChangePage = (newPage: Pages) => {
+    if (newPage === Pages.InstantReplay) {
+      setInstantReplayState((prevState) => {
+        return {
+          ...prevState,
+          openPath: prevState.currentPath,
+        };
+      });
+    }
+
     setAppState((prevState) => {
       return {
         ...prevState,
@@ -292,7 +304,8 @@ const SideMenu = (props: IProps) => {
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
       >
-        {(instantReplayPath || appState.page === Pages.InstantReplay) && (
+        {(instantReplayState.currentPath ||
+          appState.page === Pages.InstantReplay) && (
           <>
             <Separator />
             <Menu

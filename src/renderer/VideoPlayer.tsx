@@ -1264,6 +1264,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     if (!player1.current) {
       return;
     }
+    setPlaying(false);
     setRefreshingInstantReplay(true);
     setSpinner(true);
     player1.current.pause();

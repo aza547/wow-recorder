@@ -541,6 +541,7 @@ const KOREAN: Translations = {
   [Phrase.InstantReplayEnded]: '인스턴트 리플레이가 종료되었습니다.',
   [Phrase.InstantReplayEndedDescr]: '녹화가 종료되어 인스턴트 리플레이 기능을 더 이상 사용할 수 없습니다.',
   [Phrase.InstantReplayRefresh]: '새로고침',
+  [Phrase.InstantReplayStale]: '새 녹화가 활성화되었습니다. 화살표를 클릭하여 최신 인스턴트 리플레이로 이동하세요.',
   [Phrase.CloudUploadSettingsLabel]: '업로드 설정',
   [Phrase.CloudFilterSettingsLabel]: '카테고리 필터 설정',
   [Phrase.CloudAdvancedFilterSettingsLabel]: '캐릭터 필터 설정',

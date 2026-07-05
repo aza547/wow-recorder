@@ -537,6 +537,7 @@ enum Phrase {
   InstantReplayEnded,
   InstantReplayEndedDescr,
   InstantReplayRefresh,
+  InstantReplayStale,
   CloudUploadSettingsLabel,
   CloudFilterSettingsLabel,
   CloudAdvancedFilterSettingsLabel,

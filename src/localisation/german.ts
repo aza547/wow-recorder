@@ -541,6 +541,7 @@ const GERMAN: Translations = {
   [Phrase.InstantReplayEnded]: 'Die Sofortwiedergabe ist beendet.',
   [Phrase.InstantReplayEndedDescr]: 'Die Aufnahme ist beendet und die Sofortwiedergabe-Funktion ist nicht mehr verfügbar.',
   [Phrase.InstantReplayRefresh]: 'Aktualisieren',
+  [Phrase.InstantReplayStale]: 'Eine neue Aufnahme ist jetzt aktiv. Klicken Sie auf den Pfeil, um zur neuesten Sofortwiedergabe zu gelangen.',
   [Phrase.CloudUploadSettingsLabel]: 'Upload-Einstellungen',
   [Phrase.CloudFilterSettingsLabel]: 'Kategoriefilter-Einstellungen',
   [Phrase.CloudAdvancedFilterSettingsLabel]: 'Charakterfilter-Einstellungen',

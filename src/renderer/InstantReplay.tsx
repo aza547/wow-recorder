@@ -1,53 +1,86 @@
-import { AppState } from 'main/types';
+import { AppState, InstantReplayState } from 'main/types';
 import VideoPlayer from './VideoPlayer';
-import { useSettings } from './useSettings';
-import { Dispatch, RefObject, SetStateAction } from 'react';
+import { Dispatch, RefObject, SetStateAction, useEffect } from 'react';
+import { ConfigurationSchema } from 'config/configSchema';
+import { Button } from './components/Button/Button';
+import { ArrowRight } from 'lucide-react';
 import { Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
-import Separator from './components/Separator/Separator';
-import { Radio } from 'lucide-react';
+
+const ipc = window.electron.ipcRenderer;
 
 interface IProps {
-  instantReplayPath: string | null;
+  instantReplayState: InstantReplayState;
+  setInstantReplayState: Dispatch<SetStateAction<InstantReplayState>>;
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
   persistentProgress: RefObject<number>;
+  config: ConfigurationSchema;
 }
 
 const InstantReplay = (props: IProps) => {
-  const { instantReplayPath, appState, setAppState, persistentProgress } =
-    props;
+  const {
+    instantReplayState,
+    setInstantReplayState,
+    appState,
+    setAppState,
+    persistentProgress,
+    config,
+  } = props;
 
-  const [config] = useSettings();
+  const { language } = appState;
+  const { currentPath, openPath } = instantReplayState;
 
-  if (!instantReplayPath) {
+  useEffect(() => {
+    if (openPath) {
+      ipc.setOpenInstantReplayFile(openPath);
+    }
+
+    return () => {
+      ipc.setOpenInstantReplayFile(null);
+    };
+  }, [openPath]);
+
+  const goToLatestInstantReplay = () => {
+    setInstantReplayState((prev) => ({
+      ...prev,
+      openPath: prev.currentPath,
+    }));
+  };
+
+  const renderStaleReplayNotification = () => {
     return (
-      <div className="flex flex-col items-center justify-center h-full w-full bg-background-higher pt-[32px]">
-        <div className="flex items-center justify-center flex-col w-1/2 h-1/2 text-center font-sans text-foreground gap-y-6">
-          <Radio size={40} />
-          <h1 className="text-xl font-bold">
-            {getLocalePhrase(appState.language, Phrase.InstantReplayEnded)}
-          </h1>
-          <Separator className="my-2" />
-          <h2 className="text-foreground font-sans text-lg">
-            {getLocalePhrase(appState.language, Phrase.InstantReplayEndedDescr)}
-          </h2>
-        </div>
+      <div className="fixed bottom-16 right-2 w-[360px] bg-background-higher border border-card px-4 py-2 rounded-lg shadow-lg flex items-center ">
+        <p className="text-sm text-foreground-lighter">
+          {getLocalePhrase(language, Phrase.InstantReplayStale)}
+        </p>
+        <Button size="sm" onClick={goToLatestInstantReplay}>
+          <ArrowRight size={18} />
+        </Button>
       </div>
     );
+  };
+
+  const replayIsStale = openPath !== currentPath && currentPath;
+
+  if (!openPath) {
+    // Should never happen.
+    return <></>;
   }
 
   return (
     <div className="flex h-full w-full bg-background-higher pt-[32px]">
       <VideoPlayer
+        key={openPath}
         videos={[]}
-        instantReplayPath={instantReplayPath}
+        instantReplayPath={openPath}
         categoryState={[]}
         persistentProgress={persistentProgress}
         config={config}
         appState={appState}
         setAppState={setAppState}
       />
+      {!replayIsStale && renderStaleReplayNotification()}
     </div>
   );
 };

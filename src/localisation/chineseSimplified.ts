@@ -541,6 +541,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.InstantReplayEnded]: '即时回放已结束。',
   [Phrase.InstantReplayEndedDescr]: '录制已结束，即时回放功能已不再可用。',
   [Phrase.InstantReplayRefresh]: '刷新',
+  [Phrase.InstantReplayStale]: '新的录制已开始。点击箭头前往最新的即时回放。',
   [Phrase.CloudUploadSettingsLabel]: '上传设置',
   [Phrase.CloudFilterSettingsLabel]: '分类筛选设置',
   [Phrase.CloudAdvancedFilterSettingsLabel]: '角色筛选设置',

@@ -541,6 +541,7 @@ const ENGLISH: Translations = {
   [Phrase.InstantReplayEnded]: 'Instant Replay Has Ended.',
   [Phrase.InstantReplayEndedDescr]: 'The recording has ended and the instant replay feature is no longer available.', 
   [Phrase.InstantReplayRefresh]: 'Refresh',
+  [Phrase.InstantReplayStale]: 'A new recording is now active. Click the arrow to go to the latest instant replay.',
   [Phrase.CloudUploadSettingsLabel]: 'Upload Settings',
   [Phrase.CloudFilterSettingsLabel]: 'Category Filters',
   [Phrase.CloudAdvancedFilterSettingsLabel]: 'Character Filters',

@@ -13,6 +13,7 @@ import {
   StorageFilter,
   ActivityStatus,
   AdvancedLoggingStatus,
+  InstantReplayState,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language } from 'localisation/translations';
@@ -133,9 +134,11 @@ const WarcraftRecorder = () => {
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
 
   // Fragmented MP4 path.
-  const [instantReplayPath, setInstantReplayPath] = useState<string | null>(
-    null,
-  );
+  const [instantReplayState, setInstantReplayState] =
+    useState<InstantReplayState>({
+      currentPath: null,
+      openPath: null,
+    });
 
   // The counters for display on the side menu. It's convient to keep these
   // seperate to the video state so we can apply filtering without changing the
@@ -427,7 +430,10 @@ const WarcraftRecorder = () => {
   };
 
   const updateInstantReplayPath = (value: unknown) => {
-    setInstantReplayPath(value as string | null);
+    setInstantReplayState((prev) => ({
+      ...prev,
+      currentPath: value as string | null,
+    }));
   };
 
   useEffect(() => {
@@ -505,7 +511,8 @@ const WarcraftRecorder = () => {
                 activityStatus={activityStatus}
                 advancedLoggingStatus={advancedLoggingStatus}
                 setPreviewEnabled={setPreviewEnabled}
-                instantReplayPath={instantReplayPath}
+                instantReplayState={instantReplayState}
+                setInstantReplayState={setInstantReplayState}
               />
               <Layout
                 recorderStatus={recorderStatus}
@@ -520,7 +527,8 @@ const WarcraftRecorder = () => {
                 advancedLoggingStatus={advancedLoggingStatus}
                 previewEnabled={previewEnabled}
                 setPreviewEnabled={setPreviewEnabled}
-                instantReplayPath={instantReplayPath}
+                instantReplayState={instantReplayState}
+                setInstantReplayState={setInstantReplayState}
               />
             </div>
           </TooltipProvider>

@@ -678,6 +678,11 @@ enum SoundAlerts {
   MANUAL_RECORDING_STOP = 'manual-recording-stop',
 }
 
+type InstantReplayState = {
+  currentPath: string | null;
+  openPath: string | null;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -746,4 +751,5 @@ export {
   KillVideoStatus,
   Character,
   CharacterFilter,
+  InstantReplayState,
 };

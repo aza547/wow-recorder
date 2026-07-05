@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import {
   AppState,
