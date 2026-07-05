@@ -1,5 +1,10 @@
 import React, { Dispatch, SetStateAction } from 'react';
-import { AdvancedLoggingStatus, AppState, RecStatus } from 'main/types';
+import {
+  AdvancedLoggingStatus,
+  AppState,
+  RecStatus,
+  RendererVideo,
+} from 'main/types';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase } from 'localisation/translations';
 import GeneralSettings from './GeneralSettings';
@@ -27,6 +32,7 @@ interface IProps {
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   advancedLoggingStatus: AdvancedLoggingStatus;
+  videoState: RendererVideo[];
 }
 
 const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
@@ -41,6 +47,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
     appState,
     setAppState,
     advancedLoggingStatus,
+    videoState,
   } = props;
 
   return (
@@ -170,6 +177,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                   appState={appState}
                   config={config}
                   setConfig={setConfig}
+                  videoState={videoState}
                 />
               </div>
             </div>

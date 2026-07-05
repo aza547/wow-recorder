@@ -73,6 +73,7 @@ const Layout = (props: IProps) => {
         appState={appState}
         setAppState={setAppState}
         advancedLoggingStatus={advancedLoggingStatus}
+        videoState={videoState}
       />
     );
   };

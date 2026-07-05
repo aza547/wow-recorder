@@ -541,6 +541,15 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.InstantReplayEnded]: '即时回放已结束。',
   [Phrase.InstantReplayEndedDescr]: '录制已结束，即时回放功能已不再可用。',
   [Phrase.InstantReplayRefresh]: '刷新',
+  [Phrase.CloudUploadSettingsLabel]: '上传设置',
+  [Phrase.CloudFilterSettingsLabel]: '分类筛选设置',
+  [Phrase.CloudAdvancedFilterSettingsLabel]: '角色筛选设置',
+  [Phrase.CharacterAdd]: '添加角色',
+  [Phrase.CharacterFilterAdd]: '添加角色筛选',
+  [Phrase.CharacterFilterSelectFromRecent]: '从您最近的本地录制中选择一个角色筛选。',
+  [Phrase.CharacterFilterAddManual]: '...或手动添加角色筛选。',
+  [Phrase.CharacterFilterNone]: '当前未启用角色上传筛选。添加角色以启用该筛选。',
+  [Phrase.CharacterFilterActive]: '仅会上传使用下方所列角色进行游戏时创建的录制。',
 };
 
 export default CHINESE_SIMPLIFIED;

@@ -118,6 +118,7 @@ const DiagnosticsDialog = (props: IProps) => {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
+          {/* // TODO: Localize this title */}
           <DialogTitle>Diagnostics</DialogTitle>
         </DialogHeader>
 
