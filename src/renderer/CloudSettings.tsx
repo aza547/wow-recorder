@@ -34,7 +34,14 @@ import {
 } from './components/Select/Select';
 import Separator from './components/Separator/Separator';
 import { Phrase } from 'localisation/phrases';
-import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
+import {
+  ChangeEvent,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useEffect,
+  useRef,
+} from 'react';
 import { Button } from './components/Button/Button';
 import { specImages } from './images';
 import {
@@ -55,7 +62,7 @@ const raidDifficultyOptions = [
 
 let debounceTimer: NodeJS.Timeout | undefined;
 
-const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
+const CategoryHeading = ({ children }: { children: ReactNode }) => (
   <h2 className="text-foreground-lighter font-bold">{children}</h2>
 );
 
@@ -221,7 +228,7 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setMinKeystoneLevel = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setMinKeystoneLevel = (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.value) {
       // Allow setting empty as midpoint.
       setConfig((prev) => ({ ...prev, cloudUploadDungeonMinLevel: -1 }));
@@ -470,9 +477,7 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setCloudAccountName = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const setCloudAccountName = async (event: ChangeEvent<HTMLInputElement>) => {
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -516,9 +521,7 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setCloudPassword = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const setCloudPassword = async (event: ChangeEvent<HTMLInputElement>) => {
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -780,7 +783,7 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setUploadRateLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setUploadRateLimit = (event: ChangeEvent<HTMLInputElement>) => {
     const cloudUploadRateLimitMbps = parseInt(event.target.value, 10);
 
     if (Number.isNaN(cloudUploadRateLimitMbps)) {
@@ -1013,10 +1016,7 @@ const CloudSettings = (props: IProps) => {
 
           <div>
             <CategoryHeading>
-              {getLocalePhrase(
-                appState.language,
-                Phrase.CloudUploadSettingsLabel,
-              )}
+              {getLocalePhrase(language, Phrase.CloudUploadSettingsLabel)}
             </CategoryHeading>
             <Separator className="mt-2 mb-4" />
             <div className="flex flex-row gap-x-6">
@@ -1032,10 +1032,7 @@ const CloudSettings = (props: IProps) => {
             <>
               <div>
                 <CategoryHeading>
-                  {getLocalePhrase(
-                    appState.language,
-                    Phrase.CloudFilterSettingsLabel,
-                  )}
+                  {getLocalePhrase(language, Phrase.CloudFilterSettingsLabel)}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 {config.cloudUpload && (
@@ -1047,7 +1044,7 @@ const CloudSettings = (props: IProps) => {
               <div>
                 <CategoryHeading>
                   {getLocalePhrase(
-                    appState.language,
+                    language,
                     Phrase.CloudAdvancedFilterSettingsLabel,
                   )}
                 </CategoryHeading>
