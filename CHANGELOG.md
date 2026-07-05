@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added the instant replay feature. You can now view a recording, as it is recording, without interrupting it.
+- Add the ability to filter uploads by character name and realm.
+
 ### Fixed
 
 ## [7.9.0] - 2026-06-26

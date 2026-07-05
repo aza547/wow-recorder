@@ -42,7 +42,7 @@ import {
   getSpecClass,
   getWoWClassColor,
 } from './rendererutils';
-import AddCharacterFilterDialog from './AddCharacterFilterDialog';
+import CharacterFilterDialog from './CharacterFilterDialog';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -981,7 +981,7 @@ const CloudSettings = (props: IProps) => {
         )}
 
         <div className="flex gap-2">
-          <AddCharacterFilterDialog
+          <CharacterFilterDialog
             appState={appState}
             videoState={videoState}
             config={config}
@@ -991,7 +991,7 @@ const CloudSettings = (props: IProps) => {
               <PlusIcon className="mr-1" />
               {getLocalePhrase(language, Phrase.CharacterAdd)}
             </Button>
-          </AddCharacterFilterDialog>
+          </CharacterFilterDialog>
           <Button onClick={clearCharacterFilters} variant="outline">
             <Eraser className="mr-2" size={20} />
             {getLocalePhrase(language, Phrase.Clear)}
