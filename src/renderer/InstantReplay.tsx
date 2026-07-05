@@ -50,8 +50,8 @@ const InstantReplay = (props: IProps) => {
 
   const renderStaleReplayNotification = () => {
     return (
-      <div className="fixed bottom-16 right-2 w-[360px] bg-background-higher border border-card px-4 py-2 rounded-lg shadow-lg flex items-center ">
-        <p className="text-sm text-foreground-lighter">
+      <div className="fixed bottom-16 right-2 w-[320px] bg-background-higher border border-card px-4 py-2 rounded-lg shadow-lg flex items-center ">
+        <p className="text-xs text-foreground-lighter">
           {getLocalePhrase(language, Phrase.InstantReplayStale)}
         </p>
         <Button size="sm" onClick={goToLatestInstantReplay}>
@@ -80,7 +80,7 @@ const InstantReplay = (props: IProps) => {
         appState={appState}
         setAppState={setAppState}
       />
-      {!replayIsStale && renderStaleReplayNotification()}
+      {replayIsStale && renderStaleReplayNotification()}
     </div>
   );
 };
