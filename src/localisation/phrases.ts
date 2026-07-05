@@ -537,6 +537,15 @@ enum Phrase {
   InstantReplayEnded,
   InstantReplayEndedDescr,
   InstantReplayRefresh,
+  CloudUploadSettingsLabel,
+  CloudFilterSettingsLabel,
+  CloudAdvancedFilterSettingsLabel,
+  CharacterAdd,
+  CharacterFilterAdd,
+  CharacterFilterSelectFromRecent,
+  CharacterFilterAddManual,
+  CharacterFilterNone,
+  CharacterFilterActive,
 }
 
 enum Language {

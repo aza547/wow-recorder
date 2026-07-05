@@ -7,6 +7,7 @@ import {
   CloudConfig,
   Flavour,
   AudioSource,
+  CharacterFilter,
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../config/ConfigService';
@@ -145,6 +146,46 @@ const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
 
     if (keystoneLevel < minKeystoneLevel) {
       console.info('[configUtils] Keystone too low for upload');
+      return false;
+    }
+  }
+
+  const characterFilters = cfg.get<CharacterFilter[]>('characterUploadFilters');
+
+  if (characterFilters.length > 0) {
+    const { player } = metadata;
+
+    if (!player) {
+      console.info(
+        '[configUtils] Not uploading as character filter enabled but player undefined',
+      );
+      return false;
+    }
+
+    const { _name, _realm } = player;
+
+    if (!_name || !_realm) {
+      console.info(
+        '[configUtils] Not uploading as character filter enabled but player name or realm falsy',
+        _name,
+        _realm,
+      );
+      return false;
+    }
+
+    const matched = characterFilters.some((filter) => {
+      return (
+        filter.name.toLowerCase() === _name.toLowerCase() &&
+        filter.realm.toLowerCase() === _realm.toLowerCase()
+      );
+    });
+
+    if (!matched) {
+      console.info(
+        '[configUtils] Not uploading as did not match character filter',
+        _name,
+        _realm,
+      );
       return false;
     }
   }

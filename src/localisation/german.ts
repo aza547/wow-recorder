@@ -541,6 +541,15 @@ const GERMAN: Translations = {
   [Phrase.InstantReplayEnded]: 'Die Sofortwiedergabe ist beendet.',
   [Phrase.InstantReplayEndedDescr]: 'Die Aufnahme ist beendet und die Sofortwiedergabe-Funktion ist nicht mehr verfügbar.',
   [Phrase.InstantReplayRefresh]: 'Aktualisieren',
+  [Phrase.CloudUploadSettingsLabel]: 'Upload-Einstellungen',
+  [Phrase.CloudFilterSettingsLabel]: 'Kategoriefilter-Einstellungen',
+  [Phrase.CloudAdvancedFilterSettingsLabel]: 'Charakterfilter-Einstellungen',
+  [Phrase.CharacterAdd]: 'Charakter hinzufügen',
+  [Phrase.CharacterFilterAdd]: 'Charakterfilter hinzufügen',
+  [Phrase.CharacterFilterSelectFromRecent]: 'Wählen Sie einen Charakterfilter aus Ihren letzten lokalen Aufnahmen aus.',
+  [Phrase.CharacterFilterAddManual]: '...oder fügen Sie einen Charakterfilter manuell hinzu.',
+  [Phrase.CharacterFilterNone]: 'Kein Charakter-Uploadfilter aktiv. Fügen Sie einen Charakter hinzu, um ihn zu aktivieren.',
+  [Phrase.CharacterFilterActive]: 'Es werden nur Aufnahmen hochgeladen, die beim Spielen der unten aufgeführten Charaktere erstellt wurden.',
 };
 
 export default GERMAN;

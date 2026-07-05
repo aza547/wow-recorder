@@ -1153,6 +1153,11 @@ const translateQuality = (p: QualityPresets, language: Language) => {
   }
 };
 
+const formatRealmNameForDisplay = (realm: string) => {
+  // Add a space before capital letters and the first number.
+  return realm.replace(/([A-Z])|(?<!\d)(\d)/g, ' $1$2').trim();
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1218,4 +1223,5 @@ export {
   videoMatchName,
   translateQuality,
   getFriendlyCodecName,
+  formatRealmNameForDisplay,
 };
