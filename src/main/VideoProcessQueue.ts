@@ -434,7 +434,7 @@ export default class VideoProcessQueue {
 
     const fn = ffmpeg()
       .complexFilter(filter)
-      .outputOption('-movflags frag_keyframe+empty_moov') // Fragmented MP4.
+      .outputOption('-movflags +faststart')
       .outputOption('-map [v]')
       .outputOption(audioMap)
       .outputOption('-shortest')
@@ -745,8 +745,7 @@ export default class VideoProcessQueue {
       // some players, but does extend the video slightly depending on
       // the keyframe alignment.
       .outputOption('-avoid_negative_ts make_zero')
-      // Fragmented MP4.
-      .outputOption('-movflags frag_keyframe+empty_moov')
+      .outputOption('-movflags +faststart')
       .output(outputPath);
 
     console.time('[VideoProcessQueue] Video cut took:');
