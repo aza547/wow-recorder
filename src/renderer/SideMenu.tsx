@@ -148,7 +148,9 @@ const SideMenu = (props: IProps) => {
           size="sm"
           variant="ghost"
           className="mx-2 p-1 h-6 w-6 hover:bg-secondary"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             // Drops spam clicks, only let one click per second.
             // Gets reset on recorder status change.
             const now = Date.now();
@@ -183,7 +185,7 @@ const SideMenu = (props: IProps) => {
     }
 
     return (
-      <Menu.Item value={tabCategory} className="py-1.5">
+      <Menu.Item value={tabCategory} className="py-[4px]">
         <Menu.Item.Icon>
           {typeof tabIcon === 'string' ? (
             <img
@@ -206,7 +208,7 @@ const SideMenu = (props: IProps) => {
 
   const renderSettingsTab = () => {
     return (
-      <Menu.Item value={Pages.Settings} className="py-1.5">
+      <Menu.Item value={Pages.Settings} className="py-[4px]">
         <Menu.Item.Icon>
           <Cog />
         </Menu.Item.Icon>
@@ -217,7 +219,7 @@ const SideMenu = (props: IProps) => {
 
   const renderSceneTab = () => {
     return (
-      <Menu.Item value={Pages.SceneEditor} className="py-1.5">
+      <Menu.Item value={Pages.SceneEditor} className="py-[4px]">
         <Menu.Item.Icon>
           <MonitorCog />
         </Menu.Item.Icon>
@@ -228,7 +230,7 @@ const SideMenu = (props: IProps) => {
 
   const renderInstantReplayTab = () => {
     return (
-      <Menu.Item value={Pages.InstantReplay} className="py-1.5 my-2">
+      <Menu.Item value={Pages.InstantReplay} className="py-[4px] my-2">
         <span className="inline-flex items-center animate-pulse">
           <Menu.Item.Icon>
             <Radio className="text-[#bb4420] " />
@@ -310,7 +312,7 @@ const SideMenu = (props: IProps) => {
             <Separator />
             <Menu
               initialValue={
-                appState.page !== Pages.None ? appState.page : false
+                appState.page === Pages.InstantReplay ? appState.page : false
               }
               onChange={handleChangePage}
             >
@@ -340,7 +342,12 @@ const SideMenu = (props: IProps) => {
         </Menu>
         <Separator className="my-5" />
         <Menu
-          initialValue={appState.page !== Pages.None ? appState.page : false}
+          initialValue={
+            appState.page === Pages.Settings ||
+            appState.page === Pages.SceneEditor
+              ? appState.page
+              : false
+          }
           onChange={handleChangePage}
         >
           <Menu.Label>
