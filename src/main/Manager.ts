@@ -7,7 +7,6 @@ import {
   buildClipMetadata,
   checkAdvancedCombatLogging,
   getConfigWtfPath,
-  getMetadataForVideo,
   getOBSFormattedDate,
   isManualRecordHotKey,
   nextKeyPressPromise,
@@ -39,7 +38,7 @@ import {
   getBaseConfig,
   validateBaseConfig,
 } from '../utils/configUtils';
-import { ERecordingState, QualityPresets } from './obsEnums';
+import { ERecordingState } from './obsEnums';
 import {
   runClassicRecordingTest,
   runRetailRecordingTest,
@@ -315,6 +314,7 @@ export default class Manager {
 
     this.refreshMicStatus(this.recorder.obsMicState);
     this.redrawPreview();
+    this.refreshInstantReplay(this.recorder.instantReplayFile);
   }
 
   /**
@@ -414,6 +414,13 @@ export default class Manager {
    */
   private refreshMicStatus(status: MicStatus) {
     send('updateMicStatus', status);
+  }
+
+  /**
+   * Send a message to the frontend to update the instant replay path.
+   */
+  private refreshInstantReplay(path: string | null) {
+    send('updateInstantReplayPath', path);
   }
 
   /**
@@ -530,7 +537,9 @@ export default class Manager {
     }
 
     if (config.recordClassicPtr) {
-      this.classicPtrLogHandler = new ClassicLogHandler(config.classicPtrLogPath);
+      this.classicPtrLogHandler = new ClassicLogHandler(
+        config.classicPtrLogPath,
+      );
     }
 
     if (config.recordEra) {

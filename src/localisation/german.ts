@@ -547,6 +547,19 @@ const GERMAN: Translations = {
   [Phrase.DiagnosticsOpenBundleCreated]: 'Paketordner öffnen',
   [Phrase.StatusTitleMigrated]: 'Migriert',
   [Phrase.StatusDescrMigrated]: 'Diese Gilde wurde migriert.', // TODO: add more details here.
+  [Phrase.InstantReplayEnded]: 'Die Sofortwiedergabe ist beendet.',
+  [Phrase.InstantReplayEndedDescr]: 'Die Aufnahme ist beendet und die Sofortwiedergabe-Funktion ist nicht mehr verfügbar.',
+  [Phrase.InstantReplayRefresh]: 'Aktualisieren',
+  [Phrase.InstantReplayStale]: 'Eine neue Aufnahme ist jetzt aktiv. Klicken Sie auf den Pfeil, um zur neuesten Sofortwiedergabe zu gelangen.',
+  [Phrase.CloudUploadSettingsLabel]: 'Upload-Einstellungen',
+  [Phrase.CloudFilterSettingsLabel]: 'Kategoriefilter-Einstellungen',
+  [Phrase.CloudAdvancedFilterSettingsLabel]: 'Charakterfilter-Einstellungen',
+  [Phrase.CharacterAdd]: 'Charakter hinzufügen',
+  [Phrase.CharacterFilterAdd]: 'Charakterfilter hinzufügen',
+  [Phrase.CharacterFilterSelectFromRecent]: 'Wählen Sie einen Charakterfilter aus Ihren letzten lokalen Aufnahmen aus.',
+  [Phrase.CharacterFilterAddManual]: '...oder fügen Sie einen Charakterfilter manuell hinzu.',
+  [Phrase.CharacterFilterNone]: 'Kein Charakter-Uploadfilter aktiv. Fügen Sie einen Charakter hinzu, um ihn zu aktivieren.',
+  [Phrase.CharacterFilterActive]: 'Es werden nur Aufnahmen hochgeladen, die beim Spielen der unten aufgeführten Charaktere erstellt wurden.',
 };
 
 export default GERMAN;

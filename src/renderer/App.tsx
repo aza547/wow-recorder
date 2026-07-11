@@ -13,6 +13,7 @@ import {
   StorageFilter,
   ActivityStatus,
   AdvancedLoggingStatus,
+  InstantReplayState,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language } from 'localisation/translations';
@@ -138,6 +139,13 @@ const WarcraftRecorder = () => {
 
   // The video state contains most of the frontend state.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
+
+  // Fragmented MP4 path.
+  const [instantReplayState, setInstantReplayState] =
+    useState<InstantReplayState>({
+      currentPath: null,
+      openPath: null,
+    });
 
   // The counters for display on the side menu. It's convient to keep these
   // seperate to the video state so we can apply filtering without changing the
@@ -428,6 +436,13 @@ const WarcraftRecorder = () => {
     });
   };
 
+  const updateInstantReplayPath = (value: unknown) => {
+    setInstantReplayState((prev) => ({
+      ...prev,
+      currentPath: value as string | null,
+    }));
+  };
+
   useEffect(() => {
     ipc.on('updateRecStatus', updateRecStatus);
     ipc.on('updateActivityStatus', updateActivityStatus);
@@ -446,6 +461,7 @@ const WarcraftRecorder = () => {
     ipc.on('displayUnprotectCloudVideos', displayUnprotectCloudVideos);
     ipc.on('displayTagCloudVideo', displayTagCloudVideo);
     ipc.on('updateAdvancedLoggingStatus', updateAdvancedLogging);
+    ipc.on('updateInstantReplayPath', updateInstantReplayPath);
 
     return () => {
       ipc.removeAllListeners('updateRecStatus');
@@ -465,6 +481,7 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('displayUnprotectCloudVideos');
       ipc.removeAllListeners('displayTagCloudVideo');
       ipc.removeAllListeners('updateAdvancedLoggingStatus');
+      ipc.removeAllListeners('updateInstantReplayPath');
     };
   }, []);
 
@@ -501,6 +518,8 @@ const WarcraftRecorder = () => {
                 activityStatus={activityStatus}
                 advancedLoggingStatus={advancedLoggingStatus}
                 setPreviewEnabled={setPreviewEnabled}
+                instantReplayState={instantReplayState}
+                setInstantReplayState={setInstantReplayState}
               />
               <Layout
                 recorderStatus={recorderStatus}
@@ -515,6 +534,8 @@ const WarcraftRecorder = () => {
                 advancedLoggingStatus={advancedLoggingStatus}
                 previewEnabled={previewEnabled}
                 setPreviewEnabled={setPreviewEnabled}
+                instantReplayState={instantReplayState}
+                setInstantReplayState={setInstantReplayState}
               />
             </div>
           </TooltipProvider>

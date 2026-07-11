@@ -6,7 +6,7 @@ import {
   DialogTrigger,
 } from './components/Dialog/Dialog';
 import { Button } from './components/Button/Button';
-import { ReactNode, useState } from 'react';
+import { Dispatch, ReactNode, SetStateAction, useState } from 'react';
 import { AppState } from 'main/types';
 import { ExternalLink, FileText, Package } from 'lucide-react';
 import Spinner from './components/Spinner/Spinner';
@@ -16,20 +16,22 @@ import { getLocalePhrase } from 'localisation/translations';
 type IProps = {
   children: ReactNode;
   appState: AppState;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 };
 
 const ipc = window.electron.ipcRenderer;
 
-const openLogPath = () => {
-  ipc.sendMessage('logPath', ['open']);
-};
-
 const DiagnosticsDialog = (props: IProps) => {
-  const { children, appState } = props;
+  const { children, appState, setPreviewEnabled } = props;
   const { language } = appState;
   const [open, setOpen] = useState(false);
   const [zipping, setZipping] = useState(false);
   const [bundlePath, setBundlePath] = useState('');
+
+  const openLogPath = () => {
+    ipc.sendMessage('logPath', ['open']);
+    setOpen(false);
+  };
 
   const renderOpenLogFolder = () => {
     return (
@@ -61,6 +63,7 @@ const DiagnosticsDialog = (props: IProps) => {
 
   const openBundleLocation = () => {
     ipc.openSystemExplorer(bundlePath);
+    setOpen(false);
   };
 
   const renderCreateDiagsBundle = () => {
@@ -105,6 +108,7 @@ const DiagnosticsDialog = (props: IProps) => {
       open={open}
       onOpenChange={(open) => {
         setOpen(open);
+        setPreviewEnabled(!open);
         if (open) {
           setZipping(false);
           setBundlePath('');
@@ -114,6 +118,7 @@ const DiagnosticsDialog = (props: IProps) => {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
+          {/* // TODO: Localize this title */}
           <DialogTitle>Diagnostics</DialogTitle>
         </DialogHeader>
 

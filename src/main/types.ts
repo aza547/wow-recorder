@@ -316,6 +316,17 @@ type AudioSource = {
   volume: number; // Current volume setting (0-1)
 };
 
+type Character = {
+  name: string;
+  realm: string;
+  specID: number;
+};
+
+type CharacterFilter = {
+  name: string;
+  realm: string;
+};
+
 /**
  * If we should be showing a certain page. This always takes priority over anything
  * else in TNavigatorState.
@@ -324,6 +335,7 @@ enum Pages {
   'None',
   'SceneEditor',
   'Settings',
+  'InstantReplay',
 }
 
 /**
@@ -678,6 +690,11 @@ enum ObsOrderMovement {
   OBS_ORDER_MOVE_BOTTOM = 3,
 }
 
+type InstantReplayState = {
+  currentPath: string | null;
+  openPath: string | null;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -745,4 +762,7 @@ export {
   KillVideoQueueItem,
   KillVideoSegment,
   KillVideoStatus,
+  Character,
+  CharacterFilter,
+  InstantReplayState,
 };

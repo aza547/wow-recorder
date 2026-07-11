@@ -26,7 +26,7 @@ export default class AppUpdater {
     // If the user accepted the update on the frontend, actually
     // do it.
     ipcMain.on('doAppUpdate', () => {
-      console.log('[AutoUpdater] User triggered auto-update');
+      console.info('[AutoUpdater] User triggered auto-update');
       autoUpdater.quitAndInstall();
     });
 

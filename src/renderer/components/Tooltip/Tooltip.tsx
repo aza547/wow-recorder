@@ -35,7 +35,11 @@ const Tooltip = ({
       onOpenChange={onOpenChange}
       delayDuration={delayDuration}
     >
-      <TooltipPrimitive.Trigger onClick={onClick} asChild>
+      <TooltipPrimitive.Trigger
+        onClick={onClick ? onClick : (e) => e.preventDefault()}
+        asChild
+        onPointerDown={(e) => e.preventDefault()}
+      >
         {children}
       </TooltipPrimitive.Trigger>
       <TooltipPrimitive.Portal>
@@ -49,6 +53,7 @@ const Tooltip = ({
           )}
           {...props}
           style={{ ...props.style, maxWidth }}
+          onPointerDownOutside={(event) => event.preventDefault()}
         >
           {content}
         </TooltipPrimitive.Content>

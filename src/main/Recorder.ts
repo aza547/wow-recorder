@@ -66,6 +66,9 @@ import { isHighRes } from 'renderer/rendererutils';
 import { isLinux } from './platform';
 
 const devMode = process.env.NODE_ENV === 'development';
+const moov = Buffer.from('moov');
+const moof = Buffer.from('moof');
+const mdat = Buffer.from('mdat');
 
 /**
  * Class for handing the interface between Warcraft Recorder and OBS.
@@ -175,9 +178,74 @@ export default class Recorder extends EventEmitter {
   private queue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
 
   /**
+   * The current file being recorded by OBS. Set when OBS emits a converted
+   * signal.
+   */
+  private currentFile: string | null = null;
+
+  /**
+   * The instant replay feature lets the user play the fragmented MP4 as it is
+   * being written. We don't want to interrupt the viewer by deleting the file
+   * while they are watching it.
+   */
+
+  private openInstantReplayFile: string | null = null;
+
+  /**
+   * The fragmented MP4 is valid to play when the moov atom appears. This is
+   * only set once we've seen that. This is exposed publicly.
+   */
+  public instantReplayFile: string | null = null;
+
+  /**
+   * If conditions are right, look for the appropriate boxes in the fragmented
+   * MP4. We use the criteria of the moov box, and the first moof and mdat box
+   * pair being present as the criteria for exposing the the frontend.
+   *
+   * This is a bit lazy and re-reads the whole file every second till it finds
+   * the boxes. Could be optimized to read to a cursor and continue on next but
+   * saving that optimization for if it causes a problem.
+   */
+  private instantReplayTimer = setInterval(async () => {
+    if (!this.currentFile || this.instantReplayFile) {
+      return;
+    }
+
+    let fh: fs.promises.FileHandle | null = null;
+    let data: Buffer | null = null;
+
+    try {
+      fh = await fs.promises.open(this.currentFile, 'r');
+      // 256KB buffer is plenty to see the boxes we care about.
+      const buf = new Uint8Array(256 * 1024);
+      const { bytesRead } = await fh.read(buf, 0, buf.length, 0);
+      data = Buffer.from(buf.subarray(0, bytesRead));
+    } catch (err) {
+      // Failed to read the file. Shouldn't happen.
+      console.error('[Recorder] fMP4 check failed on', this.currentFile, err);
+    } finally {
+      if (fh) {
+        await fh.close();
+        fh = null;
+      }
+    }
+
+    if (
+      data &&
+      data.includes(moov) &&
+      data.includes(moof) &&
+      data.includes(mdat)
+    ) {
+      console.info('[Recorder] Enable instant replay for', this.currentFile);
+      this.instantReplayFile = this.currentFile;
+      this.emit('state-change');
+    }
+  }, 1000);
+
+  /**
    * The last file output by OBS.
    */
-  public lastFile: string | null = null;
+  private lastFile: string | null = null;
 
   /**
    * Timer that keeps the mic on briefly after you release the Push To Talk key.
@@ -441,6 +509,16 @@ export default class Recorder extends EventEmitter {
     ipcMain.handle('getSensibleEncoderDefault', (): string => {
       return this.getSensibleEncoderDefault();
     });
+
+    ipcMain.on('setOpenInstantReplayFile', (_event, value: string | null) => {
+      if (value) {
+        console.info('[Recorder] User opened instant replay file', value);
+        this.openInstantReplayFile = path.normalize(value);
+      } else {
+        console.info('[Recorder] User closed instant replay file');
+        this.openInstantReplayFile = null;
+      }
+    });
   }
 
   /**
@@ -577,11 +655,11 @@ export default class Recorder extends EventEmitter {
     await Recorder.createRecordingDirs(outputPath);
     await this.cleanup(outputPath);
 
-    // Record in MKV to avoid file corruption on crashes. MP4 cannot be
+    // Record in fragmented MP4 to avoid file corruption on crashes. MP4 cannot be
     // recovered in that event but MKV can. We will remux to MP4 for browser
     // player compatibility in the VideoProcessQueue.
     console.info('[Recorder] Set recording directory', outputPath);
-    noobs.SetRecordingCfg(outputPath, 'mkv');
+    noobs.SetRecordingCfg(outputPath, 'mp4');
 
     // Configure the encoder. It's possible that a user has replaced their
     // GPU since we last ran, so double check the encoder is still valid.
@@ -945,6 +1023,7 @@ export default class Recorder extends EventEmitter {
    */
   public shutdownOBS() {
     console.info('[Recorder] OBS shutting down');
+    clearInterval(this.instantReplayTimer);
 
     if (!this.obsInitialized) {
       console.info('[Recorder] OBS not initialized so not attempting shutdown');
@@ -1009,16 +1088,20 @@ export default class Recorder extends EventEmitter {
   public async cleanup(obsPath: string) {
     console.info('[Recorder] Clean out buffer');
 
-    // We now record in MKV but convert to MP4 during processing. So we're really
-    // cleaning out MKVs here but also may as well make sure we get any stray MP4s
-    // that might be hanging around from legacy versions.
+    // We now record in fMP4 and convert to fMP4 during processing. MKV is
+    // no longer used but still here for the sake of any straggling files.
     const videos = await getSortedFiles(
       obsPath,
       '.*\\.(mp4|mkv)',
       FileSortDirection.NewestFirst, // This sorting is redundant in this context.
     );
 
-    const files = videos.map((f) => f.name);
+    // Don't delete an open instant replay. The open instant replay path, if
+    // relevant, has already been normalized when set.
+    const files = videos
+      .map((f) => path.normalize(f.name))
+      .filter((n) => n !== this.openInstantReplayFile);
+
     const promises = files.map(tryUnlink);
     await Promise.all(promises);
   }
@@ -1205,6 +1288,7 @@ export default class Recorder extends EventEmitter {
     noobs.Init(noobsPath, logPath, cb);
     console.info('noobs.Init completed successfully');
     noobs.SetBuffering(true);
+    noobs.SetFragmentation(true);
 
     const hwnd = getNativeWindowHandle();
     noobs.InitPreview(hwnd);
@@ -1254,6 +1338,8 @@ export default class Recorder extends EventEmitter {
       case EOBSOutputSignal.Start:
         this.startQueue.push(signal);
         this.obsState = ERecordingState.Recording;
+        this.currentFile = null;
+        this.instantReplayFile = null;
         this.emit('state-change');
         console.info('[Recorder] State is now:', this.obsState);
         break;
@@ -1261,8 +1347,15 @@ export default class Recorder extends EventEmitter {
       case EOBSOutputSignal.Deactivate:
         this.stopQueue.push(signal);
         this.obsState = ERecordingState.None;
+        this.currentFile = null;
+        this.instantReplayFile = null;
         this.emit('state-change');
         console.info('[Recorder] State is now:', this.obsState);
+        break;
+
+      case EOBSOutputSignal.Converted:
+        console.info('[Recorder] Converted buffer to disk:', signal.path);
+        this.currentFile = signal.path ?? null;
         break;
 
       default:

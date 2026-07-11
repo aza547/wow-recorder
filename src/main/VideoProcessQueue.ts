@@ -215,7 +215,7 @@ export default class VideoProcessQueue {
       return;
     }
 
-    console.log('[VideoProcessQueue] Queuing video for upload', item.path);
+    console.info('[VideoProcessQueue] Queuing video for upload', item.path);
     this.inProgressUploads.push(item.path);
     this.uploadQueue.write(item);
 
@@ -235,7 +235,7 @@ export default class VideoProcessQueue {
       return;
     }
 
-    console.log('[VideoProcessQueue] Queuing video for download', videoName);
+    console.info('[VideoProcessQueue] Queuing video for download', videoName);
     this.inProgressDownloads.push(videoName);
     this.downloadQueue.write(video);
 
@@ -247,7 +247,7 @@ export default class VideoProcessQueue {
    * Queue up a kill video for creation.
    */
   public queueCreateKillVideo = async (item: KillVideoQueueItem) => {
-    console.log('[VideoProcessQueue] Queue kill video for processing');
+    console.info('[VideoProcessQueue] Queue kill video for processing');
     this.inProgressKillVideos.push(item.uuid);
     this.killVideoQueue.write(item);
   };
@@ -748,8 +748,6 @@ export default class VideoProcessQueue {
       // some players, but does extend the video slightly depending on
       // the keyframe alignment.
       .outputOption('-avoid_negative_ts make_zero')
-      // Move the moov atom to the start of the file for faster playback start.
-      // This means R2 doesn't need to seek to the end to start playback.
       .outputOption('-movflags +faststart')
       .output(outputPath);
 
@@ -826,7 +824,7 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Prepare and return the audio map for a kill video.
+   * Prepare and return the output path for a kill video.
    */
   private static prepareKillVideoPath(video: RendererVideo) {
     const videoDate = video.start ?? video.mtime;
@@ -844,6 +842,9 @@ export default class VideoProcessQueue {
     }
 
     videoName += ` - Rendered at ${getOBSFormattedDate(new Date())}`;
+    // Encounter metadata can contain characters Windows rejects in filenames,
+    // so apply the same sanitizer used for normal video cuts.
+    videoName = VideoProcessQueue.sanitizeFilename(videoName);
     const storageDir = ConfigService.getInstance().get<string>('storagePath');
     const videoPath = path.join(storageDir, `${videoName}.mp4`);
 

@@ -547,6 +547,19 @@ const KOREAN: Translations = {
   [Phrase.DiagnosticsOpenBundleCreated]: '번들 폴더 열기',
   [Phrase.StatusTitleMigrated]: '마이그레이션 완료',
   [Phrase.StatusDescrMigrated]: '이 길드는 마이그레이션되었습니다.', // TODO: add more details here.
+  [Phrase.InstantReplayEnded]: '인스턴트 리플레이가 종료되었습니다.',
+  [Phrase.InstantReplayEndedDescr]: '녹화가 종료되어 인스턴트 리플레이 기능을 더 이상 사용할 수 없습니다.',
+  [Phrase.InstantReplayRefresh]: '새로고침',
+  [Phrase.InstantReplayStale]: '새 녹화가 활성화되었습니다. 화살표를 클릭하여 최신 인스턴트 리플레이로 이동하세요.',
+  [Phrase.CloudUploadSettingsLabel]: '업로드 설정',
+  [Phrase.CloudFilterSettingsLabel]: '카테고리 필터 설정',
+  [Phrase.CloudAdvancedFilterSettingsLabel]: '캐릭터 필터 설정',
+  [Phrase.CharacterAdd]: '캐릭터 추가',
+  [Phrase.CharacterFilterAdd]: '캐릭터 필터 추가',
+  [Phrase.CharacterFilterSelectFromRecent]: '최근 로컬 녹화에서 캐릭터 필터를 선택하세요.',
+  [Phrase.CharacterFilterAddManual]: '...또는 캐릭터 필터를 직접 추가하세요.',
+  [Phrase.CharacterFilterNone]: '활성화된 캐릭터 업로드 필터가 없습니다. 캐릭터를 추가하여 활성화하세요.',
+  [Phrase.CharacterFilterActive]: '아래에 나열된 캐릭터를 플레이하는 동안 생성된 녹화만 업로드됩니다.',
 };
 
 export default KOREAN;

@@ -1,12 +1,18 @@
-import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
-import { AppState } from 'main/types';
+import {
+  AppState,
+  Character,
+  CharacterFilter,
+  RendererVideo,
+} from 'main/types';
 import {
   Check,
   Cloud,
+  Eraser,
   Info,
   MonitorPlay,
   Pencil,
+  PlusIcon,
   RefreshCcw,
   Trash,
   X,
@@ -27,8 +33,22 @@ import {
 } from './components/Select/Select';
 import Separator from './components/Separator/Separator';
 import { Phrase } from 'localisation/phrases';
-import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
+import {
+  ChangeEvent,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useEffect,
+  useRef,
+} from 'react';
 import { Button } from './components/Button/Button';
+import { specImages } from './images';
+import {
+  formatRealmNameForDisplay,
+  getSpecClass,
+  getWoWClassColor,
+} from './rendererutils';
+import CharacterFilterDialog from './CharacterFilterDialog';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -41,19 +61,28 @@ const raidDifficultyOptions = [
 
 let debounceTimer: NodeJS.Timeout | undefined;
 
+const CategoryHeading = ({ children }: { children: ReactNode }) => (
+  <h2 className="text-foreground-lighter font-bold">{children}</h2>
+);
+
 interface IProps {
   appState: AppState;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
+  videoState: RendererVideo[];
 }
 
 const CloudSettings = (props: IProps) => {
-  const { appState, config, setConfig } = props;
+  const { appState, config, setConfig, videoState } = props;
   const { language } = appState;
-  const initialRender = useRef(true);
+  const initialRender1 = useRef(true);
+  const initialRender2 = useRef(true);
 
   useEffect(() => {
-    if (initialRender.current) return;
+    if (initialRender1.current) {
+      initialRender1.current = false;
+      return;
+    }
 
     if (debounceTimer) {
       clearTimeout(debounceTimer);
@@ -87,8 +116,15 @@ const CloudSettings = (props: IProps) => {
   ]);
 
   useEffect(() => {
-    initialRender.current = false;
-  }, []);
+    if (initialRender2.current) {
+      initialRender2.current = false;
+      return;
+    }
+
+    setConfigValues({
+      characterUploadFilters: config.characterUploadFilters,
+    });
+  }, [config.characterUploadFilters]);
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
@@ -191,7 +227,7 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setMinKeystoneLevel = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setMinKeystoneLevel = (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.value) {
       // Allow setting empty as midpoint.
       setConfig((prev) => ({ ...prev, cloudUploadDungeonMinLevel: -1 }));
@@ -440,9 +476,7 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setCloudAccountName = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const setCloudAccountName = async (event: ChangeEvent<HTMLInputElement>) => {
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -486,9 +520,7 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setCloudPassword = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const setCloudPassword = async (event: ChangeEvent<HTMLInputElement>) => {
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -713,10 +745,6 @@ const CloudSettings = (props: IProps) => {
     return (
       <>
         <div className="flex flex-row gap-x-6">
-          {getRetailUploadSwitch()}
-          {getClassicUploadSwitch()}
-        </div>
-        <div className="flex flex-row gap-x-6">
           {getSwitchForm('cloudUploadRaids', Phrase.UploadRaidsLabel)}
           {config.cloudUploadRaids &&
             getSwitchForm(
@@ -754,7 +782,7 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setUploadRateLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setUploadRateLimit = (event: ChangeEvent<HTMLInputElement>) => {
     const cloudUploadRateLimitMbps = parseInt(event.target.value, 10);
 
     if (Number.isNaN(cloudUploadRateLimitMbps)) {
@@ -810,7 +838,6 @@ const CloudSettings = (props: IProps) => {
   const getPossiblyHiddenFields = () => {
     return (
       <>
-        <div className="flex flex-row">{getCloudSwitch()}</div>
         <div className="flex flex-row gap-4 flex-wrap">
           {getCloudAccountNameField()}
           {getCloudAccountPasswordField()}
@@ -820,26 +847,215 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
+  const renderCharacterFilterRow = (
+    filter: CharacterFilter,
+    known: Map<string, Character>,
+    index: number,
+  ) => {
+    const character = known.get(`${filter.name}:${filter.realm}`);
+    let specIcon = specImages[0];
+    let playerClassColor = 'gray';
+
+    if (character) {
+      const knownSpec = Object.hasOwnProperty.call(
+        specImages,
+        character.specID as keyof typeof specImages,
+      );
+
+      if (knownSpec) {
+        specIcon = specImages[character.specID as keyof typeof specImages];
+        const playerClass = getSpecClass(character.specID);
+        playerClassColor = getWoWClassColor(playerClass);
+      }
+    }
+
+    let bgClass = '';
+
+    if (index % 2 === 0) {
+      bgClass += 'bg-secondary/20 ';
+    } else {
+      bgClass += 'bg-secondary/60 ';
+    }
+
+    return (
+      <tr
+        key={`${filter.name}-${filter.realm}`}
+        className={`rounded-md ${bgClass}`}
+      >
+        <td>
+          <div className="flex items-center gap-x-1">
+            <img
+              src={specIcon}
+              className="bg-background-higher h-6 w-6 rounded-[15%] border border-black object-cover"
+            />
+            <span
+              className="font-sans font-semibold text-md text-shadow-instance truncate "
+              style={{ color: playerClassColor }}
+            >
+              {filter.name}
+            </span>
+          </div>
+        </td>
+        <td>
+          <span>{formatRealmNameForDisplay(filter.realm)}</span>
+        </td>
+        <td>
+          <div className="flex items-center justify-center">
+            <Button variant="ghost" size="icon" className="h-7 w-7">
+              <X
+                className="text-red-500 opacity-70"
+                onClick={() => clearCharacterFilter(index)}
+              />
+            </Button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderCharacterFilterHelpText = () => {
+    if (config.characterUploadFilters.length > 0) {
+      return (
+        <div className="flex flex-col text-sm text-foreground">
+          {getLocalePhrase(language, Phrase.CharacterFilterActive)}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col text-sm text-foreground">
+        {getLocalePhrase(language, Phrase.CharacterFilterNone)}
+      </div>
+    );
+  };
+
+  const knownPlayers = new Map<string, Character>();
+
+  videoState.forEach((rv) => {
+    if (!rv.player) {
+      return;
+    }
+
+    const { _name, _realm, _specID } = rv.player;
+
+    if (!_name || !_realm || !_specID) {
+      return;
+    }
+
+    knownPlayers.set(`${_name}:${_realm}`, {
+      name: _name,
+      realm: _realm,
+      specID: _specID,
+    });
+  });
+
+  const clearCharacterFilters = () => {
+    setConfig((prev) => ({ ...prev, characterUploadFilters: [] }));
+  };
+
+  const clearCharacterFilter = (index: number) => {
+    setConfig((prev) => {
+      const newFilters = [...prev.characterUploadFilters];
+      newFilters.splice(index, 1);
+      return { ...prev, characterUploadFilters: newFilters };
+    });
+  };
+
+  const getCharacterFilterSettings = () => {
+    return (
+      <div className="flex flex-col gap-y-2">
+        {renderCharacterFilterHelpText()}
+        {config.characterUploadFilters.length > 0 && (
+          <table className="m-2 w-fit">
+            <thead className="border-b border-t border-video-border">
+              <tr>
+                <th className="text-left w-[200px]">Character</th>
+                <th className="text-left w-[200px]">Realm</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {config.characterUploadFilters.map((filter, index) =>
+                renderCharacterFilterRow(filter, knownPlayers, index),
+              )}
+            </tbody>
+          </table>
+        )}
+
+        <div className="flex gap-2">
+          <CharacterFilterDialog
+            appState={appState}
+            videoState={videoState}
+            config={config}
+            setConfig={setConfig}
+          >
+            <Button variant="outline">
+              <PlusIcon className="mr-1" />
+              {getLocalePhrase(language, Phrase.CharacterAdd)}
+            </Button>
+          </CharacterFilterDialog>
+          <Button onClick={clearCharacterFilters} variant="outline">
+            <Eraser className="mr-2" size={20} />
+            {getLocalePhrase(language, Phrase.Clear)}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-y-4 flex-wrap">
+      <div className="flex flex-row">{getCloudSwitch()}</div>
       {getPossiblyHiddenFields()}
 
       {config.cloudStorage && (
         <>
           {getCloudUsageBar()}
           {getCloudPermissions()}
-          <Separator className="my-4" />
+
+          <div>
+            <CategoryHeading>
+              {getLocalePhrase(language, Phrase.CloudUploadSettingsLabel)}
+            </CategoryHeading>
+            <Separator className="mt-2 mb-4" />
+            <div className="flex flex-row gap-x-6">
+              {getCloudUploadSwitch()}
+              {getRetailUploadSwitch()}
+              {getClassicUploadSwitch()}
+              {getCloudUploadRateLimitSwitch()}
+              {getRateLimitField()}
+            </div>
+          </div>
+
+          {config.cloudUpload && (
+            <>
+              <div>
+                <CategoryHeading>
+                  {getLocalePhrase(language, Phrase.CloudFilterSettingsLabel)}
+                </CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                {config.cloudUpload && (
+                  <div className="flex flex-col gap-4">
+                    {getCloudUploadCategorySettings()}
+                  </div>
+                )}
+              </div>
+              <div>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    language,
+                    Phrase.CloudAdvancedFilterSettingsLabel,
+                  )}
+                </CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <div className="flex flex-col gap-4">
+                  {getCharacterFilterSettings()}
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
-
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-row gap-x-6">
-          {getCloudUploadSwitch()}
-          {getCloudUploadRateLimitSwitch()}
-          {getRateLimitField()}
-        </div>
-        {config.cloudUpload && getCloudUploadCategorySettings()}
-      </div>
     </div>
   );
 };

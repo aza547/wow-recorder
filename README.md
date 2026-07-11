@@ -36,6 +36,7 @@ Warcraft Recorder is a desktop screen recorder. It watches the WoW combat log fi
 |---|---|
 | Retail | Yes |
 | MoP Classic | Yes |
+| Classic Anniversary | Best Effort |
 | Classic Era | SoD Raids Only |
 
 # Testing It Works

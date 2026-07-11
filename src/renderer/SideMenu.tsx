@@ -9,6 +9,7 @@ import {
   HardHat,
   MonitorCog,
   Play,
+  Radio,
   Square,
   Sword,
   Swords,
@@ -20,6 +21,7 @@ import {
   AdvancedLoggingStatus,
   AppState,
   ErrorReport,
+  InstantReplayState,
   MicStatus,
   Pages,
   RecStatus,
@@ -43,7 +45,6 @@ import { setConfigValue } from './useSettings';
 import { getCategoryIndex } from './rendererutils';
 import Menu from './components/Menu';
 import Separator from './components/Separator/Separator';
-import LogsButton from './LogButton';
 import TestButton from './TestButton';
 import DiscordButton from './DiscordButton';
 import ApplicationStatusCard from './containers/ApplicationStatusCard/ApplicationStatusCard';
@@ -74,6 +75,8 @@ interface IProps {
   activityStatus: ActivityStatus | null;
   advancedLoggingStatus: AdvancedLoggingStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
+  instantReplayState: InstantReplayState;
+  setInstantReplayState: Dispatch<SetStateAction<InstantReplayState>>;
 }
 
 const SideMenu = (props: IProps) => {
@@ -93,6 +96,8 @@ const SideMenu = (props: IProps) => {
     activityStatus,
     advancedLoggingStatus,
     setPreviewEnabled,
+    instantReplayState,
+    setInstantReplayState,
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
@@ -143,7 +148,9 @@ const SideMenu = (props: IProps) => {
           size="sm"
           variant="ghost"
           className="mx-2 p-1 h-6 w-6 hover:bg-secondary"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             // Drops spam clicks, only let one click per second.
             // Gets reset on recorder status change.
             const now = Date.now();
@@ -178,7 +185,7 @@ const SideMenu = (props: IProps) => {
     }
 
     return (
-      <Menu.Item value={tabCategory} className="py-1.5">
+      <Menu.Item value={tabCategory} className="py-[4px]">
         <Menu.Item.Icon>
           {typeof tabIcon === 'string' ? (
             <img
@@ -201,7 +208,7 @@ const SideMenu = (props: IProps) => {
 
   const renderSettingsTab = () => {
     return (
-      <Menu.Item value={Pages.Settings} className="py-1.5">
+      <Menu.Item value={Pages.Settings} className="py-[4px]">
         <Menu.Item.Icon>
           <Cog />
         </Menu.Item.Icon>
@@ -212,7 +219,7 @@ const SideMenu = (props: IProps) => {
 
   const renderSceneTab = () => {
     return (
-      <Menu.Item value={Pages.SceneEditor} className="py-1.5">
+      <Menu.Item value={Pages.SceneEditor} className="py-[4px]">
         <Menu.Item.Icon>
           <MonitorCog />
         </Menu.Item.Icon>
@@ -221,8 +228,24 @@ const SideMenu = (props: IProps) => {
     );
   };
 
-  const handleChangeCategory = (newCategory: VideoCategory) => {
-    const index = getCategoryIndex(newCategory);
+  const renderInstantReplayTab = () => {
+    return (
+      <Menu.Item value={Pages.InstantReplay} className="py-[4px] my-2">
+        <span className="inline-flex items-center animate-pulse">
+          <Menu.Item.Icon>
+            <Radio className="text-[#bb4420] " />
+          </Menu.Item.Icon>
+
+          <span className="font-semibold text-[#bb4420] drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]">
+            Instant Replay
+          </span>
+        </span>
+      </Menu.Item>
+    );
+  };
+
+  const handleChangeCategory = (value: VideoCategory) => {
+    const index = getCategoryIndex(value);
     setConfigValue('selectedCategory', index);
     persistentProgress.current = 0;
 
@@ -231,7 +254,7 @@ const SideMenu = (props: IProps) => {
         ...prevState,
         videoFilterTags: [],
         page: Pages.None,
-        category: newCategory,
+        category: value,
         selectedVideos: [],
         multiPlayerMode: false,
         playing: false,
@@ -240,6 +263,18 @@ const SideMenu = (props: IProps) => {
   };
 
   const handleChangePage = (newPage: Pages) => {
+    if (
+      newPage === Pages.InstantReplay &&
+      appState.page !== Pages.InstantReplay
+    ) {
+      setInstantReplayState((prevState) => {
+        return {
+          ...prevState,
+          openPath: prevState.currentPath,
+        };
+      });
+    }
+
     setAppState((prevState) => {
       return {
         ...prevState,
@@ -269,15 +304,31 @@ const SideMenu = (props: IProps) => {
         appState={appState}
         setPreviewEnabled={setPreviewEnabled}
       />
-      <Separator className="mb-4" />
+
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
       >
+        {(instantReplayState.currentPath ||
+          appState.page === Pages.InstantReplay) && (
+          <>
+            <Separator />
+            <Menu
+              initialValue={
+                appState.page === Pages.InstantReplay ? appState.page : false
+              }
+              onChange={handleChangePage}
+            >
+              {renderInstantReplayTab()}
+            </Menu>
+          </>
+        )}
+
         <Menu
           initialValue={appState.page === Pages.None ? category : false}
           onChange={handleChangeCategory}
         >
+          <Separator className="mb-4" />
           <Menu.Label>
             {getLocalePhrase(language, Phrase.RecordingsHeading)}
           </Menu.Label>
@@ -294,7 +345,12 @@ const SideMenu = (props: IProps) => {
         </Menu>
         <Separator className="my-5" />
         <Menu
-          initialValue={appState.page !== Pages.None ? appState.page : false}
+          initialValue={
+            appState.page === Pages.Settings ||
+            appState.page === Pages.SceneEditor
+              ? appState.page
+              : false
+          }
           onChange={handleChangePage}
         >
           <Menu.Label>
@@ -311,7 +367,10 @@ const SideMenu = (props: IProps) => {
             updateAvailable={updateAvailable}
             appState={appState}
           />
-          <DiagnosticsDialog appState={appState}>
+          <DiagnosticsDialog
+            appState={appState}
+            setPreviewEnabled={setPreviewEnabled}
+          >
             <Button variant="ghost" size="icon">
               <FileText size={20} />
             </Button>

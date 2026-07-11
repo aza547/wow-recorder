@@ -5,12 +5,14 @@ import {
   RecStatus,
   AppState,
   RendererVideo,
+  InstantReplayState,
 } from 'main/types';
 import { Dispatch, RefObject, SetStateAction } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';
+import InstantReplay from './InstantReplay';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -25,6 +27,8 @@ interface IProps {
   advancedLoggingStatus: AdvancedLoggingStatus;
   previewEnabled: boolean;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
+  instantReplayState: InstantReplayState;
+  setInstantReplayState: Dispatch<SetStateAction<InstantReplayState>>;
 }
 
 /**
@@ -44,6 +48,8 @@ const Layout = (props: IProps) => {
     advancedLoggingStatus,
     previewEnabled,
     setPreviewEnabled,
+    instantReplayState,
+    setInstantReplayState,
   } = props;
   const { page, category } = appState;
 
@@ -70,6 +76,7 @@ const Layout = (props: IProps) => {
         appState={appState}
         setAppState={setAppState}
         advancedLoggingStatus={advancedLoggingStatus}
+        videoState={videoState}
       />
     );
   };
@@ -87,10 +94,24 @@ const Layout = (props: IProps) => {
     );
   };
 
+  const renderInstantReplay = () => {
+    return (
+      <InstantReplay
+        instantReplayState={instantReplayState}
+        setInstantReplayState={setInstantReplayState}
+        appState={appState}
+        setAppState={setAppState}
+        persistentProgress={persistentProgress}
+        config={config}
+      />
+    );
+  };
+
   return (
     <>
       {page === Pages.Settings && renderSettingsPage()}
       {page === Pages.SceneEditor && renderSceneEditor()}
+      {page === Pages.InstantReplay && renderInstantReplay()}
       {page === Pages.None && renderCategoryPage()}
     </>
   );

@@ -6,8 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Toggling playback rate now descends the options rather than ascends.
+
 ### Added
+- Added the instant replay feature. You can now view a recording, as it is recording, without interrupting it.
+- Add the ability to filter uploads by character name and realm.
+
 ### Fixed
+
+## [7.9.0] - 2026-06-26
+### Changed
+- Update to Electron 42 and related packages.
+### Added
+- Midnight Season 2 dungeon and raid support.
+### Fixed
+- Accept `wow_anniversary` as a classic combat log path. Support for anniversary realms is still best effort but should just work in most cases.
+- Fix a bug where classic raids did not correctly calculate the boss HP.
+- Add 12.1.0 PTR flavor ('wowt') to valid retail PTR log paths.
+- Accept "Wowt.exe" as a process name in addition to "WowT.exe" for PTR clients.
+- Tooltips now don't close if clicked.
+- Fix issue where the diagnostics dialog could be hidden behind the preview on the scene tab.
 
 ## [7.8.2] - 2026-06-17
 ### Fixed

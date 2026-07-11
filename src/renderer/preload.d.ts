@@ -99,6 +99,7 @@ declare global {
         getHardwareAcceleration(): boolean;
         createDiagsBundle(): Promise<string>;
         openSystemExplorer(path: string): void;
+        setOpenInstantReplayFile(path: string | null): void;
       };
     };
   }

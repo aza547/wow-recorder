@@ -551,6 +551,20 @@ const ENGLISH: Translations = {
   [Phrase.DiagnosticsOpenBundleCreated]: 'Open Bundle Location',
   [Phrase.StatusTitleMigrated]: 'Migrated',
   [Phrase.StatusDescrMigrated]: 'This guild has been migrated.', // TODO: add more details here.
+  [Phrase.InstantReplayEnded]: 'Instant Replay Has Ended.',
+  [Phrase.InstantReplayEndedDescr]: 'The recording has ended and the instant replay feature is no longer available.', 
+  [Phrase.InstantReplayRefresh]: 'Refresh',
+  [Phrase.InstantReplayStale]: 'A new recording is now active. Click the arrow to go to the latest instant replay.',
+  [Phrase.CloudUploadSettingsLabel]: 'Upload Settings',
+  [Phrase.CloudFilterSettingsLabel]: 'Category Filters',
+  [Phrase.CloudAdvancedFilterSettingsLabel]: 'Character Filters',
+  [Phrase.CharacterAdd]: 'Add Character',
+  [Phrase.CharacterFilterAdd]: 'Add Character Filter',
+  [Phrase.CharacterFilterSelectFromRecent]: 'Select a character filter from your recent local recordings.',
+  [Phrase.CharacterFilterAddManual]: '...or add a character filter manually.',
+  [Phrase.CharacterFilterNone]: 'No character upload filter active. Add a character to enable it.',
+  [Phrase.CharacterFilterActive]: 'Only recordings made while playing the characters listed below will be uploaded.',
+
 };
 
 export default ENGLISH;

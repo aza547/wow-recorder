@@ -1,5 +1,5 @@
 import { Phrase } from 'localisation/phrases';
-import { AudioSource, AudioSourceType } from 'main/types';
+import { AudioSource, AudioSourceType, CharacterFilter } from 'main/types';
 
 export type ConfigurationSchema = {
   storagePath: string;
@@ -102,6 +102,7 @@ export type ConfigurationSchema = {
   hevcTranscodeEnabled: boolean;
   hevcTranscodeCacheSizeGb: number;
   validateNtfs: boolean;
+  characterUploadFilters: CharacterFilter[];
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -638,5 +639,10 @@ export const configSchema = {
     description: Phrase.ValidateNtfsDescription,
     type: 'boolean',
     default: true,
+  },
+  characterUploadFilters: {
+    description: Phrase.Unknown, // Not actually exposed.
+    type: 'array',
+    default: [],
   },
 };

@@ -5,7 +5,6 @@ import {
   classicUniqueSpecSpells,
   mopChallengeModes,
 } from '../main/constants';
-
 import LogHandler from './LogHandler';
 import { Flavour } from '../main/types';
 import ArenaMatch from '../activitys/ArenaMatch';
@@ -34,7 +33,8 @@ export default class ClassicLogHandler extends LogHandler {
       .on('SPELL_CAST_SUCCESS',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellCastSuccess(line)) })
       .on('COMBATANT_INFO',       (line: LogLine) => { this.logProcessQueue.add(async () => this.handleCombatantInfoLine(line)) })
       .on('CHALLENGE_MODE_START', (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeStartLine(line)) })
-      .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeEndLine(line)) });
+      .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeEndLine(line)) })
+      .on('SPELL_DAMAGE',         (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellDamage(line)); });
     /* eslint-enable prettier/prettier */
   }
 
@@ -62,9 +62,6 @@ export default class ClassicLogHandler extends LogHandler {
     const destFlags = line.arg(7);
     const destNameRealm = line.arg(6);
     const spellName = line.arg(10);
-
-    const alreadyKnowCombatant =
-      LogHandler.activity.getCombatant(srcGUID) !== undefined;
 
     const combatant = this.processClassicCombatant(
       srcGUID,

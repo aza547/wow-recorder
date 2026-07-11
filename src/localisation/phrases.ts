@@ -547,6 +547,19 @@ enum Phrase {
   DiagnosticsOpenBundleCreated,
   StatusTitleMigrated,
   StatusDescrMigrated,
+  InstantReplayEnded,
+  InstantReplayEndedDescr,
+  InstantReplayRefresh,
+  InstantReplayStale,
+  CloudUploadSettingsLabel,
+  CloudFilterSettingsLabel,
+  CloudAdvancedFilterSettingsLabel,
+  CharacterAdd,
+  CharacterFilterAdd,
+  CharacterFilterSelectFromRecent,
+  CharacterFilterAddManual,
+  CharacterFilterNone,
+  CharacterFilterActive,
 }
 
 enum Language {

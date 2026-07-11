@@ -274,5 +274,9 @@ contextBridge.exposeInMainWorld('electron', {
     openSystemExplorer(path: string) {
       ipcRenderer.send('systemExplorer', path);
     },
+
+    setOpenInstantReplayFile(path: string | null) {
+      ipcRenderer.send('setOpenInstantReplayFile', path);
+    },
   },
 });
