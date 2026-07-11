@@ -6,9 +6,7 @@ import {
   buildClipMetadata,
   checkAdvancedCombatLogging,
   getConfigWtfPath,
-  getMetadataForVideo,
   getOBSFormattedDate,
-  getSortedFiles,
   isManualRecordHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
@@ -31,7 +29,6 @@ import {
   KillVideoQueueItem,
   RendererVideo,
   KillVideoSegment,
-  FileSortDirection,
 } from './types';
 import {
   getObsVideoConfig,
@@ -40,7 +37,7 @@ import {
   getBaseConfig,
   validateBaseConfig,
 } from '../utils/configUtils';
-import { ERecordingState, QualityPresets } from './obsEnums';
+import { ERecordingState } from './obsEnums';
 import {
   runClassicRecordingTest,
   runRetailRecordingTest,
@@ -309,7 +306,7 @@ export default class Manager {
 
     this.refreshMicStatus(this.recorder.obsMicState);
     this.redrawPreview();
-    this.refreshInstantReplay(this.recorder.currentFile);
+    this.refreshInstantReplay(this.recorder.instantReplayFile);
   }
 
   /**
