@@ -195,14 +195,16 @@ const getAllDeathMarkers = (deaths: PlayerDeathType[], language: Language) => {
  * Return an array of markers for a solo shuffle. This is markers for each
  * round, colored green for wins or red for losses.
  */
-const getRoundMarkers = (video: RendererVideo) => {
-  const videoMarkers: VideoMarker[] = [];
-
-  if (video.soloShuffleTimeline === undefined) {
-    return videoMarkers;
+const getRoundMarkers = (
+  soloShuffleTimeline: SoloShuffleTimelineSegment[] | undefined,
+) => {
+  if (soloShuffleTimeline === undefined) {
+    return [];
   }
 
-  video.soloShuffleTimeline.forEach((segment: SoloShuffleTimelineSegment) => {
+  const videoMarkers: VideoMarker[] = [];
+
+  soloShuffleTimeline.forEach((segment: SoloShuffleTimelineSegment) => {
     let markerText = `Round ${segment.round}`;
     let color: string;
 

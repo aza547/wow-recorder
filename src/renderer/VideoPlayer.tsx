@@ -63,6 +63,7 @@ import CloudOffIcon from '@mui/icons-material/CloudOff';
 import Separator from './components/Separator/Separator';
 import { toast } from './components/Toast/useToast';
 import { Phrase } from 'localisation/phrases';
+import { VideoCategory } from 'types/VideoCategory';
 
 interface IProps {
   videos: RendererVideo[];
@@ -311,14 +312,17 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const getActiveMarkers = () => {
     const activeMarkers: VideoMarker[] = [];
 
-    if (instantReplay) {
-      const { challengeModeTimeline } = instantReplay;
+    const { category } = instantReplay ? instantReplay : videos[0];
+
+    if (category === VideoCategory.MythicPlus) {
+      const { challengeModeTimeline } = instantReplay
+        ? instantReplay
+        : videos[0];
+
       activeMarkers.push(...getEncounterMarkers(challengeModeTimeline));
-    } else if (isMythicPlusUtil(videos[0]) && config.encounterMarkers) {
-      const { challengeModeTimeline } = videos[0];
-      activeMarkers.push(...getEncounterMarkers(challengeModeTimeline));
-    } else if (isSoloShuffleUtil(videos[0]) && config.roundMarkers) {
-      getRoundMarkers(videos[0]).forEach((m) => activeMarkers.push(m));
+    } else if (category === VideoCategory.SoloShuffle) {
+      const { soloShuffleTimeline } = instantReplay ? instantReplay : videos[0];
+      activeMarkers.push(...getRoundMarkers(soloShuffleTimeline));
     }
 
     return activeMarkers.filter((m) => m.time + m.duration <= duration);

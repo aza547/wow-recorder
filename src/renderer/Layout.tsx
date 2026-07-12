@@ -98,6 +98,10 @@ const Layout = (props: IProps) => {
   };
 
   const renderInstantReplay = () => {
+    if (!activityStatus) {
+      return <></>;
+    }
+
     return (
       <InstantReplay
         instantReplayState={instantReplayState}

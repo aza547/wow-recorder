@@ -33,6 +33,7 @@ type ActivityStatus = {
   start: number;
   deaths: PlayerDeathType[];
   challengeModeTimeline?: RawChallengeModeTimelineSegment[];
+  soloShuffleTimeline?: SoloShuffleTimelineSegment[];
 };
 
 enum MicStatus {
@@ -687,9 +688,7 @@ type InstantReplayState = {
 
 type InstantReplayPlayerData = {
   path: string;
-  deaths: PlayerDeathType[];
-  challengeModeTimeline?: RawChallengeModeTimelineSegment[];
-};
+} & ActivityStatus;
 
 export {
   RecStatus,

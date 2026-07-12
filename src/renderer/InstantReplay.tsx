@@ -21,7 +21,7 @@ interface IProps {
   setAppState: Dispatch<SetStateAction<AppState>>;
   persistentProgress: RefObject<number>;
   config: ConfigurationSchema;
-  activityStatus: ActivityStatus | null;
+  activityStatus: ActivityStatus;
 }
 
 const InstantReplay = (props: IProps) => {
@@ -77,8 +77,7 @@ const InstantReplay = (props: IProps) => {
 
   const instantReplay: InstantReplayPlayerData = {
     path: openPath,
-    deaths: activityStatus?.deaths ?? [],
-    challengeModeTimeline: activityStatus?.challengeModeTimeline,
+    ...activityStatus,
   };
 
   return (
