@@ -11,6 +11,8 @@ import {
   nextKeyPressPromise,
   nextMousePressPromise,
   pushActivityStatus,
+  resetInstantReplayState,
+  refreshInstantReplayState,
   rendererVideoToMetadata,
   resetActivityStatus,
 } from './util';
@@ -302,7 +304,12 @@ export default class Manager {
 
     this.refreshMicStatus(this.recorder.obsMicState);
     this.redrawPreview();
-    this.refreshInstantReplay(this.recorder.instantReplayFile);
+
+    if (LogHandler.activity) {
+      refreshInstantReplayState(LogHandler.activity);
+    } else {
+      resetInstantReplayState();
+    }
   }
 
   /**
@@ -403,13 +410,6 @@ export default class Manager {
    */
   private refreshMicStatus(status: MicStatus) {
     send('updateMicStatus', status);
-  }
-
-  /**
-   * Send a message to the frontend to update the instant replay path.
-   */
-  private refreshInstantReplay(path: string | null) {
-    send('updateInstantReplayPath', path);
   }
 
   /**

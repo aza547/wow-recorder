@@ -31,9 +31,6 @@ enum RecStatus {
 type ActivityStatus = {
   category: VideoCategory;
   start: number;
-  deaths: PlayerDeathType[];
-  challengeModeTimeline?: RawChallengeModeTimelineSegment[];
-  soloShuffleTimeline?: SoloShuffleTimelineSegment[];
 };
 
 enum MicStatus {
@@ -681,14 +678,18 @@ enum SoundAlerts {
   MANUAL_RECORDING_STOP = 'manual-recording-stop',
 }
 
-type InstantReplayState = {
-  currentPath: string | null;
-  openPath: string | null;
+type InstantReplayData = {
+  path: string;
+  category: VideoCategory;
+  deaths: PlayerDeathType[];
+  challengeModeTimeline?: RawChallengeModeTimelineSegment[];
+  soloShuffleTimeline?: SoloShuffleTimelineSegment[];
 };
 
-type InstantReplayPlayerData = {
-  path: string;
-} & ActivityStatus;
+type InstantReplayState = {
+  current: InstantReplayData | null;
+  open: InstantReplayData | null;
+};
 
 export {
   RecStatus,
@@ -758,6 +759,6 @@ export {
   KillVideoStatus,
   Character,
   CharacterFilter,
+  InstantReplayData,
   InstantReplayState,
-  InstantReplayPlayerData,
 };

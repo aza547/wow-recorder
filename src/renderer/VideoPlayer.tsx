@@ -1,7 +1,7 @@
 import {
   AppState,
   DeathMarkers,
-  InstantReplayPlayerData,
+  InstantReplayData,
   RendererVideo,
   SliderMark,
   StorageFilter,
@@ -42,8 +42,6 @@ import {
   getOwnDeathMarkers,
   getRoundMarkers,
   isClip,
-  isMythicPlusUtil,
-  isSoloShuffleUtil,
   secToMmSs,
 } from './rendererutils';
 import { Button } from './components/Button/Button';
@@ -68,7 +66,7 @@ import { VideoCategory } from 'types/VideoCategory';
 interface IProps {
   videos: RendererVideo[];
   // Instant replay takes precedence over the videos prop if present.
-  instantReplay?: InstantReplayPlayerData;
+  instantReplay: InstantReplayData | null;
   categoryState: RendererVideo[];
   persistentProgress: RefObject<number>;
   config: ConfigurationSchema;

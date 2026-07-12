@@ -14,6 +14,7 @@ import {
   ActivityStatus,
   AdvancedLoggingStatus,
   InstantReplayState,
+  InstantReplayData,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language } from 'localisation/translations';
@@ -136,8 +137,8 @@ const WarcraftRecorder = () => {
   // Fragmented MP4 path.
   const [instantReplayState, setInstantReplayState] =
     useState<InstantReplayState>({
-      currentPath: null,
-      openPath: null,
+      current: null,
+      open: null,
     });
 
   // The counters for display on the side menu. It's convient to keep these
@@ -429,11 +430,20 @@ const WarcraftRecorder = () => {
     });
   };
 
-  const updateInstantReplayPath = (value: unknown) => {
-    setInstantReplayState((prev) => ({
-      ...prev,
-      currentPath: value as string | null,
-    }));
+  const updateInstantReplayState = (value: unknown) => {
+    setInstantReplayState((prev) => {
+      const incoming = value as InstantReplayData | null;
+
+      if (!incoming) {
+        return { ...prev, current: null };
+      }
+
+      if (prev.open && incoming.path === prev.open.path) {
+        return { open: incoming, current: incoming };
+      }
+
+      return { ...prev, current: incoming };
+    });
   };
 
   useEffect(() => {
@@ -454,7 +464,7 @@ const WarcraftRecorder = () => {
     ipc.on('displayUnprotectCloudVideos', displayUnprotectCloudVideos);
     ipc.on('displayTagCloudVideo', displayTagCloudVideo);
     ipc.on('updateAdvancedLoggingStatus', updateAdvancedLogging);
-    ipc.on('updateInstantReplayPath', updateInstantReplayPath);
+    ipc.on('updateInstantReplayState', updateInstantReplayState);
 
     return () => {
       ipc.removeAllListeners('updateRecStatus');
@@ -474,7 +484,7 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('displayUnprotectCloudVideos');
       ipc.removeAllListeners('displayTagCloudVideo');
       ipc.removeAllListeners('updateAdvancedLoggingStatus');
-      ipc.removeAllListeners('updateInstantReplayPath');
+      ipc.removeAllListeners('updateInstantReplayState');
     };
   }, []);
 
@@ -529,7 +539,6 @@ const WarcraftRecorder = () => {
                 setPreviewEnabled={setPreviewEnabled}
                 instantReplayState={instantReplayState}
                 setInstantReplayState={setInstantReplayState}
-                activityStatus={activityStatus}
               />
             </div>
           </TooltipProvider>

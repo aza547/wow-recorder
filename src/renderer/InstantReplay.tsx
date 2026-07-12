@@ -1,9 +1,4 @@
-import {
-  ActivityStatus,
-  AppState,
-  InstantReplayPlayerData,
-  InstantReplayState,
-} from 'main/types';
+import { AppState, InstantReplayState } from 'main/types';
 import VideoPlayer from './VideoPlayer';
 import { Dispatch, RefObject, SetStateAction, useEffect } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
@@ -21,7 +16,6 @@ interface IProps {
   setAppState: Dispatch<SetStateAction<AppState>>;
   persistentProgress: RefObject<number>;
   config: ConfigurationSchema;
-  activityStatus: ActivityStatus;
 }
 
 const InstantReplay = (props: IProps) => {
@@ -32,26 +26,25 @@ const InstantReplay = (props: IProps) => {
     setAppState,
     persistentProgress,
     config,
-    activityStatus,
   } = props;
 
   const { language } = appState;
-  const { currentPath, openPath } = instantReplayState;
+  const { current, open } = instantReplayState;
 
   useEffect(() => {
-    if (openPath) {
-      ipc.setOpenInstantReplayFile(openPath);
+    if (open) {
+      ipc.setOpenInstantReplayFile(open.path);
     }
 
     return () => {
       ipc.setOpenInstantReplayFile(null);
     };
-  }, [openPath]);
+  }, [open]);
 
   const goToLatestInstantReplay = () => {
     setInstantReplayState((prev) => ({
       ...prev,
-      openPath: prev.currentPath,
+      open: prev.current,
     }));
   };
 
@@ -68,24 +61,18 @@ const InstantReplay = (props: IProps) => {
     );
   };
 
-  const replayIsStale = openPath !== currentPath && currentPath;
-
-  if (!openPath) {
-    // Should never happen.
+  if (!open) {
     return <></>;
   }
 
-  const instantReplay: InstantReplayPlayerData = {
-    path: openPath,
-    ...activityStatus,
-  };
+  const replayIsStale = current && open.path !== current.path;
 
   return (
     <div className="flex h-full w-full bg-background-higher pt-[32px]">
       <VideoPlayer
-        key={openPath}
+        key={open.path}
         videos={[]}
-        instantReplay={instantReplay}
+        instantReplay={open}
         categoryState={[]}
         persistentProgress={persistentProgress}
         config={config}

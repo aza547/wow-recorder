@@ -26,6 +26,7 @@ import {
   CloudSignedMetadata,
   KillVideoSegment,
   ActivityStatus,
+  InstantReplayData,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
@@ -44,6 +45,7 @@ import {
 import { ZipArchive } from 'archiver';
 import ChallengeModeDungeon from 'activitys/ChallengeModeDungeon';
 import Activity from 'activitys/Activity';
+import SoloShuffle from 'activitys/SoloShuffle';
 
 /**
  * When packaged, we need to fix some paths
@@ -1251,16 +1253,41 @@ const pushActivityStatus = (activity: Activity) => {
   const activityStatus: ActivityStatus = {
     category: activity.category,
     start: activity.startDate.getTime(),
-    deaths: activity.deaths,
   };
 
-  if (activity.category === VideoCategory.MythicPlus) {
-    const cm = activity as ChallengeModeDungeon;
-    const challengeModeTimeline = cm.timeline.map((s) => s.getRaw());
-    activityStatus.challengeModeTimeline = challengeModeTimeline;
+  send('updateActivityStatus', activityStatus);
+};
+
+const resetInstantReplayState = () => {
+  send('updateInstantReplayState', null);
+};
+
+const refreshInstantReplayState = (activity: Activity) => {
+  const recorder = Recorder.getInstance();
+  const instantReplayFile = recorder.instantReplayFile;
+
+  if (!instantReplayFile) {
+    resetInstantReplayState();
+    return;
   }
 
-  send('updateActivityStatus', activityStatus);
+  const category = activity.category;
+
+  const current: InstantReplayData = {
+    path: instantReplayFile,
+    deaths: activity.deaths,
+    category,
+  };
+
+  if (category === VideoCategory.MythicPlus) {
+    const cm = activity as ChallengeModeDungeon;
+    current.challengeModeTimeline = cm.timeline.map((s) => s.getRaw());
+  } else if (category === VideoCategory.SoloShuffle) {
+    const ss = activity as SoloShuffle;
+    current.soloShuffleTimeline = ss.getTimelineSegments();
+  }
+
+  send('updateInstantReplayState', current);
 };
 
 export {
@@ -1311,4 +1338,6 @@ export {
   createDiagsBundle,
   resetActivityStatus,
   pushActivityStatus,
+  resetInstantReplayState,
+  refreshInstantReplayState,
 };
