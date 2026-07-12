@@ -10,7 +10,9 @@ import {
   isManualRecordHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
+  pushActivityStatus,
   rendererVideoToMetadata,
+  resetActivityStatus,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -24,7 +26,6 @@ import {
   MicStatus,
   WowProcessEvent,
   BaseConfig,
-  ActivityStatus,
   AdvancedLoggingStatus,
   KillVideoQueueItem,
   RendererVideo,
@@ -292,12 +293,7 @@ export default class Manager {
     if (inOverrun) {
       this.refreshRecStatus(RecStatus.Overrunning);
     } else if (LogHandler.activity) {
-      const activityStatus: ActivityStatus = {
-        category: LogHandler.activity.category,
-        start: LogHandler.activity.startDate.getTime(),
-      };
-
-      this.refreshRecStatus(RecStatus.Recording, '', activityStatus);
+      this.refreshRecStatus(RecStatus.Recording);
     } else if (this.recorder.obsState === ERecordingState.Recording) {
       this.refreshRecStatus(RecStatus.ReadyToRecord);
     } else if (this.recorder.obsState === ERecordingState.None) {
@@ -392,13 +388,14 @@ export default class Manager {
   /**
    * Send a message to the frontend to update the recorder status icon.
    */
-  private refreshRecStatus(
-    status: RecStatus,
-    msg = '',
-    activityStatus: ActivityStatus | null = null,
-  ) {
+  private refreshRecStatus(status: RecStatus, msg = '') {
     send('updateRecStatus', status, msg);
-    send('updateActivityStatus', activityStatus);
+
+    if (LogHandler.activity && status === RecStatus.Recording) {
+      pushActivityStatus(LogHandler.activity);
+    } else {
+      resetActivityStatus();
+    }
   }
 
   /**

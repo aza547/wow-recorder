@@ -529,6 +529,7 @@ const WarcraftRecorder = () => {
                 setPreviewEnabled={setPreviewEnabled}
                 instantReplayState={instantReplayState}
                 setInstantReplayState={setInstantReplayState}
+                activityStatus={activityStatus}
               />
             </div>
           </TooltipProvider>

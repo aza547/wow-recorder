@@ -1,6 +1,7 @@
 import {
   AppState,
   DeathMarkers,
+  InstantReplayPlayerData,
   RendererVideo,
   SliderMark,
   StorageFilter,
@@ -65,7 +66,8 @@ import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   videos: RendererVideo[];
-  instantReplayPath?: string; // Instant replay takes precedence over the videos prop if present.
+  // Instant replay takes precedence over the videos prop if present.
+  instantReplay?: InstantReplayPlayerData;
   categoryState: RendererVideo[];
   persistentProgress: RefObject<number>;
   config: ConfigurationSchema;
@@ -114,13 +116,13 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     appState,
     setAppState,
     categoryState,
-    instantReplayPath,
+    instantReplay,
   } = props;
 
   const { playing, multiPlayerMode, language, selectedVideos, storageFilter } =
     appState;
 
-  if (!instantReplayPath && (videos.length < 1 || videos.length > 4)) {
+  if (!instantReplay && (videos.length < 1 || videos.length > 4)) {
     // Protect against stupid programmer errors.
     throw new Error('VideoPlayer should only be passed up to 4 videos');
   }
@@ -198,7 +200,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   // local or remote.
   let nameMatches: RendererVideo[] = [];
 
-  if (!instantReplayPath) {
+  if (!instantReplay) {
     const videoName = videos[0].videoName;
     nameMatches = categoryState
       .flatMap((v) => [v, ...v.multiPov])
@@ -209,8 +211,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const diskVideo = nameMatches.find((v) => !v.cloud);
   const clippable = !multiPlayerMode;
 
-  const srcs = instantReplayPath
-    ? [instantReplayPath]
+  const srcs = instantReplay
+    ? [instantReplay.path]
     : videos.map((rv) => rv.videoSource);
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
@@ -272,27 +274,35 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const getMarks = () => {
     const marks: SliderMark[] = [];
 
-    if (instantReplayPath) {
+    const loaded = duration !== 0;
+    const clip = !instantReplay && isClip(videos[0]);
+
+    if (!loaded || clip || clipMode) {
       return marks;
     }
 
-    if (duration === 0 || isClip(videos[0])) {
-      return marks;
-    }
-
+    const deaths = instantReplay ? instantReplay.deaths : videos[0].deaths;
     const deathMarkerConfig = convertNumToDeathMarkers(config.deathMarkers);
 
-    if (deathMarkerConfig === DeathMarkers.ALL) {
-      getAllDeathMarkers(videos[0], language)
+    if (!deaths) {
+      return marks;
+    }
+
+    if (instantReplay || deathMarkerConfig === DeathMarkers.ALL) {
+      getAllDeathMarkers(deaths, language)
         .map(getDeathMark)
         .forEach((m) => marks.push(m));
     } else if (deathMarkerConfig === DeathMarkers.OWN) {
-      getOwnDeathMarkers(videos[0], language)
-        .map(getDeathMark)
-        .forEach((m) => marks.push(m));
+      const { player } = videos[0];
+
+      if (player) {
+        getOwnDeathMarkers(deaths, player, language)
+          .map(getDeathMark)
+          .forEach((m) => marks.push(m));
+      }
     }
 
-    return marks;
+    return marks.filter((m) => m.value <= duration);
   };
 
   /**
@@ -301,19 +311,17 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const getActiveMarkers = () => {
     const activeMarkers: VideoMarker[] = [];
 
-    if (instantReplayPath) {
-      return activeMarkers;
-    }
-
-    if (isMythicPlusUtil(videos[0]) && config.encounterMarkers) {
-      getEncounterMarkers(videos[0]).forEach((m) => activeMarkers.push(m));
-    }
-
-    if (isSoloShuffleUtil(videos[0]) && config.roundMarkers) {
+    if (instantReplay) {
+      const { challengeModeTimeline } = instantReplay;
+      activeMarkers.push(...getEncounterMarkers(challengeModeTimeline));
+    } else if (isMythicPlusUtil(videos[0]) && config.encounterMarkers) {
+      const { challengeModeTimeline } = videos[0];
+      activeMarkers.push(...getEncounterMarkers(challengeModeTimeline));
+    } else if (isSoloShuffleUtil(videos[0]) && config.roundMarkers) {
       getRoundMarkers(videos[0]).forEach((m) => activeMarkers.push(m));
     }
 
-    return activeMarkers;
+    return activeMarkers.filter((m) => m.time + m.duration <= duration);
   };
 
   /**
@@ -325,12 +333,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     markers: VideoMarker[],
     fillerColor: string,
   ) => {
-    if (
-      instantReplayPath ||
-      !progressSlider.current ||
-      duration === 0 ||
-      isClip(videos[0])
-    ) {
+    const loaded = duration !== 0;
+    const clip = !instantReplay && isClip(videos[0]);
+
+    if (!progressSlider.current || !loaded || clip) {
       // Initial render shows a flash of the default color without this,
       // and this branch also protects us loading anything on the clips
       // category where the markers are bogus as they are just lifted
@@ -548,7 +554,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     persistentProgress.current = player1.current.currentTime;
     setDuration(player1.current.duration);
 
-    if (instantReplayPath) {
+    if (instantReplay) {
       setRefreshingInstantReplay(false);
       setSpinner(false);
     }
@@ -659,14 +665,14 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    */
   const onReady = () => {
     numReady.current++;
-    const check = instantReplayPath ? 1 : videos.length;
+    const check = instantReplay ? 1 : videos.length;
 
     if (numReady.current < check) {
       // Don't react until all the players have emitted a ready event.
       return;
     }
 
-    if (!instantReplayPath) {
+    if (!instantReplay) {
       setSpinner(false);
     }
   };
@@ -708,7 +714,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
     const valueLabelFormat = clipMode ? getClipLabelFormat : secToMmSs;
     const valueLabelDisplay = clipMode ? 'on' : 'auto';
-    const marks = clipMode ? undefined : getMarks();
+    const marks = getMarks();
 
     return (
       <Slider
@@ -1261,14 +1267,16 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   );
 
   const doInstantReplayRefresh = () => {
-    if (!player1.current) {
+    if (!player1.current || !instantReplay) {
       return;
     }
+
     setPlaying(false);
     setRefreshingInstantReplay(true);
     setSpinner(true);
+
     player1.current.pause();
-    player1.current.src = `vod://wcr/${instantReplayPath}?${Date.now()}#t=${persistentProgress.current}`;
+    player1.current.src = `vod://wcr/${instantReplay.path}?${Date.now()}#t=${persistentProgress.current}`;
     player1.current.load();
   };
 
@@ -1291,33 +1299,33 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         {renderVolumeSlider()}
         {renderProgressSlider()}
         {renderProgressText()}
-        {!multiPlayerMode && !clipMode && !instantReplayPath && (
+        {!multiPlayerMode && !clipMode && !instantReplay && (
           <Separator className="mx-2" orientation="vertical" />
         )}
         {!multiPlayerMode &&
           !clipMode &&
-          !instantReplayPath &&
+          !instantReplay &&
           renderVideoSourceToggle()}
-        {!multiPlayerMode && !clipMode && !instantReplayPath && (
+        {!multiPlayerMode && !clipMode && !instantReplay && (
           <Separator className="mx-2" orientation="vertical" />
         )}
         {!multiPlayerMode &&
           !clipMode &&
-          !instantReplayPath &&
+          !instantReplay &&
           renderOpenFolderButton()}
         {!multiPlayerMode &&
           !clipMode &&
-          !instantReplayPath &&
+          !instantReplay &&
           renderGetLinkButton()}
         <Separator className="mx-2" orientation="vertical" />
-        {instantReplayPath && (
+        {instantReplay && (
           <>
             {renderInstantReplayRefreshButton()}
             <Separator className="mx-2" orientation="vertical" />
           </>
         )}
         {renderDrawingButton()}
-        {!instantReplayPath &&
+        {!instantReplay &&
           !clipMode &&
           !isClip(videos[0]) &&
           renderClipButton()}

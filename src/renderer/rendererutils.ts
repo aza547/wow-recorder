@@ -78,15 +78,14 @@ const getFormattedDuration = (video: RendererVideo) => {
  * Return an array of death markers for a video.
  * @param video the RendereVideo data type for the video
  */
-const getOwnDeathMarkers = (video: RendererVideo, language: Language) => {
+const getOwnDeathMarkers = (
+  deaths: PlayerDeathType[],
+  player: RawCombatant,
+  language: Language,
+) => {
   const videoMarkers: VideoMarker[] = [];
-  const { player } = video;
 
-  if (video.deaths === undefined) {
-    return videoMarkers;
-  }
-
-  video.deaths.forEach((death: PlayerDeathType) => {
+  deaths.forEach((death: PlayerDeathType) => {
     const [name] = ambiguate(death.name);
 
     let markerText = getLocalePhrase(language, Phrase.Death);
@@ -121,14 +120,10 @@ const getOwnDeathMarkers = (video: RendererVideo, language: Language) => {
  * @param video the RendereVideo data type for the video
  * @param ownOnly true if should only get the players deaths
  */
-const getAllDeathMarkers = (video: RendererVideo, language: Language) => {
+const getAllDeathMarkers = (deaths: PlayerDeathType[], language: Language) => {
   const videoMarkers: VideoMarker[] = [];
 
-  if (video.deaths === undefined) {
-    return videoMarkers;
-  }
-
-  const groupedDeathsByTimestamp = video.deaths.reduce(
+  const groupedDeathsByTimestamp = deaths.reduce(
     (acc: Record<string, PlayerDeathType[]>, obj) => {
       const { timestamp } = obj;
 
@@ -237,46 +232,46 @@ const getRoundMarkers = (video: RendererVideo) => {
  * Return an array of markers for a challenge mode, this highlights the boss
  * encounters as orange and the trash as purple.
  */
-const getEncounterMarkers = (video: RendererVideo) => {
+const getEncounterMarkers = (
+  challengeModeTimeline: RawChallengeModeTimelineSegment[] | undefined,
+) => {
   const videoMarkers: VideoMarker[] = [];
 
-  if (video.challengeModeTimeline === undefined) {
+  if (challengeModeTimeline === undefined) {
     return videoMarkers;
   }
 
-  video.challengeModeTimeline.forEach(
-    (segment: RawChallengeModeTimelineSegment) => {
-      if (
-        segment.logEnd === undefined ||
-        segment.logStart === undefined ||
-        segment.segmentType === undefined ||
-        segment.segmentType !== TimelineSegmentType.BossEncounter ||
-        segment.timestamp === undefined
-      ) {
-        return;
-      }
+  challengeModeTimeline.forEach((segment: RawChallengeModeTimelineSegment) => {
+    if (
+      segment.logEnd === undefined ||
+      segment.logStart === undefined ||
+      segment.segmentType === undefined ||
+      segment.segmentType !== TimelineSegmentType.BossEncounter ||
+      segment.timestamp === undefined
+    ) {
+      return;
+    }
 
-      const segmentEnd = new Date(segment.logEnd);
-      const segmentStart = new Date(segment.logStart);
+    const segmentEnd = new Date(segment.logEnd);
+    const segmentStart = new Date(segment.logStart);
 
-      const segmentDuration = Math.floor(
-        (segmentEnd.getTime() - segmentStart.getTime()) / 1000,
-      );
+    const segmentDuration = Math.floor(
+      (segmentEnd.getTime() - segmentStart.getTime()) / 1000,
+    );
 
-      let markerText = '';
+    let markerText = '';
 
-      if (segment.encounterId !== undefined) {
-        markerText = dungeonEncounters[segment.encounterId];
-      }
+    if (segment.encounterId !== undefined) {
+      markerText = dungeonEncounters[segment.encounterId];
+    }
 
-      videoMarkers.push({
-        time: segment.timestamp,
-        text: markerText,
-        color: MarkerColors.ENCOUNTER,
-        duration: segmentDuration,
-      });
-    },
-  );
+    videoMarkers.push({
+      time: segment.timestamp,
+      text: markerText,
+      color: MarkerColors.ENCOUNTER,
+      duration: segmentDuration,
+    });
+  });
 
   return videoMarkers;
 };

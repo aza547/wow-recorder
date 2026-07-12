@@ -31,6 +31,8 @@ enum RecStatus {
 type ActivityStatus = {
   category: VideoCategory;
   start: number;
+  deaths: PlayerDeathType[];
+  challengeModeTimeline?: RawChallengeModeTimelineSegment[];
 };
 
 enum MicStatus {
@@ -683,6 +685,12 @@ type InstantReplayState = {
   openPath: string | null;
 };
 
+type InstantReplayPlayerData = {
+  path: string;
+  deaths: PlayerDeathType[];
+  challengeModeTimeline?: RawChallengeModeTimelineSegment[];
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -752,4 +760,5 @@ export {
   Character,
   CharacterFilter,
   InstantReplayState,
+  InstantReplayPlayerData,
 };

@@ -6,6 +6,7 @@ import {
   AppState,
   RendererVideo,
   InstantReplayState,
+  ActivityStatus,
 } from 'main/types';
 import { Dispatch, RefObject, SetStateAction } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
@@ -29,6 +30,7 @@ interface IProps {
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
   instantReplayState: InstantReplayState;
   setInstantReplayState: Dispatch<SetStateAction<InstantReplayState>>;
+  activityStatus: ActivityStatus | null;
 }
 
 /**
@@ -50,6 +52,7 @@ const Layout = (props: IProps) => {
     setPreviewEnabled,
     instantReplayState,
     setInstantReplayState,
+    activityStatus,
   } = props;
   const { page, category } = appState;
 
@@ -103,6 +106,7 @@ const Layout = (props: IProps) => {
         setAppState={setAppState}
         persistentProgress={persistentProgress}
         config={config}
+        activityStatus={activityStatus}
       />
     );
   };

@@ -25,6 +25,7 @@ import {
   ErrorReport,
   CloudSignedMetadata,
   KillVideoSegment,
+  ActivityStatus,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
@@ -41,6 +42,8 @@ import {
   secToMmSs,
 } from 'renderer/rendererutils';
 import { ZipArchive } from 'archiver';
+import ChallengeModeDungeon from 'activitys/ChallengeModeDungeon';
+import Activity from 'activitys/Activity';
 
 /**
  * When packaged, we need to fix some paths
@@ -1240,6 +1243,26 @@ const createDiagsBundle = async (logPath: string): Promise<string> => {
   });
 };
 
+const resetActivityStatus = () => {
+  send('updateActivityStatus', null);
+};
+
+const pushActivityStatus = (activity: Activity) => {
+  const activityStatus: ActivityStatus = {
+    category: activity.category,
+    start: activity.startDate.getTime(),
+    deaths: activity.deaths,
+  };
+
+  if (activity.category === VideoCategory.MythicPlus) {
+    const cm = activity as ChallengeModeDungeon;
+    const challengeModeTimeline = cm.timeline.map((s) => s.getRaw());
+    activityStatus.challengeModeTimeline = challengeModeTimeline;
+  }
+
+  send('updateActivityStatus', activityStatus);
+};
+
 export {
   setupApplicationLogging,
   writeMetadataFile,
@@ -1286,4 +1309,6 @@ export {
   getConfigWtfPath,
   getDriveFormat,
   createDiagsBundle,
+  resetActivityStatus,
+  pushActivityStatus,
 };

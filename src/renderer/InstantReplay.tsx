@@ -1,4 +1,9 @@
-import { AppState, InstantReplayState } from 'main/types';
+import {
+  ActivityStatus,
+  AppState,
+  InstantReplayPlayerData,
+  InstantReplayState,
+} from 'main/types';
 import VideoPlayer from './VideoPlayer';
 import { Dispatch, RefObject, SetStateAction, useEffect } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
@@ -16,6 +21,7 @@ interface IProps {
   setAppState: Dispatch<SetStateAction<AppState>>;
   persistentProgress: RefObject<number>;
   config: ConfigurationSchema;
+  activityStatus: ActivityStatus | null;
 }
 
 const InstantReplay = (props: IProps) => {
@@ -26,6 +32,7 @@ const InstantReplay = (props: IProps) => {
     setAppState,
     persistentProgress,
     config,
+    activityStatus,
   } = props;
 
   const { language } = appState;
@@ -68,12 +75,18 @@ const InstantReplay = (props: IProps) => {
     return <></>;
   }
 
+  const instantReplay: InstantReplayPlayerData = {
+    path: openPath,
+    deaths: activityStatus?.deaths ?? [],
+    challengeModeTimeline: activityStatus?.challengeModeTimeline,
+  };
+
   return (
     <div className="flex h-full w-full bg-background-higher pt-[32px]">
       <VideoPlayer
         key={openPath}
         videos={[]}
-        instantReplayPath={openPath}
+        instantReplay={instantReplay}
         categoryState={[]}
         persistentProgress={persistentProgress}
         config={config}
