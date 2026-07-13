@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "atomic-queue": "^5.0.4",
-    "noobs": "^0.0.200",
+    "noobs": "^0.0.201",
     "uiohook-napi": "^1.5.2"
   },
   "license": "MIT"
