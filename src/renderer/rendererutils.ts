@@ -714,7 +714,8 @@ const getFriendlyCodecName = (enc: string) => {
     case ESupportedEncoders.QSV_AV1:
       return 'AV1';
     default:
-      throw new Error('Unknown Encoder2: ' + enc);
+      console.log('Unknown Encoder', enc);
+      return 'Unknown Encoder';
   }
 };
 
