@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add the ability to filter uploads by character name and realm.
 
 ### Fixed
+- [Issue 868](https://github.com/aza547/wow-recorder/issues/868) - Fixes storage toggle responsiveness.
 
 ## [7.9.0] - 2026-06-26
 ### Changed

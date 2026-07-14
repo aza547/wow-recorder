@@ -53,6 +53,7 @@ const StorageFilterToggle = (props: IProps) => {
       <ToggleGroupItem value={StorageFilter.DISK} disabled={!hasDisk}>
         <Tooltip
           content={getLocalePhrase(language, Phrase.ShowDiskOnlyTooltip)}
+          onClick={() => {}}
         >
           <SaveIcon sx={{ height: 18, width: 18 }} />
         </Tooltip>
@@ -61,13 +62,17 @@ const StorageFilterToggle = (props: IProps) => {
       <ToggleGroupItem value={StorageFilter.CLOUD} disabled={!hasCloud}>
         <Tooltip
           content={getLocalePhrase(language, Phrase.ShowCloudOnlyTooltip)}
+          onClick={() => {}}
         >
           <CloudIcon sx={{ height: 18, width: 18 }} />
         </Tooltip>
       </ToggleGroupItem>
 
       <ToggleGroupItem value={StorageFilter.BOTH}>
-        <Tooltip content={getLocalePhrase(language, Phrase.ShowBothTooltip)}>
+        <Tooltip
+          content={getLocalePhrase(language, Phrase.ShowBothTooltip)}
+          onClick={() => {}}
+        >
           <Workflow size={18} />
         </Tooltip>
       </ToggleGroupItem>
