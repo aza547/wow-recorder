@@ -17,9 +17,22 @@ const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
 };
 
 export default class DiskSizeMonitor {
+  // Call sites create separate instances, so share the in-flight run to avoid overlapping cleanup.
+  private static activeRun: Promise<void> | undefined;
+
   private cfg = ConfigService.getInstance();
 
-  async run() {
+  async run(): Promise<void> {
+    if (!DiskSizeMonitor.activeRun) {
+      DiskSizeMonitor.activeRun = this.runOnce().finally(() => {
+        DiskSizeMonitor.activeRun = undefined;
+      });
+    }
+
+    return DiskSizeMonitor.activeRun;
+  }
+
+  private async runOnce() {
     const storageDir = this.cfg.get<string>('storagePath');
     const maxStorageGB = this.cfg.get<number>('maxStorage');
 
@@ -78,8 +91,11 @@ export default class DiskSizeMonitor {
     );
 
     if (filesForDeletion.length > 0) {
-      DiskClient.getInstance().refreshStatus();
-      DiskClient.getInstance().refreshVideos();
+      // Resolve only after renderer-facing state reflects the completed cleanup.
+      await Promise.all([
+        DiskClient.getInstance().refreshStatus(),
+        DiskClient.getInstance().refreshVideos(),
+      ]);
     }
   }
 

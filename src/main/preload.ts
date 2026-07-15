@@ -50,6 +50,7 @@ export type Channels =
   | 'reconfigureAudio'
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
+  | 'runDiskSizeMonitor'
   | 'getSensibleEncoderDefault'
   | 'refreshCloudGuilds';
 
@@ -195,6 +196,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     reconfigureCloud() {
       ipcRenderer.send('reconfigureCloud');
+    },
+
+    runDiskSizeMonitor(): Promise<void> {
+      return ipcRenderer.invoke('runDiskSizeMonitor');
     },
 
     getSensibleEncoderDefault(): Promise<string> {
