@@ -220,6 +220,10 @@ export default class DiskClient implements StorageClient {
   }
 
   private setupListeners() {
+    ipcMain.handle('runDiskSizeMonitor', () => {
+      return new DiskSizeMonitor().run();
+    });
+
     ipcMain.on('deleteVideosDisk', async (_event, args) => {
       const videos = args as RendererVideo[];
       const toDelete = videos.filter((v) => !v.cloud).map((v) => v.videoSource);
