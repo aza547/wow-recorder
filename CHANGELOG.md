@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 869](https://github.com/aza547/wow-recorder/issues/869) - Handle unrecognized encoders without an error.
 
 ## [7.10.0] - 2026-07-15
 ### Changed
@@ -19,7 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 868](https://github.com/aza547/wow-recorder/issues/868) - Fixes storage toggle responsiveness.
-- [Issue 869](https://github.com/aza547/wow-recorder/issues/869) - Handle unrecognized encoders without an error.
 
 ## [7.9.0] - 2026-06-26
 ### Changed
