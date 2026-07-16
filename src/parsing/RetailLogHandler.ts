@@ -27,6 +27,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import { isUnitFriendly, isUnitSelf } from './logutils';
 import ConfigService from 'config/ConfigService';
 import RaidEncounter from 'activitys/RaidEncounter';
+import { refreshInstantReplayState } from 'main/util';
 
 /**
  * RetailLogHandler class.
@@ -223,6 +224,7 @@ export default class RetailLogHandler extends LogHandler {
     );
 
     activity.addTimelineSegment(initialSegment);
+    refreshInstantReplayState(activity);
     await LogHandler.startActivity(activity);
   }
 
@@ -351,6 +353,8 @@ export default class RetailLogHandler extends LogHandler {
     );
 
     activeChallengeMode.addTimelineSegment(segment, eventDate);
+    refreshInstantReplayState(activeChallengeMode);
+
     console.debug(
       `[RetailLogHandler] Starting new boss encounter: ${dungeonEncounters[encounterID]}`,
     );
@@ -400,6 +404,8 @@ export default class RetailLogHandler extends LogHandler {
 
       // Add a trash segment as the boss encounter ended
       activeChallengeMode.addTimelineSegment(segment, eventDate);
+      refreshInstantReplayState(LogHandler.activity);
+
       console.debug(
         `[RetailLogHandler] Ending boss encounter: ${dungeonEncounters[encounterID]}`,
       );

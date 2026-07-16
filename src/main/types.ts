@@ -690,9 +690,17 @@ enum ObsOrderMovement {
   OBS_ORDER_MOVE_BOTTOM = 3,
 }
 
+type InstantReplayData = {
+  path: string;
+  category: VideoCategory;
+  deaths: PlayerDeathType[];
+  challengeModeTimeline?: RawChallengeModeTimelineSegment[];
+  soloShuffleTimeline?: SoloShuffleTimelineSegment[];
+};
+
 type InstantReplayState = {
-  currentPath: string | null;
-  openPath: string | null;
+  current: InstantReplayData | null;
+  open: InstantReplayData | null;
 };
 
 export {
@@ -764,5 +772,6 @@ export {
   KillVideoStatus,
   Character,
   CharacterFilter,
+  InstantReplayData,
   InstantReplayState,
 };

@@ -29,22 +29,22 @@ const InstantReplay = (props: IProps) => {
   } = props;
 
   const { language } = appState;
-  const { currentPath, openPath } = instantReplayState;
+  const { current, open } = instantReplayState;
 
   useEffect(() => {
-    if (openPath) {
-      ipc.setOpenInstantReplayFile(openPath);
+    if (open) {
+      ipc.setOpenInstantReplayFile(open.path);
     }
 
     return () => {
       ipc.setOpenInstantReplayFile(null);
     };
-  }, [openPath]);
+  }, [open]);
 
   const goToLatestInstantReplay = () => {
     setInstantReplayState((prev) => ({
       ...prev,
-      openPath: prev.currentPath,
+      open: prev.current,
     }));
   };
 
@@ -61,19 +61,18 @@ const InstantReplay = (props: IProps) => {
     );
   };
 
-  const replayIsStale = openPath !== currentPath && currentPath;
-
-  if (!openPath) {
-    // Should never happen.
+  if (!open) {
     return <></>;
   }
+
+  const replayIsStale = current && open.path !== current.path;
 
   return (
     <div className="flex h-full w-full bg-background-higher pt-[32px]">
       <VideoPlayer
-        key={openPath}
+        key={open.path}
         videos={[]}
-        instantReplayPath={openPath}
+        instantReplay={open}
         categoryState={[]}
         persistentProgress={persistentProgress}
         config={config}

@@ -26,7 +26,7 @@ import { assert } from 'console';
 import Manual from 'activitys/Manual';
 import { playSoundAlert } from 'main/main';
 import Poller from 'utils/Poller';
-import { emitErrorReport } from 'main/util';
+import { emitErrorReport, refreshInstantReplayState } from 'main/util';
 import AsyncQueue from 'utils/AsyncQueue';
 import path from 'path';
 import { ESupportedEncoders } from 'main/obsEnums';
@@ -206,6 +206,7 @@ export default abstract class LogHandler {
     };
 
     LogHandler.activity.addDeath(playerDeath);
+    refreshInstantReplayState(LogHandler.activity);
   }
 
   protected static async startActivity(activity: Activity) {

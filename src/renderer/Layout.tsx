@@ -6,6 +6,7 @@ import {
   AppState,
   RendererVideo,
   InstantReplayState,
+  ActivityStatus,
 } from 'main/types';
 import { Dispatch, RefObject, SetStateAction } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';

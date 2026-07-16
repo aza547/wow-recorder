@@ -267,10 +267,10 @@ const SideMenu = (props: IProps) => {
       newPage === Pages.InstantReplay &&
       appState.page !== Pages.InstantReplay
     ) {
-      setInstantReplayState((prevState) => {
+      setInstantReplayState((prev) => {
         return {
-          ...prevState,
-          openPath: prevState.currentPath,
+          ...prev,
+          open: prev.current,
         };
       });
     }
@@ -309,7 +309,7 @@ const SideMenu = (props: IProps) => {
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
       >
-        {(instantReplayState.currentPath ||
+        {(instantReplayState.current ||
           appState.page === Pages.InstantReplay) && (
           <>
             <Separator />
