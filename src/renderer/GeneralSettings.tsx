@@ -286,8 +286,6 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
 
     try {
       await ipc.runDiskSizeMonitor();
-    } catch (error) {
-      console.error('[GeneralSettings] Failed to run disk size monitor', error);
     } finally {
       setIsRunningDiskSizeMonitor(false);
     }
@@ -300,7 +298,6 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     if (perc > 100) perc = 100;
     const text = max === 0 ? `${usage}GB / ∞` : `${usage}GB / ${max}GB`;
 
-    // Compare unrounded bytes so the action only appears after the configured limit is exceeded.
     const shouldShowRunButton =
       config.maxStorage > 0 &&
       appState.diskStatus.usage > appState.diskStatus.limit;
@@ -311,7 +308,9 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           {getLocalePhrase(language, Phrase.DiskUsageDescription)}
         </Label>
 
-        <div className="flex flex-row items-center justify-start w-[430px] gap-x-2 py-2">
+        <div
+          className={`flex flex-row items-center justify-start ${shouldShowRunButton ? 'w-[430px]' : 'w-80'} gap-x-2 py-2`}
+        >
           <Tooltip
             content={getLocalePhrase(language, Phrase.DiskUsageDescription)}
           >
@@ -326,7 +325,6 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
               size="xs"
               onClick={runDiskSizeMonitor}
               disabled={isComponentDisabled() || isRunningDiskSizeMonitor}
-              aria-busy={isRunningDiskSizeMonitor}
             >
               <span
                 className={`mr-1.5 inline-flex ${isRunningDiskSizeMonitor ? 'animate-spin' : ''}`}
