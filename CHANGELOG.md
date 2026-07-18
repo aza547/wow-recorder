@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 855](https://github.com/aza547/wow-recorder/issues/855) - Share log handler timeouts between game modes.
 
 ## [7.10.1] - 2026-07-18
 ### Fixed

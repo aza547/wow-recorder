@@ -54,6 +54,19 @@ export default abstract class LogHandler {
   private static stateChangeCallback: () => void;
 
   /**
+   * The timer is static and thus shared across all LogHandlers. We don't want
+   * any weird behaviour when quickly switching between games. See Issue 855.
+   */
+  private static logDataTimeout: NodeJS.Timeout | null = null;
+
+  /**
+   * The lower this timer the better, but log flush behaviour varies between
+   * games so we can't make it too low or we risk ending activities early. Let
+   * the specific log handler instance decide what the timeout should be.
+   */
+  private logDataTimeoutDuration: number;
+
+  /**
    * Enforces ordered processing of log lines. Some log line processing
    * is asynchronous so we need to ensure later lines don't get processed
    * before earlier ones.
@@ -61,17 +74,18 @@ export default abstract class LogHandler {
   protected logProcessQueue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
 
   constructor(logPath: string, dataTimeout: number) {
-    this.combatLogWatcher = new CombatLogWatcher(logPath, dataTimeout);
+    this.logDataTimeoutDuration = dataTimeout;
+    this.combatLogWatcher = new CombatLogWatcher(logPath);
     this.combatLogWatcher.watch();
     const lpq = this.logProcessQueue;
-
-    this.combatLogWatcher.on('timeout', (ms) => {
-      lpq.add(async () => this.dataTimeout(ms));
-    });
 
     // For ease of testing force stop.
     this.combatLogWatcher.on('WARCRAFT_RECORDER_FORCE_STOP', () => {
       lpq.add(async () => LogHandler.forceEndActivity());
+    });
+
+    this.combatLogWatcher.on('WARCRAFT_RECORDER_LOG_ACTIVITY', () => {
+      lpq.add(async () => this.resetTimeout());
     });
   }
 
@@ -360,7 +374,7 @@ export default abstract class LogHandler {
 
   protected async dataTimeout(ms: number) {
     console.info(
-      `[LogHandler] Haven't received data for combatlog in ${
+      `[LogHandler] Haven't received data from any combat logs in ${
         ms / 1000
       } seconds.`,
     );
@@ -537,5 +551,21 @@ export default abstract class LogHandler {
 
     console.warn('[LogHandler] Unable to start manual recording');
     if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR);
+  }
+
+  /**
+   * Reset the log data timeout. This should be called whenever we receive
+   * data from the combat log.
+   */
+  protected resetTimeout() {
+    if (LogHandler.logDataTimeout) {
+      clearTimeout(LogHandler.logDataTimeout);
+    }
+
+    LogHandler.logDataTimeout = setTimeout(() => {
+      this.logProcessQueue.add(async () =>
+        this.dataTimeout(this.logDataTimeoutDuration),
+      );
+    }, this.logDataTimeoutDuration);
   }
 }

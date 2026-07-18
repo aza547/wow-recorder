@@ -187,7 +187,7 @@
     "@types/fluent-ffmpeg": "^2.1.27",
     "@types/jest": "^29.5.5",
     "@types/lodash": "^4.17.13",
-    "@types/node": "20.6.2",
+    "@types/node": "^26.1.1",
     "@types/react": "^19.0.11",
     "@types/react-dom": "^19.0.4",
     "@types/react-test-renderer": "^19.0.0",
