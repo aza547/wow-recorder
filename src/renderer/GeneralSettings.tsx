@@ -300,6 +300,11 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     if (perc > 100) perc = 100;
     const text = max === 0 ? `${usage}GB / ∞` : `${usage}GB / ${max}GB`;
 
+    // Compare unrounded bytes so the action only appears after the configured limit is exceeded.
+    const shouldShowRunButton =
+      config.maxStorage > 0 &&
+      appState.diskStatus.usage > appState.diskStatus.limit;
+
     return (
       <div className="flex-col">
         <Label className="flex items-center">
@@ -316,23 +321,21 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
             {text}
           </span>
-          <Button
-            size="xs"
-            onClick={runDiskSizeMonitor}
-            disabled={
-              isComponentDisabled() ||
-              isRunningDiskSizeMonitor ||
-              config.maxStorage <= 0
-            }
-            aria-busy={isRunningDiskSizeMonitor}
-          >
-            <span
-              className={`mr-1.5 inline-flex ${isRunningDiskSizeMonitor ? 'animate-spin' : ''}`}
+          {shouldShowRunButton ? (
+            <Button
+              size="xs"
+              onClick={runDiskSizeMonitor}
+              disabled={isComponentDisabled() || isRunningDiskSizeMonitor}
+              aria-busy={isRunningDiskSizeMonitor}
             >
-              <RefreshCw size={14} />
-            </span>
-            {getLocalePhrase(language, Phrase.RunDiskSizeMonitorButtonLabel)}
-          </Button>
+              <span
+                className={`mr-1.5 inline-flex ${isRunningDiskSizeMonitor ? 'animate-spin' : ''}`}
+              >
+                <RefreshCw size={14} />
+              </span>
+              {getLocalePhrase(language, Phrase.RunDiskSizeMonitorButtonLabel)}
+            </Button>
+          ) : null}
         </div>
       </div>
     );
