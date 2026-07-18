@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [7.10.1] - 2026-07-18
+### Fixed
 - [Issue 869](https://github.com/aza547/wow-recorder/issues/869) - Handle unrecognized encoders without an error.
 - Fix an issue whereclick events inside the kill video creator weren't firing preventing dragging.
 - Fix an issue where click events inside the tag dialog meant you couldn't click to move the cursor.
