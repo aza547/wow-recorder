@@ -64,7 +64,7 @@ export default abstract class LogHandler {
    * games so we can't make it too low or we risk ending activities early. Let
    * the specific log handler instance decide what the timeout should be.
    */
-  private logDataTimeoutDuration: number;
+  private logDataTimeoutMs: number;
 
   /**
    * Enforces ordered processing of log lines. Some log line processing
@@ -73,8 +73,8 @@ export default abstract class LogHandler {
    */
   protected logProcessQueue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
 
-  constructor(logPath: string, dataTimeout: number) {
-    this.logDataTimeoutDuration = dataTimeout;
+  constructor(logPath: string, dataTimeoutMins: number) {
+    this.logDataTimeoutMs = dataTimeoutMins * 60 * 1000;
     this.combatLogWatcher = new CombatLogWatcher(logPath);
     this.combatLogWatcher.watch();
     const lpq = this.logProcessQueue;
@@ -564,8 +564,8 @@ export default abstract class LogHandler {
 
     LogHandler.logDataTimeout = setTimeout(() => {
       this.logProcessQueue.add(async () =>
-        this.dataTimeout(this.logDataTimeoutDuration),
+        this.dataTimeout(this.logDataTimeoutMs),
       );
-    }, this.logDataTimeoutDuration);
+    }, this.logDataTimeoutMs);
   }
 }
