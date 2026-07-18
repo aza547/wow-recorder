@@ -220,8 +220,12 @@ export default class DiskClient implements StorageClient {
   }
 
   private setupListeners() {
-    ipcMain.handle('runDiskSizeMonitor', () => {
-      return new DiskSizeMonitor().run();
+    ipcMain.handle('runDiskSizeMonitor', async () => {
+      try {
+        await new DiskSizeMonitor().run();
+      } catch (error) {
+        console.error('[DiskClient] Failed to run disk size monitor', error);
+      }
     });
 
     ipcMain.on('deleteVideosDisk', async (_event, args) => {
