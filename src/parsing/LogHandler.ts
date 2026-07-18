@@ -379,9 +379,23 @@ export default abstract class LogHandler {
       } seconds.`,
     );
 
-    if (LogHandler.activity) {
-      await LogHandler.forceEndActivity(-ms / 1000);
+    if (!LogHandler.activity) {
+      console.info('[LogHandler] No activity, no action');
+      return;
     }
+
+    if (LogHandler.overrunning) {
+      console.info('[LogHandler] Activity in overrun, no action');
+      return;
+    }
+
+    if (this.isManual()) {
+      console.info('[LogHandler] Manual recording, no action');
+      return;
+    }
+
+    console.info('[LogHandler] Force ending activity due to data timeout');
+    await LogHandler.forceEndActivity(-ms / 1000);
   }
 
   public static async forceEndActivity(timedelta = 0) {
