@@ -61,7 +61,7 @@ export default abstract class LogHandler {
 
   /**
    * The lower this timer the better, but log flush behaviour varies between
-   * games so we can't make it too low or we risk ending activities early. Let
+   * games and we can't make it too low or we risk ending activities early. Let
    * the specific log handler instance decide what the timeout should be.
    */
   private logDataTimeoutMs: number;
