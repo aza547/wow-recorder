@@ -198,18 +198,16 @@ export const populateDetailsCell = (
 
     return (
       <Tooltip content={tooltip}>
-        <div onClick={(e) => e.stopPropagation()}>
-          <TagDialog
-            tag={tag}
-            videos={toTag}
-            setVideoState={setVideoState}
-            language={language}
-          >
-            <Button variant="ghost" size="xs" disabled={noPermission}>
-              {icon}
-            </Button>
-          </TagDialog>
-        </div>
+        <TagDialog
+          tag={tag}
+          videos={toTag}
+          setVideoState={setVideoState}
+          language={language}
+        >
+          <Button variant="ghost" size="xs" disabled={noPermission}>
+            {icon}
+          </Button>
+        </TagDialog>
       </Tooltip>
     );
   };
@@ -248,13 +246,11 @@ export const populateCreatorCell = (
   return (
     <Box className="inline-flex">
       <Tooltip content={tooltip}>
-        <div onClick={(e) => e.stopPropagation()}>
-          <KillVideoDialog sources={disk} language={language}>
-            <Button variant="ghost" size="xs" disabled={disabled}>
-              <Clapperboard size={18} />
-            </Button>
-          </KillVideoDialog>
-        </div>
+        <KillVideoDialog sources={disk} language={language}>
+          <Button variant="ghost" size="xs" disabled={disabled}>
+            <Clapperboard size={18} />
+          </Button>
+        </KillVideoDialog>
       </Tooltip>
     </Box>
   );
