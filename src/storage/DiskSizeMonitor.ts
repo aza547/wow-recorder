@@ -5,6 +5,7 @@ import {
   getMetadataForVideo,
   getSortedVideos,
 } from '../main/util';
+import AsyncQueue from '../utils/AsyncQueue';
 import DiskClient from './DiskClient';
 
 // Had a bug here where we used filter with an async function but that isn't
@@ -16,20 +17,14 @@ const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
   return fileStream.filter((_, index) => results[index]);
 };
 
-export default class DiskSizeMonitor {
-  // Call sites create separate instances, so share the in-flight run to avoid overlapping cleanup.
-  private static activeRun: Promise<void> | undefined;
+// All monitor instances share the queue, retaining at most one rerun while cleanup is active.
+const diskSizeMonitorQueue = new AsyncQueue(1);
 
+export default class DiskSizeMonitor {
   private cfg = ConfigService.getInstance();
 
-  async run(): Promise<void> {
-    if (!DiskSizeMonitor.activeRun) {
-      DiskSizeMonitor.activeRun = this.runOnce().finally(() => {
-        DiskSizeMonitor.activeRun = undefined;
-      });
-    }
-
-    return DiskSizeMonitor.activeRun;
+  run(): Promise<void> {
+    return diskSizeMonitorQueue.add(() => this.runOnce());
   }
 
   private async runOnce() {
@@ -91,11 +86,8 @@ export default class DiskSizeMonitor {
     );
 
     if (filesForDeletion.length > 0) {
-      // Resolve only after renderer-facing state reflects the completed cleanup.
-      await Promise.all([
-        DiskClient.getInstance().refreshStatus(),
-        DiskClient.getInstance().refreshVideos(),
-      ]);
+      DiskClient.getInstance().refreshStatus();
+      DiskClient.getInstance().refreshVideos();
     }
   }
 
