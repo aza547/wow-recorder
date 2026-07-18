@@ -321,22 +321,24 @@ const getEncounterNameById = (encounterId: number): string => {
 };
 
 /**
- * Get the dungeon name if possible, else an empty string.
+ * Get the dungeon name if possible, else "Unknown Map".
  */
-const getDungeonName = (video: RendererVideo) => {
+const getDungeonName = (video: RendererVideo): string => {
   const { mapID } = video;
 
   if (mapID === undefined) {
-    return '';
+    return 'Unknown Map';
   }
 
   if (video.flavour === Flavour.Retail) {
-    return dungeonsByMapId[mapID];
+    return dungeonsByMapId[mapID] ?? 'Unknown Map';
   }
 
   if (video.flavour === Flavour.Classic) {
-    return mopChallengeModes[mapID];
+    return mopChallengeModes[mapID] ?? 'Unknown Map';
   }
+
+  return 'Unknown Map';
 };
 
 const isMythicPlusUtil = (video: RendererVideo) => {
