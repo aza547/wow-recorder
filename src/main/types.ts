@@ -228,7 +228,7 @@ type Metadata = {
 };
 
 /**
- * We mandata some fields are present for cloud videos that are optional for
+ * We mandate some fields are present for cloud videos that are optional for
  * disk based videos.
  */
 type CloudMetadata = Metadata & {
