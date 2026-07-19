@@ -264,7 +264,6 @@ export default class VideoProcessQueue {
       // covers the cases where we're cutting a section off the end of
       // the video due to a timeout.
       const videoPath = await this.cutVideo(data, outputDir);
-      await VideoProcessQueue.updateClipTimingMetadata(data, videoPath);
 
       // Add the size of the newly cut video. We can't do this earlier
       // as the size will change when we cut/remux.

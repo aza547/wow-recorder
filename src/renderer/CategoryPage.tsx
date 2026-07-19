@@ -122,7 +122,9 @@ const CategoryPage = (props: IProps) => {
 
     if (parent) {
       persistentProgress.current =
-        clip.parentOffset && clip.parentOffset > 0 ? clip.parentOffset : 0;
+        clip.parentVideoOffset && clip.parentVideoOffset > 0
+          ? clip.parentVideoOffset
+          : 0;
 
       setAppState((prevState) => ({
         ...prevState,
