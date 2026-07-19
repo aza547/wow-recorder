@@ -19,12 +19,43 @@ const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
 
 // All monitor instances share the queue, retaining at most one rerun while cleanup is active.
 const diskSizeMonitorQueue = new AsyncQueue(1);
+let pendingDiskSizeMonitorCompletion: Promise<void> | undefined;
+
+const queueDiskSizeMonitorRun = (task: () => Promise<void>): Promise<void> => {
+  if (pendingDiskSizeMonitorCompletion) {
+    return pendingDiskSizeMonitorCompletion;
+  }
+
+  let resolveCompletion!: () => void;
+  let rejectCompletion!: (error: unknown) => void;
+  const completion = new Promise<void>((resolve, reject) => {
+    resolveCompletion = resolve;
+    rejectCompletion = reject;
+  });
+
+  pendingDiskSizeMonitorCompletion = completion;
+  diskSizeMonitorQueue.add(async () => {
+    pendingDiskSizeMonitorCompletion = undefined;
+
+    try {
+      await task();
+      resolveCompletion();
+    } catch (error) {
+      rejectCompletion(error);
+      throw error;
+    }
+  });
+
+  // Automatic callers may intentionally ignore the returned completion promise.
+  void completion.catch(() => undefined);
+  return completion;
+};
 
 export default class DiskSizeMonitor {
   private cfg = ConfigService.getInstance();
 
   run(): Promise<void> {
-    return diskSizeMonitorQueue.add(() => this.runOnce());
+    return queueDiskSizeMonitorRun(() => this.runOnce());
   }
 
   private async runOnce() {

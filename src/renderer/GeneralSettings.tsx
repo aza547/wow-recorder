@@ -32,6 +32,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const initialRenderVideoConfig = useRef(true);
 
   useEffect(() => {
+    return ipc.on('diskSizeMonitorComplete', () => {
+      setIsRunningDiskSizeMonitor(false);
+    });
+  }, []);
+
+  useEffect(() => {
     if (initialRenderVideoConfig.current) {
       // Drop out if initial render, we don't care about settings
       // changes until the user has had a chance to make some.
@@ -281,14 +287,9 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const runDiskSizeMonitor = async () => {
+  const runDiskSizeMonitor = () => {
     setIsRunningDiskSizeMonitor(true);
-
-    try {
-      await ipc.runDiskSizeMonitor();
-    } finally {
-      setIsRunningDiskSizeMonitor(false);
-    }
+    void ipc.runDiskSizeMonitor();
   };
 
   const getDiskUsageBar = () => {

@@ -225,6 +225,8 @@ export default class DiskClient implements StorageClient {
         await new DiskSizeMonitor().run();
       } catch (error) {
         console.error('[DiskClient] Failed to run disk size monitor', error);
+      } finally {
+        send('diskSizeMonitorComplete');
       }
     });
 
