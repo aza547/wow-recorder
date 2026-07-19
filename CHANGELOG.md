@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 855](https://github.com/aza547/wow-recorder/issues/855) - Share log handler timeouts between game modes.
+- Fix an issue where the progress bar on the video player would not be set correctly until it started playing.
 
 ## [7.10.1] - 2026-07-18
 ### Fixed
