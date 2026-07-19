@@ -52,6 +52,7 @@ export type Channels =
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
   | 'runDiskSizeMonitor'
+  | 'diskSizeMonitorComplete'
   | 'getSensibleEncoderDefault'
   | 'refreshCloudGuilds';
 
