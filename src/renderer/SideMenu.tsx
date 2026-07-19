@@ -263,12 +263,12 @@ const SideMenu = (props: IProps) => {
   };
 
   const handleChangePage = (newPage: Pages) => {
+    persistentProgress.current = 0;
+
     if (
       newPage === Pages.InstantReplay &&
       appState.page !== Pages.InstantReplay
     ) {
-      persistentProgress.current = 0;
-
       setInstantReplayState((prev) => {
         return {
           ...prev,
