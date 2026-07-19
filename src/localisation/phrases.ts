@@ -550,6 +550,11 @@ enum Phrase {
   CharacterFilterNone,
   CharacterFilterActive,
   ClippedAtLabel,
+  Arrows,
+  SelectRange,
+  SelectMultiple,
+  Navigate,
+  SelectAll,
 }
 
 enum Language {

@@ -230,6 +230,7 @@ export const populateSourceCell = (
   const clip = ctx.getValue() as RendererClip;
   const parent = getClipParent(clip);
   const disabled = parent === undefined;
+
   const tooltip = disabled
     ? getLocalePhrase(language, Phrase.ClipSourceUnavailableTooltip)
     : getLocalePhrase(language, Phrase.ClipSourceTooltip);
@@ -242,16 +243,14 @@ export const populateSourceCell = (
   return (
     <Box className="inline-flex">
       <Tooltip content={tooltip}>
-        <div onClick={stopPropagation}>
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={goToSource}
-            disabled={disabled}
-          >
-            <ExternalLink size={18} />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={goToSource}
+          disabled={disabled}
+        >
+          <ExternalLink size={18} />
+        </Button>
       </Tooltip>
     </Box>
   );

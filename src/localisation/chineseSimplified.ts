@@ -553,6 +553,12 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.CharacterFilterAddManual]: '...或手动添加角色筛选。',
   [Phrase.CharacterFilterNone]: '当前未启用角色上传筛选。添加角色以启用该筛选。',
   [Phrase.CharacterFilterActive]: '仅会上传使用下方所列角色进行游戏时创建的录制。',
+  [Phrase.Arrows]: '箭头',
+  [Phrase.Navigate]: '导航',
+  [Phrase.ClippedAtLabel]: '截断于',
+  [Phrase.SelectRange]: '选择范围',
+  [Phrase.SelectMultiple]: '选择多个',
+  [Phrase.SelectAll]: '全选',
 };
 
 export default CHINESE_SIMPLIFIED;

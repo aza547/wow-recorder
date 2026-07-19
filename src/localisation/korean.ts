@@ -553,6 +553,12 @@ const KOREAN: Translations = {
   [Phrase.CharacterFilterAddManual]: '...또는 캐릭터 필터를 직접 추가하세요.',
   [Phrase.CharacterFilterNone]: '활성화된 캐릭터 업로드 필터가 없습니다. 캐릭터를 추가하여 활성화하세요.',
   [Phrase.CharacterFilterActive]: '아래에 나열된 캐릭터를 플레이하는 동안 생성된 녹화만 업로드됩니다.',
+  [Phrase.Arrows]: '화살표',
+  [Phrase.Navigate]: '탐색',
+  [Phrase.ClippedAtLabel]: '다음에서 잘림',
+  [Phrase.SelectRange]: '범위 선택',
+  [Phrase.SelectMultiple]: '여러 개 선택',
+  [Phrase.SelectAll]: '전체 선택',
 };
 
 export default KOREAN;

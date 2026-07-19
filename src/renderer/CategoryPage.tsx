@@ -47,7 +47,7 @@ import { Direction } from 're-resizable/lib/resizer';
 import VideoPlayer, { VideoPlayerRef } from './VideoPlayer';
 import Label from './components/Label/Label';
 import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
-import useTable from './components/Tables/TableData';
+import useVideoSelectionTable from './components/Tables/useVideoSelectionTable';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import DateRangePicker from './DateRangePicker';
 import StorageFilterToggle from './StorageFilterToggle';
@@ -140,8 +140,7 @@ const CategoryPage = (props: IProps) => {
     }
   };
 
-  // The data backing the video selection table.
-  const table = useTable(
+  const table = useVideoSelectionTable(
     filteredState,
     appState,
     setVideoState,

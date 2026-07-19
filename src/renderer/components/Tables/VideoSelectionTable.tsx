@@ -4,13 +4,13 @@ import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
 import React, { Fragment, RefObject, useCallback, useEffect } from 'react';
 import {
   ArrowDown,
+  ArrowDownUp,
   ArrowUp,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
   MousePointer,
-  TextCursor,
 } from 'lucide-react';
 import { povDiskFirstNameSort } from '../../rendererutils';
 import { Button } from '../Button/Button';
@@ -32,17 +32,15 @@ interface IProps {
 const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, persistentProgress, table } = props;
   const {
-    category,
     videoFilterTags,
     dateRangeFilter,
     storageFilter,
     preferredViewpoint,
+    language,
   } = appState;
+
   const { pageIndex, pageSize } = table.getState().pagination;
   const selectedRowRef = React.useRef<HTMLTableRowElement>(null);
-  console.log('VideoSelectionTable render', {
-    rows: table.getSelectedRowModel().rows,
-  });
 
   /**
    * Mark the row as selected and update the video player to play the first
@@ -216,16 +214,16 @@ const VideoSelectionTable = (props: IProps) => {
 
     if (header.column.getCanSort()) {
       if (header.column.getNextSortingOrder() === 'asc') {
-        tooltip = getLocalePhrase(appState.language, Phrase.ClickToSortAsc);
+        tooltip = getLocalePhrase(language, Phrase.ClickToSortAsc);
       } else if (header.column.getNextSortingOrder() === 'desc') {
-        tooltip = getLocalePhrase(appState.language, Phrase.ClickToSortDec);
+        tooltip = getLocalePhrase(language, Phrase.ClickToSortDec);
       } else {
-        tooltip = getLocalePhrase(appState.language, Phrase.ClickToClearSort);
+        tooltip = getLocalePhrase(language, Phrase.ClickToClearSort);
       }
     }
 
     if (header.id === 'Select') {
-      tooltip = getLocalePhrase(appState.language, Phrase.ClickToSelectAll);
+      tooltip = getLocalePhrase(language, Phrase.ClickToSelectAll);
     }
 
     const width =
@@ -297,10 +295,6 @@ const VideoSelectionTable = (props: IProps) => {
       className += 'bg-secondary/15 ';
     }
 
-    if (selected) {
-      console.log('ROW selected', sortedIndex);
-    }
-
     return (
       <tr
         key={row.id}
@@ -333,6 +327,21 @@ const VideoSelectionTable = (props: IProps) => {
     return <tbody>{rows.map((row, i) => renderRow(row, i))}</tbody>;
   };
 
+  const renderHotkeyTipPointer = (key: string, action: Phrase) => {
+    const { language } = appState;
+
+    return (
+      <div className="flex gap-1 items-center text-foreground-lighter text-sm">
+        <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
+          {key} + <MousePointer size={16} />
+        </div>
+        <div className="text-foreground">
+          {getLocalePhrase(language, action)}
+        </div>
+      </div>
+    );
+  };
+
   /**
    * For performance reasons we render videos in pages of 100. The component
    * returns buttons to navigate the pages in the list.
@@ -345,19 +354,8 @@ const VideoSelectionTable = (props: IProps) => {
     return (
       <div className="grid w-full grid-cols-3 items-center border-t border-video-border pt-2">
         <div className="flex gap-4">
-          <div className="flex gap-1 items-center text-foreground-lighter text-sm">
-            <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
-              Shift + <MousePointer size={16} />
-            </div>
-            <div className="text-foreground">Select Range</div>
-          </div>
-
-          <div className="flex gap-1 items-center text-foreground-lighter text-sm">
-            <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
-              Ctrl + <MousePointer size={16} />
-            </div>
-            <div className="text-foreground">Select Multiple</div>
-          </div>
+          {renderHotkeyTipPointer('Shift', Phrase.SelectRange)}
+          {renderHotkeyTipPointer('Ctrl', Phrase.SelectMultiple)}
         </div>
 
         <div className="flex justify-center items-center gap-2">
@@ -406,11 +404,24 @@ const VideoSelectionTable = (props: IProps) => {
           </Button>
         </div>
 
-        <div className="justify-end flex gap-1 items-center text-foreground-lighter text-sm">
-          <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
-            Ctrl + A
+        <div className="justify-end flex gap-4 items-center text-foreground-lighter text-sm">
+          <div className="flex gap-1 items-center text-foreground-lighter text-sm">
+            <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card gap-1">
+              {getLocalePhrase(language, Phrase.Arrows)}
+              <ArrowDownUp size={16} />
+            </div>
+            <div className="text-foreground">
+              {getLocalePhrase(language, Phrase.Navigate)}
+            </div>
           </div>
-          <div className="text-foreground">Select All</div>
+          <div className="flex gap-1 items-center text-foreground-lighter text-sm">
+            <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
+              Ctrl + A
+            </div>
+            <div className="text-foreground">
+              {getLocalePhrase(language, Phrase.SelectAll)}
+            </div>
+          </div>
         </div>
       </div>
     );

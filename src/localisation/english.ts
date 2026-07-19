@@ -554,6 +554,11 @@ const ENGLISH: Translations = {
   [Phrase.CharacterFilterNone]: 'No character upload filter active. Add a character to enable it.',
   [Phrase.CharacterFilterActive]: 'Only recordings made while playing the characters listed below will be uploaded.',
   [Phrase.ClippedAtLabel]: 'Clipped At',
+  [Phrase.Arrows]: 'Arrows',
+  [Phrase.Navigate]: 'Navigate',
+  [Phrase.SelectRange]: 'Select Range',
+  [Phrase.SelectMultiple]: 'Select Multiple',
+  [Phrase.SelectAll]: 'Select All',
 };
 
 export default ENGLISH;
