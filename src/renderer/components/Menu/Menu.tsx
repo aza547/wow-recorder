@@ -49,7 +49,7 @@ export const Menu = ({
   // the fact that the two sections of content and settings are two different menus
   // so when one gets selected, the other needs to be cleared
   React.useEffect(() => {
-    if (!initialValue) setCurrentValue(undefined);
+    setCurrentValue(initialValue || undefined);
   }, [initialValue]);
 
   return (

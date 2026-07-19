@@ -57,6 +57,7 @@ const Layout = (props: IProps) => {
   const renderCategoryPage = () => {
     return (
       <CategoryPage
+        key={category}
         category={category}
         videoState={videoState}
         setVideoState={setVideoState}
