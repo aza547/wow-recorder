@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Add the ability to seek to a clip's source, if it is still available.
+
 ### Fixed
 - [Issue 855](https://github.com/aza547/wow-recorder/issues/855) - Share log handler timeouts between game modes.
 

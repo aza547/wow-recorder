@@ -632,10 +632,20 @@ const getPromiseBomb = (fuse: number, reason: string) => {
   });
 };
 
-const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
-  const final = initial;
+const buildClipMetadata = (
+  initial: Metadata,
+  duration: number,
+  date: Date,
+  offset: number,
+  parentVideoName: string,
+) => {
+  const final = { ...initial };
   final.duration = duration;
+  // Most clip metadata is copied from the source recording; parent-prefixed
+  // fields are the trusted source navigation data added at clipping time.
   final.parentCategory = initial.category;
+  final.parentVideoName = parentVideoName;
+  final.parentVideoOffset = offset;
   final.category = VideoCategory.Clips;
   final.protected = true;
   final.clippedAt = date.getTime();
@@ -646,7 +656,7 @@ const buildKillVideoMetadata = (
   initial: Metadata,
   segments: KillVideoSegment[],
 ) => {
-  const final = initial;
+  const final = { ...initial };
   final.duration = segments[segments.length - 1].stop;
   final.parentCategory = initial.category;
   final.category = VideoCategory.Clips;
