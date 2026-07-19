@@ -32,11 +32,8 @@ const StorageFilterToggle = (props: IProps) => {
       return;
     }
 
-    table.toggleAllRowsSelected(false);
-
     setAppState((prevState) => ({
       ...prevState,
-      selectedVideos: [],
       storageFilter,
     }));
   };

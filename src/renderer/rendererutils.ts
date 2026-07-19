@@ -36,6 +36,7 @@ import {
   Flavour,
   AudioSource,
   AppState,
+  RendererClip,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
@@ -1156,6 +1157,27 @@ const formatRealmNameForDisplay = (realm: string) => {
   return realm.replace(/([A-Z])|(?<!\d)(\d)/g, ' $1$2').trim();
 };
 
+const findClipParent = (
+  clip: RendererClip,
+  videos: RendererVideo[],
+): RendererVideo | undefined => {
+  if (clip.player?._GUID === 'WCR MultiPov GUID') {
+    // Multiview videos are clips and we might be able to handle them but I
+    // can't be bothered with the headache for now.
+    return undefined;
+  }
+
+  const parentVideoName = clip.parentVideoName
+    ? clip.parentVideoName
+    : clip.videoName.slice(0, -33); // " - Clipped at ..." is 33 characters.
+
+  const parent = videos.find(
+    (candidate) => candidate.videoName === parentVideoName,
+  );
+
+  return parent;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1222,4 +1244,5 @@ export {
   translateQuality,
   getFriendlyCodecName,
   formatRealmNameForDisplay,
+  findClipParent,
 };

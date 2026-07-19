@@ -37,19 +37,13 @@ const isDebug = devMode || process.env.DEBUG_PROD === 'true';
 // Use the dynamically linked ffmpeg.exe we package with OBS in noobs. This
 // allows us to avoid including a static ffmpeg.exe which is an extra 60MB.
 const ffmpegPathRel = 'node_modules/noobs/dist/bin/ffmpeg.exe';
-const ffprobePathRel = 'node_modules/noobs/dist/bin/ffprobe.exe';
 
 let ffmpegPathAbs = devMode
   ? path.resolve(__dirname, '../../release/app/', ffmpegPathRel)
   : path.resolve(__dirname, '../../', ffmpegPathRel);
-let ffprobePathAbs = devMode
-  ? path.resolve(__dirname, '../../release/app/', ffprobePathRel)
-  : path.resolve(__dirname, '../../', ffprobePathRel);
 
 ffmpegPathAbs = fixPathWhenPackaged(ffmpegPathAbs);
-ffprobePathAbs = fixPathWhenPackaged(ffprobePathAbs);
 ffmpeg.setFfmpegPath(ffmpegPathAbs);
-ffmpeg.setFfprobePath(ffprobePathAbs);
 
 /**
  * A queue for cutting videos to size.
@@ -759,73 +753,6 @@ export default class VideoProcessQueue {
     await VideoProcessQueue.ffmpegWrapper(fn, 'Video cut');
     console.timeEnd('[VideoProcessQueue] Video cut took:');
     return outputPath;
-  }
-
-  private static async getVideoDurationSeconds(
-    videoPath: string,
-  ): Promise<number | undefined> {
-    return new Promise((resolve) => {
-      ffmpeg.ffprobe(videoPath, (error, data) => {
-        if (error) {
-          console.warn(
-            '[VideoProcessQueue] Failed to probe video duration',
-            videoPath,
-            String(error),
-          );
-          resolve(undefined);
-          return;
-        }
-
-        const duration = data.format.duration;
-        resolve(
-          Number.isFinite(duration) && duration > 0 ? duration : undefined,
-        );
-      });
-    });
-  }
-
-  private static async updateClipTimingMetadata(
-    data: VideoQueueItem,
-    videoPath: string,
-  ) {
-    if (!data.clip) return;
-
-    const actualDuration =
-      await VideoProcessQueue.getVideoDurationSeconds(videoPath);
-    if (!actualDuration) return;
-
-    data.metadata.duration = actualDuration;
-
-    const parentOffset = data.metadata.parentOffset;
-    if (typeof parentOffset !== 'number' || !Number.isFinite(parentOffset)) {
-      return;
-    }
-
-    const requestedDuration = data.duration;
-    if (!Number.isFinite(requestedDuration) || requestedDuration <= 0) {
-      return;
-    }
-
-    // Copy-based clipping can only start on a keyframe, so ffmpeg may include
-    // frames from before the requested offset. Match source navigation to the
-    // clip that was actually written, not just the requested slider position.
-    const keyframeLeadIn = Math.min(
-      parentOffset,
-      Math.max(0, actualDuration - requestedDuration),
-    );
-
-    if (keyframeLeadIn <= 0) return;
-
-    const adjustedParentOffset = parentOffset - keyframeLeadIn;
-    data.metadata.parentOffset = Math.round(adjustedParentOffset * 1000) / 1000;
-
-    console.info('[VideoProcessQueue] Adjusted clip source offset:', {
-      requestedOffset: parentOffset,
-      adjustedOffset: data.metadata.parentOffset,
-      requestedDuration,
-      actualDuration,
-      keyframeLeadIn,
-    });
   }
 
   /**

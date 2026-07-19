@@ -549,6 +549,7 @@ enum Phrase {
   CharacterFilterAddManual,
   CharacterFilterNone,
   CharacterFilterActive,
+  ClippedAtLabel,
 }
 
 enum Language {

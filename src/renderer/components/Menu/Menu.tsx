@@ -45,8 +45,9 @@ export const Menu = ({
     onChange(newValue);
   };
 
-  // Keep the highlighted item in sync when navigation is driven from outside
-  // the menu, such as jumping from a clip to its source recording.
+  // This is a bit of a janky way to handle it I guess, but it accounts for
+  // the fact that the two sections of content and settings are two different menus
+  // so when one gets selected, the other needs to be cleared
   React.useEffect(() => {
     setCurrentValue(initialValue || undefined);
   }, [initialValue]);

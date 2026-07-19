@@ -637,7 +637,7 @@ const buildClipMetadata = (
   duration: number,
   date: Date,
   offset: number,
-  parentVideoName?: string,
+  parentVideoName: string,
 ) => {
   const final = initial;
   final.duration = duration;
@@ -645,7 +645,7 @@ const buildClipMetadata = (
   // fields are the trusted source navigation data added at clipping time.
   final.parentCategory = initial.category;
   final.parentVideoName = parentVideoName;
-  final.parentOffset = Number.isFinite(offset) && offset > 0 ? offset : 0;
+  final.parentOffset = offset;
   final.category = VideoCategory.Clips;
   final.protected = true;
   final.clippedAt = date.getTime();

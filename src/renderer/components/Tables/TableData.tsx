@@ -6,8 +6,8 @@ import {
   PaginationState,
   useReactTable,
 } from '@tanstack/react-table';
-import { RendererVideo, AppState } from 'main/types';
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
+import { RendererVideo, AppState, RendererClip } from 'main/types';
+import { Dispatch, SetStateAction, useMemo, useState } from 'react';
 import {
   getPullNumber,
   getInstanceDifficultyText,
@@ -43,6 +43,7 @@ import {
   ActivityHeader,
   DetailsHeader,
   AffixesHeader,
+  ClippedAtHeader,
 } from './Headers';
 import {
   resultSort,
@@ -59,37 +60,63 @@ const useTable = (
   videoState: RendererVideo[],
   appState: AppState,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
-  getClipParent: (clip: RendererVideo) => RendererVideo | undefined,
-  goToClipParent: (clip: RendererVideo) => void,
+  getClipParent: (clip: RendererClip) => RendererVideo | undefined,
+  goToClipParent: (clip: RendererClip) => void,
 ) => {
-  const {
-    category,
-    language,
-    videoFilterTags,
-    dateRangeFilter,
-    storageFilter,
-    cloudStatus,
-  } = appState;
+  const { category, language, cloudStatus, selectedVideos } = appState;
+
+  const getInitialRowSelection = () => {
+    const videoToParentId = new Map<string, string>();
+
+    videoState.forEach((video) => {
+      videoToParentId.set(video.uniqueId, video.uniqueId);
+
+      video.multiPov.forEach((child) => {
+        videoToParentId.set(child.uniqueId, video.uniqueId);
+      });
+    });
+
+    const selection = Object.fromEntries(
+      selectedVideos
+        .map((video) => videoToParentId.get(video.uniqueId))
+        .filter((id): id is string => id !== undefined)
+        .map((id) => [id, true]),
+    );
+
+    if (Object.keys(selection).length > 0) {
+      console.log('initial render with selected videos', selection);
+      return selection;
+    }
+
+    if (videoState.length > 0) {
+      console.log('initial render with empty videos', {
+        [videoState[0].uniqueId]: true,
+      });
+      return { [videoState[0].uniqueId]: true };
+    }
+
+    console.log('initial render with no videos', {});
+    return {};
+  };
 
   /**
-   * Tracks if rows are selected or not.
+   * Tracks if rows are selected or not in the ReactTable component. Initialize
+   * this in-line with any selected videos, which is important when seeking here
+   * programatically (i.e. using the seek to clip source function).
+   *
+   * It is still common to have this be empty if the user has not selected any
+   * videos yet, so still need to handle the case where the first row is
+   * selected by default.
    */
-  const [rowSelection, setRowSelection] = useState({});
+  const [rowSelection, setRowSelection] = useState(getInitialRowSelection);
 
   /**
-   * Controls the table pagnation.
+   * Controls the table pagination.
    */
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 100,
   });
-
-  /**
-   * Deselect all rows on category change or filter change.
-   */
-  useEffect(() => {
-    setRowSelection({});
-  }, [category, videoFilterTags, dateRangeFilter, storageFilter]);
 
   /**
    * The raid table columns, the data access, sorting functions
@@ -381,7 +408,7 @@ const useTable = (
       {
         id: 'Date',
         accessorFn: (v) => videoToDate(v),
-        header: () => DateHeader(language),
+        header: () => ClippedAtHeader(language),
         cell: populateDateCell,
       },
       {

@@ -280,6 +280,8 @@ type RendererVideo = Metadata & {
   uniqueId: string;
 };
 
+type RendererClip = RendererVideo & { category: VideoCategory.Clips };
+
 type SoloShuffleTimelineSegment = {
   round: number;
   timestamp: number;
@@ -709,6 +711,7 @@ export {
   VideoQueueItem,
   Metadata,
   RendererVideo,
+  RendererClip,
   Flavour,
   SoloShuffleTimelineSegment,
   EDeviceType,

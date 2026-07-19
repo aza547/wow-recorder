@@ -1,5 +1,5 @@
 import { CellContext } from '@tanstack/react-table';
-import { CloudStatus, RendererVideo } from 'main/types';
+import { CloudStatus, RendererClip, RendererVideo } from 'main/types';
 import {
   getVideoResultText,
   getResultColor,
@@ -224,11 +224,11 @@ export const populateDetailsCell = (
 export const populateSourceCell = (
   ctx: CellContext<RendererVideo, unknown>,
   language: Language,
-  getClipParent: (clip: RendererVideo) => RendererVideo | undefined,
-  goToClipParent: (clip: RendererVideo) => void,
+  getClipParent: (clip: RendererClip) => RendererVideo | undefined,
+  goToClipParent: (clip: RendererClip) => void,
 ) => {
-  const video = ctx.getValue() as RendererVideo;
-  const parent = getClipParent(video);
+  const clip = ctx.getValue() as RendererClip;
+  const parent = getClipParent(clip);
   const disabled = parent === undefined;
   const tooltip = disabled
     ? getLocalePhrase(language, Phrase.ClipSourceUnavailableTooltip)
@@ -236,7 +236,7 @@ export const populateSourceCell = (
 
   const goToSource = (e: React.MouseEvent<HTMLButtonElement>) => {
     stopPropagation(e);
-    goToClipParent(video);
+    goToClipParent(clip);
   };
 
   return (

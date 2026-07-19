@@ -1,5 +1,10 @@
 import * as React from 'react';
-import { AppState, RendererVideo, StorageFilter } from 'main/types';
+import {
+  AppState,
+  RendererClip,
+  RendererVideo,
+  StorageFilter,
+} from 'main/types';
 import {
   Dispatch,
   RefObject,
@@ -25,6 +30,7 @@ import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
 import {
+  findClipParent,
   getFriendlyCodecName,
   getVideoCategoryFilter,
   getVideoStorageFilter,
@@ -50,7 +56,6 @@ import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
 import VideoChat from './VideoChat';
 import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
-import { findClipParent, getClipParentOffset } from './ClipParent';
 
 interface IProps {
   category: VideoCategory;
@@ -109,30 +114,30 @@ const CategoryPage = (props: IProps) => {
     return correlatedState.filter(queryFilter);
   }, [correlatedState, dateRangeFilter, videoFilterTags, language]);
 
-  const getClipParent = (clip: RendererVideo) =>
+  const getClipParent = (clip: RendererClip) =>
     findClipParent(clip, videoState);
 
-  const goToClipParent = (clip: RendererVideo) => {
+  const goToClipParent = (clip: RendererClip) => {
     const parent = getClipParent(clip);
-    if (!parent) return;
 
-    // Start source playback at the offset captured when the clip was created.
-    persistentProgress.current = getClipParentOffset(clip);
+    if (parent) {
+      persistentProgress.current =
+        clip.parentOffset && clip.parentOffset > 0 ? clip.parentOffset : 0;
 
-    setAppState((prevState) => ({
-      ...prevState,
-      category: parent.category,
-      selectedVideos: [parent],
-      multiPlayerMode: false,
-      playing: false,
-      videoFilterTags: [],
-      dateRangeFilter: {
-        startDate: null,
-        endDate: null,
-      },
-      // The source may be hidden by the Clips view's current storage filter.
-      storageFilter: StorageFilter.BOTH,
-    }));
+      setAppState((prevState) => ({
+        ...prevState,
+        category: parent.category,
+        selectedVideos: [parent],
+        multiPlayerMode: false,
+        playing: false,
+        videoFilterTags: [],
+        storageFilter: StorageFilter.BOTH,
+        dateRangeFilter: {
+          startDate: null,
+          endDate: null,
+        },
+      }));
+    }
   };
 
   // The data backing the video selection table.

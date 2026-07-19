@@ -9,8 +9,10 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  MousePointer,
+  TextCursor,
 } from 'lucide-react';
-import { povDiskFirstNameSort, videoMatch } from '../../rendererutils';
+import { povDiskFirstNameSort } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { getLocalePhrase } from 'localisation/translations';
 import { ScrollArea } from '../ScrollArea/ScrollArea';
@@ -36,9 +38,11 @@ const VideoSelectionTable = (props: IProps) => {
     storageFilter,
     preferredViewpoint,
   } = appState;
-  const selectedVideo = appState.selectedVideos[0];
   const { pageIndex, pageSize } = table.getState().pagination;
   const selectedRowRef = React.useRef<HTMLTableRowElement>(null);
+  console.log('VideoSelectionTable render', {
+    rows: table.getSelectedRowModel().rows,
+  });
 
   /**
    * Mark the row as selected and update the video player to play the first
@@ -179,40 +183,30 @@ const VideoSelectionTable = (props: IProps) => {
     };
   }, [table, onRowClick, videoFilterTags, dateRangeFilter, storageFilter]);
 
+  // If we've navigated here programatically (i.e. via the clip source button),
+  // then we may already have a selected video that is not the first row. Just
+  // call this whenever we mount. It's harmless if the first row is selected.
   useEffect(() => {
-    if (!selectedVideo) return undefined;
-
-    const sortedRows = table.getSortedRowModel().rows;
-    const selectedIndex = sortedRows.findIndex((row) =>
-      [row.original, ...row.original.multiPov].some((video) =>
-        videoMatch(video, selectedVideo),
-      ),
-    );
-
-    if (selectedIndex === -1) return undefined;
-
+    const selectedIndex = table.getSelectedRowModel().rows[0]?.index ?? 0;
     const selectedPageIndex = Math.floor(selectedIndex / pageSize);
 
     if (selectedPageIndex !== pageIndex) {
       table.setPageIndex(selectedPageIndex);
-      return undefined;
     }
 
     const animationFrame = window.requestAnimationFrame(() => {
-      selectedRowRef.current?.scrollIntoView({ block: 'center' });
+      if (!selectedRowRef.current) {
+        return;
+      }
+
+      selectedRowRef.current.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      });
     });
 
     return () => window.cancelAnimationFrame(animationFrame);
-  }, [
-    category,
-    selectedVideo,
-    table,
-    pageIndex,
-    pageSize,
-    videoFilterTags,
-    dateRangeFilter,
-    storageFilter,
-  ]);
+  }, []);
 
   /**
    * Render an individual header.
@@ -292,7 +286,6 @@ const VideoSelectionTable = (props: IProps) => {
   const renderBaseRow = (
     row: Row<RendererVideo>,
     selected: boolean,
-    appStateSelected: boolean,
     sortedIndex: number,
   ) => {
     const cells = row.getVisibleCells();
@@ -304,10 +297,14 @@ const VideoSelectionTable = (props: IProps) => {
       className += 'bg-secondary/15 ';
     }
 
+    if (selected) {
+      console.log('ROW selected', sortedIndex);
+    }
+
     return (
       <tr
         key={row.id}
-        ref={appStateSelected ? selectedRowRef : undefined}
+        ref={selected ? selectedRowRef : undefined}
         className={className}
         onClick={(event) => onRowClick(event, row)}
       >
@@ -320,24 +317,13 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>, sortedIndex: number) => {
-    // Programmatic navigation, such as jumping from a clip to its source,
-    // updates appState before react-table has a selected row in the new view.
-    const appStateSelected =
-      selectedVideo !== undefined &&
-      [row.original, ...row.original.multiPov].some((video) =>
-        videoMatch(video, selectedVideo),
-      );
-
     const selected =
       row.getIsSelected() ||
-      appStateSelected ||
-      (!table.getIsSomeRowsSelected() &&
-        appState.selectedVideos.length === 0 &&
-        row.index === 0);
+      (!table.getIsSomeRowsSelected() && row.index === 0);
 
     return (
       <Fragment key={row.id}>
-        {renderBaseRow(row, selected, appStateSelected, sortedIndex)}
+        {renderBaseRow(row, selected, sortedIndex)}
       </Fragment>
     );
   };
@@ -357,46 +343,75 @@ const VideoSelectionTable = (props: IProps) => {
     const indicator = `${current} of ${total}`;
 
     return (
-      <div className="flex w-full justify-center items-center gap-2 border-t border-video-border pt-2">
-        <Button
-          className="p-1"
-          onClick={() => table.firstPage()}
-          disabled={!table.getCanPreviousPage()}
-          size="sm"
-          variant="secondary"
-        >
-          <ChevronsLeft />
-        </Button>
-        <Button
-          className="p-1"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-          size="sm"
-          variant="secondary"
-        >
-          <ChevronLeft />
-        </Button>
-        <Button
-          className="p-1"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-          size="sm"
-          variant="secondary"
-        >
-          <ChevronRight />
-        </Button>
-        <Button
-          className="p-1"
-          onClick={() => table.lastPage()}
-          disabled={!table.getCanNextPage()}
-          size="sm"
-          variant="secondary"
-        >
-          <ChevronsRight />
-        </Button>
-        <span className="flex items-center gap-1">
-          <strong>{indicator}</strong>
-        </span>
+      <div className="grid w-full grid-cols-3 items-center border-t border-video-border pt-2">
+        <div className="flex gap-4">
+          <div className="flex gap-1 items-center text-foreground-lighter text-sm">
+            <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
+              Shift + <MousePointer size={16} />
+            </div>
+            <div className="text-foreground">Select Range</div>
+          </div>
+
+          <div className="flex gap-1 items-center text-foreground-lighter text-sm">
+            <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
+              Ctrl + <MousePointer size={16} />
+            </div>
+            <div className="text-foreground">Select Multiple</div>
+          </div>
+        </div>
+
+        <div className="flex justify-center items-center gap-2">
+          <Button
+            className="p-1"
+            onClick={() => table.firstPage()}
+            disabled={!table.getCanPreviousPage()}
+            size="xs"
+            variant="secondary"
+          >
+            <ChevronsLeft size={16} />
+          </Button>
+
+          <Button
+            className="p-1"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            size="xs"
+            variant="secondary"
+          >
+            <ChevronLeft size={16} />
+          </Button>
+
+          <span className="flex items-center gap-1 text-foreground text-sm">
+            {indicator}
+          </span>
+
+          <Button
+            className="p-1"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            size="xs"
+            variant="secondary"
+          >
+            <ChevronRight size={16} />
+          </Button>
+
+          <Button
+            className="p-1"
+            onClick={() => table.lastPage()}
+            disabled={!table.getCanNextPage()}
+            size="xs"
+            variant="secondary"
+          >
+            <ChevronsRight size={16} />
+          </Button>
+        </div>
+
+        <div className="justify-end flex gap-1 items-center text-foreground-lighter text-sm">
+          <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
+            Ctrl + A
+          </div>
+          <div className="text-foreground">Select All</div>
+        </div>
       </div>
     );
   };
