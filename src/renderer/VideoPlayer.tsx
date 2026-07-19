@@ -673,6 +673,11 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return;
     }
 
+    if (persistentProgress.current > 0) {
+      // Without this the progress bar will show zero until playback starts.
+      setProgress(persistentProgress.current);
+    }
+
     if (!instantReplay) {
       setSpinner(false);
     }
