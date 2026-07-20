@@ -204,7 +204,7 @@ const VideoSelectionTable = (props: IProps) => {
     });
 
     return () => window.cancelAnimationFrame(animationFrame);
-  }, []);
+  }, [pageIndex, pageSize, table]);
 
   /**
    * Render an individual header.
