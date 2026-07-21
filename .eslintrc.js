@@ -16,6 +16,7 @@ module.exports = {
       },
     ],
     'react/jsx-props-no-spreading': 'off',
+    'react-hooks/exhaustive-deps': 'warn',
   },
   parserOptions: {
     ecmaVersion: 2020,

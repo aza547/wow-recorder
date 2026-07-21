@@ -114,6 +114,9 @@ const useVideoSelectionTable = (
     pageSize: 100,
   });
 
+  // Tanstack table relies on stable references, so while we have the React
+  // compiler enabled we still need useMemo here or weird stuff will happen.
+
   /**
    * The raid table columns, the data access, sorting functions
    * and any display transformations.
@@ -306,7 +309,7 @@ const useVideoSelectionTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, setVideoState],
+    [cloudStatus, language, setVideoState],
   );
 
   /**
@@ -360,7 +363,7 @@ const useVideoSelectionTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, setVideoState],
+    [cloudStatus, language, setVideoState],
   );
 
   /**
@@ -425,7 +428,7 @@ const useVideoSelectionTable = (
           populateSourceCell(ctx, language, getClipParent, goToClipParent),
       },
     ],
-    [appState, setVideoState, getClipParent, goToClipParent],
+    [cloudStatus, getClipParent, goToClipParent, language, setVideoState],
   );
 
   const manualColumns = useMemo<ColumnDef<RendererVideo>[]>(
@@ -459,7 +462,7 @@ const useVideoSelectionTable = (
         cell: populateDateCell,
       },
     ],
-    [appState, setVideoState],
+    [language, cloudStatus, setVideoState],
   );
 
   let columns;

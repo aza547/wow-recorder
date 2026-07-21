@@ -9,6 +9,7 @@ import {
   Dispatch,
   RefObject,
   SetStateAction,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -114,33 +115,42 @@ const CategoryPage = (props: IProps) => {
     return correlatedState.filter(queryFilter);
   }, [correlatedState, dateRangeFilter, videoFilterTags, language]);
 
-  const getClipParent = (clip: RendererClip) =>
-    findClipParent(clip, videoState);
+  // Tanstack table relies on stable references, so while we have the React
+  // compiler enabled we still need useCallback here or weird stuff will happen.
+  const getClipParent = useCallback(
+    (clip: RendererClip) => {
+      return findClipParent(clip, videoState);
+    },
+    [videoState],
+  );
 
-  const goToClipParent = (clip: RendererClip) => {
-    const parent = getClipParent(clip);
+  const goToClipParent = useCallback(
+    (clip: RendererClip) => {
+      const parent = getClipParent(clip);
 
-    if (parent) {
-      persistentProgress.current =
-        clip.parentVideoOffset && clip.parentVideoOffset > 0
-          ? clip.parentVideoOffset
-          : 0;
+      if (parent) {
+        persistentProgress.current =
+          clip.parentVideoOffset && clip.parentVideoOffset > 0
+            ? clip.parentVideoOffset
+            : 0;
 
-      setAppState((prevState) => ({
-        ...prevState,
-        category: parent.category,
-        selectedVideos: [parent],
-        multiPlayerMode: false,
-        playing: false,
-        videoFilterTags: [],
-        storageFilter: StorageFilter.BOTH,
-        dateRangeFilter: {
-          startDate: null,
-          endDate: null,
-        },
-      }));
-    }
-  };
+        setAppState((prevState) => ({
+          ...prevState,
+          category: parent.category,
+          selectedVideos: [parent],
+          multiPlayerMode: false,
+          playing: false,
+          videoFilterTags: [],
+          storageFilter: StorageFilter.BOTH,
+          dateRangeFilter: {
+            startDate: null,
+            endDate: null,
+          },
+        }));
+      }
+    },
+    [getClipParent, persistentProgress, setAppState],
+  );
 
   const table = useVideoSelectionTable(
     filteredState,
@@ -363,6 +373,7 @@ const CategoryPage = (props: IProps) => {
         <div className="flex h-full w-full">
           <VideoPlayer
             ref={videoPlayerRef}
+            instantReplay={null}
             key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
             videos={videosToPlay}
             categoryState={categoryState}
