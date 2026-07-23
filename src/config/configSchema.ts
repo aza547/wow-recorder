@@ -37,6 +37,7 @@ export type ConfigurationSchema = {
   recordSoloShuffle: boolean;
   recordBattlegrounds: boolean;
   captureCursor: boolean;
+  pipewireRestoreToken: string | null;
   minKeystoneLevel: number;
   recordChallengeModes: boolean;
   minRaidDifficulty: string;
@@ -98,6 +99,8 @@ export type ConfigurationSchema = {
   firstTimeSetup: boolean;
   chatUserNameAgreed: string;
   validateLogPaths: boolean;
+  hevcTranscodeEnabled: boolean;
+  hevcTranscodeCacheSizeGb: number;
   validateNtfs: boolean;
   characterUploadFilters: CharacterFilter[];
 };
@@ -226,6 +229,7 @@ export const configSchema = {
   },
   obsCaptureMode: {
     description: Phrase.ObsCaptureModeDescription,
+    descriptionLinux: Phrase.ObsCaptureModeDescriptionLinux,
     type: 'string',
     default: 'window_capture',
   },
@@ -303,6 +307,11 @@ export const configSchema = {
     description: Phrase.CaptureCursorDescription,
     type: 'boolean',
     default: false,
+  },
+  pipewireRestoreToken: {
+    description: Phrase.Unknown, // not exposed in the UI
+    type: 'string',
+    default: null,
   },
   minKeystoneLevel: {
     description: Phrase.MinKeystoneLevelDescription,
@@ -614,6 +623,17 @@ export const configSchema = {
     description: Phrase.ValidateLogPathsDescription,
     type: 'boolean',
     default: true,
+  },
+  hevcTranscodeEnabled: {
+    description: Phrase.HevcTranscodeEnabledDescription,
+    type: 'boolean',
+    default: true,
+  },
+  hevcTranscodeCacheSizeGb: {
+    description: Phrase.HevcTranscodeCacheSizeGbDescription,
+    type: 'integer',
+    default: 10,
+    minimum: 1,
   },
   validateNtfs: {
     description: Phrase.ValidateNtfsDescription,

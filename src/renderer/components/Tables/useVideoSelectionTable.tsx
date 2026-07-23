@@ -62,6 +62,8 @@ const useVideoSelectionTable = (
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
   getClipParent: (clip: RendererClip) => RendererVideo | undefined,
   goToClipParent: (clip: RendererClip) => void,
+  hevcTranscodeEnabled: boolean,
+  onOpenSettings: () => void,
 ) => {
   const { category, language, cloudStatus, selectedVideos } = appState;
 
@@ -184,10 +186,25 @@ const useVideoSelectionTable = (
         accessorFn: (v) => v,
         sortingFn: (a, b) => creatorSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateCreatorCell(ctx, language),
+        cell: (ctx) =>
+          populateCreatorCell(
+            ctx,
+            language,
+            appState.isLinux,
+            hevcTranscodeEnabled,
+            onOpenSettings,
+          ),
       },
     ],
-    [language, cloudStatus, videoState, setVideoState],
+    [
+      language,
+      cloudStatus,
+      videoState,
+      setVideoState,
+      appState.isLinux,
+      hevcTranscodeEnabled,
+      onOpenSettings,
+    ],
   );
 
   /**
