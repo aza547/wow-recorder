@@ -107,6 +107,7 @@ const GERMAN: Translations = {
   [Phrase.SeparateBufferFolderLabel]: 'Separater Buffer Ordner',
   [Phrase.BufferFolderLabel]: 'Buffer Ordner',
   [Phrase.MaxDiskStorageLabel]: 'Maximale Speichergröße(GB)',
+  [Phrase.RunDiskSizeMonitorButtonLabel]: 'Jetzt ausführen',
   [Phrase.WindowsSettingsLabel]: 'Anwendung Einstellungen',
   [Phrase.RunOnStartupLabel]: 'Autostart',
   [Phrase.StartMinimizedLabel]: 'Minimiert starten',

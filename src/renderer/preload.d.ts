@@ -96,6 +96,7 @@ declare global {
         clipVideo(video: RendererVideo, offset: number, duration: number): void;
         getHardwareAcceleration(): boolean;
         createDiagsBundle(): Promise<string>;
+        runDiskSizeMonitor(): Promise<void>;
         openSystemExplorer(path: string): void;
         setOpenInstantReplayFile(path: string | null): void;
       };
