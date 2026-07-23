@@ -217,26 +217,28 @@ const CategoryPage = (props: IProps) => {
       );
     }
 
+    const currentPov =
+      selectedVideos.length === 1
+        ? selectedVideos[0]
+        : selectedVideos.length === 0
+          ? availablePovs[0]
+          : undefined;
+
     const switchToViewpoint = (target: RendererVideo) => {
       setAppState((prevState) => ({
         ...prevState,
         selectedVideos: [target],
         multiPlayerMode: false,
+        playing: prevState.multiPlayerMode ? false : prevState.playing,
         preferredViewpoint:
           target.player?._name || prevState.preferredViewpoint,
       }));
     };
 
     const isViewpointSelected = (target: RendererVideo) => {
-      // With no explicit selection, VideoPlayer renders the first active POV.
-      // Treat that fallback as selected so a self-link seeks immediately.
-      const currentSinglePov =
-        selectedVideos.length === 1 ? selectedVideos[0] : availablePovs[0];
-
       return (
-        selectedVideos.length <= 1 &&
-        currentSinglePov.videoName === target.videoName &&
-        currentSinglePov.cloud === target.cloud
+        currentPov?.videoName === target.videoName &&
+        currentPov.cloud === target.cloud
       );
     };
 
@@ -249,9 +251,6 @@ const CategoryPage = (props: IProps) => {
       const target = findVideoChatViewpoint(availablePovs, viewpoint);
 
       if (!target) {
-        // Keep timestamp-only behavior if the named POV is not available in
-        // this activity, so old messages and typos still seek usefully.
-        videoPlayerRef.current?.seekAllPlayersTo(seconds);
         return;
       }
 
@@ -284,6 +283,7 @@ const CategoryPage = (props: IProps) => {
         key={video.videoName}
         video={video}
         availablePovs={availablePovs}
+        currentPov={currentPov}
         language={language}
         deletePermissions={del}
         onTimestampClick={handleTimestampClick}
