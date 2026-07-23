@@ -1,5 +1,3 @@
-import { Checkbox } from '@mui/material';
-import { HeaderContext } from '@tanstack/react-table';
 import { getLocalePhrase } from 'localisation/translations';
 import { Language, Phrase } from 'localisation/phrases';
 import {
@@ -14,7 +12,6 @@ import {
   Trophy,
   Zap,
 } from 'lucide-react';
-import { RendererVideo } from 'main/types';
 
 export const EncounterHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
