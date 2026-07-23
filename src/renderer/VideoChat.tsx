@@ -1,13 +1,7 @@
 import { MessageSquare, SendHorizontal, Unplug, X } from 'lucide-react';
 import { Textarea } from './components/TextArea/textarea';
 import { Button } from './components/Button/Button';
-import {
-  KeyboardEventHandler,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { KeyboardEventHandler, useEffect, useRef, useState } from 'react';
 import { RendererVideo } from 'main/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircularProgress } from '@mui/material';
@@ -26,10 +20,12 @@ import { classImages } from './images';
 import { getPlayerClass } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
+const maxMessageLength = 256;
 
 interface IProps {
   video: RendererVideo;
   availablePovs: RendererVideo[];
+  currentPov?: RendererVideo;
   language: Language;
   deletePermissions: boolean;
   onTimestampClick: (seconds: number, viewpoint?: string) => void;
@@ -87,6 +83,7 @@ const VideoChat = (props: IProps) => {
   const {
     video,
     availablePovs,
+    currentPov,
     language,
     deletePermissions,
     onTimestampClick,
@@ -118,22 +115,15 @@ const VideoChat = (props: IProps) => {
 
   // Suggestions come from the currently available POVs so the menu cannot
   // insert a player that this replay cannot actually switch to.
-  const mentionSuggestions = useMemo(
-    () => getVideoChatMentionSuggestions(availablePovs),
-    [availablePovs],
-  );
+  const mentionSuggestions = getVideoChatMentionSuggestions(availablePovs);
 
-  const filteredMentionSuggestions = useMemo(() => {
-    if (!mentionSearch) {
-      return [];
-    }
-
-    return mentionSuggestions
-      .filter((suggestion) =>
-        suggestion.searchText.includes(mentionSearch.query),
-      )
-      .slice(0, 6);
-  }, [mentionSearch, mentionSuggestions]);
+  const filteredMentionSuggestions = mentionSearch
+    ? mentionSuggestions
+        .filter((suggestion) =>
+          suggestion.searchText.includes(mentionSearch.query),
+        )
+        .slice(0, 6)
+    : [];
 
   const mentionMenuOpen = filteredMentionSuggestions.length > 0;
 
@@ -246,6 +236,11 @@ const VideoChat = (props: IProps) => {
       message.slice(0, mentionSearch.start) +
       insertion +
       message.slice(mentionSearch.end);
+
+    if (nextMessage.length > maxMessageLength) {
+      return;
+    }
+
     const nextCaretPosition = mentionSearch.start + insertion.length;
 
     setMessage(nextMessage);
@@ -323,7 +318,7 @@ const VideoChat = (props: IProps) => {
 
       const linkedViewpoint = part.viewpoint
         ? findVideoChatViewpoint(availablePovs, part.viewpoint)
-        : video;
+        : currentPov;
 
       // Named timestamp links are actionable only when the named POV exists.
       // Plain timestamps still seek the currently selected POV.
@@ -545,7 +540,7 @@ const VideoChat = (props: IProps) => {
               props.language,
               Phrase.ChatTypeMessageText,
             )}
-            maxLength={256}
+            maxLength={maxMessageLength}
             value={message}
             onBlur={() => setMentionSearch(null)}
             onClick={(event) => updateMentionSearch(event.currentTarget)}

@@ -34,8 +34,8 @@ export type VideoChatMentionSuggestion<T extends VideoChatViewpoint> = {
   viewpoint: T;
   label: string;
   detail?: string;
-  // Text inserted after @. It may include a realm or raw video name only when
-  // the short player name would be ambiguous.
+  // Text inserted after @. It includes the realm only when the short player
+  // name would be ambiguous.
   mention: string;
   // Lowercase aliases used by the textarea mention filter.
   searchText: string;
@@ -43,8 +43,9 @@ export type VideoChatMentionSuggestion<T extends VideoChatViewpoint> = {
 
 // Supports plain timestamps, and optional POV-qualified timestamps:
 // "2:15" or "@Player-Realm 2:15".
-const chatLinkRegex = /(?:@(\S+)\s+)?\b(\d{1,2}):(\d{2})\b/g;
-const chatMentionRegex = /(^|\s)@(\S+)/g;
+const chatLinkRegex =
+  /(?:@([^\s@,.;:!?)}\]]+)[,.;:!?)}\]]*\s+)?\b(\d{1,2}):(\d{2})\b/g;
+const chatMentionRegex = /(^|\s)@([^\s@,.;:!?)}\]]+)/g;
 
 const normalize = (value: string) => value.trim().toLowerCase();
 
@@ -120,21 +121,22 @@ export const parseVideoChatMessageLinks = (
 };
 
 const getPlayerName = (viewpoint: VideoChatViewpoint) =>
-  viewpoint.player?._name || viewpoint.videoName;
+  viewpoint.player?._name;
 
 const getPlayerRealm = (viewpoint: VideoChatViewpoint) =>
   viewpoint.player?._realm;
 
 const getViewpointAliases = (viewpoint: VideoChatViewpoint) => {
-  const aliases = [viewpoint.videoName];
   const playerName = getPlayerName(viewpoint);
   const playerRealm = getPlayerRealm(viewpoint);
 
-  if (playerName) {
-    aliases.push(playerName);
+  if (!playerName) {
+    return [];
   }
 
-  if (playerName && playerRealm) {
+  const aliases = [playerName];
+
+  if (playerRealm) {
     aliases.push(`${playerName}-${playerRealm}`);
   }
 
@@ -142,10 +144,16 @@ const getViewpointAliases = (viewpoint: VideoChatViewpoint) => {
 };
 
 const getPlayerNameContexts = (viewpoints: VideoChatViewpoint[]) => {
-  // Disk and cloud copies of the same POV share one context; genuinely
-  // different realms/video names need disambiguated mention text.
+  // Disk and cloud copies of the same POV share one context. Distinct
+  // player identities make the short name ambiguous.
   return viewpoints.reduce<Map<string, Set<string>>>((counts, viewpoint) => {
-    const normalizedName = normalize(getPlayerName(viewpoint));
+    const playerName = getPlayerName(viewpoint);
+
+    if (!playerName) {
+      return counts;
+    }
+
+    const normalizedName = normalize(playerName);
     const context = normalize(getPlayerRealm(viewpoint) || viewpoint.videoName);
     const contexts = counts.get(normalizedName) || new Set<string>();
     contexts.add(context);
@@ -165,16 +173,20 @@ export const getVideoChatMentionSuggestions = <T extends VideoChatViewpoint>(
     .reduce<VideoChatMentionSuggestion<T>[]>((suggestions, viewpoint) => {
       const label = getPlayerName(viewpoint);
       const realm = getPlayerRealm(viewpoint);
+
+      if (!label) {
+        return suggestions;
+      }
+
       const normalizedLabel = normalize(label);
       const duplicateName =
         (playerNameContexts.get(normalizedLabel)?.size || 0) > 1;
-      // Keep common cases short, but insert a disambiguated token when the
-      // same player name maps to more than one real POV.
-      const mention = duplicateName
-        ? realm
-          ? `${label}-${realm}`
-          : viewpoint.videoName
-        : label;
+
+      if (duplicateName && !realm) {
+        return suggestions;
+      }
+
+      const mention = duplicateName ? `${label}-${realm}` : label;
       const key = normalize(mention);
 
       if (seen.has(key)) {
@@ -205,8 +217,14 @@ export const findVideoChatViewpoint = <T extends VideoChatViewpoint>(
     return undefined;
   }
 
-  // Match user-friendly player names first, but also allow the raw video name
-  // for cases where chat text was generated from metadata or copied manually.
+  const playerNameContexts = getPlayerNameContexts(viewpoints);
+  const matchingContexts = playerNameContexts.get(normalizedViewpoint);
+
+  if (matchingContexts && matchingContexts.size > 1) {
+    return undefined;
+  }
+
+  // Match user-friendly player names and Player-Realm aliases.
   return [...viewpoints]
     .sort((a, b) => Number(a.cloud) - Number(b.cloud))
     .find((candidate) =>
