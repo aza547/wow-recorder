@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add the ability to seek to a clip's source, if it is still available.
 - Added some hotkey hints to the video selection table.
-
+- [Issue 877](https://github.com/aza547/wow-recorder/pull/878) - Instant replay is now available in the overrun.
+  
 ### Fixed
 - [Issue 855](https://github.com/aza547/wow-recorder/issues/855) - Share log handler timeouts between game modes.
 - Fix an issue where the progress bar on the video player would not be set correctly until it started playing.
