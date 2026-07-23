@@ -226,6 +226,8 @@ enum Phrase {
   PlaybackSpeedTooltip,
   ClipTooltip,
   ClipUnavailableTooltip,
+  ClipSourceTooltip,
+  ClipSourceUnavailableTooltip,
   ConfirmTooltip,
   CancelTooltip,
   TagButtonTooltip,
@@ -560,6 +562,12 @@ enum Phrase {
   CharacterFilterAddManual,
   CharacterFilterNone,
   CharacterFilterActive,
+  ClippedAtLabel,
+  Arrows,
+  SelectRange,
+  SelectMultiple,
+  Navigate,
+  SelectAll,
 }
 
 enum Language {

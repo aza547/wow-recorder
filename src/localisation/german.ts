@@ -220,6 +220,8 @@ const GERMAN: Translations = {
   [Phrase.PlaybackSpeedTooltip]: 'Wiedergabegeschwindigkeit',
   [Phrase.ClipTooltip]: 'Clip',
   [Phrase.ClipUnavailableTooltip]: 'Du kannst nur lokal gespeicherte Videos clipen',
+  [Phrase.ClipSourceTooltip]: 'Zur Quellaufnahme wechseln',
+  [Phrase.ClipSourceUnavailableTooltip]: 'Quellaufnahme nicht verfügbar',
   [Phrase.ConfirmTooltip]: 'Bestätigen',
   [Phrase.CancelTooltip]: 'Abbrechen',
   [Phrase.TagButtonTooltip]: 'Einen Tag hinzufügen',
@@ -560,6 +562,12 @@ const GERMAN: Translations = {
   [Phrase.CharacterFilterAddManual]: '...oder fügen Sie einen Charakterfilter manuell hinzu.',
   [Phrase.CharacterFilterNone]: 'Kein Charakter-Uploadfilter aktiv. Fügen Sie einen Charakter hinzu, um ihn zu aktivieren.',
   [Phrase.CharacterFilterActive]: 'Es werden nur Aufnahmen hochgeladen, die beim Spielen der unten aufgeführten Charaktere erstellt wurden.',
+  [Phrase.ClippedAtLabel]: 'Abgeschnitten bei',
+  [Phrase.Arrows]: 'Pfeile',
+  [Phrase.Navigate]: 'Navigieren',
+  [Phrase.SelectRange]: 'Bereich auswählen',
+  [Phrase.SelectMultiple]: 'Mehrere auswählen',
+  [Phrase.SelectAll]: 'Alle auswählen',
 };
 
 export default GERMAN;

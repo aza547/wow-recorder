@@ -1,5 +1,11 @@
 import * as React from 'react';
-import { AppState, Pages, RendererVideo } from 'main/types';
+import {
+  AppState,
+  Pages,
+  RendererClip,
+  RendererVideo,
+  StorageFilter,
+} from 'main/types';
 import {
   Dispatch,
   RefObject,
@@ -26,6 +32,7 @@ import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
 import {
+  findClipParent,
   getFriendlyCodecName,
   getVideoCategoryFilter,
   getVideoStorageFilter,
@@ -42,7 +49,7 @@ import { Direction } from 're-resizable/lib/resizer';
 import VideoPlayer, { VideoPlayerRef } from './VideoPlayer';
 import Label from './components/Label/Label';
 import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
-import useTable from './components/Tables/TableData';
+import useVideoSelectionTable from './components/Tables/useVideoSelectionTable';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import DateRangePicker from './DateRangePicker';
 import StorageFilterToggle from './StorageFilterToggle';
@@ -109,15 +116,54 @@ const CategoryPage = (props: IProps) => {
     return correlatedState.filter(queryFilter);
   }, [correlatedState, dateRangeFilter, videoFilterTags, language]);
 
-  // The data backing the video selection table.
+  // Tanstack table relies on stable references, so while we have the React
+  // compiler enabled we still need useCallback here or weird stuff will happen.
   const openSettings = useCallback(
     () => setAppState((prev) => ({ ...prev, page: Pages.Settings })),
     [setAppState],
   );
-  const table = useTable(
+
+  const getClipParent = useCallback(
+    (clip: RendererClip) => {
+      return findClipParent(clip, videoState);
+    },
+    [videoState],
+  );
+
+  const goToClipParent = useCallback(
+    (clip: RendererClip) => {
+      const parent = getClipParent(clip);
+
+      if (parent) {
+        persistentProgress.current =
+          clip.parentVideoOffset && clip.parentVideoOffset > 0
+            ? clip.parentVideoOffset
+            : 0;
+
+        setAppState((prevState) => ({
+          ...prevState,
+          category: parent.category,
+          selectedVideos: [parent],
+          multiPlayerMode: false,
+          playing: false,
+          videoFilterTags: [],
+          storageFilter: StorageFilter.BOTH,
+          dateRangeFilter: {
+            startDate: null,
+            endDate: null,
+          },
+        }));
+      }
+    },
+    [getClipParent, persistentProgress, setAppState],
+  );
+
+  const table = useVideoSelectionTable(
     filteredState,
     appState,
     setVideoState,
+    getClipParent,
+    goToClipParent,
     config.hevcTranscodeEnabled,
     openSettings,
   );
@@ -335,9 +381,9 @@ const CategoryPage = (props: IProps) => {
         <div className="flex h-full w-full">
           <VideoPlayer
             ref={videoPlayerRef}
+            instantReplay={null}
             key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
             videos={videosToPlay}
-            instantReplay={null}
             categoryState={categoryState}
             persistentProgress={persistentProgress}
             config={config}

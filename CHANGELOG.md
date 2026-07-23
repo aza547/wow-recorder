@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Add the ability to seek to a clip's source, if it is still available.
+- Added some hotkey hints to the video selection table.
+
 ### Fixed
+- [Issue 855](https://github.com/aza547/wow-recorder/issues/855) - Share log handler timeouts between game modes.
+- Fix an issue where the progress bar on the video player would not be set correctly until it started playing.
+- [Issue 876](https://github.com/aza547/wow-recorder/issues/876) - Fix tag dialog not opening on some categories.
+
+## [7.10.1] - 2026-07-18
+### Fixed
+- [Issue 869](https://github.com/aza547/wow-recorder/issues/869) - Handle unrecognized encoders without an error.
+- Fix an issue where blocked click events inside the kill video creator meant you could not interact with the timeline.
+- Fix an issue where blocked click events inside the tag dialog meant you couldn't click to move the cursor.
 
 ## [7.10.0] - 2026-07-15
 ### Changed
@@ -19,7 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 868](https://github.com/aza547/wow-recorder/issues/868) - Fixes storage toggle responsiveness.
-- [Issue 869](https://github.com/aza547/wow-recorder/issues/869) - Handle unrecognized encoders without an error.
 
 ## [7.9.0] - 2026-06-26
 ### Changed

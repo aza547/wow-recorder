@@ -582,7 +582,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return;
     }
 
-    persistentProgress.current = player1.current.currentTime;
     setDuration(player1.current.duration);
 
     if (instantReplay) {
@@ -702,6 +701,11 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     if (numReady.current < playableCount) {
       // Don't react until all the players have emitted a ready event.
       return;
+    }
+
+    if (persistentProgress.current > 0) {
+      // Without this the progress bar will show zero until playback starts.
+      setProgress(persistentProgress.current);
     }
 
     if (!instantReplay) {

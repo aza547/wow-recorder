@@ -226,6 +226,8 @@ const ENGLISH: Translations = {
   [Phrase.PlaybackSpeedTooltip]: 'Playback Speed',
   [Phrase.ClipTooltip]: 'Clip',
   [Phrase.ClipUnavailableTooltip]: 'You can only clip locally saved videos, while in single player mode',
+  [Phrase.ClipSourceTooltip]: 'Go to source',
+  [Phrase.ClipSourceUnavailableTooltip]: 'Source unavailable',
   [Phrase.ConfirmTooltip]: 'Confirm',
   [Phrase.CancelTooltip]: 'Cancel',
   [Phrase.TagButtonTooltip]: 'Add a custom tag.',
@@ -564,7 +566,12 @@ const ENGLISH: Translations = {
   [Phrase.CharacterFilterAddManual]: '...or add a character filter manually.',
   [Phrase.CharacterFilterNone]: 'No character upload filter active. Add a character to enable it.',
   [Phrase.CharacterFilterActive]: 'Only recordings made while playing the characters listed below will be uploaded.',
-
+  [Phrase.ClippedAtLabel]: 'Clipped At',
+  [Phrase.Arrows]: 'Arrows',
+  [Phrase.Navigate]: 'Navigate',
+  [Phrase.SelectRange]: 'Select Range',
+  [Phrase.SelectMultiple]: 'Select Multiple',
+  [Phrase.SelectAll]: 'Select All',
 };
 
 export default ENGLISH;

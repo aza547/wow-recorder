@@ -1,5 +1,5 @@
 import { CellContext } from '@tanstack/react-table';
-import { CloudStatus, RendererVideo } from 'main/types';
+import { CloudStatus, RendererClip, RendererVideo } from 'main/types';
 import {
   getVideoResultText,
   getResultColor,
@@ -28,6 +28,7 @@ import {
   LockOpen,
   MessageSquare,
   MessageSquareMore,
+  ExternalLink,
 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
@@ -198,18 +199,16 @@ export const populateDetailsCell = (
 
     return (
       <Tooltip content={tooltip}>
-        <div onClick={(e) => e.stopPropagation()}>
-          <TagDialog
-            tag={tag}
-            videos={toTag}
-            setVideoState={setVideoState}
-            language={language}
-          >
-            <Button variant="ghost" size="xs" disabled={noPermission}>
-              {icon}
-            </Button>
-          </TagDialog>
-        </div>
+        <TagDialog
+          tag={tag}
+          videos={toTag}
+          setVideoState={setVideoState}
+          language={language}
+        >
+          <Button variant="ghost" size="xs" disabled={noPermission}>
+            {icon}
+          </Button>
+        </TagDialog>
       </Tooltip>
     );
   };
@@ -218,6 +217,41 @@ export const populateDetailsCell = (
     <Box className="inline-flex">
       {renderProtectedIcon()}
       {renderTagIcon()}
+    </Box>
+  );
+};
+
+export const populateSourceCell = (
+  ctx: CellContext<RendererVideo, unknown>,
+  language: Language,
+  getClipParent: (clip: RendererClip) => RendererVideo | undefined,
+  goToClipParent: (clip: RendererClip) => void,
+) => {
+  const clip = ctx.getValue() as RendererClip;
+  const parent = getClipParent(clip);
+  const disabled = parent === undefined;
+
+  const tooltip = disabled
+    ? getLocalePhrase(language, Phrase.ClipSourceUnavailableTooltip)
+    : getLocalePhrase(language, Phrase.ClipSourceTooltip);
+
+  const goToSource = (e: React.MouseEvent<HTMLButtonElement>) => {
+    stopPropagation(e);
+    goToClipParent(clip);
+  };
+
+  return (
+    <Box className="inline-flex">
+      <Tooltip content={tooltip}>
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={goToSource}
+          disabled={disabled}
+        >
+          <ExternalLink size={18} />
+        </Button>
+      </Tooltip>
     </Box>
   );
 };
@@ -251,19 +285,17 @@ export const populateCreatorCell = (
   return (
     <Box className="inline-flex">
       <Tooltip content={tooltip}>
-        <div onClick={(e) => e.stopPropagation()}>
-          <KillVideoDialog
-            sources={disk}
-            language={language}
-            isLinux={isLinux}
-            hevcTranscodeEnabled={hevcTranscodeEnabled}
-            onOpenSettings={onOpenSettings}
-          >
-            <Button variant="ghost" size="xs" disabled={disabled}>
-              <Clapperboard size={18} />
-            </Button>
-          </KillVideoDialog>
-        </div>
+        <KillVideoDialog
+          sources={disk}
+          language={language}
+          isLinux={isLinux}
+          hevcTranscodeEnabled={hevcTranscodeEnabled}
+          onOpenSettings={onOpenSettings}
+        >
+          <Button variant="ghost" size="xs" disabled={disabled}>
+            <Clapperboard size={18} />
+          </Button>
+        </KillVideoDialog>
       </Tooltip>
     </Box>
   );

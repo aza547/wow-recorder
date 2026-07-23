@@ -220,6 +220,8 @@ const KOREAN: Translations = {
   [Phrase.PlaybackSpeedTooltip]: '재생 속도',
   [Phrase.ClipTooltip]: '클립',
   [Phrase.ClipUnavailableTooltip]: '디스크에 저장된 동영상만 클립할 수 있습니다.',
+  [Phrase.ClipSourceTooltip]: '원본 녹화로 이동',
+  [Phrase.ClipSourceUnavailableTooltip]: '원본 녹화를 사용할 수 없습니다',
   [Phrase.ConfirmTooltip]: '확인',
   [Phrase.CancelTooltip]: '취소',
   [Phrase.TagButtonTooltip]: '태그',
@@ -560,6 +562,12 @@ const KOREAN: Translations = {
   [Phrase.CharacterFilterAddManual]: '...또는 캐릭터 필터를 직접 추가하세요.',
   [Phrase.CharacterFilterNone]: '활성화된 캐릭터 업로드 필터가 없습니다. 캐릭터를 추가하여 활성화하세요.',
   [Phrase.CharacterFilterActive]: '아래에 나열된 캐릭터를 플레이하는 동안 생성된 녹화만 업로드됩니다.',
+  [Phrase.Arrows]: '화살표',
+  [Phrase.Navigate]: '탐색',
+  [Phrase.ClippedAtLabel]: '다음에서 잘림',
+  [Phrase.SelectRange]: '범위 선택',
+  [Phrase.SelectMultiple]: '여러 개 선택',
+  [Phrase.SelectAll]: '전체 선택',
 };
 
 export default KOREAN;

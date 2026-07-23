@@ -34,18 +34,6 @@ export default class CombatLogWatcher extends EventEmitter {
   private watcher?: FSWatcher;
 
   /**
-   * A duration after seeing a log write to send a timeout event in if no
-   * other subsequent log writes seen. In seconds.
-   */
-  private timeout: number;
-
-  /**
-   * A handle to the timeout timer so we can easily reset it when we see
-   * additional logs.
-   */
-  private timer?: NodeJS.Timeout;
-
-  /**
    * We need to keep track of some info about each log file to know how much we
    * should read.
    */
@@ -67,9 +55,8 @@ export default class CombatLogWatcher extends EventEmitter {
    * Constructor, unit of timeout is minutes. No events will be emitted until
    * watch() is called.
    */
-  constructor(logDir: string, timeout: number) {
+  constructor(logDir: string) {
     super();
-    this.timeout = timeout * 1000 * 60;
     this.logDir = logDir;
   }
 
@@ -189,6 +176,8 @@ export default class CombatLogWatcher extends EventEmitter {
       );
     }
 
+    this.emit('WARCRAFT_RECORDER_LOG_ACTIVITY');
+
     const lines = buffer
       .toString('utf-8')
       .split('\n')
@@ -198,8 +187,6 @@ export default class CombatLogWatcher extends EventEmitter {
     lines.forEach((line) => {
       this.handleLogLine(line);
     });
-
-    this.resetTimeout();
   }
 
   /**
@@ -210,20 +197,5 @@ export default class CombatLogWatcher extends EventEmitter {
     const logLine = new LogLine(line);
     const logEventType = logLine.type();
     this.emit(logEventType, logLine);
-  }
-
-  /**
-   * Sends a timeout event signalling no activity in the combat log directory
-   * for the timeout period. That's handy as a catch-all for ending any active
-   * events. Typically a Mythic+ that's been abandoned.
-   */
-  private resetTimeout() {
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-
-    this.timer = setTimeout(() => {
-      this.emit('timeout', this.timeout);
-    }, this.timeout);
   }
 }

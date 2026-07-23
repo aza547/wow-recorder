@@ -551,7 +551,7 @@ export default class Recorder extends EventEmitter {
    * misbehaves.
    */
   public async startRecording(offset: number) {
-    console.info('[Recorder] Queued start recording');
+    console.info('[Recorder] Queued convert buffer');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
     const task = async () => {
@@ -559,7 +559,7 @@ export default class Recorder extends EventEmitter {
         await this.convertObsBuffer(offset);
         resolveHelper(null);
       } catch (error) {
-        console.error('[Recorder] Error on starting recording', String(error));
+        console.error('[Recorder] Error on converting buffer', String(error));
         emitErrorReport(error);
         rejectHelper(error);
       }
@@ -1134,7 +1134,7 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Conver the buffer recording to a a real recording.
+   * Convert the buffer recording to a real recording.
    */
   private async convertObsBuffer(offset: number) {
     console.info('[Recorder] Convert buffer with offset:', offset);
