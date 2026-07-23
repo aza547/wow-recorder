@@ -307,7 +307,7 @@ export default class Manager {
 
     if (LogHandler.activity) {
       refreshInstantReplayState(LogHandler.activity);
-    } else {
+    } else if (!inOverrun) {
       resetInstantReplayState();
     }
   }
