@@ -199,16 +199,18 @@ export const populateDetailsCell = (
 
     return (
       <Tooltip content={tooltip}>
-        <TagDialog
-          tag={tag}
-          videos={toTag}
-          setVideoState={setVideoState}
-          language={language}
-        >
-          <Button variant="ghost" size="xs" disabled={noPermission}>
-            {icon}
-          </Button>
-        </TagDialog>
+        <div>
+          <TagDialog
+            tag={tag}
+            videos={toTag}
+            setVideoState={setVideoState}
+            language={language}
+          >
+            <Button variant="ghost" size="xs" disabled={noPermission}>
+              {icon}
+            </Button>
+          </TagDialog>
+        </div>
       </Tooltip>
     );
   };
@@ -243,14 +245,16 @@ export const populateSourceCell = (
   return (
     <Box className="inline-flex">
       <Tooltip content={tooltip}>
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={goToSource}
-          disabled={disabled}
-        >
-          <ExternalLink size={18} />
-        </Button>
+        <div>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={goToSource}
+            disabled={disabled}
+          >
+            <ExternalLink size={18} />
+          </Button>
+        </div>
       </Tooltip>
     </Box>
   );
