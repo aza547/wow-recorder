@@ -44,7 +44,7 @@ export type VideoChatMentionSuggestion<T extends VideoChatViewpoint> = {
 // Supports plain timestamps, and optional POV-qualified timestamps:
 // "2:15" or "@Player-Realm 2:15".
 const chatLinkRegex =
-  /(?:@([^\s@,.;:!?)}\]]+)[,.;:!?)}\]]*\s+)?\b(\d{1,2}):(\d{2})\b/g;
+  /(?:(?<!\S)@([^\s@,.;:!?)}\]]+)[,.;:!?)}\]]*\s+)?\b(\d{1,2}):(\d{2})\b/g;
 const chatMentionRegex = /(^|\s)@([^\s@,.;:!?)}\]]+)/g;
 
 const normalize = (value: string) => value.trim().toLowerCase();
