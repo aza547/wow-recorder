@@ -187,7 +187,7 @@ const VideoSelectionTable = (props: IProps) => {
   // call this whenever we mount. It's harmless if the first row is selected.
   useEffect(() => {
     if (hasScrolledToSelection.current) {
-      return;
+      return undefined;
     }
 
     hasScrolledToSelection.current = true;
