@@ -1,6 +1,6 @@
 import fs, { FSWatcher } from 'fs';
 import { setTimeout as sleep } from 'timers/promises';
-import { app, ipcMain, powerMonitor } from 'electron';
+import { ipcMain, powerMonitor } from 'electron';
 import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
