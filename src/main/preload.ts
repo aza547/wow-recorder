@@ -51,7 +51,12 @@ export type Channels =
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
   | 'getSensibleEncoderDefault'
-  | 'refreshCloudGuilds';
+  | 'getPlatform'
+  | 'refreshCloudGuilds'
+  | 'reselectPipewireSource'
+  | 'videoPrepareForPlayback'
+  | 'videoCancelTranscode'
+  | 'hevcTranscodeCancelAll';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -201,8 +206,16 @@ contextBridge.exposeInMainWorld('electron', {
       return ipcRenderer.invoke('getSensibleEncoderDefault');
     },
 
+    getPlatform(): NodeJS.Platform {
+      return ipcRenderer.sendSync('getPlatform', []);
+    },
+
     refreshCloudGuilds() {
       ipcRenderer.send('refreshCloudGuilds');
+    },
+
+    reselectPipewireSource() {
+      ipcRenderer.send('reselectPipewireSource');
     },
 
     getOrCreateChatCorrelator(video: RendererVideo): Promise<string> {

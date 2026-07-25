@@ -36,6 +36,7 @@ import {
   Flavour,
   AudioSource,
   AppState,
+  AudioSourceType,
   RendererClip,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
@@ -640,10 +641,15 @@ const isHighRes = (res: string) => {
   return false;
 };
 
-const encoderFilter = (enc: string, highRes: boolean) => {
+const encoderFilter = (enc: string, highRes: boolean, isLinux: boolean) => {
   const encoder = enc as ESupportedEncoders;
 
   if (!Object.values(ESupportedEncoders).includes(encoder)) {
+    return false;
+  }
+
+  // H.265 is not offered as a recording encoder on Linux.
+  if (isLinux && isHevcEncoder(encoder)) {
     return false;
   }
 
@@ -653,7 +659,8 @@ const encoderFilter = (enc: string, highRes: boolean) => {
       encoder === ESupportedEncoders.OBS_X264 ||
       encoder === ESupportedEncoders.AMD_AV1 ||
       encoder === ESupportedEncoders.NVENC_AV1 ||
-      encoder === ESupportedEncoders.QSV_AV1
+      encoder === ESupportedEncoders.QSV_AV1 ||
+      encoder === ESupportedEncoders.VAAPI_AV1
     );
   }
 
@@ -697,6 +704,10 @@ const getFriendlyEncoderName = (enc: ESupportedEncoders) => {
       return 'Intel H.264';
     case ESupportedEncoders.QSV_AV1:
       return 'Intel AV1';
+    case ESupportedEncoders.VAAPI_H264:
+      return 'VAAPI H.264';
+    case ESupportedEncoders.VAAPI_AV1:
+      return 'VAAPI AV1';
     default:
       throw new Error('Unknown Encoder: ' + enc);
   }
@@ -708,6 +719,7 @@ const getFriendlyCodecName = (enc: string) => {
     case ESupportedEncoders.NVENC_H264:
     case ESupportedEncoders.AMD_H264:
     case ESupportedEncoders.QSV_H264:
+    case ESupportedEncoders.VAAPI_H264:
       return 'H264';
     case ESupportedEncoders.NVENC_H265:
     case ESupportedEncoders.AMD_H265:
@@ -715,6 +727,7 @@ const getFriendlyCodecName = (enc: string) => {
     case ESupportedEncoders.NVENC_AV1:
     case ESupportedEncoders.AMD_AV1:
     case ESupportedEncoders.QSV_AV1:
+    case ESupportedEncoders.VAAPI_AV1:
       return 'AV1';
     default:
       console.warn('Unknown Encoder', enc);
@@ -729,6 +742,14 @@ const mapStringToEncoder = (enc: string): Encoder => {
   const name = getFriendlyEncoderName(value);
   return { name, value, type };
 };
+
+/**
+ * Whether the given encoder produces HEVC (H.265) output. Used by the
+ * Linux playback path to decide if a video needs transcoding to H.264
+ * before Chromium can play it.
+ */
+const isHevcEncoder = (enc?: string): boolean =>
+  enc === ESupportedEncoders.NVENC_H265 || enc === ESupportedEncoders.AMD_H265;
 
 const pathSelect = async (): Promise<string> => {
   const ipc = window.electron.ipcRenderer;
@@ -1096,15 +1117,22 @@ const getAudioSourceChoices = async (src: AudioSource) => {
   const ipc = window.electron.ipcRenderer;
   const properties = await ipc.getAudioSourceProperties(src.id);
 
-  const devices = properties.find(
-    (prop) => prop.name === 'device_id' || prop.name === 'window',
-  );
+  let devices;
+  if (src.type === AudioSourceType.PROCESS) {
+    devices = properties.find(
+      (prop) => prop.name === 'window' || prop.name === 'TargetName',
+    );
+  } else {
+    devices = properties.find((prop) => prop.name === 'device_id');
+  }
 
   if (!devices || devices.type !== 'list') {
     return [];
   }
 
-  return devices.items;
+  // [linux] pipewire audio sources can sometimes return empty names.
+  // filter out anything falsy -- we wouldn't want to capture any of those anyway
+  return devices.items.filter((item) => item.value);
 };
 
 const getKeyPressEventString = (
@@ -1245,6 +1273,7 @@ export {
   videoMatchName,
   translateQuality,
   getFriendlyCodecName,
+  isHevcEncoder,
   formatRealmNameForDisplay,
   findClipParent,
 };

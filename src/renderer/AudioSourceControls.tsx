@@ -677,7 +677,7 @@ const AudioSourceControls = (props: IProps) => {
       device,
       volume: 1,
     };
-
+    
     const choices = await getAudioSourceChoices(src);
 
     setConfig((prev) => ({
