@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [7.11.1] - 2026-07-25
+### Fixed
 - Fix an issue where the pagination buttons were not working.
 
 ## [7.11.0] - 2026-07-25
