@@ -41,6 +41,7 @@ const VideoSelectionTable = (props: IProps) => {
 
   const { pageIndex, pageSize } = table.getState().pagination;
   const selectedRowRef = React.useRef<HTMLTableRowElement>(null);
+  const hasScrolledToSelection = React.useRef(false);
 
   /**
    * Mark the row as selected and update the video player to play the first
@@ -185,6 +186,11 @@ const VideoSelectionTable = (props: IProps) => {
   // then we may already have a selected video that is not the first row. Just
   // call this whenever we mount. It's harmless if the first row is selected.
   useEffect(() => {
+    if (hasScrolledToSelection.current) {
+      return;
+    }
+
+    hasScrolledToSelection.current = true;
     const selectedIndex = table.getSelectedRowModel().rows[0]?.index ?? 0;
     const selectedPageIndex = Math.floor(selectedIndex / pageSize);
 
