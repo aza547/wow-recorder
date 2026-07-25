@@ -56,10 +56,15 @@ const getMentionSearch = (
   }
 
   const separatorLength = match[1].length;
+  const suffix = value.slice(caretPosition);
+  const nextSeparatorIndex = suffix.search(/[\s@,.;:!?)}\]]/);
 
   return {
     start: prefix.length - match[0].length + separatorLength,
-    end: caretPosition,
+    end:
+      nextSeparatorIndex === -1
+        ? value.length
+        : caretPosition + nextSeparatorIndex,
     query: match[2].toLowerCase(),
   };
 };
@@ -231,11 +236,12 @@ const VideoChat = (props: IProps) => {
       return;
     }
 
-    const insertion = `@${suggestion.mention} `;
+    const messageSuffix = message.slice(mentionSearch.end);
+    const needsSeparator =
+      messageSuffix.length === 0 || messageSuffix.startsWith('@');
+    const insertion = `@${suggestion.mention}${needsSeparator ? ' ' : ''}`;
     const nextMessage =
-      message.slice(0, mentionSearch.start) +
-      insertion +
-      message.slice(mentionSearch.end);
+      message.slice(0, mentionSearch.start) + insertion + messageSuffix;
 
     if (nextMessage.length > maxMessageLength) {
       return;
