@@ -61,14 +61,20 @@ declare global {
 
         audioSettingsOpen(): Promise<void>;
         audioSettingsClosed(): Promise<void>;
-        createAudioSource(id: string, type: AudioSourceType): Promise<string>;
+        createAudioSource(
+          id: string,
+          type: AudioSourceType,
+          audioTracks: number[],
+        ): Promise<string>;
         getAudioSourceProperties(id: string): Promise<ObsProperty[]>;
         deleteAudioSource(id: string): void;
         setAudioSourceDevice(id: string, device: string): void;
         setAudioSourceWindow(id: string, window: string): void;
+        setAudioSourceTracks(id: string, audioTracks: number[]): void;
         setAudioSourceVolume(id: string, volume: number): void;
         setForceMono(enabled: boolean): void;
         setAudioSuppression(enabled: boolean): void;
+        setSeparateAudioTracks(enabled: boolean): void;
 
         reconfigureBase(): void;
         reconfigureVideo(): void;

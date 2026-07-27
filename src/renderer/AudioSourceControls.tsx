@@ -1,6 +1,11 @@
-import { AppState, AudioSource, AudioSourceType } from 'main/types';
+import { AppState, AudioSource, AudioSourceType, RecStatus } from 'main/types';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
+import {
+  getAudioTracksForNewSource,
+  normalizeAudioTracks,
+  OBS_AUDIO_TRACKS,
+} from 'utils/audioTracks';
 import {
   AppWindow,
   AudioLines,
@@ -37,6 +42,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from './components/Select/Select';
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from './components/ToggleGroup/ToggleGroup';
 
 import { ObsListItem } from 'noobs';
 import {
@@ -51,11 +60,12 @@ let debounceTimer: NodeJS.Timeout | undefined;
 
 interface IProps {
   appState: AppState;
+  recorderStatus: RecStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
 const AudioSourceControls = (props: IProps) => {
-  const { appState, setPreviewEnabled } = props;
+  const { appState, recorderStatus, setPreviewEnabled } = props;
   const { language } = appState;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
@@ -85,6 +95,11 @@ const AudioSourceControls = (props: IProps) => {
       sourcesAreFullyDefined = false;
     }
   });
+
+  const isRecording =
+    recorderStatus === RecStatus.Recording ||
+    recorderStatus === RecStatus.Overrunning;
+  const separateTrackEditingLocked = config.separateAudioTracks && isRecording;
 
   const [pttHotKeyFieldFocused, setPttHotKeyFieldFocused] = useState(false);
 
@@ -243,6 +258,16 @@ const AudioSourceControls = (props: IProps) => {
     ipc.setAudioSuppression(checked);
   };
 
+  const setSeparateAudioTracks = (checked: boolean) => {
+    setConfig((prevState) => ({
+      ...prevState,
+      separateAudioTracks: checked,
+    }));
+
+    setConfigValues({ separateAudioTracks: checked });
+    ipc.setSeparateAudioTracks(checked);
+  };
+
   const getMonoSwitch = () => {
     return (
       <div className="flex flex-col w-[140px]">
@@ -381,6 +406,32 @@ const AudioSourceControls = (props: IProps) => {
     );
   };
 
+  const getSeparateAudioTracksSwitch = () => {
+    return (
+      <div className="flex flex-col w-[160px]">
+        <Label className="flex items-center">
+          {getLocalePhrase(language, Phrase.SeparateAudioTracksLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              language,
+              configSchema.separateAudioTracks.description,
+            )}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          <Switch
+            checked={config.separateAudioTracks}
+            disabled={isRecording}
+            onCheckedChange={setSeparateAudioTracks}
+          />
+        </div>
+      </div>
+    );
+  };
+
   useEffect(() => {
     setLocalReleaseDelay(config.pushToTalkReleaseDelay);
   }, [config.pushToTalkReleaseDelay]);
@@ -445,6 +496,22 @@ const AudioSourceControls = (props: IProps) => {
     } else {
       ipc.setAudioSourceDevice(src.id, device);
     }
+  };
+
+  const setSourceAudioTracks = (src: AudioSource, values: string[]) => {
+    const audioTracks = normalizeAudioTracks(values.map(Number));
+    if (audioTracks.length === 0) return;
+
+    setConfig((prev) => {
+      const idx = prev.audioSources.findIndex((source) => source.id === src.id);
+      if (idx === -1) return prev;
+
+      const audioSources = [...prev.audioSources];
+      audioSources[idx] = { ...audioSources[idx], audioTracks };
+      return { ...prev, audioSources };
+    });
+
+    ipc.setAudioSourceTracks(src.id, audioTracks);
   };
 
   const renderSourceType = (src: AudioSource) => {
@@ -529,13 +596,19 @@ const AudioSourceControls = (props: IProps) => {
     };
 
     return (
-      <div className="flex flex-col w-[500px]">
+      <div
+        className={
+          config.separateAudioTracks
+            ? 'flex w-[724px] items-center gap-x-2'
+            : 'flex w-[500px]'
+        }
+      >
         <Select
           value={src.device}
           onValueChange={(value) => setSourceDevice(src, value)}
           onOpenChange={(open) => setPreviewEnabled(!open)}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-[500px] flex-none">
             <SelectValue
               placeholder={
                 src.type !== AudioSourceType.PROCESS
@@ -546,6 +619,31 @@ const AudioSourceControls = (props: IProps) => {
           </SelectTrigger>
           <SelectContent>{renderSelectItems()}</SelectContent>
         </Select>
+        {config.separateAudioTracks && (
+          <div className="flex items-center gap-x-2">
+            <Label className="text-xs text-foreground-lighter">
+              {getLocalePhrase(language, Phrase.AudioTracksLabel)}
+            </Label>
+            <ToggleGroup
+              type="multiple"
+              variant="outline"
+              size="xs"
+              value={normalizeAudioTracks(src.audioTracks).map(String)}
+              disabled={isRecording}
+              onValueChange={(values) => setSourceAudioTracks(src, values)}
+            >
+              {OBS_AUDIO_TRACKS.map((track) => (
+                <ToggleGroupItem
+                  key={track}
+                  value={String(track)}
+                  className="w-7 flex-none px-0 tabular-nums"
+                >
+                  {track}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+        )}
       </div>
     );
   };
@@ -578,7 +676,12 @@ const AudioSourceControls = (props: IProps) => {
 
   const renderDeleteSourceButton = (src: AudioSource) => {
     return (
-      <Button onClick={() => removeSource(src)} variant="ghost" size="sm">
+      <Button
+        onClick={() => removeSource(src)}
+        disabled={separateTrackEditingLocked}
+        variant="ghost"
+        size="sm"
+      >
         <X color="red" opacity={0.5} />
       </Button>
     );
@@ -666,7 +769,8 @@ const AudioSourceControls = (props: IProps) => {
     }
 
     const id = `WCR Audio Source ${idx}`;
-    const name = await ipc.createAudioSource(id, type);
+    const audioTracks = getAudioTracksForNewSource(config.audioSources);
+    const name = await ipc.createAudioSource(id, type, audioTracks);
     const device = type === AudioSourceType.PROCESS ? undefined : 'default';
     const friendly = device;
 
@@ -676,6 +780,7 @@ const AudioSourceControls = (props: IProps) => {
       friendly,
       device,
       volume: 1,
+      audioTracks,
     };
 
     const choices = await getAudioSourceChoices(src);
@@ -720,7 +825,7 @@ const AudioSourceControls = (props: IProps) => {
         <div className="flex gap-2 mx-2">
           <Button
             onClick={() => addSource(AudioSourceType.OUTPUT)}
-            disabled={!sourcesAreFullyDefined}
+            disabled={!sourcesAreFullyDefined || separateTrackEditingLocked}
             variant="outline"
           >
             <PlusIcon className="px-0" />
@@ -728,7 +833,7 @@ const AudioSourceControls = (props: IProps) => {
           </Button>
           <Button
             onClick={() => addSource(AudioSourceType.INPUT)}
-            disabled={!sourcesAreFullyDefined}
+            disabled={!sourcesAreFullyDefined || separateTrackEditingLocked}
             variant="outline"
           >
             <PlusIcon className="px-0" />
@@ -736,7 +841,7 @@ const AudioSourceControls = (props: IProps) => {
           </Button>
           <Button
             onClick={() => addSource(AudioSourceType.PROCESS)}
-            disabled={!sourcesAreFullyDefined}
+            disabled={!sourcesAreFullyDefined || separateTrackEditingLocked}
             variant="outline"
           >
             <PlusIcon className="px-0" />
@@ -751,6 +856,7 @@ const AudioSourceControls = (props: IProps) => {
     return (
       <div className="flex gap-y-8 flex-col m-4">
         <div className="flex items-center content-start w-full gap-10 flex-wrap">
+          {getSeparateAudioTracksSwitch()}
           {getAudioSuppressionSwitch()}
           {getMonoSwitch()}
           {getPushToTalkSwitch()}

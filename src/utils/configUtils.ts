@@ -263,6 +263,7 @@ const getObsVideoConfig = (cfg: ConfigService): ObsVideoConfig => {
 const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
   return {
     audioSources: cfg.get<AudioSource[]>('audioSources'),
+    separateAudioTracks: cfg.get<boolean>('separateAudioTracks'),
     obsAudioSuppression: cfg.get<boolean>('obsAudioSuppression'),
     obsForceMono: cfg.get<boolean>('obsForceMono'),
     pushToTalk: cfg.get<boolean>('pushToTalk'),

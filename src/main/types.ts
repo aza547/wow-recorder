@@ -318,6 +318,7 @@ type AudioSource = {
   friendly?: string; // A user-friendly name for the source
   device?: string | number; // Machine friendly identifier for the device or window, I think this can only be a string in practice.
   volume: number; // Current volume setting (0-1)
+  audioTracks?: number[]; // OBS output tracks this source is routed to.
 };
 
 type Character = {
@@ -455,6 +456,7 @@ type ObsOverlayConfig = {
 
 type ObsAudioConfig = {
   audioSources: AudioSource[];
+  separateAudioTracks: boolean;
   obsAudioSuppression: boolean;
   obsForceMono: boolean;
   pushToTalk: boolean;

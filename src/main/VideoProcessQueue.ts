@@ -741,6 +741,8 @@ export default class VideoProcessQueue {
       // re-encoding which would take time and CPU.
       .withVideoCodec('copy')
       .withAudioCodec('copy')
+      .outputOption('-map 0:v:0')
+      .outputOption('-map 0:a?')
       // Avoid any negative timestamps, which can cause issues with
       // some players, but does extend the video slightly depending on
       // the keyframe alignment.
@@ -856,7 +858,7 @@ export default class VideoProcessQueue {
     const map =
       item.audioTrackIndex === -1
         ? '-map [a]'
-        : `-map ${item.audioTrackIndex}:a`;
+        : `-map ${item.audioTrackIndex}:a:0`;
 
     console.info('[VideoProcessQueue] Audio map filter:', map);
     return map;
@@ -892,7 +894,7 @@ export default class VideoProcessQueue {
       if (item.audioTrackIndex === -1) {
         // Audio
         filter +=
-          `[${idx}:a]atrim=${trim},asetpts=PTS-STARTPTS,` +
+          `[${idx}:a:0]atrim=${trim},asetpts=PTS-STARTPTS,` +
           `afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
       }
     });

@@ -57,6 +57,11 @@ import { getNativeWindowHandle, send } from './main';
 import { ipcMain } from 'electron';
 import Poller from 'utils/Poller';
 import AsyncQueue from 'utils/AsyncQueue';
+import {
+  getAudioTrackMask,
+  normalizeAudioSourceTracks,
+  normalizeAudioTracks,
+} from 'utils/audioTracks';
 import assert from 'assert';
 import { isHighRes } from 'renderer/rendererutils';
 
@@ -370,11 +375,18 @@ export default class Recorder extends EventEmitter {
 
     ipcMain.handle(
       'createAudioSource',
-      (event, id: string, type: AudioSourceType) => {
+      (_event, id: string, type: AudioSourceType, tracks: number[]) => {
         console.info('[Manager] Creating audio source', id, 'of type', type);
         const name = noobs.CreateSource(id, type);
         console.info('[Manager] Created audio source', name);
+        const audioTracks = normalizeAudioTracks(tracks);
+        const separateAudioTracks = this.cfg.get<boolean>(
+          'separateAudioTracks',
+        );
+
+        this.configureAudioSourceTracks(name, audioTracks, separateAudioTracks);
         noobs.AddSourceToScene(name);
+        this.audioSources.push({ id: name, type, volume: 1, audioTracks });
         return name;
       },
     );
@@ -387,6 +399,9 @@ export default class Recorder extends EventEmitter {
     ipcMain.on('deleteAudioSource', (_event, id: string) => {
       console.info('[Manager] Deleting audio source', id);
       noobs.DeleteSource(id);
+      this.audioSources = this.audioSources.filter(
+        (source) => source.id !== id,
+      );
     });
 
     ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
@@ -424,6 +439,29 @@ export default class Recorder extends EventEmitter {
       noobs.SetSourceVolume(id, value);
     });
 
+    ipcMain.on(
+      'setAudioSourceTracks',
+      (_event, id: string, tracks: number[]) => {
+        const source = this.audioSources.find((item) => item.id === id);
+
+        if (!source) {
+          console.warn(
+            '[Recorder] Unable to set audio tracks for missing source',
+            id,
+          );
+          return;
+        }
+
+        const audioTracks = normalizeAudioTracks(tracks);
+        source.audioTracks = audioTracks;
+        this.configureAudioSourceTracks(
+          id,
+          audioTracks,
+          this.cfg.get<boolean>('separateAudioTracks'),
+        );
+      },
+    );
+
     ipcMain.on('setForceMono', (_event, enabled: boolean) => {
       console.info('[Manager] Setting force mono to', enabled);
       noobs.SetForceMono(enabled);
@@ -432,6 +470,11 @@ export default class Recorder extends EventEmitter {
     ipcMain.on('setAudioSuppression', (_event, enabled: boolean) => {
       console.info('[Manager] Setting audio suppression to', enabled);
       noobs.SetAudioSuppression(enabled);
+    });
+
+    ipcMain.on('setSeparateAudioTracks', (_event, enabled: boolean) => {
+      console.info('[Recorder] Setting separate audio tracks to', enabled);
+      this.configureCurrentAudioTracks(enabled);
     });
 
     ipcMain.on(
@@ -787,6 +830,31 @@ export default class Recorder extends EventEmitter {
     });
   }
 
+  private configureAudioSourceTracks(
+    sourceId: string,
+    audioTracks: number[] | undefined,
+    separateAudioTracks: boolean,
+  ) {
+    const mixerMask = getAudioTrackMask(audioTracks, separateAudioTracks);
+
+    console.info('[Recorder] Set audio tracks for source', {
+      sourceId,
+      audioTracks,
+      mixerMask,
+    });
+    noobs.SetSourceAudioTracks(sourceId, mixerMask);
+  }
+
+  private configureCurrentAudioTracks(separateAudioTracks: boolean) {
+    this.audioSources.forEach((source) => {
+      this.configureAudioSourceTracks(
+        source.id,
+        source.audioTracks,
+        separateAudioTracks,
+      );
+    });
+  }
+
   /**
    * Add the configured audio sources to the OBS scene. This is public
    * so it can be called externally when WoW is opened.
@@ -794,6 +862,7 @@ export default class Recorder extends EventEmitter {
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
     console.info('[Recorder] Configure audio sources');
+    const audioSources = normalizeAudioSourceTracks(config.audioSources);
 
     // Can't release all the listeners here as we now use
     // uIOhook for triggering manual recording too.
@@ -805,7 +874,7 @@ export default class Recorder extends EventEmitter {
     noobs.SetForceMono(config.obsForceMono);
     noobs.SetAudioSuppression(config.obsAudioSuppression);
 
-    config.audioSources.forEach((src) => {
+    audioSources.forEach((src) => {
       console.info('[Recorder] Create audio source', src.id);
 
       // OBS may have renamed the source if there was a naming conflict,
@@ -853,7 +922,7 @@ export default class Recorder extends EventEmitter {
           );
 
           src.device = match.value;
-          this.cfg.set('audioSources', config.audioSources);
+          this.cfg.set('audioSources', audioSources);
         }
 
         // Finish configuring the source.
@@ -865,6 +934,11 @@ export default class Recorder extends EventEmitter {
         console.warn('[Recorder] Unable to configure audio source', src);
       }
 
+      this.configureAudioSourceTracks(
+        name,
+        src.audioTracks,
+        config.separateAudioTracks,
+      );
       noobs.AddSourceToScene(name);
       this.audioSources.push({ ...src, id: name });
     });

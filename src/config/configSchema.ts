@@ -14,6 +14,7 @@ export type ConfigurationSchema = {
   monitorIndex: number;
   selectedCategory: number;
   audioSources: AudioSource[];
+  separateAudioTracks: boolean;
   minEncounterDuration: number;
   startUp: boolean;
   startMinimized: boolean;
@@ -176,6 +177,7 @@ export const configSchema = {
         device: 'default',
         volume: 1,
         type: AudioSourceType.OUTPUT,
+        audioTracks: [1, 2],
       },
       {
         id: 'WCR Audio Source 2',
@@ -183,8 +185,14 @@ export const configSchema = {
         device: 'default',
         volume: 1,
         type: AudioSourceType.INPUT,
+        audioTracks: [1, 3],
       },
     ],
+  },
+  separateAudioTracks: {
+    description: Phrase.SeparateAudioTracksDescription,
+    type: 'boolean',
+    default: false,
   },
   minEncounterDuration: {
     description: Phrase.MinEncounterDurationDescription,
