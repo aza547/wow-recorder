@@ -96,9 +96,7 @@ const AudioSourceControls = (props: IProps) => {
     }
   });
 
-  // ReadyToRecord means OBS is already buffering audio for the next pre-roll.
   const audioTrackRoutingLocked = [
-    RecStatus.ReadyToRecord,
     RecStatus.Recording,
     RecStatus.Overrunning,
     RecStatus.Reconfiguring,
