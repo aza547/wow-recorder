@@ -181,6 +181,7 @@ type VideoQueueItem = {
   offset: number;
   duration: number;
   clip: boolean;
+  preserveAllAudioStreams: boolean;
   metadata: Metadata;
 };
 

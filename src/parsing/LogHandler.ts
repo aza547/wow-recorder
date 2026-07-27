@@ -356,6 +356,7 @@ export default abstract class LogHandler {
         duration,
         metadata,
         clip: false,
+        preserveAllAudioStreams: cfg.get<boolean>('separateAudioTracks'),
       };
 
       VideoProcessQueue.getInstance().queueVideo(queueItem);

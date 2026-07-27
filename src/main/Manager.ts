@@ -613,6 +613,7 @@ export default class Manager {
           offset,
           duration,
           clip: true,
+          preserveAllAudioStreams: true,
           metadata: clipMetadata,
         };
 

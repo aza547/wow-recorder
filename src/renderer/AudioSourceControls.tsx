@@ -96,10 +96,15 @@ const AudioSourceControls = (props: IProps) => {
     }
   });
 
-  const isRecording =
-    recorderStatus === RecStatus.Recording ||
-    recorderStatus === RecStatus.Overrunning;
-  const separateTrackEditingLocked = config.separateAudioTracks && isRecording;
+  // ReadyToRecord means OBS is already buffering audio for the next pre-roll.
+  const audioTrackRoutingLocked = [
+    RecStatus.ReadyToRecord,
+    RecStatus.Recording,
+    RecStatus.Overrunning,
+    RecStatus.Reconfiguring,
+  ].includes(recorderStatus);
+  const separateTrackEditingLocked =
+    config.separateAudioTracks && audioTrackRoutingLocked;
 
   const [pttHotKeyFieldFocused, setPttHotKeyFieldFocused] = useState(false);
 
@@ -424,7 +429,7 @@ const AudioSourceControls = (props: IProps) => {
         <div className="flex h-10 items-center">
           <Switch
             checked={config.separateAudioTracks}
-            disabled={isRecording}
+            disabled={audioTrackRoutingLocked}
             onCheckedChange={setSeparateAudioTracks}
           />
         </div>
@@ -629,7 +634,7 @@ const AudioSourceControls = (props: IProps) => {
               variant="outline"
               size="xs"
               value={normalizeAudioTracks(src.audioTracks).map(String)}
-              disabled={isRecording}
+              disabled={audioTrackRoutingLocked}
               onValueChange={(values) => setSourceAudioTracks(src, values)}
             >
               {OBS_AUDIO_TRACKS.map((track) => (
