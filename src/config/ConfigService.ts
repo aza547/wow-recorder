@@ -4,8 +4,6 @@ import path from 'path';
 import { EventEmitter } from 'stream';
 import { configSchema, ConfigurationSchema } from './configSchema';
 import _ from 'lodash';
-import type { AudioSource } from 'main/types';
-import { normalizeAudioSourceTracks } from 'utils/audioTracks';
 
 /**
  * Interface for the ConfigService class.
@@ -78,7 +76,6 @@ export default class ConfigService
     super();
 
     this.cleanupStore();
-    this.migrateAudioSourceTracks();
 
     const loggable = this._store.store;
 
@@ -229,23 +226,6 @@ export default class ConfigService
     console.info(
       '[Config Service] Deleted deprecated keys from configuration store',
       keysToDelete,
-    );
-  }
-
-  /**
-   * Add default track assignments to audio sources saved by older versions.
-   */
-  private migrateAudioSourceTracks(): void {
-    const audioSources = this.get<AudioSource[]>('audioSources');
-    const migratedAudioSources = normalizeAudioSourceTracks(audioSources);
-
-    if (_.isEqual(audioSources, migratedAudioSources)) {
-      return;
-    }
-
-    this.set('audioSources', migratedAudioSources);
-    console.info(
-      '[Config Service] Added default audio track assignments to audio sources',
     );
   }
 

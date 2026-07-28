@@ -173,7 +173,6 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
             <div className="p-4">
               <AudioSourceControls
                 appState={appState}
-                recorderStatus={recorderStatus}
                 setPreviewEnabled={setPreviewEnabled}
               />
             </div>

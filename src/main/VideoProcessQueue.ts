@@ -733,7 +733,6 @@ export default class VideoProcessQueue {
     }
 
     const outputPath = VideoProcessQueue.getOutputVideoPath(data, outputDir);
-    const audioMap = data.preserveAllAudioStreams ? '-map 0:a?' : '-map 0:a:0?';
 
     const fn = ffmpeg(data.source)
       .setStartTime(start)
@@ -743,7 +742,7 @@ export default class VideoProcessQueue {
       .withVideoCodec('copy')
       .withAudioCodec('copy')
       .outputOption('-map 0:v:0')
-      .outputOption(audioMap)
+      .outputOption('-map 0:a?')
       // Avoid any negative timestamps, which can cause issues with
       // some players, but does extend the video slightly depending on
       // the keyframe alignment.

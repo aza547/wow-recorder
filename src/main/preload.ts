@@ -45,7 +45,6 @@ export type Channels =
   | 'resetSourcePosition'
   | 'setForceMono'
   | 'setAudioSuppression'
-  | 'setSeparateAudioTracks'
   | 'setCaptureCursor'
   | 'reconfigureBase'
   | 'reconfigureVideo'
@@ -147,12 +146,8 @@ contextBridge.exposeInMainWorld('electron', {
     },
 
     // Also returns the properties.
-    createAudioSource(
-      id: string,
-      type: AudioSourceType,
-      audioTracks: number[],
-    ): Promise<string> {
-      return ipcRenderer.invoke('createAudioSource', id, type, audioTracks);
+    createAudioSource(id: string, type: AudioSourceType): Promise<string> {
+      return ipcRenderer.invoke('createAudioSource', id, type);
     },
 
     getAudioSourceProperties(id: string): Promise<ObsProperty[]> {
@@ -171,8 +166,8 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('setAudioSourceWindow', id, window);
     },
 
-    setAudioSourceTracks(id: string, audioTracks: number[]): void {
-      ipcRenderer.send('setAudioSourceTracks', id, audioTracks);
+    setAudioSourceTracks(id: string, tracks: number): void {
+      ipcRenderer.send('setAudioSourceTracks', id, tracks);
     },
 
     setAudioSourceVolume(id: string, volume: number): void {
@@ -185,10 +180,6 @@ contextBridge.exposeInMainWorld('electron', {
 
     setAudioSuppression(enabled: boolean) {
       ipcRenderer.send('setAudioSuppression', enabled);
-    },
-
-    setSeparateAudioTracks(enabled: boolean) {
-      ipcRenderer.send('setSeparateAudioTracks', enabled);
     },
 
     reconfigureBase() {
