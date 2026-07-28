@@ -176,7 +176,7 @@ export const configSchema = {
         device: 'default',
         volume: 1,
         type: AudioSourceType.OUTPUT,
-        tracks: 1,
+        tracks: 1 << 0,
       },
       {
         id: 'WCR Audio Source 2',
@@ -184,7 +184,7 @@ export const configSchema = {
         device: 'default',
         volume: 1,
         type: AudioSourceType.INPUT,
-        tracks: 1,
+        tracks: 1 << 0,
       },
     ],
   },
