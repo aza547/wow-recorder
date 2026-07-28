@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 730](https://github.com/aza547/wow-recorder/issues/730) - Add per-source audio track routing.
+
 ### Fixed
 
 ## [7.11.1] - 2026-07-25

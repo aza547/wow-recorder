@@ -1,4 +1,10 @@
-import { AppState, AudioSource, AudioSourceType } from 'main/types';
+import {
+  AppState,
+  AudioSource,
+  AudioSourceType,
+  defaultAudioTrack,
+  obsAudioTracks,
+} from 'main/types';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
 import {
@@ -52,9 +58,6 @@ import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timeout | undefined;
-const OBS_AUDIO_TRACKS = [1, 2, 3, 4, 5, 6];
-const DEFAULT_AUDIO_TRACKS = 1;
-
 interface IProps {
   appState: AppState;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
@@ -454,20 +457,16 @@ const AudioSourceControls = (props: IProps) => {
   };
 
   const setSourceAudioTracks = (src: AudioSource, values: string[]) => {
-    const tracks = values.reduce(
-      (mask, value) => mask | (1 << (Number(value) - 1)),
-      0,
-    );
+    const tracks = values.reduce((mask, value) => mask | Number(value), 0);
+    // Keep at least one track assigned to each source.
     if (tracks === 0) return;
 
-    setConfig((prev) => {
-      const idx = prev.audioSources.findIndex((source) => source.id === src.id);
-      if (idx === -1) return prev;
-
-      const audioSources = [...prev.audioSources];
-      audioSources[idx] = { ...audioSources[idx], tracks };
-      return { ...prev, audioSources };
-    });
+    setConfig((prev) => ({
+      ...prev,
+      audioSources: prev.audioSources.map((source) =>
+        source.id === src.id ? { ...source, tracks } : source,
+      ),
+    }));
 
     ipc.setAudioSourceTracks(src.id, tracks);
   };
@@ -574,10 +573,10 @@ const AudioSourceControls = (props: IProps) => {
   };
 
   const renderSourceTrackSelect = (src: AudioSource) => {
-    const tracks = src.tracks ?? DEFAULT_AUDIO_TRACKS;
-    const selectedTracks = OBS_AUDIO_TRACKS.filter(
-      (track) => tracks & (1 << (track - 1)),
-    ).map(String);
+    const tracks = src.tracks ?? defaultAudioTrack;
+    const selectedTracks = obsAudioTracks
+      .filter((track) => tracks & track)
+      .map(String);
 
     return (
       <ToggleGroup
@@ -587,13 +586,13 @@ const AudioSourceControls = (props: IProps) => {
         value={selectedTracks}
         onValueChange={(values) => setSourceAudioTracks(src, values)}
       >
-        {OBS_AUDIO_TRACKS.map((track) => (
+        {obsAudioTracks.map((track, index) => (
           <ToggleGroupItem
             key={track}
             value={String(track)}
             className="h-10 w-10 flex-none px-0 tabular-nums"
           >
-            {track}
+            {index + 1}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
@@ -727,7 +726,7 @@ const AudioSourceControls = (props: IProps) => {
       friendly,
       device,
       volume: 1,
-      tracks: DEFAULT_AUDIO_TRACKS,
+      tracks: defaultAudioTrack,
     };
 
     const choices = await getAudioSourceChoices(src);

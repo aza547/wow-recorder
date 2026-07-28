@@ -1,5 +1,10 @@
 import { Phrase } from 'localisation/phrases';
-import { AudioSource, AudioSourceType, CharacterFilter } from 'main/types';
+import {
+  AudioSource,
+  AudioSourceType,
+  CharacterFilter,
+  defaultAudioTrack,
+} from 'main/types';
 
 export type ConfigurationSchema = {
   storagePath: string;
@@ -176,7 +181,7 @@ export const configSchema = {
         device: 'default',
         volume: 1,
         type: AudioSourceType.OUTPUT,
-        tracks: 1 << 0,
+        tracks: defaultAudioTrack,
       },
       {
         id: 'WCR Audio Source 2',
@@ -184,7 +189,7 @@ export const configSchema = {
         device: 'default',
         volume: 1,
         type: AudioSourceType.INPUT,
-        tracks: 1 << 0,
+        tracks: defaultAudioTrack,
       },
     ],
   },

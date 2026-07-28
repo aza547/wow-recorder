@@ -39,6 +39,7 @@ import {
   VideoSourceName,
   SceneItem,
   FileSortDirection,
+  defaultAudioTrack,
 } from './types';
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
@@ -374,9 +375,14 @@ export default class Recorder extends EventEmitter {
         console.info('[Manager] Creating audio source', id, 'of type', type);
         const name = noobs.CreateSource(id, type);
         console.info('[Manager] Created audio source', name);
-        this.configureAudioSourceTracks(name, 1);
+        this.configureAudioSourceTracks(name, defaultAudioTrack);
         noobs.AddSourceToScene(name);
-        this.audioSources.push({ id: name, type, volume: 1, tracks: 1 });
+        this.audioSources.push({
+          id: name,
+          type,
+          volume: 1,
+          tracks: defaultAudioTrack,
+        });
         return name;
       },
     );
@@ -388,6 +394,7 @@ export default class Recorder extends EventEmitter {
 
     ipcMain.on('deleteAudioSource', (_event, id: string) => {
       console.info('[Manager] Deleting audio source', id);
+      noobs.RemoveSourceFromScene(id);
       noobs.DeleteSource(id);
       this.audioSources = this.audioSources.filter(
         (source) => source.id !== id,
@@ -882,7 +889,7 @@ export default class Recorder extends EventEmitter {
         console.warn('[Recorder] Unable to configure audio source', src);
       }
 
-      this.configureAudioSourceTracks(name, src.tracks ?? 1);
+      this.configureAudioSourceTracks(name, src.tracks ?? defaultAudioTrack);
       noobs.AddSourceToScene(name);
       this.audioSources.push({ ...src, id: name });
     });

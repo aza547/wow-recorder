@@ -312,13 +312,22 @@ enum AudioSourceType {
   PROCESS = 'wasapi_process_output_capture',
 }
 
+const track1 = 1 << 0;
+const track2 = 1 << 1;
+const track3 = 1 << 2;
+const track4 = 1 << 3;
+const track5 = 1 << 4;
+const track6 = 1 << 5;
+const obsAudioTracks = [track1, track2, track3, track4, track5, track6];
+const defaultAudioTrack = track1;
+
 type AudioSource = {
   id: string; // The source name
   type: AudioSourceType;
   friendly?: string; // A user-friendly name for the source
   device?: string | number; // Machine friendly identifier for the device or window, I think this can only be a string in practice.
   volume: number; // Current volume setting (0-1)
-  tracks?: number; // OBS tracks represented as a mixer bitmask.
+  tracks?: number; // Exactly six OBS tracks represented by the six least significant bits.
 };
 
 type Character = {
@@ -719,6 +728,8 @@ export {
   IOBSDevice,
   IDevice,
   AudioSourceType,
+  obsAudioTracks,
+  defaultAudioTrack,
   AppState,
   RawCombatant,
   TPreviewPosition,

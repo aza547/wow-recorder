@@ -741,6 +741,8 @@ export default class VideoProcessQueue {
       // re-encoding which would take time and CPU.
       .withVideoCodec('copy')
       .withAudioCodec('copy')
+      // FFmpeg otherwise selects only one audio stream. OBS recordings can
+      // contain six, so preserve them all while allowing sources without audio.
       .outputOption('-map 0:v:0')
       .outputOption('-map 0:a?')
       // Avoid any negative timestamps, which can cause issues with
@@ -855,6 +857,8 @@ export default class VideoProcessQueue {
    * Prepare and return the audio map for a kill video.
    */
   private static prepareKillVideoAudioMap(item: KillVideoQueueItem) {
+    // Kill videos use one mix, so select the first (full-mix) audio stream
+    // from the chosen input rather than every OBS track.
     const map =
       item.audioTrackIndex === -1
         ? '-map [a]'
@@ -892,7 +896,7 @@ export default class VideoProcessQueue {
         `fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
 
       if (item.audioTrackIndex === -1) {
-        // Audio
+        // Stitch the first (full-mix) audio stream from each input.
         filter +=
           `[${idx}:a:0]atrim=${trim},asetpts=PTS-STARTPTS,` +
           `afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
