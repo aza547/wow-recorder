@@ -857,8 +857,8 @@ export default class VideoProcessQueue {
    * Prepare and return the audio map for a kill video.
    */
   private static prepareKillVideoAudioMap(item: KillVideoQueueItem) {
-    // Kill videos use one mix, so select the first (full-mix) audio stream
-    // from the chosen input rather than every OBS track.
+    // Kill videos currently output one audio stream, so preserve the existing
+    // behavior by selecting OBS track 1 from the chosen input.
     const map =
       item.audioTrackIndex === -1
         ? '-map [a]'
