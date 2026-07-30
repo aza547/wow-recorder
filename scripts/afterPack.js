@@ -38,7 +38,9 @@ LIBX264_PATH="$NOOBS_BIN/libx264.so.165"
 
 export LD_PRELOAD="$AVUTIL_PATH $AVCODEC_PATH $AVFORMAT_PATH $LIBOBS_PATH $LIBX264_PATH"
 
-exec "$SCRIPT_DIR/${executableName}-bin" "$@"
+# Force the X11 Ozone backend. Chromium 140 / Electron 42 defaults
+# --ozone-platform-hint to auto, so a Wayland wins.
+exec "$SCRIPT_DIR/${executableName}-bin" --ozone-platform=x11 "$@"
 `;
 
   fs.writeFileSync(wrapperScript, wrapperContent, { mode: 0o755 });

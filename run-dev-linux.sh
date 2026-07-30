@@ -28,7 +28,9 @@ done
 # force our vended ffmpeg and x264 binaries
 # the kids in the electron sandbox are fighting
 # load order matters
+# Force the X11 Ozone backend. Electron 42+ defaults to Wayland.
 LD_PRELOAD="$AVUTIL_PATH $AVCODEC_PATH $AVFORMAT_PATH $LIBOBS_PATH $LIBX264_PATH" \
   LD_LIBRARY_PATH="$LD_LIB_PATH" \
   PATH="$BIN_PATH" \
+  XDG_SESSION_TYPE=x11 \
   exec npm run start
