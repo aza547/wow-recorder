@@ -312,15 +312,6 @@ enum AudioSourceType {
   PROCESS = 'wasapi_process_output_capture',
 }
 
-const track1 = 1 << 0;
-const track2 = 1 << 1;
-const track3 = 1 << 2;
-const track4 = 1 << 3;
-const track5 = 1 << 4;
-const track6 = 1 << 5;
-const obsAudioTracks = [track1, track2, track3, track4, track5, track6];
-const defaultAudioTrack = track1;
-
 type AudioSource = {
   id: string; // The source name
   type: AudioSourceType;
@@ -728,8 +719,6 @@ export {
   IOBSDevice,
   IDevice,
   AudioSourceType,
-  obsAudioTracks,
-  defaultAudioTrack,
   AppState,
   RawCombatant,
   TPreviewPosition,

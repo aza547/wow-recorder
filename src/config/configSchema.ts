@@ -1,10 +1,6 @@
 import { Phrase } from 'localisation/phrases';
-import {
-  AudioSource,
-  AudioSourceType,
-  CharacterFilter,
-  defaultAudioTrack,
-} from 'main/types';
+import { defaultAudioTrack } from 'main/constants';
+import { AudioSource, AudioSourceType, CharacterFilter } from 'main/types';
 
 export type ConfigurationSchema = {
   storagePath: string;

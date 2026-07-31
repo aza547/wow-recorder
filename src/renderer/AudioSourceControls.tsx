@@ -1,10 +1,4 @@
-import {
-  AppState,
-  AudioSource,
-  AudioSourceType,
-  defaultAudioTrack,
-  obsAudioTracks,
-} from 'main/types';
+import { AppState, AudioSource, AudioSourceType } from 'main/types';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
 import {
@@ -55,6 +49,15 @@ import {
   PopoverTrigger,
 } from './components/Popover/Popover';
 import { Phrase } from 'localisation/phrases';
+import {
+  audioTrack1,
+  audioTrack2,
+  audioTrack3,
+  audioTrack4,
+  audioTrack5,
+  audioTrack6,
+  defaultAudioTrack,
+} from 'main/constants';
 
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timeout | undefined;
@@ -62,6 +65,15 @@ interface IProps {
   appState: AppState;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
+
+const obsAudioTracks = [
+  audioTrack1,
+  audioTrack2,
+  audioTrack3,
+  audioTrack4,
+  audioTrack5,
+  audioTrack6,
+];
 
 const AudioSourceControls = (props: IProps) => {
   const { appState, setPreviewEnabled } = props;
@@ -574,6 +586,7 @@ const AudioSourceControls = (props: IProps) => {
 
   const renderSourceTrackSelect = (src: AudioSource) => {
     const tracks = src.tracks ?? defaultAudioTrack;
+
     const selectedTracks = obsAudioTracks
       .filter((track) => tracks & track)
       .map(String);

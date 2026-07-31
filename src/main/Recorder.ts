@@ -39,10 +39,9 @@ import {
   VideoSourceName,
   SceneItem,
   FileSortDirection,
-  defaultAudioTrack,
 } from './types';
 import ConfigService from '../config/ConfigService';
-import { obsResolutions } from './constants';
+import { defaultAudioTrack, obsResolutions } from './constants';
 import {
   getObsAudioConfig,
   getObsVideoConfig,

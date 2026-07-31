@@ -44,7 +44,6 @@ let ffmpegPathAbs = devMode
 
 ffmpegPathAbs = fixPathWhenPackaged(ffmpegPathAbs);
 ffmpeg.setFfmpegPath(ffmpegPathAbs);
-ffmpeg.setFfprobePath(path.join(path.dirname(ffmpegPathAbs), 'ffprobe.exe'));
 
 /**
  * A queue for cutting videos to size.
@@ -430,42 +429,31 @@ export default class VideoProcessQueue {
 
     const first = item.segments[0].video;
     const videoPath = VideoProcessQueue.prepareKillVideoPath(first);
+    const audioMap = VideoProcessQueue.prepareKillVideoAudioMap(item);
+    const filter = VideoProcessQueue.prepareKillVideoComplexFilter(item);
+
+    const fn = ffmpeg()
+      .complexFilter(filter)
+      .outputOption('-movflags +faststart')
+      .outputOption('-map [v]')
+      .outputOption(audioMap)
+      .outputOption('-shortest')
+      .outputOption('-c:v libx264')
+      .outputOption('-crf 22') // Matches "Ultra" in the Recorder.
+      .outputOption('-c:a aac')
+      .outputOption('-preset fast')
+      .outputOption('-pix_fmt yuv420p')
+      .outputOption('-xerror') // Die on error.
+      .output(videoPath);
+
+    item.segments
+      .map((seg) => seg.video.videoSource)
+      .forEach((src) => {
+        console.info('[VideoProcessQueue] Adding source to ffmpeg:', src);
+        fn.input(src);
+      });
 
     try {
-      const audioTrackCount =
-        await VideoProcessQueue.getKillVideoAudioTrackCount(item);
-      const audioMaps = VideoProcessQueue.prepareKillVideoAudioMaps(
-        item,
-        audioTrackCount,
-      );
-      const filter = VideoProcessQueue.prepareKillVideoComplexFilter(
-        item,
-        audioTrackCount,
-      );
-
-      const fn = ffmpeg()
-        .complexFilter(filter)
-        .outputOption([
-          '-movflags +faststart',
-          '-map [v]',
-          ...audioMaps,
-          '-shortest',
-          '-c:v libx264',
-          '-crf 22', // Matches "Ultra" in the Recorder.
-          '-c:a aac',
-          '-preset fast',
-          '-pix_fmt yuv420p',
-          '-xerror', // Die on error.
-        ])
-        .output(videoPath);
-
-      item.segments
-        .map((seg) => seg.video.videoSource)
-        .forEach((src) => {
-          console.info('[VideoProcessQueue] Adding source to ffmpeg:', src);
-          fn.input(src);
-        });
-
       console.time(`[VideoProcessQueue] Create ${item.uuid} kill video`);
 
       // The ffmpeg command is constructed so now do the actual work. A
@@ -753,10 +741,11 @@ export default class VideoProcessQueue {
       // re-encoding which would take time and CPU.
       .withVideoCodec('copy')
       .withAudioCodec('copy')
-      // FFmpeg otherwise selects only one audio stream. OBS recordings can
-      // contain six, so preserve them all while allowing sources without audio.
-      .outputOption('-map 0:v:0')
-      .outputOption('-map 0:a?')
+      // This argument is "map all streams as they are from the 0th input".
+      // FFmpeg otherwise selects only one audio stream. Modern WCR recordings
+      // contain six, but historically the noobs library only included one so
+      // we need to handle both cases.
+      .outputOption('-map 0')
       // Avoid any negative timestamps, which can cause issues with
       // some players, but does extend the video slightly depending on
       // the keyframe alignment.
@@ -866,62 +855,16 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Return the number of audio streams that can be preserved in a kill video.
-   * Spliced audio is limited to streams shared by every input, while the
-   * single-player mode can preserve every stream from the selected input.
+   * Prepare and return the audio map for a kill video.
    */
-  private static async getKillVideoAudioTrackCount(
-    item: KillVideoQueueItem,
-  ): Promise<number> {
-    const counts = await Promise.all(
-      item.segments.map(
-        (segment) =>
-          new Promise<number>((resolve, reject) => {
-            const videoPath = segment.video.videoSource;
-            ffmpeg.ffprobe(videoPath, (error, data) => {
-              if (error) {
-                console.error(
-                  '[VideoProcessQueue] Failed to probe kill video audio streams',
-                  { videoPath, error: String(error) },
-                );
-                reject(error);
-                return;
-              }
-
-              const count = data.streams.filter(
-                (stream) => stream.codec_type === 'audio',
-              ).length;
-              resolve(count);
-            });
-          }),
-      ),
-    );
-
-    const count =
+  private static prepareKillVideoAudioMap(item: KillVideoQueueItem) {
+    const map =
       item.audioTrackIndex === -1
-        ? Math.min(...counts)
-        : (counts[item.audioTrackIndex] ?? 0);
+        ? '-map [a]'
+        : `-map ${item.audioTrackIndex}:a`;
 
-    console.info('[VideoProcessQueue] Kill video audio stream counts', {
-      inputs: counts,
-      selectedInput: item.audioTrackIndex,
-      output: count,
-    });
-    return count;
-  }
-
-  /**
-   * Prepare the audio maps for a kill video.
-   */
-  private static prepareKillVideoAudioMaps(
-    item: KillVideoQueueItem,
-    audioTrackCount: number,
-  ) {
-    return Array.from({ length: audioTrackCount }, (_, track) =>
-      item.audioTrackIndex === -1
-        ? `-map [a${track}]`
-        : `-map ${item.audioTrackIndex}:a:${track}`,
-    );
+    console.info('[VideoProcessQueue] Audio map filter:', map);
+    return map;
   }
 
   /**
@@ -929,11 +872,8 @@ export default class VideoProcessQueue {
    * appropriate trimming, scaling, padding and fading to render a kill
    * video.
    */
-  private static prepareKillVideoComplexFilter(
-    item: KillVideoQueueItem,
-    audioTrackCount: number,
-  ) {
-    const filters: string[] = [];
+  private static prepareKillVideoComplexFilter(item: KillVideoQueueItem) {
+    let filter = '';
 
     item.segments.forEach((pov, idx) => {
       const segmentDuration = pov.stop - pov.start;
@@ -949,37 +889,27 @@ export default class VideoProcessQueue {
       const trim = `start=${pov.start}:end=${pov.stop}`;
 
       // Video
-      filters.push(
+      filter +=
         `[${idx}:v]trim=${trim},setpts=PTS-STARTPTS,` +
-          `fps=${item.fps},scale=${scale},pad=${pad},` +
-          `fade=${fadeIn},fade=${fadeOut}[v${idx}]`,
-      );
+        `fps=${item.fps},scale=${scale},pad=${pad},` +
+        `fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
 
       if (item.audioTrackIndex === -1) {
-        for (let track = 0; track < audioTrackCount; track++) {
-          filters.push(
-            `[${idx}:a:${track}]atrim=${trim},asetpts=PTS-STARTPTS,` +
-              `afade=${fadeIn},afade=${fadeOut}[a${idx}_${track}]`,
-          );
-        }
+        // Audio
+        filter +=
+          `[${idx}:a]atrim=${trim},asetpts=PTS-STARTPTS,` +
+          `afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
       }
     });
 
-    const videoInputs = item.segments.map((_, i) => `[v${i}]`).join('');
-    filters.push(`${videoInputs}concat=n=${item.segments.length}:v=1:a=0[v]`);
-
     if (item.audioTrackIndex === -1) {
-      for (let track = 0; track < audioTrackCount; track++) {
-        const audioInputs = item.segments
-          .map((_, i) => `[a${i}_${track}]`)
-          .join('');
-        filters.push(
-          `${audioInputs}concat=n=${item.segments.length}:v=0:a=1[a${track}]`,
-        );
-      }
+      const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
+      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a]`;
+    } else {
+      const inputs = item.segments.map((_, i) => `[v${i}]`).join('');
+      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=0[v]`;
     }
 
-    const filter = filters.join(';');
     console.info('[VideoProcessQueue] Generated filter:', filter);
     return filter;
   }

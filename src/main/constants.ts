@@ -1939,6 +1939,15 @@ const wowInstallSearchPaths = [
 //   - '6/26/2026 22:59:54.4311 ENCOUNTER_START,3594,"Hazardous Healer",3,10,3105',
 const dummyDomeEncounterIds = [3590, 3591, 3593, 3594];
 
+// We have exactly 6 audio tracks. They are represented here as bit flags.
+const audioTrack1 = 1 << 0;
+const audioTrack2 = 1 << 1;
+const audioTrack3 = 1 << 2;
+const audioTrack4 = 1 << 3;
+const audioTrack5 = 1 << 4;
+const audioTrack6 = 1 << 5;
+const defaultAudioTrack = audioTrack1;
+
 export {
   months,
   categoryTabSx,
@@ -1974,4 +1983,11 @@ export {
   mopChallengeModesTimers,
   wowInstallSearchPaths,
   dummyDomeEncounterIds,
+  audioTrack1,
+  audioTrack2,
+  audioTrack3,
+  audioTrack4,
+  audioTrack5,
+  audioTrack6,
+  defaultAudioTrack,
 };
