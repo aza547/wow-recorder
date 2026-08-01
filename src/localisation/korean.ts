@@ -107,6 +107,7 @@ const KOREAN: Translations = {
   [Phrase.SeparateBufferFolderLabel]: '별도의 임시 폴더',
   [Phrase.BufferFolderLabel]: '임시 폴더',
   [Phrase.MaxDiskStorageLabel]: '디스크 저장 용량 제한 (GB)',
+  [Phrase.RunDiskSizeMonitorButtonLabel]: '지금 실행',
   [Phrase.WindowsSettingsLabel]: '윈도우 설정',
   [Phrase.RunOnStartupLabel]: '시작시 실행',
   [Phrase.StartMinimizedLabel]: '트레이 시작',

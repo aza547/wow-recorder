@@ -5,6 +5,7 @@ import {
   getMetadataForVideo,
   getSortedVideos,
 } from '../main/util';
+import AsyncQueue from '../utils/AsyncQueue';
 import DiskClient from './DiskClient';
 
 // Had a bug here where we used filter with an async function but that isn't
@@ -16,10 +17,48 @@ const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
   return fileStream.filter((_, index) => results[index]);
 };
 
+// All monitor instances share the queue, retaining at most one rerun while cleanup is active.
+const diskSizeMonitorQueue = new AsyncQueue(1);
+let pendingDiskSizeMonitorCompletion: Promise<void> | undefined;
+
+const queueDiskSizeMonitorRun = (task: () => Promise<void>): Promise<void> => {
+  if (pendingDiskSizeMonitorCompletion) {
+    return pendingDiskSizeMonitorCompletion;
+  }
+
+  let resolveCompletion!: () => void;
+  let rejectCompletion!: (error: unknown) => void;
+  const completion = new Promise<void>((resolve, reject) => {
+    resolveCompletion = resolve;
+    rejectCompletion = reject;
+  });
+
+  pendingDiskSizeMonitorCompletion = completion;
+  diskSizeMonitorQueue.add(async () => {
+    pendingDiskSizeMonitorCompletion = undefined;
+
+    try {
+      await task();
+      resolveCompletion();
+    } catch (error) {
+      rejectCompletion(error);
+      throw error;
+    }
+  });
+
+  // Automatic callers may intentionally ignore the returned completion promise.
+  void completion.catch(() => undefined);
+  return completion;
+};
+
 export default class DiskSizeMonitor {
   private cfg = ConfigService.getInstance();
 
-  async run() {
+  run(): Promise<void> {
+    return queueDiskSizeMonitorRun(() => this.runOnce());
+  }
+
+  private async runOnce() {
     const storageDir = this.cfg.get<string>('storagePath');
     const maxStorageGB = this.cfg.get<number>('maxStorage');
 

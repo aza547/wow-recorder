@@ -109,6 +109,7 @@ const ENGLISH: Translations = {
   [Phrase.SeparateBufferFolderLabel]: 'Separate Buffer Folder',
   [Phrase.BufferFolderLabel]: 'Buffer Folder',
   [Phrase.MaxDiskStorageLabel]: 'Max Disk Storage (GB)',
+  [Phrase.RunDiskSizeMonitorButtonLabel]: 'Run now',
   [Phrase.WindowsSettingsLabel]: 'Windows Settings',
   [Phrase.RunOnStartupLabel]: 'Run on Startup',
   [Phrase.StartMinimizedLabel]: 'Start Minimized',
