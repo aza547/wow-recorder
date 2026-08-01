@@ -396,7 +396,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
           </button>
         </div>
         {props.children && (
-          <div className="flex-shrink-0 p-2 border-l border-card h-full pl-2">
+          <div className="flex-shrink-0 p-4 border-l border-card h-full">
             {props.children}
           </div>
         )}

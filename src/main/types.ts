@@ -318,6 +318,7 @@ type AudioSource = {
   friendly?: string; // A user-friendly name for the source
   device?: string | number; // Machine friendly identifier for the device or window, I think this can only be a string in practice.
   volume: number; // Current volume setting (0-1)
+  tracks?: number; // Exactly six OBS tracks represented by the six least significant bits.
 };
 
 type Character = {
@@ -536,7 +537,7 @@ type KillVideoQueueItem = {
   height: number;
   fps: number;
   segments: KillVideoSegment[];
-  audioTrackIndex: number; // -1 for splicing all tracks
+  audioSegmentIndex: number; // -1 to splice each POV's audio; otherwise use one POV's audio.
 };
 
 type KillVideoSegment = {

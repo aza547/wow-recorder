@@ -37,6 +37,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from './components/Select/Select';
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from './components/ToggleGroup/ToggleGroup';
 
 import { ObsListItem } from 'noobs';
 import {
@@ -45,14 +49,31 @@ import {
   PopoverTrigger,
 } from './components/Popover/Popover';
 import { Phrase } from 'localisation/phrases';
+import {
+  audioTrack1,
+  audioTrack2,
+  audioTrack3,
+  audioTrack4,
+  audioTrack5,
+  audioTrack6,
+  defaultAudioTrack,
+} from 'main/constants';
 
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timeout | undefined;
-
 interface IProps {
   appState: AppState;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
+
+const obsAudioTracks = [
+  audioTrack1,
+  audioTrack2,
+  audioTrack3,
+  audioTrack4,
+  audioTrack5,
+  audioTrack6,
+];
 
 const AudioSourceControls = (props: IProps) => {
   const { appState, setPreviewEnabled } = props;
@@ -447,6 +468,21 @@ const AudioSourceControls = (props: IProps) => {
     }
   };
 
+  const setSourceAudioTracks = (src: AudioSource, values: string[]) => {
+    const tracks = values.reduce((mask, value) => mask | Number(value), 0);
+    // Keep at least one track assigned to each source.
+    if (tracks === 0) return;
+
+    setConfig((prev) => ({
+      ...prev,
+      audioSources: prev.audioSources.map((source) =>
+        source.id === src.id ? { ...source, tracks } : source,
+      ),
+    }));
+
+    ipc.setAudioSourceTracks(src.id, tracks);
+  };
+
   const renderSourceType = (src: AudioSource) => {
     if (src.type === AudioSourceType.OUTPUT) {
       return (
@@ -529,24 +565,50 @@ const AudioSourceControls = (props: IProps) => {
     };
 
     return (
-      <div className="flex flex-col w-[500px]">
-        <Select
-          value={src.device}
-          onValueChange={(value) => setSourceDevice(src, value)}
-          onOpenChange={(open) => setPreviewEnabled(!open)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue
-              placeholder={
-                src.type !== AudioSourceType.PROCESS
-                  ? getLocalePhrase(language, Phrase.SelectADevice)
-                  : getLocalePhrase(language, Phrase.SelectAnApplication)
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>{renderSelectItems()}</SelectContent>
-        </Select>
-      </div>
+      <Select
+        value={src.device}
+        onValueChange={(value) => setSourceDevice(src, value)}
+        onOpenChange={(open) => setPreviewEnabled(!open)}
+      >
+        <SelectTrigger className="w-[500px]">
+          <SelectValue
+            placeholder={
+              src.type !== AudioSourceType.PROCESS
+                ? getLocalePhrase(language, Phrase.SelectADevice)
+                : getLocalePhrase(language, Phrase.SelectAnApplication)
+            }
+          />
+        </SelectTrigger>
+        <SelectContent>{renderSelectItems()}</SelectContent>
+      </Select>
+    );
+  };
+
+  const renderSourceTrackSelect = (src: AudioSource) => {
+    const tracks = src.tracks ?? defaultAudioTrack;
+
+    const selectedTracks = obsAudioTracks
+      .filter((track) => tracks & track)
+      .map(String);
+
+    return (
+      <ToggleGroup
+        type="multiple"
+        variant="outline"
+        size="default"
+        value={selectedTracks}
+        onValueChange={(values) => setSourceAudioTracks(src, values)}
+      >
+        {obsAudioTracks.map((track, index) => (
+          <ToggleGroupItem
+            key={track}
+            value={String(track)}
+            className="h-10 w-10 flex-none px-0 tabular-nums"
+          >
+            {index + 1}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
     );
   };
 
@@ -607,6 +669,7 @@ const AudioSourceControls = (props: IProps) => {
       <tr key={idx}>
         <td className="px-2">{renderSourceType(src)}</td>
         <td className="px-2">{renderSourceDeviceSelect(src)}</td>
+        <td className="px-2">{renderSourceTrackSelect(src)}</td>
         <td className="px-2">
           <div className="relative h-[38px] w-[150px]">
             <Progress
@@ -676,6 +739,7 @@ const AudioSourceControls = (props: IProps) => {
       friendly,
       device,
       volume: 1,
+      tracks: defaultAudioTrack,
     };
 
     const choices = await getAudioSourceChoices(src);
@@ -694,10 +758,24 @@ const AudioSourceControls = (props: IProps) => {
   const renderSourceTable = () => {
     return (
       <table className="table-auto w-max">
+        <thead>
+          <tr className="h-6">
+            <th></th>
+            <th className="px-2 text-center text-xs font-normal text-foreground-lighter">
+              {getLocalePhrase(language, Phrase.SourceHeading)}
+            </th>
+            <th className="px-2 text-center text-xs font-normal text-foreground-lighter">
+              {getLocalePhrase(language, Phrase.AudioTracksLabel)}
+            </th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
         <tbody>
           {config.audioSources.map(renderSourceRow)}
           <tr>
-            <td colSpan={5}></td>
+            <td colSpan={6}></td>
           </tr>
         </tbody>
       </table>

@@ -66,6 +66,7 @@ declare global {
         deleteAudioSource(id: string): void;
         setAudioSourceDevice(id: string, device: string): void;
         setAudioSourceWindow(id: string, window: string): void;
+        setAudioSourceTracks(id: string, tracks: number): void;
         setAudioSourceVolume(id: string, volume: number): void;
         setForceMono(enabled: boolean): void;
         setAudioSuppression(enabled: boolean): void;
@@ -90,7 +91,7 @@ declare global {
           height: number,
           fps: number,
           sources: KillVideoSegment[],
-          audioTrackIndex: number,
+          audioSegmentIndex: number,
         ): void;
 
         clipVideo(video: RendererVideo, offset: number, duration: number): void;
