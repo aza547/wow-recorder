@@ -537,7 +537,7 @@ type KillVideoQueueItem = {
   height: number;
   fps: number;
   segments: KillVideoSegment[];
-  audioTrackIndex: number; // -1 to splice each POV's audio; otherwise use one POV's audio.
+  audioSegmentIndex: number; // -1 to splice each POV's audio; otherwise use one POV's audio.
 };
 
 type KillVideoSegment = {

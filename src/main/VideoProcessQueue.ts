@@ -21,6 +21,7 @@ import {
   logAxiosError,
   buildKillVideoMetadata,
   getOBSFormattedDate,
+  getAudioTrackCount,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import { send } from './main';
@@ -859,9 +860,9 @@ export default class VideoProcessQueue {
    */
   private static prepareKillVideoAudioMap(item: KillVideoQueueItem) {
     const map =
-      item.audioTrackIndex === -1
+      item.audioSegmentIndex === -1
         ? '-map [a]'
-        : `-map ${item.audioTrackIndex}:a`;
+        : `-map ${item.audioSegmentIndex}:a`;
 
     console.info('[VideoProcessQueue] Audio map filter:', map);
     return map;
@@ -873,7 +874,9 @@ export default class VideoProcessQueue {
    * video.
    */
   private static prepareKillVideoComplexFilter(item: KillVideoQueueItem) {
+    const outputAudioTracks = 6;
     let filter = '';
+    const splicingAudio = item.audioSegmentIndex === -1;
 
     item.segments.forEach((pov, idx) => {
       const segmentDuration = pov.stop - pov.start;
@@ -887,6 +890,7 @@ export default class VideoProcessQueue {
       const fadeOut = `t=out:st=${fadeOutStart}:d=${fadeDuration}`;
 
       const trim = `start=${pov.start}:end=${pov.stop}`;
+      const tracks = getAudioTrackCount(pov.video);
 
       // Video
       filter +=
@@ -894,20 +898,60 @@ export default class VideoProcessQueue {
         `fps=${item.fps},scale=${scale},pad=${pad},` +
         `fade=${fadeIn},fade=${fadeOut}[v${idx}];`;
 
-      if (item.audioTrackIndex === -1) {
-        // Audio
-        filter +=
-          `[${idx}:a]atrim=${trim},asetpts=PTS-STARTPTS,` +
-          `afade=${fadeIn},afade=${fadeOut}[a${idx}];`;
+      // Audio
+      if (splicingAudio) {
+        // We're splicing audio between tracks. So we need to trim and apply
+        // fade transitions.
+        for (let track = 0; track < outputAudioTracks; track++) {
+          if (track < tracks) {
+            // Audio track is present in input segment, and we're splicing.
+            filter +=
+              `[${idx}:a:${track}]atrim=${trim},asetpts=PTS-STARTPTS,` +
+              `afade=${fadeIn},afade=${fadeOut}[a${idx}_${track}];`;
+          } else {
+            // Missing track on the input. Thats fine, just apply silence. This
+            // can happen with an older video before we always had 6 tracks.
+            filter +=
+              `anullsrc=r=48000:cl=stereo,atrim=duration=${segmentDuration},` +
+              `asetpts=PTS-STARTPTS[a${idx}_${track}];`;
+          }
+        }
       }
     });
 
-    if (item.audioTrackIndex === -1) {
-      const inputs = item.segments.map((_, i) => `[v${i}][a${i}]`).join('');
-      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=1[v][a]`;
+    if (splicingAudio) {
+      // Build the video concat filter for the single video stream we created
+      // above, with no audio. This has the spliced perspective video streams.
+      const videoInputs = item.segments.map((_, i) => `[v${i}]`).join('');
+      filter += `${videoInputs}concat=n=${item.segments.length}:v=1:a=0[v];`;
+
+      // Build the audio concat filter. We can rely on having 6 audio streams
+      // here because we added silence for any missing tracks above.
+      for (let track = 0; track < outputAudioTracks; track++) {
+        const audioInputs = item.segments
+          .map((_, i) => `[a${i}_${track}]`)
+          .join('');
+        filter += `${audioInputs}concat=n=${item.segments.length}:v=0:a=1[a${track}];`;
+      }
     } else {
-      const inputs = item.segments.map((_, i) => `[v${i}]`).join('');
-      filter += `${inputs}concat=n=${item.segments.length}:v=1:a=0[v]`;
+      // Build the video concat filter for the single video stream we created
+      // above, with no audio. This has the spliced perspective video streams.
+      const videoInputs = item.segments.map((_, i) => `[v${i}]`).join('');
+      filter += `${videoInputs}concat=n=${item.segments.length}:v=1:a=0[v]`;
+
+      // Build the audio concat filter, which takes the audio from the
+      // specified segment as we are not splicing audio. Fill any missing
+      // tracks with silence.
+      const audioSourceSegment = item.segments[item.audioSegmentIndex];
+      const tracks = getAudioTrackCount(audioSourceSegment.video);
+
+      for (let track = 0; track < outputAudioTracks; track++) {
+        if (track < tracks) {
+          filter += `[${item.audioSegmentIndex}:a:${track}]asetpts=PTS-STARTPTS[a${track}];`;
+        } else {
+          filter += `anullsrc=sample_rate=48000:cl=stereo[a${track}];`;
+        }
+      }
     }
 
     console.info('[VideoProcessQueue] Generated filter:', filter);

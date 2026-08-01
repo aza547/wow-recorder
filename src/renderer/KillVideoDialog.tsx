@@ -68,12 +68,12 @@ const KillVideoDialog = (props: IProps) => {
 
   const createKillVideo = () => {
     const { width, height } = obsResolutions[resolution];
-    let audioTrackIndex = -1;
+    let audioSegmentIndex = -1;
 
     if (singleAudio) {
       // If not found, findIndex returns -1 so if something goes wrong will
       // just fallback to splicing all the audio tracks.
-      audioTrackIndex = segments.findIndex(
+      audioSegmentIndex = segments.findIndex(
         (s) => s.video.player?._name === audioTrackPlayer,
       );
     }
@@ -83,7 +83,7 @@ const KillVideoDialog = (props: IProps) => {
       height,
       parseInt(fps, 10),
       segments,
-      audioTrackIndex,
+      audioSegmentIndex,
     );
   };
 
