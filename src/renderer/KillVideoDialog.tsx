@@ -114,7 +114,7 @@ const KillVideoDialog = (props: IProps) => {
 
   const getAudioSwitch = () => {
     return (
-      <div className="flex flex-col w-[140px]">
+      <div className="flex flex-col w-[160px]">
         <Label className="flex items-center">
           {getLocalePhrase(language, Phrase.KillVideoSingleAudioTrackLabel)}
           <Tooltip

@@ -430,14 +430,14 @@ export default class VideoProcessQueue {
 
     const first = item.segments[0].video;
     const videoPath = VideoProcessQueue.prepareKillVideoPath(first);
-    const audioMap = VideoProcessQueue.prepareKillVideoAudioMap(item);
+    const audioMap = VideoProcessQueue.prepareKillVideoAudioMap();
     const filter = VideoProcessQueue.prepareKillVideoComplexFilter(item);
 
     const fn = ffmpeg()
       .complexFilter(filter)
       .outputOption('-movflags +faststart')
       .outputOption('-map [v]')
-      .outputOption(audioMap)
+      .outputOptions(audioMap)
       .outputOption('-shortest')
       .outputOption('-c:v libx264')
       .outputOption('-crf 22') // Matches "Ultra" in the Recorder.
@@ -858,12 +858,8 @@ export default class VideoProcessQueue {
   /**
    * Prepare and return the audio map for a kill video.
    */
-  private static prepareKillVideoAudioMap(item: KillVideoQueueItem) {
-    const map =
-      item.audioSegmentIndex === -1
-        ? '-map [a]'
-        : `-map ${item.audioSegmentIndex}:a`;
-
+  private static prepareKillVideoAudioMap() {
+    const map = Array.from({ length: 6 }, (_, track) => `-map [a${track}]`);
     console.info('[VideoProcessQueue] Audio map filter:', map);
     return map;
   }
@@ -937,7 +933,7 @@ export default class VideoProcessQueue {
       // Build the video concat filter for the single video stream we created
       // above, with no audio. This has the spliced perspective video streams.
       const videoInputs = item.segments.map((_, i) => `[v${i}]`).join('');
-      filter += `${videoInputs}concat=n=${item.segments.length}:v=1:a=0[v]`;
+      filter += `${videoInputs}concat=n=${item.segments.length}:v=1:a=0[v];`;
 
       // Build the audio concat filter, which takes the audio from the
       // specified segment as we are not splicing audio. Fill any missing
