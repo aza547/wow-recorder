@@ -29,12 +29,19 @@ import {
   MessageSquare,
   MessageSquareMore,
   ExternalLink,
+  FolderLock,
+  Cloud,
+  SaveIcon,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
 import TagDialog from 'renderer/TagDialog';
 import KillVideoDialog from 'renderer/KillVideoDialog';
 import wcrIcon from '../../../../assets/icon/small-icon.png';
+import LockDialog from 'renderer/LockDialog';
+import { count } from 'console';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -108,7 +115,7 @@ export const populateDetailsCell = (
   const video = ctx.getValue() as RendererVideo;
   const { write, del } = cloudStatus;
 
-  const renderProtectedIcon = () => {
+  const renderProtectedIconSingle = () => {
     // If any videos in our selection are not protected, then the button's
     // action is to protect.
     const toProtect = [video, ...video.multiPov];
@@ -173,6 +180,29 @@ export const populateDetailsCell = (
     );
   };
 
+  const renderProtectedIconMulti = () => {
+    // If any videos in our selection are not protected, then the button's
+    // action is to protect.
+    const toProtect = [video, ...video.multiPov];
+    const tooltip = 'Open Multilock dialog';
+
+    return (
+      <Tooltip content={tooltip}>
+        <div>
+          <LockDialog
+            videos={toProtect}
+            setVideoState={setVideoState}
+            language={language}
+          >
+            <Button variant="ghost" size="xs">
+              <FolderLock size={20} />
+            </Button>
+          </LockDialog>
+        </div>
+      </Tooltip>
+    );
+  };
+
   const renderTagIcon = () => {
     const toTag = [video, ...video.multiPov];
     const noPermission = !write && toTag.some((v) => v.cloud);
@@ -215,9 +245,11 @@ export const populateDetailsCell = (
     );
   };
 
+  const n = [video, ...video.multiPov].length;
+
   return (
     <Box className="inline-flex">
-      {renderProtectedIcon()}
+      {n < 2 ? renderProtectedIconSingle() : renderProtectedIconMulti()}
       {renderTagIcon()}
     </Box>
   );
@@ -412,24 +444,88 @@ export const populateViewpointCell = (
   );
 };
 
-export const populateSelectCell = (
+export const populateStorageCell = (
   ctx: CellContext<RendererVideo, unknown>,
 ) => {
   const { row } = ctx;
+  const { cloud } = row.original;
+
+  if (cloud) {
+    return <Cloud size={20} />;
+  }
+  return <SaveIcon size={20} />;
+};
+
+export const populateLockCell = (ctx: CellContext<RendererVideo, unknown>) => {
+  const { row } = ctx;
+  const { isProtected } = row.original;
+
+  if (isProtected) {
+    return <Lock size={20} />;
+  }
+
+  return <Unlock size={20} />;
+};
+
+export const populatePlayerCell = (
+  info: CellContext<RendererVideo, unknown>,
+) => {
+  const video = info.getValue() as RendererVideo;
+  const { player } = video;
+
+  if (!player || !player._specID) {
+    return <div>Unknown</div>;
+  }
+
+  const playerClass = getPlayerClass(video);
+  const playerSpecID = getPlayerSpecID(video);
+  const playerName = getPlayerName(video);
+  const playerClassColor = getWoWClassColor(playerClass);
+  const specIcon = specImages[playerSpecID as keyof typeof specImages];
+
+  const renderSpecAndName = () => {
+    return (
+      <>
+        <Box
+          key={player._GUID}
+          component="img"
+          src={specIcon}
+          className="bg-background-higher"
+          sx={{
+            display: 'flex',
+            height: '25px',
+            width: '25px',
+            border: '1px solid black',
+            borderRadius: '15%',
+            boxSizing: 'border-box',
+            objectFit: 'cover',
+          }}
+        />
+        <div
+          className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate flex items-center"
+          style={{ color: playerClassColor }}
+        >
+          {playerName}
+        </div>
+      </>
+    );
+  };
+
+  return <div className="flex truncate">{renderSpecAndName()}</div>;
+};
+
+export const populateLockedStatusCell = (
+  info: CellContext<RendererVideo, unknown>,
+) => {
+  const { row } = info;
+  const { isProtected } = row.original;
+
+  if (isProtected) {
+    return (
+      <div className="flex truncate text-sm">Safe from automatic deletion</div>
+    );
+  }
   return (
-    <Checkbox
-      checked={row.getIsSelected()}
-      onClick={row.getToggleSelectedHandler()}
-      onDoubleClick={stopPropagation}
-      sx={{
-        color: 'gray',
-        '&.Mui-checked': {
-          color: 'gray',
-        },
-        '&:hover': {
-          backgroundColor: 'rgba(128, 128, 128, 0.05)',
-        },
-      }}
-    />
+    <div className="flex truncate text-sm">Eligible for automatic deletion</div>
   );
 };
