@@ -16,7 +16,7 @@ import {
   isMythicPlusUtil,
   getDungeonName,
 } from 'renderer/rendererutils';
-import { Box, Checkbox } from '@mui/material';
+import { Box } from '@mui/material';
 import { affixImages, specImages } from 'renderer/images';
 import { Language, Phrase } from 'localisation/phrases';
 import { Button } from '../Button/Button';
@@ -30,18 +30,12 @@ import {
   MessageSquareMore,
   ExternalLink,
   FolderLock,
-  Cloud,
-  SaveIcon,
-  Lock,
-  Unlock,
+  FolderPen,
 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
-import TagDialog from 'renderer/TagDialog';
 import KillVideoDialog from 'renderer/KillVideoDialog';
 import wcrIcon from '../../../../assets/icon/small-icon.png';
-import LockDialog from 'renderer/LockDialog';
-import { count } from 'console';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -111,6 +105,10 @@ export const populateDetailsCell = (
   language: Language,
   cloudStatus: CloudStatus,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
+  setLockDialogOpen: Dispatch<SetStateAction<boolean>>,
+  setLockDialogVideoTarget: Dispatch<SetStateAction<RendererVideo | null>>,
+  setTagDialogOpen: Dispatch<SetStateAction<boolean>>,
+  setTagDialogVideoTarget: Dispatch<SetStateAction<RendererVideo | null>>,
 ) => {
   const video = ctx.getValue() as RendererVideo;
   const { write, del } = cloudStatus;
@@ -123,7 +121,10 @@ export const populateDetailsCell = (
 
     // Disable the protect button if there are no selected viewpoints, or if
     // the action is to unprotect and we don't have delete permissions.
-    const noPermission = !del && !lock && toProtect.some((v) => v.cloud);
+    const noPermission =
+      (!write && toProtect.some((v) => v.cloud)) ||
+      (!del && !lock && toProtect.some((v) => v.cloud));
+
     const disabled = noPermission || toProtect.length < 1;
 
     const icon = lock ? <LockOpen size={20} /> : <LockKeyhole size={20} />;
@@ -181,29 +182,27 @@ export const populateDetailsCell = (
   };
 
   const renderProtectedIconMulti = () => {
-    // If any videos in our selection are not protected, then the button's
-    // action is to protect.
-    const toProtect = [video, ...video.multiPov];
     const tooltip = 'Open Multilock dialog';
 
     return (
       <Tooltip content={tooltip}>
         <div>
-          <LockDialog
-            videos={toProtect}
-            setVideoState={setVideoState}
-            language={language}
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={() => {
+              setLockDialogVideoTarget(video);
+              setLockDialogOpen(true);
+            }}
           >
-            <Button variant="ghost" size="xs">
-              <FolderLock size={20} />
-            </Button>
-          </LockDialog>
+            <FolderLock size={20} />
+          </Button>
         </div>
       </Tooltip>
     );
   };
 
-  const renderTagIcon = () => {
+  const renderTagIconSingle = () => {
     const toTag = [video, ...video.multiPov];
     const noPermission = !write && toTag.some((v) => v.cloud);
 
@@ -230,16 +229,58 @@ export const populateDetailsCell = (
     return (
       <Tooltip content={tooltip}>
         <div>
-          <TagDialog
-            tag={tag}
-            videos={toTag}
-            setVideoState={setVideoState}
-            language={language}
+          <Button
+            variant="ghost"
+            size="xs"
+            disabled={noPermission}
+            onClick={() => {
+              setTagDialogVideoTarget(video);
+              setTagDialogOpen(true);
+            }}
           >
-            <Button variant="ghost" size="xs" disabled={noPermission}>
-              {icon}
-            </Button>
-          </TagDialog>
+            {icon}
+          </Button>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const renderTagIconMulti = () => {
+    const toTag = [video, ...video.multiPov];
+    const noPermission = !write && toTag.some((v) => v.cloud);
+
+    let tag = '';
+    let icon = <MessageSquare size={18} />;
+
+    let tooltip = noPermission
+      ? getLocalePhrase(language, Phrase.GuildNoPermission)
+      : getLocalePhrase(language, Phrase.TagButtonTooltip);
+
+    const foundTag = toTag.map((v) => v.tag).find((t) => t);
+
+    if (foundTag) {
+      tag = foundTag;
+      icon = <MessageSquareMore size={18} />;
+
+      if (tag.length > 50) {
+        tooltip = `${tag.slice(0, 50)}...`;
+      } else {
+        tooltip = tag;
+      }
+    }
+
+    return (
+      <Tooltip content={tooltip}>
+        <div>
+          <Button variant="ghost" size="xs" disabled={noPermission}>
+            <FolderPen
+              size={20}
+              onClick={() => {
+                setTagDialogVideoTarget(video);
+                setTagDialogOpen(true);
+              }}
+            />
+          </Button>
         </div>
       </Tooltip>
     );
@@ -250,7 +291,7 @@ export const populateDetailsCell = (
   return (
     <Box className="inline-flex">
       {n < 2 ? renderProtectedIconSingle() : renderProtectedIconMulti()}
-      {renderTagIcon()}
+      {n < 2 ? renderTagIconSingle() : renderTagIconMulti()}
     </Box>
   );
 };
@@ -441,91 +482,5 @@ export const populateViewpointCell = (
       {renderSpecAndName()}
       {renderRemainingCount()}
     </div>
-  );
-};
-
-export const populateStorageCell = (
-  ctx: CellContext<RendererVideo, unknown>,
-) => {
-  const { row } = ctx;
-  const { cloud } = row.original;
-
-  if (cloud) {
-    return <Cloud size={20} />;
-  }
-  return <SaveIcon size={20} />;
-};
-
-export const populateLockCell = (ctx: CellContext<RendererVideo, unknown>) => {
-  const { row } = ctx;
-  const { isProtected } = row.original;
-
-  if (isProtected) {
-    return <Lock size={20} />;
-  }
-
-  return <Unlock size={20} />;
-};
-
-export const populatePlayerCell = (
-  info: CellContext<RendererVideo, unknown>,
-) => {
-  const video = info.getValue() as RendererVideo;
-  const { player } = video;
-
-  if (!player || !player._specID) {
-    return <div>Unknown</div>;
-  }
-
-  const playerClass = getPlayerClass(video);
-  const playerSpecID = getPlayerSpecID(video);
-  const playerName = getPlayerName(video);
-  const playerClassColor = getWoWClassColor(playerClass);
-  const specIcon = specImages[playerSpecID as keyof typeof specImages];
-
-  const renderSpecAndName = () => {
-    return (
-      <>
-        <Box
-          key={player._GUID}
-          component="img"
-          src={specIcon}
-          className="bg-background-higher"
-          sx={{
-            display: 'flex',
-            height: '25px',
-            width: '25px',
-            border: '1px solid black',
-            borderRadius: '15%',
-            boxSizing: 'border-box',
-            objectFit: 'cover',
-          }}
-        />
-        <div
-          className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate flex items-center"
-          style={{ color: playerClassColor }}
-        >
-          {playerName}
-        </div>
-      </>
-    );
-  };
-
-  return <div className="flex truncate">{renderSpecAndName()}</div>;
-};
-
-export const populateLockedStatusCell = (
-  info: CellContext<RendererVideo, unknown>,
-) => {
-  const { row } = info;
-  const { isProtected } = row.original;
-
-  if (isProtected) {
-    return (
-      <div className="flex truncate text-sm">Safe from automatic deletion</div>
-    );
-  }
-  return (
-    <div className="flex truncate text-sm">Eligible for automatic deletion</div>
   );
 };

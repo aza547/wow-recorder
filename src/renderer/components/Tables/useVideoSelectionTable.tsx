@@ -62,6 +62,10 @@ const useVideoSelectionTable = (
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
   getClipParent: (clip: RendererClip) => RendererVideo | undefined,
   goToClipParent: (clip: RendererClip) => void,
+  setLockDialogOpen: Dispatch<SetStateAction<boolean>>,
+  setLockDialogVideoTarget: Dispatch<SetStateAction<RendererVideo | null>>,
+  setTagDialogOpen: Dispatch<SetStateAction<boolean>>,
+  setTagDialogVideoTarget: Dispatch<SetStateAction<RendererVideo | null>>,
 ) => {
   const { category, language, cloudStatus, selectedVideos } = appState;
 
@@ -130,7 +134,16 @@ const useVideoSelectionTable = (
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
-          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
+          populateDetailsCell(
+            ctx,
+            language,
+            cloudStatus,
+            setVideoState,
+            setLockDialogOpen,
+            setLockDialogVideoTarget,
+            setTagDialogOpen,
+            setTagDialogVideoTarget,
+          ),
       },
       {
         id: 'Encounter',
@@ -187,7 +200,16 @@ const useVideoSelectionTable = (
         cell: (ctx) => populateCreatorCell(ctx, language),
       },
     ],
-    [language, cloudStatus, videoState, setVideoState],
+    [
+      language,
+      cloudStatus,
+      setVideoState,
+      setLockDialogOpen,
+      setLockDialogVideoTarget,
+      setTagDialogOpen,
+      setTagDialogVideoTarget,
+      videoState,
+    ],
   );
 
   /**
@@ -203,7 +225,16 @@ const useVideoSelectionTable = (
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
-          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
+          populateDetailsCell(
+            ctx,
+            language,
+            cloudStatus,
+            setVideoState,
+            setLockDialogOpen,
+            setLockDialogVideoTarget,
+            setTagDialogOpen,
+            setTagDialogVideoTarget,
+          ),
       },
       {
         id: 'Map',
@@ -241,7 +272,15 @@ const useVideoSelectionTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, cloudStatus, setVideoState],
+    [
+      language,
+      cloudStatus,
+      setVideoState,
+      setLockDialogOpen,
+      setLockDialogVideoTarget,
+      setTagDialogOpen,
+      setTagDialogVideoTarget,
+    ],
   );
 
   /**
@@ -257,7 +296,16 @@ const useVideoSelectionTable = (
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
-          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
+          populateDetailsCell(
+            ctx,
+            language,
+            cloudStatus,
+            setVideoState,
+            setLockDialogOpen,
+            setLockDialogVideoTarget,
+            setTagDialogOpen,
+            setTagDialogVideoTarget,
+          ),
       },
       {
         id: 'Map',
@@ -309,7 +357,15 @@ const useVideoSelectionTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [cloudStatus, language, setVideoState],
+    [
+      cloudStatus,
+      language,
+      setLockDialogOpen,
+      setLockDialogVideoTarget,
+      setTagDialogOpen,
+      setTagDialogVideoTarget,
+      setVideoState,
+    ],
   );
 
   /**
@@ -325,7 +381,16 @@ const useVideoSelectionTable = (
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
-          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
+          populateDetailsCell(
+            ctx,
+            language,
+            cloudStatus,
+            setVideoState,
+            setLockDialogOpen,
+            setLockDialogVideoTarget,
+            setTagDialogOpen,
+            setTagDialogVideoTarget,
+          ),
       },
       {
         id: 'Map',
@@ -363,7 +428,15 @@ const useVideoSelectionTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [cloudStatus, language, setVideoState],
+    [
+      cloudStatus,
+      language,
+      setLockDialogOpen,
+      setLockDialogVideoTarget,
+      setTagDialogOpen,
+      setTagDialogVideoTarget,
+      setVideoState,
+    ],
   );
 
   /**
@@ -379,7 +452,16 @@ const useVideoSelectionTable = (
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
-          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
+          populateDetailsCell(
+            ctx,
+            language,
+            cloudStatus,
+            setVideoState,
+            setLockDialogOpen,
+            setLockDialogVideoTarget,
+            setTagDialogOpen,
+            setTagDialogVideoTarget,
+          ),
       },
       {
         id: 'Type',
@@ -428,7 +510,17 @@ const useVideoSelectionTable = (
           populateSourceCell(ctx, language, getClipParent, goToClipParent),
       },
     ],
-    [cloudStatus, getClipParent, goToClipParent, language, setVideoState],
+    [
+      cloudStatus,
+      getClipParent,
+      goToClipParent,
+      language,
+      setLockDialogOpen,
+      setLockDialogVideoTarget,
+      setTagDialogOpen,
+      setTagDialogVideoTarget,
+      setVideoState,
+    ],
   );
 
   const manualColumns = useMemo<ColumnDef<RendererVideo>[]>(
@@ -440,7 +532,16 @@ const useVideoSelectionTable = (
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
-          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
+          populateDetailsCell(
+            ctx,
+            language,
+            cloudStatus,
+            setVideoState,
+            setLockDialogOpen,
+            setLockDialogVideoTarget,
+            setTagDialogOpen,
+            setTagDialogVideoTarget,
+          ),
       },
       {
         id: 'Type',
@@ -462,7 +563,15 @@ const useVideoSelectionTable = (
         cell: populateDateCell,
       },
     ],
-    [language, cloudStatus, setVideoState],
+    [
+      language,
+      cloudStatus,
+      setVideoState,
+      setLockDialogOpen,
+      setLockDialogVideoTarget,
+      setTagDialogOpen,
+      setTagDialogVideoTarget,
+    ],
   );
 
   let columns;

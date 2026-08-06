@@ -13,6 +13,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import {
   GripHorizontal,
@@ -57,6 +58,8 @@ import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
 import VideoChat from './VideoChat';
 import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
+import LockDialog from './LockDialog';
+import TagDialog from './TagDialog';
 
 interface IProps {
   category: VideoCategory;
@@ -94,6 +97,16 @@ const CategoryPage = (props: IProps) => {
 
   const { write, del } = cloudStatus;
   const [config, setConfig] = useSettings();
+
+  const [lockDialogOpen, setLockDialogOpen] = useState(false);
+
+  const [lockDialogVideoTarget, setLockDialogVideoTarget] =
+    useState<RendererVideo | null>(null);
+
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
+
+  const [tagDialogVideoTarget, setTagDialogVideoTarget] =
+    useState<RendererVideo | null>(null);
 
   // The category state, recalculated only when required.
   const categoryState = useMemo<RendererVideo[]>(() => {
@@ -158,6 +171,10 @@ const CategoryPage = (props: IProps) => {
     setVideoState,
     getClipParent,
     goToClipParent,
+    setLockDialogOpen,
+    setLockDialogVideoTarget,
+    setTagDialogOpen,
+    setTagDialogVideoTarget,
   );
 
   const haveVideos = categoryState.length > 0;
@@ -678,6 +695,23 @@ const CategoryPage = (props: IProps) => {
           </div>
         </div>
         <div className="w-full h-full overflow-hidden">
+          <LockDialog
+            open={lockDialogOpen}
+            setOpen={setLockDialogOpen}
+            lockDialogVideoTarget={lockDialogVideoTarget}
+            setVideoState={setVideoState}
+            language={language}
+            cloudStatus={cloudStatus}
+          />
+          <TagDialog
+            open={tagDialogOpen}
+            setOpen={setTagDialogOpen}
+            tagDialogVideoTarget={tagDialogVideoTarget}
+            setTagDialogVideoTarget={setTagDialogVideoTarget}
+            setVideoState={setVideoState}
+            language={language}
+          />
+          {/* // KillVideoDialog */}
           <VideoSelectionTable
             table={table}
             appState={appState}
