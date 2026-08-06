@@ -31,6 +31,7 @@ interface IProps {
  */
 const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, persistentProgress, table } = props;
+
   const {
     videoFilterTags,
     dateRangeFilter,

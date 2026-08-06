@@ -33,7 +33,7 @@ import SideMenu from './SideMenu';
 import { useToast } from './components/Toast/useToast';
 import { Button } from './components/Button/Button';
 import { ErrorBoundary } from 'react-error-boundary';
-import { RefreshCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { VideoCategory } from 'types/VideoCategory';
 import { Phrase } from 'localisation/phrases';
 import _ from 'lodash';
@@ -558,7 +558,7 @@ const renderErrorPage = () => {
         You hit a bug in the code. Please try refreshing.
       </h2>
       <Button className="m-2" onClick={() => window.location.reload()}>
-        <RefreshCcw />
+        <RotateCcw />
       </Button>
     </div>
   );
