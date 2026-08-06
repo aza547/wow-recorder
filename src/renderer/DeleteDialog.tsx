@@ -21,8 +21,8 @@ import {
 import {
   ColumnDef,
   flexRender,
-  getCoreRowModel,
-  useReactTable,
+  useTable,
+  stockFeatures,
 } from '@tanstack/react-table';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
@@ -112,13 +112,13 @@ const DeleteDialog = ({
     [],
   );
 
-  const table = useReactTable({
+  const table = useTable({
     data,
     columns,
+    features: stockFeatures,
     state: { rowSelection },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
   });
 
   const renderTable = () => {
