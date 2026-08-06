@@ -1,10 +1,9 @@
 import {
   ColumnDef,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
+  createColumnHelper,
   PaginationState,
-  useReactTable,
+  stockFeatures,
+  useTable,
 } from '@tanstack/react-table';
 import { RendererVideo, AppState, RendererClip } from 'main/types';
 import { Dispatch, SetStateAction, useMemo, useState } from 'react';
@@ -69,7 +68,7 @@ const useVideoSelectionTable = (
 ) => {
   const { category, language, cloudStatus, selectedVideos } = appState;
 
-  const getInitialRowSelection = () => {
+  const getInitialRowSelection = (): Record<string, true> => {
     const videoToParentId = new Map<string, string>();
 
     videoState.forEach((video) => {
@@ -80,7 +79,7 @@ const useVideoSelectionTable = (
       });
     });
 
-    const selection = Object.fromEntries(
+    const selection: Record<string, true> = Object.fromEntries(
       selectedVideos
         .map((video) => videoToParentId.get(video.uniqueId))
         .filter((id): id is string => id !== undefined)
@@ -120,11 +119,6 @@ const useVideoSelectionTable = (
 
   // Tanstack table relies on stable references, so while we have the React
   // compiler enabled we still need useMemo here or weird stuff will happen.
-
-  /**
-   * The raid table columns, the data access, sorting functions
-   * and any display transformations.
-   */
   const raidColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
@@ -216,13 +210,15 @@ const useVideoSelectionTable = (
    * The arena table columns, the data access, sorting functions
    * and any display transformations.
    */
-  const arenaColumns = useMemo<ColumnDef<RendererVideo>[]>(
+  const arenaColumns = useMemo<
+    ColumnDef<typeof stockFeatures, RendererVideo, RendererVideo>[]
+  >(
     () => [
       {
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
-        sortingFn: (a, b) => detailSort(a, b),
+        sortFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
           populateDetailsCell(
@@ -246,14 +242,14 @@ const useVideoSelectionTable = (
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: (a, b) => resultSort(a, b, language),
+        sortFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
         cell: (c) => populateResultCell(c, language),
       },
       {
         id: 'Duration',
         accessorFn: (v) => v,
-        sortingFn: durationSort,
+        sortFn: durationSort,
         header: () => DurationHeader(language),
         cell: populateDurationCell,
       },
@@ -269,7 +265,7 @@ const useVideoSelectionTable = (
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
-        sortingFn: viewPointCountSort,
+        sortFn: viewPointCountSort,
       },
     ],
     [
@@ -293,7 +289,7 @@ const useVideoSelectionTable = (
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
-        sortingFn: (a, b) => detailSort(a, b),
+        sortFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
           populateDetailsCell(
@@ -317,28 +313,28 @@ const useVideoSelectionTable = (
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: (a, b) => resultSort(a, b, language),
+        sortFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
         cell: (c) => populateResultCell(c, language),
       },
       {
         id: 'Level',
         accessorFn: (v) => v,
-        sortingFn: levelSort,
+        sortFn: levelSort,
         header: () => LevelHeader(language),
         cell: populateLevelCell,
       },
       {
         id: 'Affixes',
         accessorFn: (v) => v,
-        sortingFn: levelSort,
+        sortFn: levelSort,
         header: () => AffixesHeader(),
         cell: populateAffixesCell,
       },
       {
         id: 'Duration',
         accessorFn: (v) => v,
-        sortingFn: durationSort,
+        sortFn: durationSort,
         header: () => DurationHeader(language),
         cell: populateDurationCell,
       },
@@ -354,7 +350,7 @@ const useVideoSelectionTable = (
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
-        sortingFn: viewPointCountSort,
+        sortFn: viewPointCountSort,
       },
     ],
     [
@@ -378,7 +374,7 @@ const useVideoSelectionTable = (
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
-        sortingFn: (a, b) => detailSort(a, b),
+        sortFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
           populateDetailsCell(
@@ -402,14 +398,14 @@ const useVideoSelectionTable = (
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: (a, b) => resultSort(a, b, language),
+        sortFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
         cell: (c) => populateResultCell(c, language),
       },
       {
         id: 'Duration',
         accessorFn: (v) => v,
-        sortingFn: durationSort,
+        sortFn: durationSort,
         header: () => DurationHeader(language),
         cell: populateDurationCell,
       },
@@ -425,7 +421,7 @@ const useVideoSelectionTable = (
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
-        sortingFn: viewPointCountSort,
+        sortFn: viewPointCountSort,
       },
     ],
     [
@@ -449,7 +445,7 @@ const useVideoSelectionTable = (
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
-        sortingFn: (a, b) => detailSort(a, b),
+        sortFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
           populateDetailsCell(
@@ -475,14 +471,14 @@ const useVideoSelectionTable = (
       {
         id: 'Activity',
         accessorFn: (v) => v,
-        sortingFn: (a, b) => clipActivitySort(a, b, language),
+        sortFn: (a, b) => clipActivitySort(a, b, language),
         header: () => ActivityHeader(language),
         cell: (ctx) => populateActivityCell(ctx, language),
       },
       {
         id: 'Duration',
         accessorFn: (v) => v,
-        sortingFn: durationSort,
+        sortFn: durationSort,
         header: () => DurationHeader(language),
         cell: populateDurationCell,
       },
@@ -498,7 +494,7 @@ const useVideoSelectionTable = (
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
-        sortingFn: viewPointCountSort,
+        sortFn: viewPointCountSort,
       },
       {
         id: 'Source',
@@ -529,7 +525,7 @@ const useVideoSelectionTable = (
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
-        sortingFn: (a, b) => detailSort(a, b),
+        sortFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
           populateDetailsCell(
@@ -552,7 +548,7 @@ const useVideoSelectionTable = (
       {
         id: 'Duration',
         accessorFn: (v) => v,
-        sortingFn: durationSort,
+        sortFn: durationSort,
         header: () => DurationHeader(language),
         cell: populateDurationCell,
       },
@@ -607,9 +603,10 @@ const useVideoSelectionTable = (
    * Prepare the headless table, with sorting and row expansion. This is where
    * the data is passed in to be rendered.
    */
-  const table = useReactTable({
+  const table = useTable({
     columns,
     data: videoState,
+    features: stockFeatures,
     state: { pagination, rowSelection },
     getRowId: (row) => row.uniqueId,
     getCoreRowModel: getCoreRowModel(),

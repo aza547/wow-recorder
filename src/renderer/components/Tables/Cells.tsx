@@ -1,4 +1,8 @@
-import { CellContext } from '@tanstack/react-table';
+import {
+  CellContext,
+  stockFeatures,
+  TableFeatures,
+} from '@tanstack/react-table';
 import { CloudStatus, RendererClip, RendererVideo } from 'main/types';
 import {
   getVideoResultText,
@@ -101,7 +105,7 @@ export const populateActivityCell = (
 };
 
 export const populateDetailsCell = (
-  ctx: CellContext<RendererVideo, unknown>,
+  ctx: CellContext<typeof stockFeatures, RendererVideo, RendererVideo>,
   language: Language,
   cloudStatus: CloudStatus,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,

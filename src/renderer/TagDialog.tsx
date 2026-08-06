@@ -15,11 +15,13 @@ import { Textarea } from './components/TextArea/textarea';
 import {
   CellContext,
   ColumnDef,
+  createSortedRowModel,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
   Row,
-  useReactTable,
+  stockFeatures,
+  useTable,
 } from '@tanstack/react-table';
 import {
   getPlayerClass,
@@ -209,12 +211,11 @@ export default function TagDialog(props: IProps) {
       : [];
   }, [tagDialogVideoTarget]);
 
-  const table = useReactTable({
+  const table = useTable({
     columns,
     data,
+    features: stockFeatures,
     getRowId: (row) => row.uniqueId,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   const renderTable = () => {

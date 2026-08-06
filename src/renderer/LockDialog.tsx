@@ -16,7 +16,8 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
-  useReactTable,
+  stockFeatures,
+  useTable,
 } from '@tanstack/react-table';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import {
@@ -226,12 +227,11 @@ export default function LockDialog(props: IProps) {
       : [];
   }, [lockDialogVideoTarget]);
 
-  const table = useReactTable({
+  const table = useTable({
     columns,
     data,
+    features: stockFeatures,
     getRowId: (row) => row.uniqueId,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   const renderTable = () => {

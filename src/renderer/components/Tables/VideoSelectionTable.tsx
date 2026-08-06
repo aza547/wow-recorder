@@ -40,7 +40,7 @@ const VideoSelectionTable = (props: IProps) => {
     language,
   } = appState;
 
-  const { pageIndex, pageSize } = table.getState().pagination;
+  const { pageIndex, pageSize } = table.state.pagination;
   const selectedRowRef = React.useRef<HTMLTableRowElement>(null);
   const hasScrolledToSelection = React.useRef(false);
 
@@ -354,7 +354,7 @@ const VideoSelectionTable = (props: IProps) => {
    * returns buttons to navigate the pages in the list.
    */
   const renderPagnationButtons = () => {
-    const current = table.getState().pagination.pageIndex + 1;
+    const current = table.state.pagination.pageIndex + 1;
     const total = table.getPageCount().toLocaleString();
     const indicator = `${current} of ${total}`;
 
