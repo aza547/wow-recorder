@@ -1,8 +1,4 @@
-import {
-  CellContext,
-  stockFeatures,
-  TableFeatures,
-} from '@tanstack/react-table';
+import { CellContext, stockFeatures } from '@tanstack/react-table';
 import { CloudStatus, RendererClip, RendererVideo } from 'main/types';
 import {
   getVideoResultText,
@@ -44,7 +40,7 @@ import wcrIcon from '../../../../assets/icon/small-icon.png';
 const ipc = window.electron.ipcRenderer;
 
 export const populateResultCell = (
-  info: CellContext<RendererVideo, unknown>,
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
   language: Language,
 ) => {
   const video = info.getValue() as RendererVideo;
@@ -62,31 +58,35 @@ export const populateResultCell = (
 };
 
 export const populateDurationCell = (
-  info: CellContext<RendererVideo, unknown>,
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
 ) => {
   const rawValue = info.getValue() as RendererVideo;
   return getFormattedDuration(rawValue);
 };
 
 export const populateEncounterNameCell = (
-  info: CellContext<RendererVideo, unknown>,
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
 ) => {
   const encounter = info.getValue() as string;
   return <div className="truncate">{encounter}</div>;
 };
 
-export const populateMapCell = (info: CellContext<RendererVideo, unknown>) => {
+export const populateMapCell = (
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+) => {
   const map = info.getValue() as string;
   return <div className="truncate">{map}</div>;
 };
 
-export const populateDateCell = (info: CellContext<RendererVideo, unknown>) => {
+export const populateDateCell = (
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+) => {
   const date = info.getValue() as Date;
   return <div className="truncate">{dateToHumanReadable(date)}</div>;
 };
 
 export const populateActivityCell = (
-  info: CellContext<RendererVideo, unknown>,
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
   language: Language,
 ) => {
   const video = info.getValue() as RendererVideo;
@@ -105,7 +105,7 @@ export const populateActivityCell = (
 };
 
 export const populateDetailsCell = (
-  ctx: CellContext<typeof stockFeatures, RendererVideo, RendererVideo>,
+  ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
   language: Language,
   cloudStatus: CloudStatus,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
@@ -194,7 +194,8 @@ export const populateDetailsCell = (
           <Button
             variant="ghost"
             size="xs"
-            onClick={() => {
+            onClick={(event) => {
+              stopPropagation(event);
               setLockDialogVideoTarget(video);
               setLockDialogOpen(true);
             }}
@@ -276,14 +277,17 @@ export const populateDetailsCell = (
     return (
       <Tooltip content={tooltip}>
         <div>
-          <Button variant="ghost" size="xs" disabled={noPermission}>
-            <FolderPen
-              size={20}
-              onClick={() => {
-                setTagDialogVideoTarget(video);
-                setTagDialogOpen(true);
-              }}
-            />
+          <Button
+            variant="ghost"
+            size="xs"
+            disabled={noPermission}
+            onClick={(event) => {
+              stopPropagation(event);
+              setTagDialogVideoTarget(video);
+              setTagDialogOpen(true);
+            }}
+          >
+            <FolderPen size={20} />
           </Button>
         </div>
       </Tooltip>
@@ -301,7 +305,7 @@ export const populateDetailsCell = (
 };
 
 export const populateSourceCell = (
-  ctx: CellContext<RendererVideo, unknown>,
+  ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
   language: Language,
   getClipParent: (clip: RendererClip) => RendererVideo | undefined,
   goToClipParent: (clip: RendererClip) => void,
@@ -338,7 +342,7 @@ export const populateSourceCell = (
 };
 
 export const populateCreatorCell = (
-  ctx: CellContext<RendererVideo, unknown>,
+  ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
   language: Language,
 ) => {
   const video = ctx.getValue() as RendererVideo;
@@ -374,14 +378,14 @@ export const populateCreatorCell = (
 };
 
 export const populateLevelCell = (
-  info: CellContext<RendererVideo, unknown>,
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
 ) => {
   const video = info.getValue() as RendererVideo;
   return `+${video.keystoneLevel || video.level || 0}`;
 };
 
 export const populateAffixesCell = (
-  info: CellContext<RendererVideo, unknown>,
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
 ) => {
   const video = info.getValue() as RendererVideo;
 
@@ -418,7 +422,7 @@ export const populateAffixesCell = (
 };
 
 export const populateViewpointCell = (
-  info: CellContext<RendererVideo, unknown>,
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
 ) => {
   const video = info.getValue() as RendererVideo;
   const count = countUniqueViewpoints(video);

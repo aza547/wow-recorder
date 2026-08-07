@@ -1,6 +1,12 @@
 import { AppState, RendererVideo } from 'main/types';
 
-import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
+import {
+  Cell,
+  flexRender,
+  Header,
+  Row,
+  stockFeatures,
+} from '@tanstack/react-table';
 import React, { Fragment, RefObject, useCallback, useEffect } from 'react';
 import {
   ArrowDown,
@@ -17,9 +23,10 @@ import { Button } from '../Button/Button';
 import { getLocalePhrase } from 'localisation/translations';
 import { ScrollArea } from '../ScrollArea/ScrollArea';
 import { Phrase } from 'localisation/phrases';
+import useVideoSelectionTable from './useVideoSelectionTable';
 
 interface IProps {
-  table: Table<RendererVideo>;
+  table: ReturnType<typeof useVideoSelectionTable>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: RefObject<number>;
@@ -51,7 +58,7 @@ const VideoSelectionTable = (props: IProps) => {
   const onRowClick = useCallback(
     (
       event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,
-      row: Row<RendererVideo>,
+      row: Row<typeof stockFeatures, RendererVideo>,
     ) => {
       const allRows = table.getSortedRowModel().rows;
       const selectedRows = table.getSelectedRowModel().rows;
@@ -216,7 +223,9 @@ const VideoSelectionTable = (props: IProps) => {
   /**
    * Render an individual header.
    */
-  const renderIndividualHeader = (header: Header<RendererVideo, unknown>) => {
+  const renderIndividualHeader = (
+    header: Header<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
     let tooltip;
 
     if (header.column.getCanSort()) {
@@ -272,7 +281,9 @@ const VideoSelectionTable = (props: IProps) => {
   /**
    * Render a cell in the base row.
    */
-  const renderBaseCell = (cell: Cell<RendererVideo, unknown>) => {
+  const renderBaseCell = (
+    cell: Cell<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
     const width =
       cell.column.getSize() === Number.MAX_SAFE_INTEGER
         ? 'auto'
@@ -289,7 +300,7 @@ const VideoSelectionTable = (props: IProps) => {
    * Render the base row.
    */
   const renderBaseRow = (
-    row: Row<RendererVideo>,
+    row: Row<typeof stockFeatures, RendererVideo>,
     selected: boolean,
     sortedIndex: number,
   ) => {
@@ -317,7 +328,10 @@ const VideoSelectionTable = (props: IProps) => {
   /**
    * Render an individual row of the table.
    */
-  const renderRow = (row: Row<RendererVideo>, sortedIndex: number) => {
+  const renderRow = (
+    row: Row<typeof stockFeatures, RendererVideo>,
+    sortedIndex: number,
+  ) => {
     const selected =
       row.getIsSelected() ||
       (!table.getIsSomeRowsSelected() && row.index === 0);

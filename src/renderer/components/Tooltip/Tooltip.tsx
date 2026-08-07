@@ -32,13 +32,18 @@ const Tooltip = ({
     <TooltipPrimitive.Root
       open={open}
       defaultOpen={defaultOpen}
-      onOpenChange={onOpenChange}
+      onOpenChange={(value) => {
+        console.log('tooltip changed', value, content);
+        onOpenChange?.(value);
+      }}
       delayDuration={delayDuration}
     >
       <TooltipPrimitive.Trigger
         onClick={onClick ? onClick : (e) => e.preventDefault()}
         asChild
         onPointerDown={(e) => e.preventDefault()}
+        onPointerEnter={() => console.log('entered', content)}
+        onFocus={() => console.log('tooltip trigger focused')}
       >
         {children}
       </TooltipPrimitive.Trigger>

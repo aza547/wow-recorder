@@ -14,8 +14,6 @@ import {
   CellContext,
   ColumnDef,
   flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
   stockFeatures,
   useTable,
 } from '@tanstack/react-table';
@@ -55,7 +53,7 @@ export default function LockDialog(props: IProps) {
   } = props;
 
   const populateLockDialogLockCell = (
-    ctx: CellContext<RendererVideo, unknown>,
+    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
     language: Language,
     cloudStatus: CloudStatus,
     setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
@@ -102,7 +100,7 @@ export default function LockDialog(props: IProps) {
     }
 
     return (
-      <Tooltip content={tooltip}>
+      <Tooltip content="asd">
         <div>
           <Button
             variant="ghost"
@@ -117,7 +115,9 @@ export default function LockDialog(props: IProps) {
     );
   };
 
-  const populateStorageCell = (ctx: CellContext<RendererVideo, unknown>) => {
+  const populateStorageCell = (
+    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
     const { row } = ctx;
     const { cloud } = row.original;
 
@@ -127,7 +127,9 @@ export default function LockDialog(props: IProps) {
     return <SaveIcon size={20} />;
   };
 
-  const populatePlayerCell = (info: CellContext<RendererVideo, unknown>) => {
+  const populatePlayerCell = (
+    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
     const video = info.getValue() as RendererVideo;
     const { player } = video;
 
@@ -173,7 +175,7 @@ export default function LockDialog(props: IProps) {
   };
 
   const populateLockedStatusCell = (
-    info: CellContext<RendererVideo, unknown>,
+    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
   ) => {
     const { row } = info;
     const { isProtected } = row.original;
@@ -192,7 +194,9 @@ export default function LockDialog(props: IProps) {
     );
   };
 
-  const columns = useMemo<ColumnDef<RendererVideo>[]>(
+  const columns = useMemo<
+    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
+  >(
     () => [
       {
         id: 'Lock',

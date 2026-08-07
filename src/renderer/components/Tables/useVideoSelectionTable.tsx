@@ -1,6 +1,5 @@
 import {
   ColumnDef,
-  createColumnHelper,
   PaginationState,
   stockFeatures,
   useTable,
@@ -119,13 +118,15 @@ const useVideoSelectionTable = (
 
   // Tanstack table relies on stable references, so while we have the React
   // compiler enabled we still need useMemo here or weird stuff will happen.
-  const raidColumns = useMemo<ColumnDef<RendererVideo>[]>(
+  const raidColumns = useMemo<
+    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
+  >(
     () => [
       {
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
-        sortingFn: (a, b) => detailSort(a, b),
+        sortFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) =>
           populateDetailsCell(
@@ -149,9 +150,9 @@ const useVideoSelectionTable = (
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: (a, b) => resultSort(a, b, language),
+        sortFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
-        cell: (c) => populateResultCell(c, language),
+        cell: (ctx) => populateResultCell(ctx, language),
       },
       {
         id: 'Pull',
@@ -167,7 +168,7 @@ const useVideoSelectionTable = (
       {
         id: 'Duration',
         accessorFn: (v) => v,
-        sortingFn: durationSort,
+        sortFn: durationSort,
         header: () => DurationHeader(language),
         cell: populateDurationCell,
       },
@@ -183,13 +184,13 @@ const useVideoSelectionTable = (
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: (v) => populateViewpointCell(v),
-        sortingFn: viewPointCountSort,
+        sortFn: viewPointCountSort,
       },
       {
         id: 'Creator',
         size: 50,
         accessorFn: (v) => v,
-        sortingFn: (a, b) => creatorSort(a, b),
+        sortFn: (a, b) => creatorSort(a, b),
         header: DetailsHeader,
         cell: (ctx) => populateCreatorCell(ctx, language),
       },
@@ -211,7 +212,7 @@ const useVideoSelectionTable = (
    * and any display transformations.
    */
   const arenaColumns = useMemo<
-    ColumnDef<typeof stockFeatures, RendererVideo, RendererVideo>[]
+    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
   >(
     () => [
       {
@@ -283,7 +284,9 @@ const useVideoSelectionTable = (
    * The dungeon table columns, the data access, sorting functions
    * and any display transformations.
    */
-  const dungeonColumns = useMemo<ColumnDef<RendererVideo>[]>(
+  const dungeonColumns = useMemo<
+    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
+  >(
     () => [
       {
         id: 'Details',
@@ -368,7 +371,9 @@ const useVideoSelectionTable = (
    * The battleground table columns, the data access, sorting functions
    * and any display transformations.
    */
-  const battlegroundColumns = useMemo<ColumnDef<RendererVideo>[]>(
+  const battlegroundColumns = useMemo<
+    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
+  >(
     () => [
       {
         id: 'Details',
@@ -439,7 +444,9 @@ const useVideoSelectionTable = (
    * The battleground table columns, the data access, sorting functions
    * and any display transformations.
    */
-  const clipsColumns = useMemo<ColumnDef<RendererVideo>[]>(
+  const clipsColumns = useMemo<
+    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
+  >(
     () => [
       {
         id: 'Details',
@@ -519,7 +526,9 @@ const useVideoSelectionTable = (
     ],
   );
 
-  const manualColumns = useMemo<ColumnDef<RendererVideo>[]>(
+  const manualColumns = useMemo<
+    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
+  >(
     () => [
       {
         id: 'Details',
@@ -609,11 +618,8 @@ const useVideoSelectionTable = (
     features: stockFeatures,
     state: { pagination, rowSelection },
     getRowId: (row) => row.uniqueId,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
     autoResetPageIndex: false,
     // This is a workaround for tanstack defaulting to 150px.
