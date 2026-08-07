@@ -42,8 +42,6 @@ const Tooltip = ({
         onClick={onClick ? onClick : (e) => e.preventDefault()}
         asChild
         onPointerDown={(e) => e.preventDefault()}
-        onPointerEnter={() => console.log('entered', content)}
-        onFocus={() => console.log('tooltip trigger focused')}
       >
         {children}
       </TooltipPrimitive.Trigger>

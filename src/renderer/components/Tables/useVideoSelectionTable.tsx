@@ -1,11 +1,14 @@
 import {
   ColumnDef,
+  createPaginatedRowModel,
+  createSortedRowModel,
   PaginationState,
   stockFeatures,
+  tableFeatures,
   useTable,
 } from '@tanstack/react-table';
 import { RendererVideo, AppState, RendererClip } from 'main/types';
-import { Dispatch, SetStateAction, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import {
   getPullNumber,
   getInstanceDifficultyText,
@@ -61,9 +64,9 @@ const useVideoSelectionTable = (
   getClipParent: (clip: RendererClip) => RendererVideo | undefined,
   goToClipParent: (clip: RendererClip) => void,
   setLockDialogOpen: Dispatch<SetStateAction<boolean>>,
-  setLockDialogVideoTarget: Dispatch<SetStateAction<RendererVideo | null>>,
+  setLockDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
   setTagDialogOpen: Dispatch<SetStateAction<boolean>>,
-  setTagDialogVideoTarget: Dispatch<SetStateAction<RendererVideo | null>>,
+  setTagDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
 ) => {
   const { category, language, cloudStatus, selectedVideos } = appState;
 
@@ -118,10 +121,8 @@ const useVideoSelectionTable = (
 
   // Tanstack table relies on stable references, so while we have the React
   // compiler enabled we still need useMemo here or weird stuff will happen.
-  const raidColumns = useMemo<
-    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
-  >(
-    () => [
+  const raidColumns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] =
+    [
       {
         id: 'Details',
         size: 80,
@@ -135,9 +136,9 @@ const useVideoSelectionTable = (
             cloudStatus,
             setVideoState,
             setLockDialogOpen,
-            setLockDialogVideoTarget,
+            setLockDialogVideoTargetId,
             setTagDialogOpen,
-            setTagDialogVideoTarget,
+            setTagDialogVideoTargetId,
           ),
       },
       {
@@ -194,390 +195,332 @@ const useVideoSelectionTable = (
         header: DetailsHeader,
         cell: (ctx) => populateCreatorCell(ctx, language),
       },
-    ],
-    [
-      language,
-      cloudStatus,
-      setVideoState,
-      setLockDialogOpen,
-      setLockDialogVideoTarget,
-      setTagDialogOpen,
-      setTagDialogVideoTarget,
-      videoState,
-    ],
-  );
+    ];
 
   /**
    * The arena table columns, the data access, sorting functions
    * and any display transformations.
    */
-  const arenaColumns = useMemo<
-    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
-  >(
-    () => [
-      {
-        id: 'Details',
-        size: 80,
-        accessorFn: (v) => v,
-        sortFn: (a, b) => detailSort(a, b),
-        header: DetailsHeader,
-        cell: (ctx) =>
-          populateDetailsCell(
-            ctx,
-            language,
-            cloudStatus,
-            setVideoState,
-            setLockDialogOpen,
-            setLockDialogVideoTarget,
-            setTagDialogOpen,
-            setTagDialogVideoTarget,
-          ),
-      },
-      {
-        id: 'Map',
-        size: 300,
-        accessorKey: 'zoneName',
-        header: () => MapHeader(language),
-        cell: populateMapCell,
-      },
-      {
-        id: 'Result',
-        accessorFn: (v) => v,
-        sortFn: (a, b) => resultSort(a, b, language),
-        header: () => ResultHeader(language),
-        cell: (c) => populateResultCell(c, language),
-      },
-      {
-        id: 'Duration',
-        accessorFn: (v) => v,
-        sortFn: durationSort,
-        header: () => DurationHeader(language),
-        cell: populateDurationCell,
-      },
-      {
-        id: 'Date',
-        accessorFn: (v) => videoToDate(v),
-        header: () => DateHeader(language),
-        cell: populateDateCell,
-      },
-      {
-        id: 'Viewpoints',
-        size: 180,
-        accessorFn: (v) => v,
-        header: () => ViewpointsHeader(language),
-        cell: (v) => populateViewpointCell(v),
-        sortFn: viewPointCountSort,
-      },
-    ],
-    [
-      language,
-      cloudStatus,
-      setVideoState,
-      setLockDialogOpen,
-      setLockDialogVideoTarget,
-      setTagDialogOpen,
-      setTagDialogVideoTarget,
-    ],
-  );
+  const arenaColumns: ColumnDef<
+    typeof stockFeatures,
+    RendererVideo,
+    unknown
+  >[] = [
+    {
+      id: 'Details',
+      size: 80,
+      accessorFn: (v) => v,
+      sortFn: (a, b) => detailSort(a, b),
+      header: DetailsHeader,
+      cell: (ctx) =>
+        populateDetailsCell(
+          ctx,
+          language,
+          cloudStatus,
+          setVideoState,
+          setLockDialogOpen,
+          setLockDialogVideoTargetId,
+          setTagDialogOpen,
+          setTagDialogVideoTargetId,
+        ),
+    },
+    {
+      id: 'Map',
+      size: 300,
+      accessorKey: 'zoneName',
+      header: () => MapHeader(language),
+      cell: populateMapCell,
+    },
+    {
+      id: 'Result',
+      accessorFn: (v) => v,
+      sortFn: (a, b) => resultSort(a, b, language),
+      header: () => ResultHeader(language),
+      cell: (c) => populateResultCell(c, language),
+    },
+    {
+      id: 'Duration',
+      accessorFn: (v) => v,
+      sortFn: durationSort,
+      header: () => DurationHeader(language),
+      cell: populateDurationCell,
+    },
+    {
+      id: 'Date',
+      accessorFn: (v) => videoToDate(v),
+      header: () => DateHeader(language),
+      cell: populateDateCell,
+    },
+    {
+      id: 'Viewpoints',
+      size: 180,
+      accessorFn: (v) => v,
+      header: () => ViewpointsHeader(language),
+      cell: (v) => populateViewpointCell(v),
+      sortFn: viewPointCountSort,
+    },
+  ];
 
   /**
    * The dungeon table columns, the data access, sorting functions
    * and any display transformations.
    */
-  const dungeonColumns = useMemo<
-    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
-  >(
-    () => [
-      {
-        id: 'Details',
-        size: 80,
-        accessorFn: (v) => v,
-        sortFn: (a, b) => detailSort(a, b),
-        header: DetailsHeader,
-        cell: (ctx) =>
-          populateDetailsCell(
-            ctx,
-            language,
-            cloudStatus,
-            setVideoState,
-            setLockDialogOpen,
-            setLockDialogVideoTarget,
-            setTagDialogOpen,
-            setTagDialogVideoTarget,
-          ),
-      },
-      {
-        id: 'Map',
-        size: 300,
-        accessorFn: getDungeonName,
-        header: () => MapHeader(language),
-        cell: populateMapCell,
-      },
-      {
-        id: 'Result',
-        accessorFn: (v) => v,
-        sortFn: (a, b) => resultSort(a, b, language),
-        header: () => ResultHeader(language),
-        cell: (c) => populateResultCell(c, language),
-      },
-      {
-        id: 'Level',
-        accessorFn: (v) => v,
-        sortFn: levelSort,
-        header: () => LevelHeader(language),
-        cell: populateLevelCell,
-      },
-      {
-        id: 'Affixes',
-        accessorFn: (v) => v,
-        sortFn: levelSort,
-        header: () => AffixesHeader(),
-        cell: populateAffixesCell,
-      },
-      {
-        id: 'Duration',
-        accessorFn: (v) => v,
-        sortFn: durationSort,
-        header: () => DurationHeader(language),
-        cell: populateDurationCell,
-      },
-      {
-        id: 'Date',
-        accessorFn: (v) => videoToDate(v),
-        header: () => DateHeader(language),
-        cell: populateDateCell,
-      },
-      {
-        id: 'Viewpoints',
-        size: 180,
-        accessorFn: (v) => v,
-        header: () => ViewpointsHeader(language),
-        cell: (v) => populateViewpointCell(v),
-        sortFn: viewPointCountSort,
-      },
-    ],
-    [
-      cloudStatus,
-      language,
-      setLockDialogOpen,
-      setLockDialogVideoTarget,
-      setTagDialogOpen,
-      setTagDialogVideoTarget,
-      setVideoState,
-    ],
-  );
+  const dungeonColumns: ColumnDef<
+    typeof stockFeatures,
+    RendererVideo,
+    unknown
+  >[] = [
+    {
+      id: 'Details',
+      size: 80,
+      accessorFn: (v) => v,
+      sortFn: (a, b) => detailSort(a, b),
+      header: DetailsHeader,
+      cell: (ctx) =>
+        populateDetailsCell(
+          ctx,
+          language,
+          cloudStatus,
+          setVideoState,
+          setLockDialogOpen,
+          setLockDialogVideoTargetId,
+          setTagDialogOpen,
+          setTagDialogVideoTargetId,
+        ),
+    },
+    {
+      id: 'Map',
+      size: 300,
+      accessorFn: getDungeonName,
+      header: () => MapHeader(language),
+      cell: populateMapCell,
+    },
+    {
+      id: 'Result',
+      accessorFn: (v) => v,
+      sortFn: (a, b) => resultSort(a, b, language),
+      header: () => ResultHeader(language),
+      cell: (c) => populateResultCell(c, language),
+    },
+    {
+      id: 'Level',
+      accessorFn: (v) => v,
+      sortFn: levelSort,
+      header: () => LevelHeader(language),
+      cell: populateLevelCell,
+    },
+    {
+      id: 'Affixes',
+      accessorFn: (v) => v,
+      sortFn: levelSort,
+      header: () => AffixesHeader(),
+      cell: populateAffixesCell,
+    },
+    {
+      id: 'Duration',
+      accessorFn: (v) => v,
+      sortFn: durationSort,
+      header: () => DurationHeader(language),
+      cell: populateDurationCell,
+    },
+    {
+      id: 'Date',
+      accessorFn: (v) => videoToDate(v),
+      header: () => DateHeader(language),
+      cell: populateDateCell,
+    },
+    {
+      id: 'Viewpoints',
+      size: 180,
+      accessorFn: (v) => v,
+      header: () => ViewpointsHeader(language),
+      cell: (v) => populateViewpointCell(v),
+      sortFn: viewPointCountSort,
+    },
+  ];
 
   /**
    * The battleground table columns, the data access, sorting functions
    * and any display transformations.
    */
-  const battlegroundColumns = useMemo<
-    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
-  >(
-    () => [
-      {
-        id: 'Details',
-        size: 80,
-        accessorFn: (v) => v,
-        sortFn: (a, b) => detailSort(a, b),
-        header: DetailsHeader,
-        cell: (ctx) =>
-          populateDetailsCell(
-            ctx,
-            language,
-            cloudStatus,
-            setVideoState,
-            setLockDialogOpen,
-            setLockDialogVideoTarget,
-            setTagDialogOpen,
-            setTagDialogVideoTarget,
-          ),
-      },
-      {
-        id: 'Map',
-        size: 300,
-        accessorKey: 'zoneName',
-        header: () => MapHeader(language),
-        cell: populateMapCell,
-      },
-      {
-        id: 'Result',
-        accessorFn: (v) => v,
-        sortFn: (a, b) => resultSort(a, b, language),
-        header: () => ResultHeader(language),
-        cell: (c) => populateResultCell(c, language),
-      },
-      {
-        id: 'Duration',
-        accessorFn: (v) => v,
-        sortFn: durationSort,
-        header: () => DurationHeader(language),
-        cell: populateDurationCell,
-      },
-      {
-        id: 'Date',
-        accessorFn: (v) => videoToDate(v),
-        header: () => DateHeader(language),
-        cell: populateDateCell,
-      },
-      {
-        id: 'Viewpoints',
-        size: 180,
-        accessorFn: (v) => v,
-        header: () => ViewpointsHeader(language),
-        cell: (v) => populateViewpointCell(v),
-        sortFn: viewPointCountSort,
-      },
-    ],
-    [
-      cloudStatus,
-      language,
-      setLockDialogOpen,
-      setLockDialogVideoTarget,
-      setTagDialogOpen,
-      setTagDialogVideoTarget,
-      setVideoState,
-    ],
-  );
+  const battlegroundColumns: ColumnDef<
+    typeof stockFeatures,
+    RendererVideo,
+    unknown
+  >[] = [
+    {
+      id: 'Details',
+      size: 80,
+      accessorFn: (v) => v,
+      sortFn: (a, b) => detailSort(a, b),
+      header: DetailsHeader,
+      cell: (ctx) =>
+        populateDetailsCell(
+          ctx,
+          language,
+          cloudStatus,
+          setVideoState,
+          setLockDialogOpen,
+          setLockDialogVideoTargetId,
+          setTagDialogOpen,
+          setTagDialogVideoTargetId,
+        ),
+    },
+    {
+      id: 'Map',
+      size: 300,
+      accessorKey: 'zoneName',
+      header: () => MapHeader(language),
+      cell: populateMapCell,
+    },
+    {
+      id: 'Result',
+      accessorFn: (v) => v,
+      sortFn: (a, b) => resultSort(a, b, language),
+      header: () => ResultHeader(language),
+      cell: (c) => populateResultCell(c, language),
+    },
+    {
+      id: 'Duration',
+      accessorFn: (v) => v,
+      sortFn: durationSort,
+      header: () => DurationHeader(language),
+      cell: populateDurationCell,
+    },
+    {
+      id: 'Date',
+      accessorFn: (v) => videoToDate(v),
+      header: () => DateHeader(language),
+      cell: populateDateCell,
+    },
+    {
+      id: 'Viewpoints',
+      size: 180,
+      accessorFn: (v) => v,
+      header: () => ViewpointsHeader(language),
+      cell: (v) => populateViewpointCell(v),
+      sortFn: viewPointCountSort,
+    },
+  ];
 
   /**
    * The battleground table columns, the data access, sorting functions
    * and any display transformations.
    */
-  const clipsColumns = useMemo<
-    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
-  >(
-    () => [
-      {
-        id: 'Details',
-        size: 80,
-        accessorFn: (v) => v,
-        sortFn: (a, b) => detailSort(a, b),
-        header: DetailsHeader,
-        cell: (ctx) =>
-          populateDetailsCell(
-            ctx,
-            language,
-            cloudStatus,
-            setVideoState,
-            setLockDialogOpen,
-            setLockDialogVideoTarget,
-            setTagDialogOpen,
-            setTagDialogVideoTarget,
-          ),
+  const clipsColumns: ColumnDef<
+    typeof stockFeatures,
+    RendererVideo,
+    unknown
+  >[] = [
+    {
+      id: 'Details',
+      size: 80,
+      accessorFn: (v) => v,
+      sortFn: (a, b) => detailSort(a, b),
+      header: DetailsHeader,
+      cell: (ctx) =>
+        populateDetailsCell(
+          ctx,
+          language,
+          cloudStatus,
+          setVideoState,
+          setLockDialogOpen,
+          setLockDialogVideoTargetId,
+          setTagDialogOpen,
+          setTagDialogVideoTargetId,
+        ),
+    },
+    {
+      id: 'Type',
+      accessorKey: 'parentCategory',
+      header: () => TypeHeader(language),
+      cell: (info) => {
+        const category = info.getValue();
+        return getLocaleCategoryLabel(language, category as VideoCategory);
       },
-      {
-        id: 'Type',
-        accessorKey: 'parentCategory',
-        header: () => TypeHeader(language),
-        cell: (info) => {
-          const category = info.getValue();
-          return getLocaleCategoryLabel(language, category as VideoCategory);
-        },
-      },
-      {
-        id: 'Activity',
-        accessorFn: (v) => v,
-        sortFn: (a, b) => clipActivitySort(a, b, language),
-        header: () => ActivityHeader(language),
-        cell: (ctx) => populateActivityCell(ctx, language),
-      },
-      {
-        id: 'Duration',
-        accessorFn: (v) => v,
-        sortFn: durationSort,
-        header: () => DurationHeader(language),
-        cell: populateDurationCell,
-      },
-      {
-        id: 'Date',
-        accessorFn: (v) => videoToDate(v),
-        header: () => ClippedAtHeader(language),
-        cell: populateDateCell,
-      },
-      {
-        id: 'Viewpoints',
-        size: 180,
-        accessorFn: (v) => v,
-        header: () => ViewpointsHeader(language),
-        cell: (v) => populateViewpointCell(v),
-        sortFn: viewPointCountSort,
-      },
-      {
-        id: 'Source',
-        size: 50,
-        accessorFn: (v) => v,
-        enableSorting: false,
-        header: DetailsHeader,
-        cell: (ctx) =>
-          populateSourceCell(ctx, language, getClipParent, goToClipParent),
-      },
-    ],
-    [
-      cloudStatus,
-      getClipParent,
-      goToClipParent,
-      language,
-      setLockDialogOpen,
-      setLockDialogVideoTarget,
-      setTagDialogOpen,
-      setTagDialogVideoTarget,
-      setVideoState,
-    ],
-  );
+    },
+    {
+      id: 'Activity',
+      accessorFn: (v) => v,
+      sortFn: (a, b) => clipActivitySort(a, b, language),
+      header: () => ActivityHeader(language),
+      cell: (ctx) => populateActivityCell(ctx, language),
+    },
+    {
+      id: 'Duration',
+      accessorFn: (v) => v,
+      sortFn: durationSort,
+      header: () => DurationHeader(language),
+      cell: populateDurationCell,
+    },
+    {
+      id: 'Date',
+      accessorFn: (v) => videoToDate(v),
+      header: () => ClippedAtHeader(language),
+      cell: populateDateCell,
+    },
+    {
+      id: 'Viewpoints',
+      size: 180,
+      accessorFn: (v) => v,
+      header: () => ViewpointsHeader(language),
+      cell: (v) => populateViewpointCell(v),
+      sortFn: viewPointCountSort,
+    },
+    {
+      id: 'Source',
+      size: 50,
+      accessorFn: (v) => v,
+      enableSorting: false,
+      header: DetailsHeader,
+      cell: (ctx) =>
+        populateSourceCell(ctx, language, getClipParent, goToClipParent),
+    },
+  ];
 
-  const manualColumns = useMemo<
-    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
-  >(
-    () => [
-      {
-        id: 'Details',
-        size: 80,
-        accessorFn: (v) => v,
-        sortFn: (a, b) => detailSort(a, b),
-        header: DetailsHeader,
-        cell: (ctx) =>
-          populateDetailsCell(
-            ctx,
-            language,
-            cloudStatus,
-            setVideoState,
-            setLockDialogOpen,
-            setLockDialogVideoTarget,
-            setTagDialogOpen,
-            setTagDialogVideoTarget,
-          ),
-      },
-      {
-        id: 'Type',
-        accessorFn: (v) => v,
-        header: () => TypeHeader(language),
-        cell: 'Manual',
-      },
-      {
-        id: 'Duration',
-        accessorFn: (v) => v,
-        sortFn: durationSort,
-        header: () => DurationHeader(language),
-        cell: populateDurationCell,
-      },
-      {
-        id: 'Date',
-        accessorFn: (v) => videoToDate(v),
-        header: () => DateHeader(language),
-        cell: populateDateCell,
-      },
-    ],
-    [
-      language,
-      cloudStatus,
-      setVideoState,
-      setLockDialogOpen,
-      setLockDialogVideoTarget,
-      setTagDialogOpen,
-      setTagDialogVideoTarget,
-    ],
-  );
+  const manualColumns: ColumnDef<
+    typeof stockFeatures,
+    RendererVideo,
+    unknown
+  >[] = [
+    {
+      id: 'Details',
+      size: 80,
+      accessorFn: (v) => v,
+      sortFn: (a, b) => detailSort(a, b),
+      header: DetailsHeader,
+      cell: (ctx) =>
+        populateDetailsCell(
+          ctx,
+          language,
+          cloudStatus,
+          setVideoState,
+          setLockDialogOpen,
+          setLockDialogVideoTargetId,
+          setTagDialogOpen,
+          setTagDialogVideoTargetId,
+        ),
+    },
+    {
+      id: 'Type',
+      accessorFn: (v) => v,
+      header: () => TypeHeader(language),
+      cell: 'Manual',
+    },
+    {
+      id: 'Duration',
+      accessorFn: (v) => v,
+      sortFn: durationSort,
+      header: () => DurationHeader(language),
+      cell: populateDurationCell,
+    },
+    {
+      id: 'Date',
+      accessorFn: (v) => videoToDate(v),
+      header: () => DateHeader(language),
+      cell: populateDateCell,
+    },
+  ];
 
   let columns;
 
@@ -608,14 +551,16 @@ const useVideoSelectionTable = (
       throw new Error('Unrecognized category');
   }
 
-  /**
-   * Prepare the headless table, with sorting and row expansion. This is where
-   * the data is passed in to be rendered.
-   */
+  const features = tableFeatures({
+    ...stockFeatures,
+    sortedRowModel: createSortedRowModel(),
+    paginatedRowModel: createPaginatedRowModel(),
+  });
+
   const table = useTable({
     columns,
     data: videoState,
-    features: stockFeatures,
+    features,
     state: { pagination, rowSelection },
     getRowId: (row) => row.uniqueId,
     enableRowSelection: true,

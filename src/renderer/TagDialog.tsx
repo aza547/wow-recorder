@@ -1,5 +1,5 @@
 import { RendererVideo } from 'main/types';
-import { Dispatch, SetStateAction, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { getLocalePhrase } from 'localisation/translations';
 import {
   Dialog,
@@ -29,19 +29,14 @@ import {
 import { specImages } from './images';
 import Box from '@mui/material/Box/Box';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
-import {
-  Cloud,
-  MessageSquare,
-  MessageSquareMore,
-  SaveIcon,
-} from 'lucide-react';
+import { Cloud, Pen, PenLine, SaveIcon } from 'lucide-react';
 
 interface IProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  tagDialogVideoTarget: RendererVideo | null;
-  setTagDialogVideoTarget: Dispatch<SetStateAction<RendererVideo | null>>;
-  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
+  tagDialogVideoTargetId: string | null;
+  videoState: Array<RendererVideo>;
+  setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
   language: Language;
 }
 
@@ -49,12 +44,14 @@ export default function TagDialog(props: IProps) {
   const {
     open,
     setOpen,
+    videoState,
     setVideoState,
     language,
-    tagDialogVideoTarget,
-    setTagDialogVideoTarget,
+    tagDialogVideoTargetId,
   } = props;
+
   const [tag, setTag] = useState('');
+  const [rowSelection, setRowSelection] = useState({});
 
   // const handleOpenChange = (isOpen: boolean) => {
   //   setTagDialogVideoTarget(isOpen ? tagDialogVideoTarget : null);
@@ -153,9 +150,9 @@ export default function TagDialog(props: IProps) {
     const { tag } = row.original;
 
     if (tag) {
-      return <MessageSquareMore size={20} className="mx-2" />;
+      return <PenLine size={18} className="mx-2" />;
     }
-    return <MessageSquare size={20} className="mx-2" />;
+    return <Pen size={18} className="mx-2" />;
   };
 
   const populateStorageCell = (
@@ -165,9 +162,9 @@ export default function TagDialog(props: IProps) {
     const { cloud } = row.original;
 
     if (cloud) {
-      return <Cloud size={20} />;
+      return <Cloud size={18} />;
     }
-    return <SaveIcon size={20} />;
+    return <SaveIcon size={18} />;
   };
 
   const populateTagStatusCell = (
@@ -182,47 +179,46 @@ export default function TagDialog(props: IProps) {
     return <div className=" truncate text-sm">No custom tag</div>;
   };
 
-  const columns = useMemo<
-    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
-  >(
-    () => [
-      {
-        id: 'Tag',
-        accessorFn: (v) => v,
-        cell: (ctx) => populateTagCell(ctx),
-      },
-      {
-        id: 'Storage',
-        accessorFn: (v) => v,
-        cell: (ctx) => populateStorageCell(ctx),
-      },
-      {
-        id: 'Player',
-        accessorFn: (v) => v,
-        accessorKey: 'encounterName',
-        cell: (ctx) => populatePlayerCell(ctx),
-      },
-      {
-        id: 'Status',
-        accessorFn: (v) => v,
-        accessorKey: 'encounterName',
-        cell: (ctx) => populateTagStatusCell(ctx),
-      },
-    ],
-    [],
-  );
+  const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
+    {
+      id: 'Tag',
+      accessorFn: (v) => v,
+      cell: (ctx) => populateTagCell(ctx),
+    },
+    {
+      id: 'Storage',
+      accessorFn: (v) => v,
+      cell: (ctx) => populateStorageCell(ctx),
+    },
+    {
+      id: 'Player',
+      accessorFn: (v) => v,
+      accessorKey: 'encounterName',
+      cell: (ctx) => populatePlayerCell(ctx),
+    },
+    {
+      id: 'Status',
+      accessorFn: (v) => v,
+      accessorKey: 'encounterName',
+      cell: (ctx) => populateTagStatusCell(ctx),
+    },
+  ];
 
   const data = useMemo<Array<RendererVideo>>(() => {
-    return tagDialogVideoTarget
-      ? [tagDialogVideoTarget, ...tagDialogVideoTarget.multiPov]
-      : [];
-  }, [tagDialogVideoTarget]);
+    const parent = videoState.find(
+      (v) => v.uniqueId === tagDialogVideoTargetId,
+    );
+    return parent ? [parent, ...parent.multiPov] : [];
+  }, [tagDialogVideoTargetId, videoState]);
 
   const table = useTable({
     columns,
     data,
     features: stockFeatures,
     getRowId: (row) => row.uniqueId,
+    enableRowSelection: true,
+    state: { rowSelection },
+    onRowSelectionChange: setRowSelection,
   });
 
   const renderTable = () => {
@@ -304,6 +300,34 @@ export default function TagDialog(props: IProps) {
     return <Dialog open={open} onOpenChange={setOpen}></Dialog>;
   }
 
+  const renderTextArea = () => {
+    const selected = table.getSelectedRowModel().rows;
+    const tooltip =
+      selected.length < 1
+        ? 'Select a video to add a tag.'
+        : getLocalePhrase(language, Phrase.TagButtonTooltip);
+
+    return (
+      <Textarea
+        maxLength={1024}
+        className="bg-background-dark-gradient-to rounded-sm h-20
+                    border-background-dark-gradient-to flex-1 resize-none
+                    placeholder:text-foreground  focus-visible:ring-0
+                    focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
+        placeholder={tooltip}
+        spellCheck={false}
+        value={tag}
+        disabled={selected.length !== 1}
+        onChange={(e) => setTag(e.target.value)}
+        onKeyDown={(e) => {
+          // Need this to prevent "k" triggering video play/pause while
+          // dialog is open and other similar things.
+          e.stopPropagation();
+        }}
+      />
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
@@ -315,31 +339,16 @@ export default function TagDialog(props: IProps) {
           are not used for any other purpose and do not affect the video.
         </div>
         {renderTable()}
-        <Textarea
-          maxLength={1024}
-          className="bg-background-dark-gradient-to rounded-sm h-20
-                    border-background-dark-gradient-to flex-1 resize-none
-                    placeholder:text-foreground  focus-visible:ring-0
-                    focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
-          placeholder={getLocalePhrase(language, Phrase.TagButtonTooltip)}
-          spellCheck={false}
-          value={tag}
-          onChange={(e) => setTag(e.target.value)}
-          onKeyDown={(e) => {
-            // Need this to prevent "k" triggering video play/pause while
-            // dialog is open and other similar things.
-            e.stopPropagation();
-          }}
-        />
+        {renderTextArea()}
         <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="ghost">Close</Button>
+          </DialogClose>
+
+          <Button variant="ghost">Clear All</Button>
           <Button onClick={onSave} type="submit">
             {getLocalePhrase(language, Phrase.Save)}
           </Button>
-          <DialogClose asChild>
-            <Button onClick={onSave} variant="outline">
-              Close
-            </Button>
-          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

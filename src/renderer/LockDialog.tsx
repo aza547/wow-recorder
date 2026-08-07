@@ -36,8 +36,9 @@ const ipc = window.electron.ipcRenderer;
 interface IProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  lockDialogVideoTarget: RendererVideo | null;
-  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
+  lockDialogVideoTargetId: string | null;
+  videoState: Array<RendererVideo>;
+  setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
   language: Language;
   cloudStatus: CloudStatus;
 }
@@ -46,17 +47,33 @@ export default function LockDialog(props: IProps) {
   const {
     open,
     setOpen,
-    lockDialogVideoTarget,
+    lockDialogVideoTargetId,
+    videoState,
     setVideoState,
     language,
     cloudStatus,
   } = props;
 
+  const setLock = (videos: Array<RendererVideo>, lock: boolean) => {
+    const disk = videos.filter((v) => !v.cloud);
+    const cloud = videos.filter((v) => v.cloud);
+
+    ipc.sendMessage('videoButtonDisk', ['protect', lock, disk]);
+    ipc.sendMessage('videoButtonCloud', ['protect', lock, cloud]);
+
+    setVideoState((prev) => {
+      return prev.map((rv) => {
+        return videos.some((v) => v.uniqueId == rv.uniqueId)
+          ? { ...rv, isProtected: lock }
+          : rv;
+      });
+    });
+  };
+
   const populateLockDialogLockCell = (
     ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
     language: Language,
     cloudStatus: CloudStatus,
-    setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
   ) => {
     const video = ctx.getValue() as RendererVideo;
     const { write, del } = cloudStatus;
@@ -65,28 +82,10 @@ export default function LockDialog(props: IProps) {
     const noPermission =
       (!write && video.cloud) || (!del && video.cloud && isProtected);
 
-    const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
-      stopPropagation(e);
-
-      if (video.cloud) {
-        ipc.sendMessage('videoButtonCloud', ['protect', !isProtected, [video]]);
-      } else {
-        ipc.sendMessage('videoButtonDisk', ['protect', !isProtected, [video]]);
-      }
-
-      setVideoState((prev) => {
-        return prev.map((rv) => {
-          return video.uniqueId == rv.uniqueId
-            ? { ...rv, isProtected: !isProtected }
-            : rv;
-        });
-      });
-    };
-
     const icon = isProtected ? (
-      <LockKeyhole size={20} />
+      <LockKeyhole size={18} />
     ) : (
-      <LockOpen size={20} />
+      <LockOpen size={18} />
     );
 
     let tooltip = '';
@@ -100,12 +99,15 @@ export default function LockDialog(props: IProps) {
     }
 
     return (
-      <Tooltip content="asd">
+      <Tooltip content={tooltip}>
         <div>
           <Button
             variant="ghost"
             size="xs"
-            onClick={toggleProtected}
+            onClick={(event) => {
+              stopPropagation(event);
+              setLock([video], !isProtected);
+            }}
             disabled={noPermission}
           >
             {icon}
@@ -122,9 +124,9 @@ export default function LockDialog(props: IProps) {
     const { cloud } = row.original;
 
     if (cloud) {
-      return <Cloud size={20} />;
+      return <Cloud size={18} />;
     }
-    return <SaveIcon size={20} />;
+    return <SaveIcon size={18} />;
   };
 
   const populatePlayerCell = (
@@ -194,42 +196,42 @@ export default function LockDialog(props: IProps) {
     );
   };
 
-  const columns = useMemo<
-    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
-  >(
-    () => [
-      {
-        id: 'Lock',
-        accessorFn: (v) => v,
-        cell: (ctx) =>
-          populateLockDialogLockCell(ctx, language, cloudStatus, setVideoState),
-      },
-      {
-        id: 'Storage',
-        accessorFn: (v) => v,
-        cell: (ctx) => populateStorageCell(ctx),
-      },
-      {
-        id: 'Player',
-        accessorFn: (v) => v,
-        accessorKey: 'encounterName',
-        cell: (ctx) => populatePlayerCell(ctx),
-      },
-      {
-        id: 'Status',
-        accessorFn: (v) => v,
-        accessorKey: 'encounterName',
-        cell: (ctx) => populateLockedStatusCell(ctx),
-      },
-    ],
-    [cloudStatus, language, setVideoState],
-  );
+  const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
+    {
+      id: 'Lock',
+      accessorFn: (v) => v,
+      cell: (ctx) => populateLockDialogLockCell(ctx, language, cloudStatus),
+    },
+    {
+      id: 'Storage',
+      accessorFn: (v) => v,
+      cell: (ctx) => populateStorageCell(ctx),
+    },
+    {
+      id: 'Player',
+      accessorFn: (v) => v,
+      accessorKey: 'encounterName',
+      cell: (ctx) => populatePlayerCell(ctx),
+    },
+    {
+      id: 'Status',
+      accessorFn: (v) => v,
+      accessorKey: 'encounterName',
+      cell: (ctx) => populateLockedStatusCell(ctx),
+    },
+  ];
 
   const data = useMemo<Array<RendererVideo>>(() => {
-    return lockDialogVideoTarget
-      ? [lockDialogVideoTarget, ...lockDialogVideoTarget.multiPov]
-      : [];
-  }, [lockDialogVideoTarget]);
+    const parent = videoState.find(
+      (v) => v.uniqueId === lockDialogVideoTargetId,
+    );
+
+    if (parent) {
+      return [parent, ...parent.multiPov];
+    }
+
+    return [];
+  }, [lockDialogVideoTargetId, videoState]);
 
   const table = useTable({
     columns,
@@ -286,6 +288,26 @@ export default function LockDialog(props: IProps) {
     );
   };
 
+  const renderLockAllButton = () => {
+    const actionIsLock = data.some((v) => !v.isProtected);
+    const includesCloud = data.some((v) => v.cloud);
+    const label = actionIsLock ? 'Lock All' : 'Unlock All';
+    const { write, del } = cloudStatus;
+    const noPermission = includesCloud && (!write || (!del && !actionIsLock));
+
+    return (
+      <Button
+        disabled={noPermission}
+        onClick={(event) => {
+          stopPropagation(event);
+          setLock(data, actionIsLock);
+        }}
+      >
+        {label}
+      </Button>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
@@ -298,10 +320,10 @@ export default function LockDialog(props: IProps) {
         </div>
         {renderTable()}
         <DialogFooter>
-          <Button>Lock/Unlock All</Button>
           <DialogClose asChild>
-            <Button variant="outline">Close</Button>
+            <Button variant="ghost">Close</Button>
           </DialogClose>
+          {renderLockAllButton()}
         </DialogFooter>
       </DialogContent>
     </Dialog>
