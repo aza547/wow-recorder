@@ -15,10 +15,7 @@ import { Textarea } from './components/TextArea/textarea';
 import {
   CellContext,
   ColumnDef,
-  createSortedRowModel,
   flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
   Row,
   stockFeatures,
   useTable,
@@ -102,7 +99,9 @@ export default function TagDialog(props: IProps) {
     saveTag(tag ?? '');
   };
 
-  const populatePlayerCell = (info: CellContext<RendererVideo, unknown>) => {
+  const populatePlayerCell = (
+    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
     const video = info.getValue() as RendererVideo;
     const { player } = video;
 
@@ -147,7 +146,9 @@ export default function TagDialog(props: IProps) {
     return <div className="flex truncate">{renderSpecAndName()}</div>;
   };
 
-  const populateTagCell = (ctx: CellContext<RendererVideo, unknown>) => {
+  const populateTagCell = (
+    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
     const { row } = ctx;
     const { tag } = row.original;
 
@@ -157,7 +158,9 @@ export default function TagDialog(props: IProps) {
     return <MessageSquare size={20} className="mx-2" />;
   };
 
-  const populateStorageCell = (ctx: CellContext<RendererVideo, unknown>) => {
+  const populateStorageCell = (
+    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
     const { row } = ctx;
     const { cloud } = row.original;
 
@@ -167,7 +170,9 @@ export default function TagDialog(props: IProps) {
     return <SaveIcon size={20} />;
   };
 
-  const populateTagStatusCell = (info: CellContext<RendererVideo, unknown>) => {
+  const populateTagStatusCell = (
+    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
     const { row } = info;
     const { tag } = row.original;
 
@@ -177,7 +182,9 @@ export default function TagDialog(props: IProps) {
     return <div className=" truncate text-sm">No custom tag</div>;
   };
 
-  const columns = useMemo<ColumnDef<RendererVideo>[]>(
+  const columns = useMemo<
+    ColumnDef<typeof stockFeatures, RendererVideo, unknown>[]
+  >(
     () => [
       {
         id: 'Tag',
@@ -227,7 +234,7 @@ export default function TagDialog(props: IProps) {
 
     const onRowClick = (
       event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,
-      row: Row<RendererVideo>,
+      row: Row<typeof stockFeatures, RendererVideo>,
     ) => {
       const selectedRows = table.getSelectedRowModel().rows;
 
@@ -292,6 +299,10 @@ export default function TagDialog(props: IProps) {
       </div>
     );
   };
+
+  if (!open) {
+    return <Dialog open={open} onOpenChange={setOpen}></Dialog>;
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
