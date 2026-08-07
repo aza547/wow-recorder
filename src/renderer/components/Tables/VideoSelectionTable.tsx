@@ -75,7 +75,7 @@ const VideoSelectionTable = (props: IProps) => {
 
         allRows.slice(start, end).forEach((r) => {
           if (!r.getIsSelected()) {
-            r.getToggleSelectedHandler()(event);
+            r.toggleSelected(true);
           }
         });
 
