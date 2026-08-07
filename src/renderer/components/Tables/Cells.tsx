@@ -31,6 +31,8 @@ import {
   ExternalLink,
   FolderLock,
   FolderPen,
+  Pen,
+  PenLine,
 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
@@ -110,9 +112,9 @@ export const populateDetailsCell = (
   cloudStatus: CloudStatus,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
   setLockDialogOpen: Dispatch<SetStateAction<boolean>>,
-  setLockDialogVideoTarget: Dispatch<SetStateAction<RendererVideo | null>>,
+  setLockDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
   setTagDialogOpen: Dispatch<SetStateAction<boolean>>,
-  setTagDialogVideoTarget: Dispatch<SetStateAction<RendererVideo | null>>,
+  setTagDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
 ) => {
   const video = ctx.getValue() as RendererVideo;
   const { write, del } = cloudStatus;
@@ -196,7 +198,7 @@ export const populateDetailsCell = (
             size="xs"
             onClick={(event) => {
               stopPropagation(event);
-              setLockDialogVideoTarget(video);
+              setLockDialogVideoTargetId(video.uniqueId);
               setLockDialogOpen(true);
             }}
           >
@@ -212,7 +214,7 @@ export const populateDetailsCell = (
     const noPermission = !write && toTag.some((v) => v.cloud);
 
     let tag = '';
-    let icon = <MessageSquare size={18} />;
+    let icon = <Pen size={18} />;
 
     let tooltip = noPermission
       ? getLocalePhrase(language, Phrase.GuildNoPermission)
@@ -222,7 +224,7 @@ export const populateDetailsCell = (
 
     if (foundTag) {
       tag = foundTag;
-      icon = <MessageSquareMore size={18} />;
+      icon = <PenLine size={18} />;
 
       if (tag.length > 50) {
         tooltip = `${tag.slice(0, 50)}...`;
@@ -238,8 +240,9 @@ export const populateDetailsCell = (
             variant="ghost"
             size="xs"
             disabled={noPermission}
-            onClick={() => {
-              setTagDialogVideoTarget(video);
+            onClick={(event) => {
+              stopPropagation(event);
+              setTagDialogVideoTargetId(video.uniqueId);
               setTagDialogOpen(true);
             }}
           >
@@ -283,7 +286,7 @@ export const populateDetailsCell = (
             disabled={noPermission}
             onClick={(event) => {
               stopPropagation(event);
-              setTagDialogVideoTarget(video);
+              setTagDialogVideoTargetId(video.uniqueId);
               setTagDialogOpen(true);
             }}
           >

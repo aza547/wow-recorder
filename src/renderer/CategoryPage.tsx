@@ -100,13 +100,15 @@ const CategoryPage = (props: IProps) => {
 
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
 
-  const [lockDialogVideoTarget, setLockDialogVideoTarget] =
-    useState<RendererVideo | null>(null);
+  const [lockDialogVideoTargetId, setLockDialogVideoTargetId] = useState<
+    string | null
+  >(null);
 
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
 
-  const [tagDialogVideoTarget, setTagDialogVideoTarget] =
-    useState<RendererVideo | null>(null);
+  const [tagDialogVideoTargetId, setTagDialogVideoTargetId] = useState<
+    string | null
+  >(null);
 
   // The category state, recalculated only when required.
   const categoryState = useMemo<RendererVideo[]>(() => {
@@ -172,9 +174,9 @@ const CategoryPage = (props: IProps) => {
     getClipParent,
     goToClipParent,
     setLockDialogOpen,
-    setLockDialogVideoTarget,
+    setLockDialogVideoTargetId,
     setTagDialogOpen,
-    setTagDialogVideoTarget,
+    setTagDialogVideoTargetId,
   );
 
   const haveVideos = categoryState.length > 0;
@@ -705,7 +707,8 @@ const CategoryPage = (props: IProps) => {
           <LockDialog
             open={lockDialogOpen}
             setOpen={setLockDialogOpen}
-            lockDialogVideoTarget={lockDialogVideoTarget}
+            lockDialogVideoTargetId={lockDialogVideoTargetId}
+            videoState={videoState}
             setVideoState={setVideoState}
             language={language}
             cloudStatus={cloudStatus}
@@ -713,8 +716,8 @@ const CategoryPage = (props: IProps) => {
           <TagDialog
             open={tagDialogOpen}
             setOpen={setTagDialogOpen}
-            tagDialogVideoTarget={tagDialogVideoTarget}
-            setTagDialogVideoTarget={setTagDialogVideoTarget}
+            tagDialogVideoTargetId={tagDialogVideoTargetId}
+            videoState={videoState}
             setVideoState={setVideoState}
             language={language}
           />
