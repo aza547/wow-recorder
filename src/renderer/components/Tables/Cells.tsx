@@ -1,5 +1,10 @@
 import { CellContext, stockFeatures } from '@tanstack/react-table';
-import { CloudStatus, RendererClip, RendererVideo } from 'main/types';
+import {
+  CloudStatus,
+  DialogType,
+  RendererClip,
+  RendererVideo,
+} from 'main/types';
 import {
   getVideoResultText,
   getResultColor,
@@ -29,15 +34,15 @@ import {
   MessageSquare,
   MessageSquareMore,
   ExternalLink,
-  FolderLock,
-  FolderPen,
-  Pen,
-  PenLine,
 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
 import KillVideoDialog from 'renderer/KillVideoDialog';
 import wcrIcon from '../../../../assets/icon/small-icon.png';
+import { FolderLocked } from 'renderer/icons/FolderLocked';
+import { FolderUnlocked } from 'renderer/icons/FolderUnlocked';
+import { FolderMessageSquare } from 'renderer/icons/FolderMessageSquare';
+import { FolderMessageSquareMore } from 'renderer/icons/FolderMessageSquareMore';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -111,9 +116,8 @@ export const populateDetailsCell = (
   language: Language,
   cloudStatus: CloudStatus,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
-  setLockDialogOpen: Dispatch<SetStateAction<boolean>>,
+  setDialog: Dispatch<SetStateAction<DialogType>>,
   setLockDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
-  setTagDialogOpen: Dispatch<SetStateAction<boolean>>,
   setTagDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
 ) => {
   const video = ctx.getValue() as RendererVideo;
@@ -133,7 +137,7 @@ export const populateDetailsCell = (
 
     const disabled = noPermission || toProtect.length < 1;
 
-    const icon = lock ? <LockOpen size={20} /> : <LockKeyhole size={20} />;
+    const icon = lock ? <LockOpen size={18} /> : <LockKeyhole size={18} />;
 
     let tooltip = '';
 
@@ -190,6 +194,12 @@ export const populateDetailsCell = (
   const renderProtectedIconMulti = () => {
     const tooltip = 'Open Multilock dialog';
 
+    const icon = [video, ...video.multiPov].some((v) => v.isProtected) ? (
+      <FolderLocked size={20} />
+    ) : (
+      <FolderUnlocked size={20} />
+    );
+
     return (
       <Tooltip content={tooltip}>
         <div>
@@ -199,51 +209,7 @@ export const populateDetailsCell = (
             onClick={(event) => {
               stopPropagation(event);
               setLockDialogVideoTargetId(video.uniqueId);
-              setLockDialogOpen(true);
-            }}
-          >
-            <FolderLock size={20} />
-          </Button>
-        </div>
-      </Tooltip>
-    );
-  };
-
-  const renderTagIconSingle = () => {
-    const toTag = [video, ...video.multiPov];
-    const noPermission = !write && toTag.some((v) => v.cloud);
-
-    let tag = '';
-    let icon = <Pen size={18} />;
-
-    let tooltip = noPermission
-      ? getLocalePhrase(language, Phrase.GuildNoPermission)
-      : getLocalePhrase(language, Phrase.TagButtonTooltip);
-
-    const foundTag = toTag.map((v) => v.tag).find((t) => t);
-
-    if (foundTag) {
-      tag = foundTag;
-      icon = <PenLine size={18} />;
-
-      if (tag.length > 50) {
-        tooltip = `${tag.slice(0, 50)}...`;
-      } else {
-        tooltip = tag;
-      }
-    }
-
-    return (
-      <Tooltip content={tooltip}>
-        <div>
-          <Button
-            variant="ghost"
-            size="xs"
-            disabled={noPermission}
-            onClick={(event) => {
-              stopPropagation(event);
-              setTagDialogVideoTargetId(video.uniqueId);
-              setTagDialogOpen(true);
+              setDialog(DialogType.LOCK);
             }}
           >
             {icon}
@@ -253,7 +219,7 @@ export const populateDetailsCell = (
     );
   };
 
-  const renderTagIconMulti = () => {
+  const renderTagIconSingle = () => {
     const toTag = [video, ...video.multiPov];
     const noPermission = !write && toTag.some((v) => v.cloud);
 
@@ -287,10 +253,47 @@ export const populateDetailsCell = (
             onClick={(event) => {
               stopPropagation(event);
               setTagDialogVideoTargetId(video.uniqueId);
-              setTagDialogOpen(true);
+              setDialog(DialogType.TAG);
             }}
           >
-            <FolderPen size={20} />
+            {icon}
+          </Button>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const renderTagIconMulti = () => {
+    const toTag = [video, ...video.multiPov];
+    const noPermission = !write && toTag.some((v) => v.cloud);
+
+    let icon = <FolderMessageSquare size={18} />;
+
+    let tooltip = noPermission
+      ? getLocalePhrase(language, Phrase.GuildNoPermission)
+      : getLocalePhrase(language, Phrase.TagButtonTooltip);
+
+    const foundTag = toTag.map((v) => v.tag).find((t) => t);
+
+    if (foundTag) {
+      icon = <FolderMessageSquareMore size={18} />;
+      tooltip = `Open multitag dialog`;
+    }
+
+    return (
+      <Tooltip content={tooltip}>
+        <div>
+          <Button
+            variant="ghost"
+            size="xs"
+            disabled={noPermission}
+            onClick={(event) => {
+              stopPropagation(event);
+              setTagDialogVideoTargetId(video.uniqueId);
+              setDialog(DialogType.TAG);
+            }}
+          >
+            {icon}
           </Button>
         </div>
       </Tooltip>

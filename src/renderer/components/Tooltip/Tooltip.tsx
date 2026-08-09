@@ -33,7 +33,6 @@ const Tooltip = ({
       open={open}
       defaultOpen={defaultOpen}
       onOpenChange={(value) => {
-        console.log('tooltip changed', value, content);
         onOpenChange?.(value);
       }}
       delayDuration={delayDuration}

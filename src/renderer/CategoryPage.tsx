@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
   AppState,
+  DialogType,
   RendererClip,
   RendererVideo,
   StorageFilter,
@@ -97,14 +98,20 @@ const CategoryPage = (props: IProps) => {
 
   const { write, del } = cloudStatus;
   const [config, setConfig] = useSettings();
+  const [dialog, setDialog] = useState<DialogType>(DialogType.NONE);
 
-  const [lockDialogOpen, setLockDialogOpen] = useState(false);
+  const setLockDialog = (open: boolean) =>
+    setDialog(open ? DialogType.LOCK : DialogType.NONE);
+
+  const setTagDialog = (open: boolean) =>
+    setDialog(open ? DialogType.TAG : DialogType.NONE);
+
+  const setDeleteDialog = (open: boolean) =>
+    setDialog(open ? DialogType.DELETE : DialogType.NONE);
 
   const [lockDialogVideoTargetId, setLockDialogVideoTargetId] = useState<
     string | null
   >(null);
-
-  const [tagDialogOpen, setTagDialogOpen] = useState(false);
 
   const [tagDialogVideoTargetId, setTagDialogVideoTargetId] = useState<
     string | null
@@ -117,7 +124,7 @@ const CategoryPage = (props: IProps) => {
   }, [videoState, category]);
 
   // Filter by storage type before we apply grouping.
-  const correlatedState = useMemo<RendererVideo[]>(() => {
+  const { correlatedState, parentLookupMap } = useMemo(() => {
     const storageFilterFn = getVideoStorageFilter(storageFilter);
     const storageFilteredState = categoryState.filter(storageFilterFn);
     return VideoCorrelator.correlate(storageFilteredState);
@@ -173,9 +180,8 @@ const CategoryPage = (props: IProps) => {
     setVideoState,
     getClipParent,
     goToClipParent,
-    setLockDialogOpen,
+    setDialog,
     setLockDialogVideoTargetId,
-    setTagDialogOpen,
     setTagDialogVideoTargetId,
   );
 
@@ -557,15 +563,18 @@ const CategoryPage = (props: IProps) => {
         ? getLocalePhrase(language, Phrase.GuildNoPermission)
         : getLocalePhrase(language, Phrase.BulkDeleteButtonTooltip);
 
+      const ids = selectedRows.map((r) => r.original.uniqueId);
+
       return (
         <Tooltip content={tooltip}>
           <div>
             <DeleteDialog
-              key={toDelete.map((v) => v.videoName).join(',')} // Forces a remount on selection change.
-              inScope={toDelete}
-              appState={appState}
+              open={dialog === DialogType.DELETE}
+              onOpenChange={setDeleteDialog}
+              deleteDialogVideoTargetIds={ids}
+              parentLookupMap={parentLookupMap}
               setVideoState={setVideoState}
-              selectedRowCount={selectedRows.length}
+              language={language}
             >
               <Button
                 variant="secondary"
@@ -705,19 +714,19 @@ const CategoryPage = (props: IProps) => {
         </div>
         <div className="w-full h-full overflow-hidden">
           <LockDialog
-            open={lockDialogOpen}
-            setOpen={setLockDialogOpen}
+            open={dialog === DialogType.LOCK}
+            onOpenChange={setLockDialog}
             lockDialogVideoTargetId={lockDialogVideoTargetId}
-            videoState={videoState}
+            parentLookupMap={parentLookupMap}
             setVideoState={setVideoState}
             language={language}
             cloudStatus={cloudStatus}
           />
           <TagDialog
-            open={tagDialogOpen}
-            setOpen={setTagDialogOpen}
+            open={dialog === DialogType.TAG}
+            onOpenChange={setTagDialog}
             tagDialogVideoTargetId={tagDialogVideoTargetId}
-            videoState={videoState}
+            parentLookupMap={parentLookupMap}
             setVideoState={setVideoState}
             language={language}
           />
@@ -727,6 +736,7 @@ const CategoryPage = (props: IProps) => {
             appState={appState}
             setAppState={setAppState}
             persistentProgress={persistentProgress}
+            dialogOpen={dialog !== DialogType.NONE}
           />
         </div>
       </>

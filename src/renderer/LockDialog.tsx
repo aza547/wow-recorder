@@ -27,17 +27,19 @@ import {
 } from './rendererutils';
 import { specImages } from './images';
 import Box from '@mui/material/Box/Box';
-import { Cloud, LockKeyhole, LockOpen, SaveIcon } from 'lucide-react';
+import { LockKeyhole, LockOpen } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import SaveIcon from '@mui/icons-material/Save';
+import CloudIcon from '@mui/icons-material/Cloud';
 
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
+  onOpenChange: (open: boolean) => void;
   lockDialogVideoTargetId: string | null;
-  videoState: Array<RendererVideo>;
+  parentLookupMap: Map<string, RendererVideo>;
   setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
   language: Language;
   cloudStatus: CloudStatus;
@@ -46,9 +48,9 @@ interface IProps {
 export default function LockDialog(props: IProps) {
   const {
     open,
-    setOpen,
+    onOpenChange,
     lockDialogVideoTargetId,
-    videoState,
+    parentLookupMap,
     setVideoState,
     language,
     cloudStatus,
@@ -100,7 +102,7 @@ export default function LockDialog(props: IProps) {
 
     return (
       <Tooltip content={tooltip}>
-        <div>
+        <div className="flex justify-center items-center">
           <Button
             variant="ghost"
             size="xs"
@@ -123,10 +125,29 @@ export default function LockDialog(props: IProps) {
     const { row } = ctx;
     const { cloud } = row.original;
 
-    if (cloud) {
-      return <Cloud size={18} />;
-    }
-    return <SaveIcon size={18} />;
+    const icon = cloud ? (
+      <CloudIcon
+        sx={{
+          height: '18px',
+          width: '18px',
+          color: 'white',
+          opacity: 0.3,
+          marginBottom: '3px',
+        }}
+      />
+    ) : (
+      <SaveIcon
+        sx={{
+          height: '18px',
+          width: '18px',
+          color: 'white',
+          opacity: 0.3,
+          marginBottom: '3px',
+        }}
+      />
+    );
+
+    return <div className="flex justify-center items-center">{icon}</div>;
   };
 
   const populatePlayerCell = (
@@ -147,14 +168,12 @@ export default function LockDialog(props: IProps) {
 
     const renderSpecAndName = () => {
       return (
-        <>
+        <div className="flex items-center pl-2 min-w-0">
           <Box
-            key={player._GUID}
             component="img"
             src={specIcon}
-            className="bg-background-higher"
+            className="bg-background-higher shrink-0"
             sx={{
-              display: 'flex',
               height: '25px',
               width: '25px',
               border: '1px solid black',
@@ -163,13 +182,14 @@ export default function LockDialog(props: IProps) {
               objectFit: 'cover',
             }}
           />
+
           <div
-            className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate flex items-center"
+            className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate min-w-0"
             style={{ color: playerClassColor }}
           >
             {playerName}
           </div>
-        </>
+        </div>
       );
     };
 
@@ -222,16 +242,20 @@ export default function LockDialog(props: IProps) {
   ];
 
   const data = useMemo<Array<RendererVideo>>(() => {
-    const parent = videoState.find(
-      (v) => v.uniqueId === lockDialogVideoTargetId,
-    );
+    const parent = lockDialogVideoTargetId
+      ? parentLookupMap.get(lockDialogVideoTargetId)
+      : undefined;
 
-    if (parent) {
-      return [parent, ...parent.multiPov];
-    }
+    const group = parent ? [parent, ...parent.multiPov] : [];
 
-    return [];
-  }, [lockDialogVideoTargetId, videoState]);
+    group.sort((a, b) => {
+      const aName = a.player?._name ?? '';
+      const bName = b.player?._name ?? '';
+      return aName.localeCompare(bName);
+    });
+
+    return group;
+  }, [parentLookupMap, lockDialogVideoTargetId]);
 
   const table = useTable({
     columns,
@@ -249,17 +273,13 @@ export default function LockDialog(props: IProps) {
 
     return (
       <div className="max-h-[400px] overflow-auto">
-        <ScrollArea
-          id={'asdasd'}
-          withScrollIndicators={false}
-          className="h-full w-full"
-        >
+        <ScrollArea withScrollIndicators={false} className="h-full w-full">
           <div>
             <table className="table-fixed w-full mx-auto border-separate border-spacing-y-0 overflow-hidden rounded-sm">
               <colgroup>
-                <col style={{ width: 40 }} />
-                <col style={{ width: 40 }} />
-                <col style={{ width: 150 }} />
+                <col style={{ width: 35 }} />
+                <col style={{ width: 35 }} />
+                <col style={{ width: 125 }} />
                 <col />
               </colgroup>
               <tbody>
@@ -309,7 +329,7 @@ export default function LockDialog(props: IProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Lock Manager</DialogTitle>

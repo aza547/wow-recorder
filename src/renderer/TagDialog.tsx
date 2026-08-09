@@ -1,5 +1,12 @@
 import { RendererVideo } from 'main/types';
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { getLocalePhrase } from 'localisation/translations';
 import {
   Dialog,
@@ -29,71 +36,84 @@ import {
 import { specImages } from './images';
 import Box from '@mui/material/Box/Box';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
-import { Cloud, Pen, PenLine, SaveIcon } from 'lucide-react';
+import { MessageSquare, MessageSquareMore } from 'lucide-react';
+import SaveIcon from '@mui/icons-material/Save';
+import CloudIcon from '@mui/icons-material/Cloud';
 
 interface IProps {
   open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
+  onOpenChange: (open: boolean) => void;
   tagDialogVideoTargetId: string | null;
-  videoState: Array<RendererVideo>;
+  parentLookupMap: Map<string, RendererVideo>;
   setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
   language: Language;
 }
 
+const ipc = window.electron.ipcRenderer;
+
 export default function TagDialog(props: IProps) {
   const {
     open,
-    setOpen,
-    videoState,
+    onOpenChange,
+    parentLookupMap,
     setVideoState,
     language,
     tagDialogVideoTargetId,
   } = props;
 
-  const [tag, setTag] = useState('');
   const [rowSelection, setRowSelection] = useState({});
+  const [innerTag, setInnerTag] = useState<string>('');
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // const handleOpenChange = (isOpen: boolean) => {
-  //   setTagDialogVideoTarget(isOpen ? tagDialogVideoTarget : null);
-  //   setTag(tag);
-  // };
+  const saveTag = (video: RendererVideo, tag: string) => {
+    if (video.cloud) {
+      ipc.sendMessage('videoButtonCloud', ['tag', tag, [video]]);
+    } else {
+      ipc.sendMessage('videoButtonDisk', ['tag', tag, [video]]);
+    }
 
-  const saveTag = (newTag: string) => {
-    // const toProtectDisk = videos.filter((v) => !v.cloud);
-    // const toProtectCloud = videos.filter((v) => v.cloud);
-    // window.electron.ipcRenderer.sendMessage('videoButtonDisk', [
-    //   'tag',
-    //   newTag,
-    //   toProtectDisk,
-    // ]);
-    // window.electron.ipcRenderer.sendMessage('videoButtonCloud', [
-    //   'tag',
-    //   newTag,
-    //   toProtectCloud,
-    // ]);
-    // setVideoState((prev) => {
-    //   const state = [...prev];
-    //   state.forEach((rv) => {
-    //     // A video is uniquely identified by its name and storage type.
-    //     const match = videos.find(
-    //       (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
-    //     );
-    //     if (match) {
-    //       rv.tag = newTag;
-    //     }
-    //   });
-    //   return state;
-    // });
+    setVideoState((prev) =>
+      prev.map((rv) => (rv.uniqueId === video.uniqueId ? { ...rv, tag } : rv)),
+    );
   };
 
-  const clearTag = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    saveTag('');
+  const clearAllTags = () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+
+    const videos = table.getRowModel().rows.map((r) => r.original);
+    const ids = videos.map((v) => v.uniqueId);
+    const disk = videos.filter((v) => !v.cloud);
+    const cloud = videos.filter((v) => v.cloud);
+
+    ipc.sendMessage('videoButtonCloud', ['tag', '', cloud]);
+    ipc.sendMessage('videoButtonDisk', ['tag', '', disk]);
+
+    setInnerTag('');
+
+    setVideoState((prev) => {
+      return prev.map((rv) =>
+        ids.includes(rv.uniqueId) ? { ...rv, tag: '' } : rv,
+      );
+    });
   };
 
-  const onSave = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    saveTag(tag ?? '');
+  const handleOpenChange = (open: boolean) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+
+      const selected = table.getSelectedRowModel().rows;
+      const video = selected[0]?.original;
+
+      if (video) {
+        saveTag(video, innerTag);
+      }
+    }
+
+    onOpenChange(open);
   };
 
   const populatePlayerCell = (
@@ -114,14 +134,12 @@ export default function TagDialog(props: IProps) {
 
     const renderSpecAndName = () => {
       return (
-        <>
+        <div className="flex items-center pl-2 min-w-0">
           <Box
-            key={player._GUID}
             component="img"
             src={specIcon}
-            className="bg-background-higher"
+            className="bg-background-higher shrink-0"
             sx={{
-              display: 'flex',
               height: '25px',
               width: '25px',
               border: '1px solid black',
@@ -130,13 +148,14 @@ export default function TagDialog(props: IProps) {
               objectFit: 'cover',
             }}
           />
+
           <div
-            className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate flex items-center"
+            className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate min-w-0"
             style={{ color: playerClassColor }}
           >
             {playerName}
           </div>
-        </>
+        </div>
       );
     };
 
@@ -149,10 +168,13 @@ export default function TagDialog(props: IProps) {
     const { row } = ctx;
     const { tag } = row.original;
 
-    if (tag) {
-      return <PenLine size={18} className="mx-2" />;
-    }
-    return <Pen size={18} className="mx-2" />;
+    const icon = tag ? (
+      <MessageSquareMore size={18} />
+    ) : (
+      <MessageSquare size={18} />
+    );
+
+    return <div className="flex justify-center items-center">{icon}</div>;
   };
 
   const populateStorageCell = (
@@ -161,10 +183,29 @@ export default function TagDialog(props: IProps) {
     const { row } = ctx;
     const { cloud } = row.original;
 
-    if (cloud) {
-      return <Cloud size={18} />;
-    }
-    return <SaveIcon size={18} />;
+    const icon = cloud ? (
+      <CloudIcon
+        sx={{
+          height: '18px',
+          width: '18px',
+          color: 'white',
+          opacity: 0.3,
+          marginBottom: '3px',
+        }}
+      />
+    ) : (
+      <SaveIcon
+        sx={{
+          height: '18px',
+          width: '18px',
+          color: 'white',
+          opacity: 0.3,
+          marginBottom: '3px',
+        }}
+      />
+    );
+
+    return <div className="flex justify-center items-center">{icon}</div>;
   };
 
   const populateTagStatusCell = (
@@ -172,11 +213,8 @@ export default function TagDialog(props: IProps) {
   ) => {
     const { row } = info;
     const { tag } = row.original;
-
-    if (tag) {
-      return <div className=" truncate text-sm mr-2">{tag}</div>;
-    }
-    return <div className=" truncate text-sm">No custom tag</div>;
+    const text = tag ? tag : 'No custom tag.';
+    return <div className="truncate text-sm">{text}</div>;
   };
 
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
@@ -205,11 +243,20 @@ export default function TagDialog(props: IProps) {
   ];
 
   const data = useMemo<Array<RendererVideo>>(() => {
-    const parent = videoState.find(
-      (v) => v.uniqueId === tagDialogVideoTargetId,
-    );
-    return parent ? [parent, ...parent.multiPov] : [];
-  }, [tagDialogVideoTargetId, videoState]);
+    const parent = tagDialogVideoTargetId
+      ? parentLookupMap.get(tagDialogVideoTargetId)
+      : undefined;
+
+    const group = parent ? [parent, ...parent.multiPov] : [];
+
+    group.sort((a, b) => {
+      const aName = a.player?._name ?? '';
+      const bName = b.player?._name ?? '';
+      return aName.localeCompare(bName);
+    });
+
+    return group;
+  }, [parentLookupMap, tagDialogVideoTargetId]);
 
   const table = useTable({
     columns,
@@ -218,54 +265,71 @@ export default function TagDialog(props: IProps) {
     getRowId: (row) => row.uniqueId,
     enableRowSelection: true,
     state: { rowSelection },
-    onRowSelectionChange: setRowSelection,
-  });
+    onRowSelectionChange: (newSelection) => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
 
-  const renderTable = () => {
-    const sorted = table.getRowModel().rows.sort((a, b) => {
-      const aName = a.original.player?._name ?? '';
-      const bName = b.original.player?._name ?? '';
-      return aName.localeCompare(bName);
-    });
+        const selected = table.getSelectedRowModel().rows;
+        const video = selected[0]?.original;
 
-    const onRowClick = (
-      event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,
-      row: Row<typeof stockFeatures, RendererVideo>,
-    ) => {
-      const selectedRows = table.getSelectedRowModel().rows;
-
-      selectedRows.forEach((r) => {
-        if (r.id !== row.id) {
-          r.getToggleSelectedHandler()(event);
+        if (video) {
+          saveTag(video, innerTag);
         }
-      });
-
-      if (!row.getIsSelected()) {
-        row.getToggleSelectedHandler()(event);
       }
 
-      setTag(row.original.tag ?? '');
-    };
+      setRowSelection(newSelection);
+    },
+  });
 
+  useEffect(() => {
+    const selectedRows = table.getSelectedRowModel().rows;
+
+    if (selectedRows.length > 0) {
+      return;
+    }
+
+    if (data.length > 0) {
+      setRowSelection({ [data[0].uniqueId]: true });
+      setInnerTag(data[0]?.tag ?? '');
+    }
+  }, [data, table]);
+
+  const onRowClick = (
+    event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,
+    row: Row<typeof stockFeatures, RendererVideo>,
+  ) => {
+    const selectedRows = table.getSelectedRowModel().rows;
+
+    selectedRows.forEach((r) => {
+      if (r.id !== row.id) {
+        r.getToggleSelectedHandler()(event);
+      }
+    });
+
+    if (!row.getIsSelected()) {
+      row.getToggleSelectedHandler()(event);
+    }
+
+    setInnerTag(row.original.tag ?? '');
+  };
+
+  const renderTable = () => {
     const rowClassName = 'cursor-pointer hover:bg-secondary/80 ';
 
     return (
       <div className="max-h-[300px] overflow-auto">
-        <ScrollArea
-          id={'asdasd'}
-          withScrollIndicators={false}
-          className="h-full w-full"
-        >
+        <ScrollArea withScrollIndicators={false} className="h-full w-full">
           <div>
             <table className="table-fixed w-full mx-auto border-separate border-spacing-y-0 overflow-hidden rounded-sm">
               <colgroup>
-                <col style={{ width: 40 }} />
-                <col style={{ width: 40 }} />
-                <col style={{ width: 150 }} />
+                <col style={{ width: 35 }} />
+                <col style={{ width: 35 }} />
+                <col style={{ width: 125 }} />
                 <col />
               </colgroup>
               <tbody>
-                {sorted.map((row, idx) => (
+                {table.getRowModel().rows.map((row, idx) => (
                   <tr
                     key={row.id}
                     className={
@@ -296,16 +360,9 @@ export default function TagDialog(props: IProps) {
     );
   };
 
-  if (!open) {
-    return <Dialog open={open} onOpenChange={setOpen}></Dialog>;
-  }
-
   const renderTextArea = () => {
     const selected = table.getSelectedRowModel().rows;
-    const tooltip =
-      selected.length < 1
-        ? 'Select a video to add a tag.'
-        : getLocalePhrase(language, Phrase.TagButtonTooltip);
+    const tooltip = getLocalePhrase(language, Phrase.TagButtonTooltip);
 
     return (
       <Textarea
@@ -316,9 +373,28 @@ export default function TagDialog(props: IProps) {
                     focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
         placeholder={tooltip}
         spellCheck={false}
-        value={tag}
+        value={innerTag}
         disabled={selected.length !== 1}
-        onChange={(e) => setTag(e.target.value)}
+        onChange={(e) => {
+          const tag = e.target.value;
+          setInnerTag(tag);
+
+          if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+            debounceRef.current = null;
+          }
+
+          const selected = table.getSelectedRowModel().rows;
+          const video = selected[0]?.original;
+
+          if (!video) {
+            return;
+          }
+
+          debounceRef.current = setTimeout(() => {
+            saveTag(video, tag);
+          }, 2000);
+        }}
         onKeyDown={(e) => {
           // Need this to prevent "k" triggering video play/pause while
           // dialog is open and other similar things.
@@ -329,7 +405,7 @@ export default function TagDialog(props: IProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Tag Manager</DialogTitle>
@@ -344,11 +420,7 @@ export default function TagDialog(props: IProps) {
           <DialogClose asChild>
             <Button variant="ghost">Close</Button>
           </DialogClose>
-
-          <Button variant="ghost">Clear All</Button>
-          <Button onClick={onSave} type="submit">
-            {getLocalePhrase(language, Phrase.Save)}
-          </Button>
+          <Button onClick={clearAllTags}>Clear All</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

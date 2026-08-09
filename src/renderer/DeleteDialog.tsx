@@ -1,4 +1,4 @@
-import { AppState, RendererVideo } from 'main/types';
+import { RendererVideo } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
 import { Button } from './components/Button/Button';
 import {
   Dispatch,
-  HTMLProps,
+  ReactNode,
   SetStateAction,
   useEffect,
   useMemo,
@@ -23,127 +23,315 @@ import {
   flexRender,
   useTable,
   stockFeatures,
+  Row,
+  CellContext,
 } from '@tanstack/react-table';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
-import { Phrase } from 'localisation/phrases';
+import { Language, Phrase } from 'localisation/phrases';
+import { ScrollArea } from './components/ScrollArea/ScrollArea';
+import {
+  getPlayerClass,
+  getPlayerName,
+  getPlayerSpecID,
+  getWoWClassColor,
+} from './rendererutils';
+import { specImages } from './images';
+import Box from '@mui/material/Box/Box';
+import { LockKeyhole, LockOpen } from 'lucide-react';
+import SelectAllShortcut from './components/Shortcuts/SelectAllShortcut';
+import SelectRangeShortcut from './components/Shortcuts/SelectRangeShortcut';
+import SelectMultiShortcut from './components/Shortcuts/SelectMultiShortcut';
 
 type DeleteDialogProps = {
-  children: React.ReactNode;
-  inScope: RendererVideo[];
-  appState: AppState;
-  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
-  selectedRowCount: number;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: ReactNode;
+  deleteDialogVideoTargetIds: Array<string>;
+  language: Language;
+  parentLookupMap: Map<string, RendererVideo>;
+  setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
 };
 
-const Checkbox = (props: HTMLProps<HTMLInputElement>) => {
-  return (
-    <input
-      type="checkbox"
-      className={'cursor-pointer accent-[#bb4420]'}
-      {...props}
-    />
-  );
-};
+const DeleteDialog = (props: DeleteDialogProps) => {
+  const {
+    open,
+    onOpenChange,
+    language,
+    deleteDialogVideoTargetIds,
+    parentLookupMap,
+    setVideoState,
+    children,
+  } = props;
 
-const DeleteDialog = ({
-  children,
-  inScope,
-  appState,
-  setVideoState,
-  selectedRowCount,
-}: DeleteDialogProps) => {
-  const { language } = appState;
-
-  // Alphabetically sort the videos by their name.
-  const [data] = useState(() => [
-    ...inScope.sort((a, b) => {
-      return a.videoName.localeCompare(b.videoName);
-    }),
-  ]);
-
-  const inScopeLocked = inScope.filter((video) => video.isProtected);
+  // const inScopeLocked = deleteDialogVideoTargetIds.filter(
+  //   (video) => video.isProtected,
+  // );
 
   const [rowSelection, setRowSelection] = useState({});
 
-  // Initialize all the rows to be selected by default.
-  useEffect(() => {
-    const allRowIds = Object.fromEntries(data.map((_, i) => [i, true]));
-    setRowSelection(allRowIds);
-  }, [data]);
+  const populatePlayerCell = (
+    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
+    const video = info.getValue() as RendererVideo;
+    const { player } = video;
 
-  const columns = useMemo<ColumnDef<RendererVideo>[]>(
-    () => [
-      {
-        id: 'Select',
-        cell: ({ row }) => (
-          <div className="flex justify-center items-center">
-            <Checkbox
-              {...{
-                checked: row.getIsSelected(),
-                onChange: row.getToggleSelectedHandler(),
-              }}
-            />
+    if (!player || !player._specID) {
+      return <div>Unknown</div>;
+    }
+
+    const playerClass = getPlayerClass(video);
+    const playerSpecID = getPlayerSpecID(video);
+    const playerName = getPlayerName(video);
+    const playerClassColor = getWoWClassColor(playerClass);
+    const specIcon = specImages[playerSpecID as keyof typeof specImages];
+
+    const renderSpecAndName = () => {
+      return (
+        <div className="flex items-center pl-2 min-w-0">
+          <Box
+            component="img"
+            src={specIcon}
+            className="bg-background-higher shrink-0"
+            sx={{
+              height: '25px',
+              width: '25px',
+              border: '1px solid black',
+              borderRadius: '15%',
+              boxSizing: 'border-box',
+              objectFit: 'cover',
+            }}
+          />
+
+          <div
+            className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate min-w-0"
+            style={{ color: playerClassColor }}
+          >
+            {playerName}
           </div>
-        ),
-      },
-      {
-        id: 'Storage',
-        accessorKey: 'cloud',
-        cell: (info) => (
-          <div className="flex justify-center items-center">
-            {info.getValue() ? (
-              <CloudIcon sx={{ height: 18, width: 18 }} />
-            ) : (
-              <SaveIcon sx={{ height: 18, width: 18 }} />
-            )}
-          </div>
-        ),
-      },
-      {
-        id: 'Name',
-        accessorKey: 'videoName',
-        // Strip date prefix from the video name.
-        cell: (info) => (
-          <div className="text-sm">{(info.getValue() as string).slice(22)}</div>
-        ),
-      },
-    ],
-    [],
-  );
+        </div>
+      );
+    };
+
+    return <div className="flex truncate">{renderSpecAndName()}</div>;
+  };
+
+  const populateLockCell = (
+    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
+    const video = ctx.getValue() as RendererVideo;
+    const { isProtected } = video;
+
+    const icon = isProtected ? (
+      <LockKeyhole size={18} />
+    ) : (
+      <LockOpen size={18} />
+    );
+
+    return <div className="flex justify-center items-center">{icon}</div>;
+  };
+
+  const populateStorageCell = (
+    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
+    return (
+      <div className="flex justify-center items-center">
+        {info.getValue() ? (
+          <CloudIcon sx={{ height: 18, width: 18 }} />
+        ) : (
+          <SaveIcon sx={{ height: 18, width: 18 }} />
+        )}
+      </div>
+    );
+  };
+
+  const populateTagStatusCell = (
+    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  ) => {
+    const { row } = info;
+    const { tag } = row.original;
+    const text = tag ? tag : 'No custom tag.';
+    return <div className="truncate text-sm">{text}</div>;
+  };
+
+  const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
+    {
+      id: 'Lock',
+      accessorKey: 'isProtected',
+      accessorFn: (v) => v,
+      cell: populateLockCell,
+    },
+    {
+      id: 'Storage',
+      accessorKey: 'cloud',
+      accessorFn: (v) => v,
+      cell: populateStorageCell,
+    },
+    {
+      id: 'Name',
+      accessorFn: (v) => v,
+      accessorKey: 'videoName',
+      cell: populatePlayerCell,
+    },
+    {
+      id: 'Status',
+      accessorFn: (v) => v,
+      accessorKey: 'encounterName',
+      cell: (ctx) => populateTagStatusCell(ctx),
+    },
+  ];
+
+  const data = useMemo<Array<RendererVideo>>(() => {
+    // TODO handle multi row delete
+    const parent = deleteDialogVideoTargetIds[0]
+      ? parentLookupMap.get(deleteDialogVideoTargetIds[0])
+      : undefined;
+
+    const data = parent ? [parent, ...parent.multiPov] : [];
+
+    data.sort((a, b) => {
+      const aName = a.player?._name ?? '';
+      const bName = b.player?._name ?? '';
+      return aName.localeCompare(bName);
+    });
+
+    return data;
+  }, [deleteDialogVideoTargetIds, parentLookupMap]);
 
   const table = useTable({
-    data,
     columns,
+    data,
     features: stockFeatures,
-    state: { rowSelection },
+    getRowId: (row) => row.uniqueId,
     enableRowSelection: true,
+    state: { rowSelection },
     onRowSelectionChange: setRowSelection,
   });
 
+  useEffect(() => {
+    const selectedRows = table.getSelectedRowModel().rows;
+
+    if (selectedRows.length > 0) {
+      return;
+    }
+
+    if (data.length > 0) {
+      setRowSelection({ [data[0].uniqueId]: true });
+    }
+  }, [data, table]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) {
+        return;
+      }
+
+      if (event.key === 'a' && event.ctrlKey) {
+        const { rows } = table.getRowModel();
+
+        rows.forEach((row) => {
+          if (!row.getIsSelected()) {
+            row.getToggleSelectedHandler()(event);
+          }
+        });
+
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [table]);
+
+  const onRowClick = (
+    event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,
+    row: Row<typeof stockFeatures, RendererVideo>,
+  ) => {
+    const rows = table.getRowModel().rows;
+    const targetIndex = rows.findIndex((r) => r.id === row.id);
+    const selectedRows = table.getSelectedRowModel().rows;
+
+    if (event.shiftKey) {
+      const baseIndex = selectedRows[0]
+        ? rows.findIndex((r) => r.id === selectedRows[0].id)
+        : 0;
+
+      const start = Math.min(baseIndex, targetIndex);
+      const end = Math.max(baseIndex, targetIndex) + 1;
+
+      rows.slice(start, end).forEach((r) => {
+        if (!r.getIsSelected()) {
+          r.toggleSelected(true);
+        }
+      });
+
+      return;
+    }
+
+    if (event.ctrlKey) {
+      row.getToggleSelectedHandler()(event);
+      return;
+    }
+
+    selectedRows.forEach((r) => {
+      if (r.id !== row.id) {
+        r.getToggleSelectedHandler()(event);
+      }
+    });
+
+    if (!row.getIsSelected()) {
+      row.getToggleSelectedHandler()(event);
+    }
+  };
+
   const renderTable = () => {
+    const rowClassName = 'cursor-pointer hover:bg-secondary/80 ';
+
     return (
-      <table>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell, index) => {
-                let className = 'px-[4px] ';
-
-                if (index === 2) {
-                  className += 'text-left w-full'; // Take remaining space
-                }
-
-                return (
-                  <td key={cell.id} className={className}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="max-h-[300px] overflow-auto">
+        <ScrollArea withScrollIndicators={false} className="h-full w-full">
+          <div>
+            <table className="table-fixed w-full mx-auto border-separate border-spacing-y-0 overflow-hidden rounded-sm">
+              <colgroup>
+                <col style={{ width: 35 }} />
+                <col style={{ width: 35 }} />
+                <col style={{ width: 125 }} />
+                <col />
+              </colgroup>
+              <tbody>
+                {table.getRowModel().rows.map((row, idx) => (
+                  <tr
+                    key={row.id}
+                    className={
+                      rowClassName +
+                      (row.getIsSelected()
+                        ? 'bg-secondary/100'
+                        : idx % 2 === 0
+                          ? 'bg-secondary/15'
+                          : 'bg-secondary/40')
+                    }
+                    onClick={(event) => onRowClick(event, row)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="h-[30px]">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ScrollArea>
+      </div>
     );
   };
 
@@ -157,17 +345,17 @@ const DeleteDialog = ({
     )} ${getLocalePhrase(
       language,
       Phrase.From,
-    )} ${Math.max(selectedRowCount, 1)} ${getLocalePhrase(language, Phrase.Rows)}.`;
+    )} ${Math.max(deleteDialogVideoTargetIds.length, 1)} ${getLocalePhrase(language, Phrase.Rows)}.`;
 
     return (
       <div className="text-sm">
         <p className="inline ">{warning}</p>
 
-        {inScopeLocked.length > 0 && (
+        {/* {inScopeLocked.length > 0 && (
           <span className="text-destructive ml-1">
             {getLocalePhrase(language, Phrase.DeleteSelectionContainsLocked)}
           </span>
-        )}
+        )} */}
       </div>
     );
   };
@@ -193,33 +381,30 @@ const DeleteDialog = ({
     });
   };
 
+  const count = table.getSelectedRowModel().rows.length;
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {getLocalePhrase(appState.language, Phrase.AreYouSure)}
-          </DialogTitle>
+          <DialogTitle>Delete Manager</DialogTitle>
         </DialogHeader>
-        {selectedRowCount < 2 && renderTable()}
+        <div className="text-sm">
+          Deleting videos is permanent and cannot be undone.
+        </div>
+        {renderTable()}
+        <div className="flex gap-1">
+          <SelectRangeShortcut language={language} />
+          <SelectMultiShortcut language={language} />
+          <SelectAllShortcut language={language} />
+        </div>
         {getWarningMessage()}
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="ghost">
-              {getLocalePhrase(appState.language, Phrase.CancelTooltip)}
-            </Button>
+            <Button variant="ghost">Close</Button>
           </DialogClose>
-          <DialogClose asChild>
-            <Button
-              variant="destructive"
-              type="submit"
-              onClick={doDelete}
-              disabled={table.getSelectedRowModel().rows.length < 1}
-            >
-              {getLocalePhrase(appState.language, Phrase.DeleteButtonTooltip)}
-            </Button>
-          </DialogClose>
+          <Button variant="destructive">Delete ({count})</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

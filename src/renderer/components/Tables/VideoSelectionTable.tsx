@@ -10,13 +10,11 @@ import {
 import React, { Fragment, RefObject, useCallback, useEffect } from 'react';
 import {
   ArrowDown,
-  ArrowDownUp,
   ArrowUp,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  MousePointer,
 } from 'lucide-react';
 import { povDiskFirstNameSort } from '../../rendererutils';
 import { Button } from '../Button/Button';
@@ -24,12 +22,17 @@ import { getLocalePhrase } from 'localisation/translations';
 import { ScrollArea } from '../ScrollArea/ScrollArea';
 import { Phrase } from 'localisation/phrases';
 import useVideoSelectionTable from './useVideoSelectionTable';
+import SelectAllShortcut from '../Shortcuts/SelectAllShortcut';
+import SelectMultiShortcut from '../Shortcuts/SelectMultiShortcut';
+import SelectRangeShortcut from '../Shortcuts/SelectRangeShortcut';
+import NavigateShortcut from '../Shortcuts/NavigateShortcut';
 
 interface IProps {
   table: ReturnType<typeof useVideoSelectionTable>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: RefObject<number>;
+  dialogOpen: boolean;
 }
 
 /**
@@ -37,7 +40,8 @@ interface IProps {
  * columns for a quick overview, the ability to sort by column.
  */
 const VideoSelectionTable = (props: IProps) => {
-  const { appState, setAppState, persistentProgress, table } = props;
+  const { appState, setAppState, persistentProgress, table, dialogOpen } =
+    props;
 
   const {
     videoFilterTags,
@@ -184,14 +188,23 @@ const VideoSelectionTable = (props: IProps) => {
       if (event.shiftKey || event.ctrlKey) event.preventDefault();
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handleMouseDown);
+    if (!dialogOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('mousedown', handleMouseDown);
+    }
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [table, onRowClick, videoFilterTags, dateRangeFilter, storageFilter]);
+  }, [
+    table,
+    onRowClick,
+    videoFilterTags,
+    dateRangeFilter,
+    storageFilter,
+    dialogOpen,
+  ]);
 
   // If we've navigated here programatically (i.e. via the clip source button),
   // then we may already have a selected video that is not the first row. Just
@@ -351,21 +364,6 @@ const VideoSelectionTable = (props: IProps) => {
     return <tbody>{rows.map((row, i) => renderRow(row, i))}</tbody>;
   };
 
-  const renderHotkeyTipPointer = (key: string, action: Phrase) => {
-    const { language } = appState;
-
-    return (
-      <div className="flex gap-1 items-center text-foreground-lighter text-sm">
-        <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
-          {key} + <MousePointer size={16} />
-        </div>
-        <div className="text-foreground">
-          {getLocalePhrase(language, action)}
-        </div>
-      </div>
-    );
-  };
-
   /**
    * For performance reasons we render videos in pages of 100. The component
    * returns buttons to navigate the pages in the list.
@@ -378,8 +376,8 @@ const VideoSelectionTable = (props: IProps) => {
     return (
       <div className="grid w-full grid-cols-3 items-center border-t border-video-border pt-2">
         <div className="flex gap-4">
-          {renderHotkeyTipPointer('Shift', Phrase.SelectRange)}
-          {renderHotkeyTipPointer('Ctrl', Phrase.SelectMultiple)}
+          <SelectRangeShortcut language={language} />
+          <SelectMultiShortcut language={language} />
         </div>
 
         <div className="flex justify-center items-center gap-2">
@@ -429,23 +427,8 @@ const VideoSelectionTable = (props: IProps) => {
         </div>
 
         <div className="justify-end flex gap-4 items-center text-foreground-lighter text-sm">
-          <div className="flex gap-1 items-center text-foreground-lighter text-sm">
-            <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card gap-1">
-              {getLocalePhrase(language, Phrase.Arrows)}
-              <ArrowDownUp size={16} />
-            </div>
-            <div className="text-foreground">
-              {getLocalePhrase(language, Phrase.Navigate)}
-            </div>
-          </div>
-          <div className="flex gap-1 items-center text-foreground-lighter text-sm">
-            <div className="inline-flex whitespace-nowrap items-center border border-card rounded-sm p-1 bg-card">
-              Ctrl + A
-            </div>
-            <div className="text-foreground">
-              {getLocalePhrase(language, Phrase.SelectAll)}
-            </div>
-          </div>
+          <NavigateShortcut language={language} />
+          <SelectAllShortcut language={language} />
         </div>
       </div>
     );
