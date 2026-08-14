@@ -216,6 +216,9 @@ export default function LockDialog(props: IProps) {
     );
   };
 
+  {
+    /* // share this stuff where sensible with other dialogs */
+  }
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
     {
       id: 'Lock',
@@ -230,13 +233,11 @@ export default function LockDialog(props: IProps) {
     {
       id: 'Player',
       accessorFn: (v) => v,
-      accessorKey: 'encounterName',
       cell: (ctx) => populatePlayerCell(ctx),
     },
     {
       id: 'Status',
       accessorFn: (v) => v,
-      accessorKey: 'encounterName',
       cell: (ctx) => populateLockedStatusCell(ctx),
     },
   ];
@@ -312,6 +313,9 @@ export default function LockDialog(props: IProps) {
     const actionIsLock = data.some((v) => !v.isProtected);
     const includesCloud = data.some((v) => v.cloud);
     const label = actionIsLock ? 'Lock All' : 'Unlock All';
+    {
+      /* // TODO localize */
+    }
     const { write, del } = cloudStatus;
     const noPermission = includesCloud && (!write || (!del && !actionIsLock));
 
@@ -332,15 +336,18 @@ export default function LockDialog(props: IProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
+          {/* // TODO localize */}
           <DialogTitle>Lock Manager</DialogTitle>
         </DialogHeader>
         <div className="text-sm">
+          {/* // TODO localize */}
           Locked videos are protected from automatic deletion. Unlocked videos
           may be automatically deleted to make space for new videos.
         </div>
         {renderTable()}
         <DialogFooter>
           <DialogClose asChild>
+            {/* // TODO localize */}
             <Button variant="ghost">Close</Button>
           </DialogClose>
           {renderLockAllButton()}

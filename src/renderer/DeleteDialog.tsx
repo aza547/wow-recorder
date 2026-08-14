@@ -43,6 +43,8 @@ import SelectAllShortcut from './components/Shortcuts/SelectAllShortcut';
 import SelectRangeShortcut from './components/Shortcuts/SelectRangeShortcut';
 import SelectMultiShortcut from './components/Shortcuts/SelectMultiShortcut';
 
+const ipc = window.electron.ipcRenderer;
+
 type DeleteDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,10 +65,6 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     setVideoState,
     children,
   } = props;
-
-  // const inScopeLocked = deleteDialogVideoTargetIds.filter(
-  //   (video) => video.isProtected,
-  // );
 
   const [rowSelection, setRowSelection] = useState({});
 
@@ -123,7 +121,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     const { isProtected } = video;
 
     const icon = isProtected ? (
-      <LockKeyhole size={18} />
+      <LockKeyhole size={18} className="text-destructive" />
     ) : (
       <LockOpen size={18} />
     );
@@ -132,51 +130,47 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   };
 
   const populateStorageCell = (
-    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
   ) => {
-    return (
-      <div className="flex justify-center items-center">
-        {info.getValue() ? (
-          <CloudIcon sx={{ height: 18, width: 18 }} />
-        ) : (
-          <SaveIcon sx={{ height: 18, width: 18 }} />
-        )}
-      </div>
+    const video = ctx.getValue() as RendererVideo;
+
+    const icon = video.cloud ? (
+      <CloudIcon sx={{ height: 18, width: 18 }} />
+    ) : (
+      <SaveIcon sx={{ height: 18, width: 18 }} />
     );
+
+    return <div className="flex justify-center items-center">{icon}</div>;
   };
 
   const populateTagStatusCell = (
-    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
   ) => {
-    const { row } = info;
+    const { row } = ctx;
     const { tag } = row.original;
-    const text = tag ? tag : 'No custom tag.';
-    return <div className="truncate text-sm">{text}</div>;
+    const text = tag ? tag : 'No custom tag.'; // TODO localise this text
+    return <div className="truncate text-sm mx-2">{text}</div>;
   };
 
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
     {
       id: 'Lock',
-      accessorKey: 'isProtected',
       accessorFn: (v) => v,
       cell: populateLockCell,
     },
     {
       id: 'Storage',
-      accessorKey: 'cloud',
       accessorFn: (v) => v,
       cell: populateStorageCell,
     },
     {
       id: 'Name',
       accessorFn: (v) => v,
-      accessorKey: 'videoName',
       cell: populatePlayerCell,
     },
     {
       id: 'Status',
       accessorFn: (v) => v,
-      accessorKey: 'encounterName',
       cell: (ctx) => populateTagStatusCell(ctx),
     },
   ];
@@ -336,7 +330,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   };
 
   const getWarningMessage = () => {
-    const warning = `${getLocalePhrase(
+    const general = `${getLocalePhrase(
       language,
       Phrase.ThisWillPermanentlyDelete,
     )} ${table.getSelectedRowModel().rows.length} ${getLocalePhrase(
@@ -347,20 +341,26 @@ const DeleteDialog = (props: DeleteDialogProps) => {
       Phrase.From,
     )} ${Math.max(deleteDialogVideoTargetIds.length, 1)} ${getLocalePhrase(language, Phrase.Rows)}.`;
 
-    return (
-      <div className="text-sm">
-        <p className="inline ">{warning}</p>
+    const selected = table.getSelectedRowModel().rows;
+    const inScopeLocked = selected.filter((row) => row.original.isProtected);
 
-        {/* {inScopeLocked.length > 0 && (
-          <span className="text-destructive ml-1">
-            {getLocalePhrase(language, Phrase.DeleteSelectionContainsLocked)}
-          </span>
-        )} */}
+    const lock =
+      inScopeLocked.length > 0
+        ? getLocalePhrase(language, Phrase.DeleteSelectionContainsLocked)
+        : 'This selection contains no locked recordings.';
+
+    const color = inScopeLocked.length > 0 ? 'text-destructive' : '';
+
+    return (
+      <div className="text-sm gap-2 flex flex-col h-[60px]">
+        <p>{general}</p>
+        <p className={color}>{lock}</p>
       </div>
     );
   };
 
   const doDelete = () => {
+    const total = table.getRowModel().rows.length;
     const toDelete = table
       .getSelectedRowModel()
       .rows.map((row) => row.original);
@@ -368,8 +368,8 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     const toDeleteDisk = toDelete.filter((rv) => !rv.cloud);
     const toDeleteCloud = toDelete.filter((rv) => rv.cloud);
 
-    window.electron.ipcRenderer.sendMessage('deleteVideosDisk', toDeleteDisk);
-    window.electron.ipcRenderer.sendMessage('deleteVideosCloud', toDeleteCloud);
+    ipc.sendMessage('deleteVideosDisk', toDeleteDisk);
+    ipc.sendMessage('deleteVideosCloud', toDeleteCloud);
 
     setVideoState((prev) => {
       return [...prev].filter((rv) => {
@@ -379,6 +379,10 @@ const DeleteDialog = (props: DeleteDialogProps) => {
         );
       });
     });
+
+    if (toDelete.length >= total) {
+      onOpenChange(false);
+    }
   };
 
   const count = table.getSelectedRowModel().rows.length;
@@ -388,13 +392,16 @@ const DeleteDialog = (props: DeleteDialogProps) => {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
+          {/* // TODO localize */}
           <DialogTitle>Delete Manager</DialogTitle>
         </DialogHeader>
         <div className="text-sm">
+          {/* // TODO localize */}
           Deleting videos is permanent and cannot be undone.
         </div>
         {renderTable()}
-        <div className="flex gap-1">
+        <div className="flex gap-2 items-center">
+          <span className="text-foreground text-sm">Shortcuts:</span>
           <SelectRangeShortcut language={language} />
           <SelectMultiShortcut language={language} />
           <SelectAllShortcut language={language} />
@@ -402,9 +409,13 @@ const DeleteDialog = (props: DeleteDialogProps) => {
         {getWarningMessage()}
         <DialogFooter>
           <DialogClose asChild>
+            {/* // TODO localize */}
             <Button variant="ghost">Close</Button>
           </DialogClose>
-          <Button variant="destructive">Delete ({count})</Button>
+          {/* // TODO localize */}
+          <Button variant="destructive" onClick={doDelete}>
+            Delete ({count})
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

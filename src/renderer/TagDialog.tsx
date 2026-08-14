@@ -39,6 +39,7 @@ import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import { MessageSquare, MessageSquareMore } from 'lucide-react';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudIcon from '@mui/icons-material/Cloud';
+import CircularProgress from '@mui/material/CircularProgress/CircularProgress';
 
 interface IProps {
   open: boolean;
@@ -64,6 +65,9 @@ export default function TagDialog(props: IProps) {
   const [rowSelection, setRowSelection] = useState({});
   const [innerTag, setInnerTag] = useState<string>('');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceStartRef = useRef<number | null>(null);
+  const debounceTimer = 2000;
+  const [debounceProgress, setDebounceProgress] = useState<number | null>(null);
 
   const saveTag = (video: RendererVideo, tag: string) => {
     if (video.cloud) {
@@ -79,9 +83,11 @@ export default function TagDialog(props: IProps) {
 
   const clearAllTags = () => {
     if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
+      clearInterval(debounceRef.current);
       debounceRef.current = null;
     }
+
+    setDebounceProgress(null);
 
     const videos = table.getRowModel().rows.map((r) => r.original);
     const ids = videos.map((v) => v.uniqueId);
@@ -102,7 +108,7 @@ export default function TagDialog(props: IProps) {
 
   const handleOpenChange = (open: boolean) => {
     if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
+      clearInterval(debounceRef.current);
       debounceRef.current = null;
 
       const selected = table.getSelectedRowModel().rows;
@@ -113,6 +119,7 @@ export default function TagDialog(props: IProps) {
       }
     }
 
+    setDebounceProgress(null);
     onOpenChange(open);
   };
 
@@ -213,8 +220,8 @@ export default function TagDialog(props: IProps) {
   ) => {
     const { row } = info;
     const { tag } = row.original;
-    const text = tag ? tag : 'No custom tag.';
-    return <div className="truncate text-sm">{text}</div>;
+    const text = tag ? tag : 'No custom tag.'; // TODO localise this text
+    return <div className="truncate text-sm mx-2">{text}</div>;
   };
 
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
@@ -231,13 +238,11 @@ export default function TagDialog(props: IProps) {
     {
       id: 'Player',
       accessorFn: (v) => v,
-      accessorKey: 'encounterName',
       cell: (ctx) => populatePlayerCell(ctx),
     },
     {
       id: 'Status',
       accessorFn: (v) => v,
-      accessorKey: 'encounterName',
       cell: (ctx) => populateTagStatusCell(ctx),
     },
   ];
@@ -267,7 +272,7 @@ export default function TagDialog(props: IProps) {
     state: { rowSelection },
     onRowSelectionChange: (newSelection) => {
       if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
+        clearInterval(debounceRef.current);
         debounceRef.current = null;
 
         const selected = table.getSelectedRowModel().rows;
@@ -278,6 +283,7 @@ export default function TagDialog(props: IProps) {
         }
       }
 
+      setDebounceProgress(null);
       setRowSelection(newSelection);
     },
   });
@@ -365,42 +371,76 @@ export default function TagDialog(props: IProps) {
     const tooltip = getLocalePhrase(language, Phrase.TagButtonTooltip);
 
     return (
-      <Textarea
-        maxLength={1024}
-        className="bg-background-dark-gradient-to rounded-sm h-20
+      <div className="relative">
+        <Textarea
+          maxLength={1024}
+          className="bg-background-dark-gradient-to rounded-sm h-20
                     border-background-dark-gradient-to flex-1 resize-none
                     placeholder:text-foreground  focus-visible:ring-0
                     focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
-        placeholder={tooltip}
-        spellCheck={false}
-        value={innerTag}
-        disabled={selected.length !== 1}
-        onChange={(e) => {
-          const tag = e.target.value;
-          setInnerTag(tag);
+          placeholder={tooltip}
+          spellCheck={false}
+          value={innerTag}
+          disabled={selected.length !== 1}
+          onChange={(e) => {
+            if (debounceRef.current) {
+              clearInterval(debounceRef.current);
+              debounceRef.current = null;
+            }
 
-          if (debounceRef.current) {
-            clearTimeout(debounceRef.current);
-            debounceRef.current = null;
-          }
+            const tag = e.target.value;
+            setInnerTag(tag);
 
-          const selected = table.getSelectedRowModel().rows;
-          const video = selected[0]?.original;
+            const selected = table.getSelectedRowModel().rows;
+            const video = selected[0]?.original;
 
-          if (!video) {
-            return;
-          }
+            if (!video) {
+              return;
+            }
 
-          debounceRef.current = setTimeout(() => {
-            saveTag(video, tag);
-          }, 2000);
-        }}
-        onKeyDown={(e) => {
-          // Need this to prevent "k" triggering video play/pause while
-          // dialog is open and other similar things.
-          e.stopPropagation();
-        }}
-      />
+            const startTime = Date.now();
+            debounceStartRef.current = startTime;
+            setDebounceProgress(0);
+
+            debounceRef.current = setInterval(() => {
+              const elapsed = Date.now() - startTime;
+              const progress = (elapsed / debounceTimer) * 100;
+
+              setDebounceProgress(progress);
+
+              // Better UX to go a bit beyond 100% so that the user sees the
+              // progress fill up completely before it disappears.
+              if (progress < 125) {
+                return;
+              }
+
+              if (debounceRef.current) {
+                clearInterval(debounceRef.current);
+                debounceRef.current = null;
+              }
+
+              debounceStartRef.current = null;
+              setDebounceProgress(null);
+              saveTag(video, tag);
+            }, 100);
+          }}
+          onKeyDown={(e) => {
+            // Need this to prevent "k" triggering video play/pause while
+            // dialog is open and other similar things.
+            e.stopPropagation();
+          }}
+        />
+        {debounceProgress !== null && (
+          <div className="absolute right-2 top-2">
+            <CircularProgress
+              variant="determinate"
+              color="inherit"
+              value={debounceProgress > 100 ? 100 : debounceProgress}
+              size={16}
+            />
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -408,9 +448,11 @@ export default function TagDialog(props: IProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
+          {/* // TODO localize */}
           <DialogTitle>Tag Manager</DialogTitle>
         </DialogHeader>
         <div className="text-sm">
+          {/* // TODO localize */}
           Tags may be added to videos to label them for future reference. Tags
           are not used for any other purpose and do not affect the video.
         </div>
@@ -418,8 +460,10 @@ export default function TagDialog(props: IProps) {
         {renderTextArea()}
         <DialogFooter>
           <DialogClose asChild>
+            {/* // TODO localize */}
             <Button variant="ghost">Close</Button>
           </DialogClose>
+          {/* // TODO localize */}
           <Button onClick={clearAllTags}>Clear All</Button>
         </DialogFooter>
       </DialogContent>

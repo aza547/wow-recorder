@@ -375,7 +375,7 @@ const VideoSelectionTable = (props: IProps) => {
 
     return (
       <div className="grid w-full grid-cols-3 items-center border-t border-video-border pt-2">
-        <div className="flex gap-4">
+        <div className="flex gap-2">
           <SelectRangeShortcut language={language} />
           <SelectMultiShortcut language={language} />
         </div>
@@ -426,7 +426,7 @@ const VideoSelectionTable = (props: IProps) => {
           </Button>
         </div>
 
-        <div className="justify-end flex gap-4 items-center text-foreground-lighter text-sm">
+        <div className="justify-end flex gap-2 items-center text-foreground-lighter text-sm">
           <NavigateShortcut language={language} />
           <SelectAllShortcut language={language} />
         </div>
