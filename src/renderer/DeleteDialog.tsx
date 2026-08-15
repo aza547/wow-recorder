@@ -263,7 +263,10 @@ const DeleteDialog = (props: DeleteDialogProps) => {
       return;
     }
 
-    if (event.ctrlKey) {
+    const isClickedRowOnlySelected =
+      selectedRows.length === 1 && row.getIsSelected();
+
+    if (event.ctrlKey && !isClickedRowOnlySelected) {
       row.getToggleSelectedHandler()(event);
       return;
     }
