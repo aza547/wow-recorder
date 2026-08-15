@@ -9,18 +9,16 @@ import SaveIcon from '@mui/icons-material/Save';
 import { Workflow } from 'lucide-react';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';
-import { Table } from '@tanstack/react-table';
 import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
-  table: Table<RendererVideo>;
   categoryState: RendererVideo[];
 }
 
 const StorageFilterToggle = (props: IProps) => {
-  const { appState, setAppState, table, categoryState } = props;
+  const { appState, setAppState, categoryState } = props;
   const { storageFilter, language } = appState;
 
   const hasDisk = categoryState.filter((rv) => !rv.cloud).length > 0;

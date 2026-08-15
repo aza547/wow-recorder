@@ -706,7 +706,6 @@ const CategoryPage = (props: IProps) => {
                 categoryState={categoryState}
                 appState={appState}
                 setAppState={setAppState}
-                table={table}
               />
             </div>
           </div>

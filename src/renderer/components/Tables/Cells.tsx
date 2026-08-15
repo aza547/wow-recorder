@@ -37,7 +37,6 @@ import {
 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
-import KillVideoDialog from 'renderer/KillVideoDialog';
 import wcrIcon from '../../../../assets/icon/small-icon.png';
 import { FolderLocked } from 'renderer/icons/FolderLocked';
 import { FolderUnlocked } from 'renderer/icons/FolderUnlocked';
