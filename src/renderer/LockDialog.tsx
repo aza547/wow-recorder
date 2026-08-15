@@ -22,6 +22,7 @@ import {
   getPlayerClass,
   getPlayerName,
   getPlayerSpecID,
+  getVideoGroup,
   getWoWClassColor,
   stopPropagation,
 } from './rendererutils';
@@ -38,7 +39,7 @@ const ipc = window.electron.ipcRenderer;
 interface IProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  lockDialogVideoTargetId: string | null;
+  targetVideoId: string | null;
   parentLookupMap: Map<string, RendererVideo>;
   setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
   language: Language;
@@ -49,7 +50,7 @@ export default function LockDialog(props: IProps) {
   const {
     open,
     onOpenChange,
-    lockDialogVideoTargetId,
+    targetVideoId,
     parentLookupMap,
     setVideoState,
     language,
@@ -243,11 +244,7 @@ export default function LockDialog(props: IProps) {
   ];
 
   const data = useMemo<Array<RendererVideo>>(() => {
-    const parent = lockDialogVideoTargetId
-      ? parentLookupMap.get(lockDialogVideoTargetId)
-      : undefined;
-
-    const group = parent ? [parent, ...parent.multiPov] : [];
+    const group = getVideoGroup(targetVideoId, parentLookupMap);
 
     group.sort((a, b) => {
       const aName = a.player?._name ?? '';
@@ -256,7 +253,7 @@ export default function LockDialog(props: IProps) {
     });
 
     return group;
-  }, [parentLookupMap, lockDialogVideoTargetId]);
+  }, [parentLookupMap, targetVideoId]);
 
   const table = useTable({
     columns,
@@ -337,7 +334,7 @@ export default function LockDialog(props: IProps) {
       <DialogContent>
         <DialogHeader>
           {/* // TODO localize */}
-          <DialogTitle>Lock Manager</DialogTitle>
+          <DialogTitle>Lock</DialogTitle>
         </DialogHeader>
         <div className="text-sm">
           {/* // TODO localize */}

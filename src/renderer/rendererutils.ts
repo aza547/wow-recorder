@@ -1180,6 +1180,14 @@ const findClipParent = (
   return parent;
 };
 
+const getVideoGroup = (
+  uniqueId: string | null | undefined,
+  parentLookupMap: Map<string, RendererVideo>,
+): Array<RendererVideo> => {
+  const parent = uniqueId ? parentLookupMap.get(uniqueId) : null;
+  return parent ? [parent, ...parent.multiPov] : [];
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1247,4 +1255,5 @@ export {
   getFriendlyCodecName,
   formatRealmNameForDisplay,
   findClipParent,
+  getVideoGroup,
 };

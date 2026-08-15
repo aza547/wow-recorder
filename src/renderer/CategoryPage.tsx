@@ -580,7 +580,7 @@ const CategoryPage = (props: IProps) => {
             <DeleteDialog
               open={dialog === DialogType.DELETE}
               onOpenChange={setDeleteDialog}
-              deleteDialogVideoTargetIds={ids}
+              targetVideoIds={ids}
               parentLookupMap={parentLookupMap}
               setVideoState={setVideoState}
               language={language}
@@ -724,7 +724,7 @@ const CategoryPage = (props: IProps) => {
           <LockDialog
             open={dialog === DialogType.LOCK}
             onOpenChange={setLockDialog}
-            lockDialogVideoTargetId={lockDialogVideoTargetId}
+            targetVideoId={lockDialogVideoTargetId}
             parentLookupMap={parentLookupMap}
             setVideoState={setVideoState}
             language={language}
@@ -733,7 +733,7 @@ const CategoryPage = (props: IProps) => {
           <TagDialog
             open={dialog === DialogType.TAG}
             onOpenChange={setTagDialog}
-            tagDialogVideoTargetId={tagDialogVideoTargetId}
+            targetVideoId={tagDialogVideoTargetId}
             parentLookupMap={parentLookupMap}
             setVideoState={setVideoState}
             language={language}
@@ -741,7 +741,7 @@ const CategoryPage = (props: IProps) => {
           <KillVideoDialog
             open={dialog === DialogType.KILL}
             onOpenChange={setKillVideoDialog}
-            killDialogVideoTargetId={killDialogVideoTargetId}
+            targetVideoId={killDialogVideoTargetId}
             parentLookupMap={parentLookupMap}
             language={language}
           />

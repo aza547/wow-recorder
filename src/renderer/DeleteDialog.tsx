@@ -34,6 +34,7 @@ import {
   getPlayerClass,
   getPlayerName,
   getPlayerSpecID,
+  getVideoGroup,
   getWoWClassColor,
 } from './rendererutils';
 import { specImages } from './images';
@@ -49,7 +50,7 @@ type DeleteDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: ReactNode;
-  deleteDialogVideoTargetIds: Array<string>;
+  targetVideoIds: Array<string>;
   language: Language;
   parentLookupMap: Map<string, RendererVideo>;
   setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
@@ -60,7 +61,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     open,
     onOpenChange,
     language,
-    deleteDialogVideoTargetIds,
+    targetVideoIds,
     parentLookupMap,
     setVideoState,
     children,
@@ -121,7 +122,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     const { isProtected } = video;
 
     const icon = isProtected ? (
-      <LockKeyhole size={18} className="text-destructive" />
+      <LockKeyhole size={18} />
     ) : (
       <LockOpen size={18} />
     );
@@ -176,20 +177,16 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   ];
 
   const data = useMemo<Array<RendererVideo>>(() => {
-    const parent = deleteDialogVideoTargetIds[0]
-      ? parentLookupMap.get(deleteDialogVideoTargetIds[0])
-      : undefined;
+    const group = getVideoGroup(targetVideoIds[0], parentLookupMap);
 
-    const data = parent ? [parent, ...parent.multiPov] : [];
-
-    data.sort((a, b) => {
+    group.sort((a, b) => {
       const aName = a.player?._name ?? '';
       const bName = b.player?._name ?? '';
       return aName.localeCompare(bName);
     });
 
-    return data;
-  }, [deleteDialogVideoTargetIds, parentLookupMap]);
+    return group;
+  }, [targetVideoIds, parentLookupMap]);
 
   const table = useTable({
     columns,
@@ -284,61 +281,81 @@ const DeleteDialog = (props: DeleteDialogProps) => {
 
   const renderTable = () => {
     const rowClassName = 'cursor-pointer hover:bg-secondary/80 ';
+    const { rows } = table.getRowModel();
 
     return (
-      <div className="max-h-[300px] overflow-auto">
-        <ScrollArea withScrollIndicators={false} className="h-full w-full">
-          <div>
-            <table className="table-fixed w-full mx-auto border-separate border-spacing-y-0 overflow-hidden rounded-sm">
-              <colgroup>
-                <col style={{ width: 35 }} />
-                <col style={{ width: 35 }} />
-                <col style={{ width: 125 }} />
-                <col />
-              </colgroup>
-              <tbody>
-                {table.getRowModel().rows.map((row, idx) => (
-                  <tr
-                    key={row.id}
-                    className={
-                      rowClassName +
-                      (row.getIsSelected()
-                        ? 'bg-secondary/100'
-                        : idx % 2 === 0
-                          ? 'bg-secondary/15'
-                          : 'bg-secondary/40')
-                    }
-                    onClick={(event) => onRowClick(event, row)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="h-[30px]">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <>
+        <div className="max-h-[300px] overflow-auto">
+          <ScrollArea withScrollIndicators={false} className="h-full w-full">
+            <div>
+              <table className="table-fixed w-full mx-auto border-separate border-spacing-y-0 overflow-hidden rounded-sm">
+                <colgroup>
+                  <col style={{ width: 35 }} />
+                  <col style={{ width: 35 }} />
+                  <col style={{ width: 125 }} />
+                  <col />
+                </colgroup>
+                <tbody>
+                  {rows.map((row, idx) => (
+                    <tr
+                      key={row.id}
+                      className={
+                        rowClassName +
+                        (row.getIsSelected()
+                          ? 'bg-secondary/100'
+                          : idx % 2 === 0
+                            ? 'bg-secondary/15'
+                            : 'bg-secondary/40')
+                      }
+                      onClick={(event) => onRowClick(event, row)}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="h-[30px]">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </ScrollArea>
+        </div>
+        {rows.length > 1 && (
+          <div className="flex gap-2 items-center">
+            <SelectRangeShortcut language={language} />
+            <SelectMultiShortcut language={language} />
+            <SelectAllShortcut language={language} />
           </div>
-        </ScrollArea>
-      </div>
+        )}
+      </>
     );
   };
 
   const getWarningMessage = () => {
+    const multipleParentRowsSelected = targetVideoIds.length > 1;
+
+    const videos = multipleParentRowsSelected
+      ? targetVideoIds.flatMap((uniqueId) =>
+          getVideoGroup(uniqueId, parentLookupMap),
+        ).length
+      : table.getSelectedRowModel().rows.length;
+
+    const rows = targetVideoIds.length;
+
     const general = `${getLocalePhrase(
       language,
       Phrase.ThisWillPermanentlyDelete,
-    )} ${table.getSelectedRowModel().rows.length} ${getLocalePhrase(
+    )} ${videos} ${getLocalePhrase(
       language,
       Phrase.Recordings,
     )} ${getLocalePhrase(
       language,
       Phrase.From,
-    )} ${Math.max(deleteDialogVideoTargetIds.length, 1)} ${getLocalePhrase(language, Phrase.Rows)}.`;
+    )} ${rows} ${getLocalePhrase(language, Phrase.Rows)}.`;
 
     const selected = table.getSelectedRowModel().rows;
     const inScopeLocked = selected.filter((row) => row.original.isProtected);
@@ -349,20 +366,30 @@ const DeleteDialog = (props: DeleteDialogProps) => {
         : 'This selection contains no locked recordings.';
 
     const color = inScopeLocked.length > 0 ? 'text-destructive' : '';
+    const gap = targetVideoIds.length > 1 ? 'gap-4' : 'gap-2';
 
     return (
-      <div className="text-sm gap-2 flex flex-col h-[60px]">
+      <div className={`text-sm ${gap} flex flex-col h-[60px]`}>
         <p>{general}</p>
         <p className={color}>{lock}</p>
       </div>
     );
   };
 
+  const getVideosToDelete = () => {
+    const multipleParentRowsSelected = targetVideoIds.length > 1;
+
+    const toDelete = multipleParentRowsSelected
+      ? targetVideoIds.flatMap((uniqueId) =>
+          getVideoGroup(uniqueId, parentLookupMap),
+        )
+      : table.getSelectedRowModel().rows.map((row) => row.original);
+
+    return toDelete;
+  };
+
   const doDelete = () => {
-    const total = table.getRowModel().rows.length;
-    const toDelete = table
-      .getSelectedRowModel()
-      .rows.map((row) => row.original);
+    const toDelete = getVideosToDelete();
 
     const toDeleteDisk = toDelete.filter((rv) => !rv.cloud);
     const toDeleteCloud = toDelete.filter((rv) => rv.cloud);
@@ -372,19 +399,12 @@ const DeleteDialog = (props: DeleteDialogProps) => {
 
     setVideoState((prev) => {
       return [...prev].filter((rv) => {
-        return !toDelete.find(
-          // A video is uniquely identified by its name and storage type.
-          (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
-        );
+        return !toDelete.find((v) => v.uniqueId === rv.uniqueId);
       });
     });
 
-    if (toDelete.length >= total) {
-      onOpenChange(false);
-    }
+    onOpenChange(false);
   };
-
-  const count = table.getSelectedRowModel().rows.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -392,19 +412,13 @@ const DeleteDialog = (props: DeleteDialogProps) => {
       <DialogContent>
         <DialogHeader>
           {/* // TODO localize */}
-          <DialogTitle>Delete Manager</DialogTitle>
+          <DialogTitle>Delete</DialogTitle>
         </DialogHeader>
         <div className="text-sm">
           {/* // TODO localize */}
           Deleting videos is permanent and cannot be undone.
         </div>
-        {renderTable()}
-        <div className="flex gap-2 items-center">
-          <span className="text-foreground text-sm">Shortcuts:</span>
-          <SelectRangeShortcut language={language} />
-          <SelectMultiShortcut language={language} />
-          <SelectAllShortcut language={language} />
-        </div>
+        {targetVideoIds.length === 1 && renderTable()}
         {getWarningMessage()}
         <DialogFooter>
           <DialogClose asChild>
@@ -413,7 +427,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
           </DialogClose>
           {/* // TODO localize */}
           <Button variant="destructive" onClick={doDelete}>
-            Delete ({count})
+            Delete ({getVideosToDelete().length})
           </Button>
         </DialogFooter>
       </DialogContent>

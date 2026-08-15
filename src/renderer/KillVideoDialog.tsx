@@ -24,25 +24,21 @@ import { Info } from 'lucide-react';
 import { obsResolutions } from 'main/constants';
 import KillVideoSourceTimeline from './KillVideoSourceTimeline';
 import Switch from './components/Switch/Switch';
+import { getVideoGroup } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  killDialogVideoTargetId: string | null;
+  targetVideoId: string | null;
   parentLookupMap: Map<string, RendererVideo>;
   language: Language;
 }
 
 const KillVideoDialog = (props: IProps) => {
-  const {
-    open,
-    onOpenChange,
-    killDialogVideoTargetId,
-    parentLookupMap,
-    language,
-  } = props;
+  const { open, onOpenChange, targetVideoId, parentLookupMap, language } =
+    props;
 
   // This React logic is super gross but we need the kill video dialog to
   // snapshot the sources when it opens so that we can calculate the segments,
@@ -50,12 +46,9 @@ const KillVideoDialog = (props: IProps) => {
   // by another user in the guild. It's not possible for a change another user
   // makes to impact this dialog as it only operates on local videos.
   const sources = useMemo(() => {
-    const parent = killDialogVideoTargetId
-      ? parentLookupMap.get(killDialogVideoTargetId)
-      : undefined;
-
-    return parent ? [parent, ...parent.multiPov].filter((rv) => !rv.cloud) : [];
-  }, [killDialogVideoTargetId, parentLookupMap]);
+    const group = getVideoGroup(targetVideoId, parentLookupMap);
+    return group.filter((rv) => !rv.cloud);
+  }, [targetVideoId, parentLookupMap]);
 
   const sourcesRef = useRef<Array<RendererVideo>>([]);
 

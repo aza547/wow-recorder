@@ -31,6 +31,7 @@ import {
   getPlayerClass,
   getPlayerName,
   getPlayerSpecID,
+  getVideoGroup,
   getWoWClassColor,
 } from './rendererutils';
 import { specImages } from './images';
@@ -44,7 +45,7 @@ import CircularProgress from '@mui/material/CircularProgress/CircularProgress';
 interface IProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  tagDialogVideoTargetId: string | null;
+  targetVideoId: string | null;
   parentLookupMap: Map<string, RendererVideo>;
   setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
   language: Language;
@@ -59,7 +60,7 @@ export default function TagDialog(props: IProps) {
     parentLookupMap,
     setVideoState,
     language,
-    tagDialogVideoTargetId,
+    targetVideoId,
   } = props;
 
   const [rowSelection, setRowSelection] = useState({});
@@ -248,11 +249,7 @@ export default function TagDialog(props: IProps) {
   ];
 
   const data = useMemo<Array<RendererVideo>>(() => {
-    const parent = tagDialogVideoTargetId
-      ? parentLookupMap.get(tagDialogVideoTargetId)
-      : undefined;
-
-    const group = parent ? [parent, ...parent.multiPov] : [];
+    const group = getVideoGroup(targetVideoId, parentLookupMap);
 
     group.sort((a, b) => {
       const aName = a.player?._name ?? '';
@@ -261,7 +258,7 @@ export default function TagDialog(props: IProps) {
     });
 
     return group;
-  }, [parentLookupMap, tagDialogVideoTargetId]);
+  }, [parentLookupMap, targetVideoId]);
 
   const table = useTable({
     columns,
@@ -449,7 +446,7 @@ export default function TagDialog(props: IProps) {
       <DialogContent>
         <DialogHeader>
           {/* // TODO localize */}
-          <DialogTitle>Tag Manager</DialogTitle>
+          <DialogTitle>Tag</DialogTitle>
         </DialogHeader>
         <div className="text-sm">
           {/* // TODO localize */}
