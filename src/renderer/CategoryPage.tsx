@@ -61,6 +61,7 @@ import VideoChat from './VideoChat';
 import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
 import LockDialog from './LockDialog';
 import TagDialog from './TagDialog';
+import KillVideoDialog from './KillVideoDialog';
 
 interface IProps {
   category: VideoCategory;
@@ -109,11 +110,18 @@ const CategoryPage = (props: IProps) => {
   const setDeleteDialog = (open: boolean) =>
     setDialog(open ? DialogType.DELETE : DialogType.NONE);
 
+  const setKillVideoDialog = (open: boolean) =>
+    setDialog(open ? DialogType.KILL : DialogType.NONE);
+
   const [lockDialogVideoTargetId, setLockDialogVideoTargetId] = useState<
     string | null
   >(null);
 
   const [tagDialogVideoTargetId, setTagDialogVideoTargetId] = useState<
+    string | null
+  >(null);
+
+  const [killDialogVideoTargetId, setKillDialogVideoTargetId] = useState<
     string | null
   >(null);
 
@@ -183,6 +191,7 @@ const CategoryPage = (props: IProps) => {
     setDialog,
     setLockDialogVideoTargetId,
     setTagDialogVideoTargetId,
+    setKillDialogVideoTargetId,
   );
 
   const haveVideos = categoryState.length > 0;
@@ -730,7 +739,13 @@ const CategoryPage = (props: IProps) => {
             setVideoState={setVideoState}
             language={language}
           />
-          {/* // KillVideoDialog */}
+          <KillVideoDialog
+            open={dialog === DialogType.KILL}
+            onOpenChange={setKillVideoDialog}
+            killDialogVideoTargetId={killDialogVideoTargetId}
+            parentLookupMap={parentLookupMap}
+            language={language}
+          />
           <VideoSelectionTable
             table={table}
             appState={appState}

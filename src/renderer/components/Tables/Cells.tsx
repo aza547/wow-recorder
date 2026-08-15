@@ -347,9 +347,11 @@ export const populateSourceCell = (
   );
 };
 
-export const populateCreatorCell = (
+export const populateKillVideoCell = (
   ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
   language: Language,
+  setDialog: Dispatch<SetStateAction<DialogType>>,
+  setKillVideoDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
 ) => {
   const video = ctx.getValue() as RendererVideo;
   const cloud = [video, ...video.multiPov].filter((rv) => rv.cloud);
@@ -373,11 +375,18 @@ export const populateCreatorCell = (
   return (
     <Box className="inline-flex">
       <Tooltip content={tooltip}>
-        <KillVideoDialog sources={disk} language={language}>
-          <Button variant="ghost" size="xs" disabled={disabled}>
-            <Clapperboard size={18} />
-          </Button>
-        </KillVideoDialog>
+        <Button
+          variant="ghost"
+          size="xs"
+          disabled={disabled}
+          onClick={(event) => {
+            stopPropagation(event);
+            setKillVideoDialogVideoTargetId(video.uniqueId);
+            setDialog(DialogType.KILL);
+          }}
+        >
+          <Clapperboard size={18} />
+        </Button>
       </Tooltip>
     </Box>
   );

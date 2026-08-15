@@ -7,11 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from './components/Dialog/Dialog';
 import { Button } from './components/Button/Button';
 import { Language, Phrase } from 'localisation/phrases';
-import { ReactNode, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import {
   Select,
   SelectContent,
@@ -29,42 +28,73 @@ import Switch from './components/Switch/Switch';
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
-  sources: RendererVideo[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  killDialogVideoTargetId: string | null;
+  parentLookupMap: Map<string, RendererVideo>;
   language: Language;
-  children: ReactNode;
 }
 
 const KillVideoDialog = (props: IProps) => {
-  const [open, setOpen] = useState(false);
-  const { children, language, sources } = props;
+  const {
+    open,
+    onOpenChange,
+    killDialogVideoTargetId,
+    parentLookupMap,
+    language,
+  } = props;
 
-  // Our select component only accepts strings annoyingly.
-  const [fps, setFps] = useState('60');
-  const [singleAudio, setSingleAudio] = useState(false);
-  const [audioTrackPlayer, setAudioTrackPlayer] = useState(
-    sources[0]?.player?._name || '',
-  );
-  const [resolution, setResolution] =
-    useState<keyof typeof obsResolutions>('1920x1080');
+  // This React logic is super gross but we need the kill video dialog to
+  // snapshot the sources when it opens so that we can calculate the segments,
+  // which shouldn't be reset on an update to the parentLookupMap, triggered
+  // by another user in the guild. It's not possible for a change another user
+  // makes to impact this dialog as it only operates on local videos.
+  const sources = useMemo(() => {
+    const parent = killDialogVideoTargetId
+      ? parentLookupMap.get(killDialogVideoTargetId)
+      : undefined;
 
-  const [segments, setSegments] = useState<KillVideoSegment[]>(() => {
+    return parent ? [parent, ...parent.multiPov].filter((rv) => !rv.cloud) : [];
+  }, [killDialogVideoTargetId, parentLookupMap]);
+
+  const sourcesRef = useRef<Array<RendererVideo>>([]);
+
+  useEffect(() => {
+    sourcesRef.current = sources;
+  }, [sources]);
+
+  useEffect(() => {
     // Calculate the length of the video as the shortest source. That
     // avoids weird conditions due to misclipped videos. Not perfect
     // but should be good enough for now.
     let videoDuration = Number.MAX_SAFE_INTEGER;
 
-    sources.forEach((rv) => {
+    sourcesRef.current.forEach((rv) => {
       videoDuration = Math.min(videoDuration, rv.duration);
     });
 
-    const segmentDuration = videoDuration / sources.length;
+    const segmentDuration = videoDuration / sourcesRef.current.length;
 
-    return sources.map((rv, idx) => ({
+    const segs = sourcesRef.current.map((rv, idx) => ({
       video: rv,
       start: idx * segmentDuration,
       stop: (idx + 1) * segmentDuration,
     }));
-  });
+
+    setSegments(segs);
+  }, [open]);
+
+  // Our select component only accepts strings annoyingly.
+  const [fps, setFps] = useState('60');
+  const [singleAudio, setSingleAudio] = useState(false);
+
+  const [audioTrackPlayer, setAudioTrackPlayer] = useState('');
+  const [resolution, setResolution] =
+    useState<keyof typeof obsResolutions>('1920x1080');
+
+  const [segments, setSegments] = useState<KillVideoSegment[]>([]);
+
+  useEffect(() => {}, [open]);
 
   const createKillVideo = () => {
     const { width, height } = obsResolutions[resolution];
@@ -225,18 +255,8 @@ const KillVideoDialog = (props: IProps) => {
     setResolution('1920x1080');
   };
 
-  if (!open) {
-    // Lazy render the dialog for performance.
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>{children}</DialogTrigger>
-      </Dialog>
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[70%]">
         <DialogHeader>
           <DialogTitle>

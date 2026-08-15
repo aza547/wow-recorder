@@ -176,7 +176,6 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   ];
 
   const data = useMemo<Array<RendererVideo>>(() => {
-    // TODO handle multi row delete
     const parent = deleteDialogVideoTargetIds[0]
       ? parentLookupMap.get(deleteDialogVideoTargetIds[0])
       : undefined;

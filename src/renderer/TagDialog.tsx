@@ -376,7 +376,7 @@ export default function TagDialog(props: IProps) {
           maxLength={1024}
           className="bg-background-dark-gradient-to rounded-sm h-20
                     border-background-dark-gradient-to flex-1 resize-none
-                    placeholder:text-foreground  focus-visible:ring-0
+                    placeholder:text-foreground focus-visible:ring-0
                     focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
           placeholder={tooltip}
           spellCheck={false}

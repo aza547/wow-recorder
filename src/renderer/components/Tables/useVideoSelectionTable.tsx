@@ -27,8 +27,8 @@ import {
   populateLevelCell,
   populateActivityCell,
   populateAffixesCell,
-  populateCreatorCell,
   populateSourceCell,
+  populateKillVideoCell,
 } from './Cells';
 import {
   EncounterHeader,
@@ -53,7 +53,7 @@ import {
   levelSort,
   detailSort,
   clipActivitySort,
-  creatorSort,
+  killVideoCreatorSort,
 } from './Sorting';
 import { getLocaleCategoryLabel } from 'localisation/translations';
 
@@ -66,6 +66,7 @@ const useVideoSelectionTable = (
   setDialog: Dispatch<SetStateAction<DialogType>>,
   setLockDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
   setTagDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
+  setKillDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
 ) => {
   const { category, language, cloudStatus, selectedVideos } = appState;
 
@@ -186,12 +187,18 @@ const useVideoSelectionTable = (
         sortFn: viewPointCountSort,
       },
       {
-        id: 'Creator',
+        id: 'Kill Video Creator',
         size: 50,
         accessorFn: (v) => v,
-        sortFn: (a, b) => creatorSort(a, b),
+        sortFn: (a, b) => killVideoCreatorSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateCreatorCell(ctx, language),
+        cell: (ctx) =>
+          populateKillVideoCell(
+            ctx,
+            language,
+            setDialog,
+            setKillDialogVideoTargetId,
+          ),
       },
     ];
 

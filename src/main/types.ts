@@ -700,6 +700,7 @@ enum DialogType {
   NONE,
   LOCK,
   TAG,
+  KILL,
   DELETE,
 }
 
