@@ -1,6 +1,5 @@
 import { Translations, Phrase } from './phrases';
 
-/* eslint-disable prettier/prettier */
 const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.NoVideosSaved]: '你还没有为此分类保存任何视频',
   [Phrase.FirstTimeHere]: '如果这是你第一次使用，下面的链接中可以找到设置说明。如果你遇到问题，请在 Discord 的 #help 频道寻求支持。',

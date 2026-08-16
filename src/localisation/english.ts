@@ -1,164 +1,90 @@
 import { Translations, Phrase } from './phrases';
 
-/* eslint-disable prettier/prettier */
 const ENGLISH: Translations = {
   [Phrase.NoVideosSaved]: 'You have no videos saved for this category',
-  [Phrase.FirstTimeHere]:
-    'If it is your first time here, setup instructions can be found at the link below. If you have problems, please use the Discord #help channel to get support.',
+  [Phrase.FirstTimeHere]: 'If it is your first time here, setup instructions can be found at the link below. If you have problems, please use the Discord #help channel to get support.',
   [Phrase.SetupInstructions]: 'Setup Instructions',
   [Phrase.ClipsDisplayedHere]: 'Videos you clip will be displayed here.',
   [Phrase.NoClipsSaved]: 'You have no clips saved',
-  [Phrase.StoragePathDescription]:
-    'Location to store the recordings. Warcraft Recorder takes ownership of this directory, it should be empty on initial setup and you should not modify the contents in-place.',
-  [Phrase.SeparateBufferPathDescription]:
-    'Enable storing temporary recordings in a seperate location. This should always be a local location. This feature is intended for people who want their final recordings to be on an NFS drive but not incur the network traffic of constantly recording to it.',
-  [Phrase.BufferStoragePathDescription]:
-    'Location to store temporary recordings. If left unset this will default to a folder inside the Storage Path.',
-  [Phrase.RetailLogPathDescription]:
-    'Location of the World of Warcraft logs folder for your retail installation, e.g. "D:\\World of Warcraft\\_retail_\\Logs".',
-  [Phrase.ClassicLogPathDescription]:
-    'Location of the World of Warcraft logs folder for your classic installation, e.g. "D:\\World of Warcraft\\_classic_\\Logs".',
-  [Phrase.ClassicPtrLogPathDescription]:
-    'Location of the World of Warcraft logs folder for your classic PTR installation, e.g. "D:\\World of Warcraft\\_classic_ptr_\\Logs". ',
-  [Phrase.EraLogPathDescription]:
-    'Location of the World of Warcraft logs folder for your classic era installation, e.g. "D:\\World of Warcraft\\_classic_era_\\Logs".',
-  [Phrase.MaxStorageDescription]:
-    'Maximum allowed storage that the application will consume for video files. The oldest videos will be deleted one by one to remain under the limit. Recording will not stop. Set to 0 to signify unlimited.',
-  [Phrase.MonitorIndexDescription]:
-    'The monitor to record. Only applicible if monitor capture is selected.',
-  [Phrase.SelectedCategoryDescription]:
-    'Last selected video category in the UI.',
-  [Phrase.AudioInputDevicesDescription]:
-    'Audio input devices to be included in the recording.',
-  [Phrase.AudioOutputDevicesDescription]:
-    'Audio output devices to be included in the recording.',
-  [Phrase.MinEncounterDurationDescription]:
-    'Encounters shorter than this duration will not be recorded. This setting is aimed at avoiding saving boss resets.',
-  [Phrase.StartUpDescription]:
-    'Automatically start the application when Windows starts.',
+  [Phrase.StoragePathDescription]: 'Location to store the recordings. Warcraft Recorder takes ownership of this directory, it should be empty on initial setup and you should not modify the contents in-place.',
+  [Phrase.SeparateBufferPathDescription]: 'Enable storing temporary recordings in a seperate location. This should always be a local location. This feature is intended for people who want their final recordings to be on an NFS drive but not incur the network traffic of constantly recording to it.',
+  [Phrase.BufferStoragePathDescription]: 'Location to store temporary recordings. If left unset this will default to a folder inside the Storage Path.',
+  [Phrase.RetailLogPathDescription]: 'Location of the World of Warcraft logs folder for your retail installation, e.g. "D:\\World of Warcraft\\_retail_\\Logs".',
+  [Phrase.ClassicLogPathDescription]: 'Location of the World of Warcraft logs folder for your classic installation, e.g. "D:\\World of Warcraft\\_classic_\\Logs".',
+  [Phrase.ClassicPtrLogPathDescription]: 'Location of the World of Warcraft logs folder for your classic PTR installation, e.g. "D:\\World of Warcraft\\_classic_ptr_\\Logs". ',
+  [Phrase.EraLogPathDescription]: 'Location of the World of Warcraft logs folder for your classic era installation, e.g. "D:\\World of Warcraft\\_classic_era_\\Logs".',
+  [Phrase.MaxStorageDescription]: 'Maximum allowed storage that the application will consume for video files. The oldest videos will be deleted one by one to remain under the limit. Recording will not stop. Set to 0 to signify unlimited.',
+  [Phrase.MonitorIndexDescription]: 'The monitor to record. Only applicible if monitor capture is selected.',
+  [Phrase.SelectedCategoryDescription]: 'Last selected video category in the UI.',
+  [Phrase.AudioInputDevicesDescription]: 'Audio input devices to be included in the recording.',
+  [Phrase.AudioOutputDevicesDescription]: 'Audio output devices to be included in the recording.',
+  [Phrase.MinEncounterDurationDescription]: 'Encounters shorter than this duration will not be recorded. This setting is aimed at avoiding saving boss resets.',
+  [Phrase.StartUpDescription]: 'Automatically start the application when Windows starts.',
   [Phrase.StartMinimizedDescription]: 'Open to the Windows system tray.',
-  [Phrase.ObsOutputResolutionDescription]:
-    'Resolution of videos as saved on disk. Set this to the size of your WoW monitor, or less if you want to scale down.',
-  [Phrase.ObsFPSDescription]:
-    'The number of frames per second to record the video at. Lower FPS gives smaller video size, but also more choppy playback.',
-  [Phrase.ObsForceMonoDescription]:
-    'Whether to force the audio of your input device to mono. Enable if your microphone audio is only playing out of one stereo channel.',
-  [Phrase.ObsQualityDescription]:
-    'Quality to record at. Higher quality works your encoder harder and uses more disk space per video.',
-  [Phrase.ObsCaptureModeDescription]:
-    'The capture mode OBS should use to record. See the #faq channel in discord for more details.',
-  [Phrase.ObsRecEncoderDescription]:
-    'The video encoder to use. Hardware encoders are typically preferable, usually giving better performance, but are specific to your graphics card.',
-  [Phrase.RecordRetailDescription]:
-    'Whether the application should record retail.',
-  [Phrase.RecordClassicDescription]:
-    'Whether the application should record classic.',
-  [Phrase.RecordClassicPtrDescription]:
-    'Whether the application should record classic PTR. This feature is provided on a best-effort basis and depends on Blizzard maintaining compatibility with the PTR combat log. As a result, functionality may be unpredictable.',
-  [Phrase.RecordEraDescription]:
-    'Whether the application should record classic era.',
-  [Phrase.RecordRaidsDescription]:
-    'Whether the application should record raids.',
-  [Phrase.RecordDungeonsDescription]:
-    'Whether the application should record Mythic+.',
-  [Phrase.RecordTwoVTwoDescription]:
-    'Whether the application should record 2v2.',
-  [Phrase.RecordThreeVThreeDescription]:
-    'Whether the application should record 3v3.',
-  [Phrase.RecordFiveVFiveDescription]:
-    'Whether the application should record 5v5.',
-  [Phrase.RecordSkirmishDescription]:
-    'Whether the application should record skirmishes.',
-  [Phrase.RecordSoloShuffleDescription]:
-    'Whether the application should record solo shuffle.',
-  [Phrase.RecordBattlegroundsDescription]:
-    'Whether the application should record battlegrounds.',
-  [Phrase.CaptureCursorDescription]:
-    'Whether the cursor should be included in recordings.',
+  [Phrase.ObsOutputResolutionDescription]: 'Resolution of videos as saved on disk. Set this to the size of your WoW monitor, or less if you want to scale down.',
+  [Phrase.ObsFPSDescription]: 'The number of frames per second to record the video at. Lower FPS gives smaller video size, but also more choppy playback.',
+  [Phrase.ObsForceMonoDescription]: 'Whether to force the audio of your input device to mono. Enable if your microphone audio is only playing out of one stereo channel.',
+  [Phrase.ObsQualityDescription]: 'Quality to record at. Higher quality works your encoder harder and uses more disk space per video.',
+  [Phrase.ObsCaptureModeDescription]: 'The capture mode OBS should use to record. See the #faq channel in discord for more details.',
+  [Phrase.ObsRecEncoderDescription]: 'The video encoder to use. Hardware encoders are typically preferable, usually giving better performance, but are specific to your graphics card.',
+  [Phrase.RecordRetailDescription]: 'Whether the application should record retail.',
+  [Phrase.RecordClassicDescription]: 'Whether the application should record classic.',
+  [Phrase.RecordClassicPtrDescription]: 'Whether the application should record classic PTR. This feature is provided on a best-effort basis and depends on Blizzard maintaining compatibility with the PTR combat log. As a result, functionality may be unpredictable.',
+  [Phrase.RecordEraDescription]: 'Whether the application should record classic era.',
+  [Phrase.RecordRaidsDescription]: 'Whether the application should record raids.',
+  [Phrase.RecordDungeonsDescription]: 'Whether the application should record Mythic+.',
+  [Phrase.RecordTwoVTwoDescription]: 'Whether the application should record 2v2.',
+  [Phrase.RecordThreeVThreeDescription]: 'Whether the application should record 3v3.',
+  [Phrase.RecordFiveVFiveDescription]: 'Whether the application should record 5v5.',
+  [Phrase.RecordSkirmishDescription]: 'Whether the application should record skirmishes.',
+  [Phrase.RecordSoloShuffleDescription]: 'Whether the application should record solo shuffle.',
+  [Phrase.RecordBattlegroundsDescription]: 'Whether the application should record battlegrounds.',
+  [Phrase.CaptureCursorDescription]: 'Whether the cursor should be included in recordings.',
   [Phrase.MinKeystoneLevelDescription]: 'The minimum keystone level to record.',
   [Phrase.ChallengeModeDescription]: 'Whether to record challenge modes.',
-  [Phrase.MinRaidDifficultyDescription]:
-    'The minimum raid difficulty to record. Only applies to retail.',
-  [Phrase.MinimizeOnQuitDescription]:
-    'Whether the close button should minimize rather than quit.',
-  [Phrase.MinimizeToTrayDescription]:
-    'Whether the minimize button should minimize to the system tray or the taskbar.',
-  [Phrase.ChatOverlayEnabledDescription]:
-    'If a chat overlay should be added to the scene.',
-  [Phrase.ChatOverlayOwnImageDescription]:
-    'If a custom image should be used as the chat overlay. This feature is only available to Pro users.',
-  [Phrase.ChatOverlayOwnImagePathDescription]:
-    'The PNG file to use as a chat overlay. This feature is only available to Pro users.',
+  [Phrase.MinRaidDifficultyDescription]: 'The minimum raid difficulty to record. Only applies to retail.',
+  [Phrase.MinimizeOnQuitDescription]: 'Whether the close button should minimize rather than quit.',
+  [Phrase.MinimizeToTrayDescription]: 'Whether the minimize button should minimize to the system tray or the taskbar.',
+  [Phrase.ChatOverlayEnabledDescription]: 'If a chat overlay should be added to the scene.',
+  [Phrase.ChatOverlayOwnImageDescription]: 'If a custom image should be used as the chat overlay. This feature is only available to Pro users.',
+  [Phrase.ChatOverlayOwnImagePathDescription]: 'The PNG file to use as a chat overlay. This feature is only available to Pro users.',
   [Phrase.ChatOverlayWidthDescription]: 'Crop the width of the chat overlay.',
   [Phrase.ChatOverlayHeightDescription]: 'Crop the height of the chat overlay.',
   [Phrase.ChatOverlayScaleDescription]: 'The scale of the chat overlay.',
-  [Phrase.ChatOverlayXPositionDescription]:
-    'The x-position of the chat overlay.',
-  [Phrase.ChatOverlayYPositionDescription]:
-    'The y-position of the chat overlay.',
-  [Phrase.SpeakerVolumeDescription]:
-    'The volume of your speakers in the recording, from 0 to 1.',
-  [Phrase.MicVolumeDescription]:
-    'The volume of your mic in the recording, from 0 to 1.',
-  [Phrase.DeathMarkersDescription]:
-    'Death markers to display on the video timeline.',
-  [Phrase.EncounterMarkersDescription]:
-    'Encounter markers to display on the video timeline.',
-  [Phrase.RoundMarkersDescription]:
-    'Round markers to display on the video timeline.',
-  [Phrase.PushToTalkDescription]:
-    'If the input audio devices should be recorded all the time, or only when a hotkey is held down.',
-  [Phrase.PushToTalkKeyDescription]:
-    'The push to talk hotkey, represented by the key code.',
+  [Phrase.ChatOverlayXPositionDescription]: 'The x-position of the chat overlay.',
+  [Phrase.ChatOverlayYPositionDescription]: 'The y-position of the chat overlay.',
+  [Phrase.SpeakerVolumeDescription]: 'The volume of your speakers in the recording, from 0 to 1.',
+  [Phrase.MicVolumeDescription]: 'The volume of your mic in the recording, from 0 to 1.',
+  [Phrase.DeathMarkersDescription]: 'Death markers to display on the video timeline.',
+  [Phrase.EncounterMarkersDescription]: 'Encounter markers to display on the video timeline.',
+  [Phrase.RoundMarkersDescription]: 'Round markers to display on the video timeline.',
+  [Phrase.PushToTalkDescription]: 'If the input audio devices should be recorded all the time, or only when a hotkey is held down.',
+  [Phrase.PushToTalkKeyDescription]: 'The push to talk hotkey, represented by the key code.',
   [Phrase.PushToTalkMouseButtonDescription]: 'The push to talk mouse button.',
-  [Phrase.PushToTalkModifiersDescription]:
-    'A comma seperated list of modifiers required in conjunction with the push to talk hotkey.',
-  [Phrase.PushToTalkReleaseDelayDescription]:
-    'How long your microphone stays active after you release the Push To Talk key.',
-  [Phrase.ObsAudioSuppressionDescription]:
-    'Suppress background noise picked up by your microphone, this can help reduce keyboard clacking, breathing, etc.',
-  [Phrase.RaidOverrunDescription]:
-    'Number of seconds to record after a boss has been killed.',
-  [Phrase.DungeonOverrunDescription]:
-    'Number of seconds to record after a dungeon has been completed.',
-  [Phrase.CloudStorageDescription]:
-    'Enable the ability to play videos from the cloud.',
-  [Phrase.CloudUploadDescription]:
-    'Upload your videos to the cloud, this enables both automatic upload on completion of a recording, as well as the ability to manually upload existing videos.',
-  [Phrase.CloudUploadRetailDescription]:
-    'If Retail recordings should be uploaded to the cloud.',
-  [Phrase.CloudUploadClassicDescription]:
-    'If Classic recordings should be uploaded to the cloud.',
-  [Phrase.CloudUploadRateLimitDescription]:
-    'If upload to the cloud should be rate limited. Useful if you are finding uploading is causing you to lag.',
-  [Phrase.CloudUploadRateLimitMbpsDescription]:
-    'The upload rate limit in MB/s ',
-  [Phrase.CloudAccountNameDescription]:
-    'Your Warcraft Recorder account username. This will be shown as your display name when using the chat feature.',
-  [Phrase.CloudAccountPasswordDescription]:
-    'Your Warcraft Recorder account password.',
-  [Phrase.CloudGuildNameDescription]:
-    'The guild or group your account is affiliated with.',
-  [Phrase.CloudUpload2v2Description]:
-    'If 2v2 recordings should be uploaded to the cloud.',
-  [Phrase.CloudUpload3v3Description]:
-    'If 3v3 recordings should be uploaded to the cloud.',
-  [Phrase.CloudUpload5v5Description]:
-    'If 5v5 recordings should be uploaded to the cloud.',
-  [Phrase.CloudUploadSkirmishDescription]:
-    'If skirmish recordings should be uploaded to the cloud.',
-  [Phrase.CloudUploadSoloShuffleDescription]:
-    'If solo shuffle recordings should be uploaded to the cloud.',
-  [Phrase.CloudUploadDungeonsDescription]:
-    'If mythic+ recordings should be uploaded to the cloud.',
-  [Phrase.CloudUploadRaidsDescription]:
-    'If raid encounter recordings should be uploaded to the cloud.',
-  [Phrase.CloudUploadBattlegroundsDescription]:
-    'If battleground recordings should be uploaded to the cloud.',
-  [Phrase.CloudUploadRaidMinDifficultyDescription]:
-    'The minimum raid encounter difficulty for automatic cloud uploading.',
-  [Phrase.CloudUploadDungeonMinLevelDescription]:
-    'The minimum keystone level for automatic cloud uploading.',
+  [Phrase.PushToTalkModifiersDescription]: 'A comma seperated list of modifiers required in conjunction with the push to talk hotkey.',
+  [Phrase.PushToTalkReleaseDelayDescription]: 'How long your microphone stays active after you release the Push To Talk key.',
+  [Phrase.ObsAudioSuppressionDescription]: 'Suppress background noise picked up by your microphone, this can help reduce keyboard clacking, breathing, etc.',
+  [Phrase.RaidOverrunDescription]: 'Number of seconds to record after a boss has been killed.',
+  [Phrase.DungeonOverrunDescription]: 'Number of seconds to record after a dungeon has been completed.',
+  [Phrase.CloudStorageDescription]: 'Enable the ability to play videos from the cloud.',
+  [Phrase.CloudUploadDescription]: 'Upload your videos to the cloud, this enables both automatic upload on completion of a recording, as well as the ability to manually upload existing videos.',
+  [Phrase.CloudUploadRetailDescription]: 'If Retail recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadClassicDescription]: 'If Classic recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadRateLimitDescription]: 'If upload to the cloud should be rate limited. Useful if you are finding uploading is causing you to lag.',
+  [Phrase.CloudUploadRateLimitMbpsDescription]: 'The upload rate limit in MB/s ',
+  [Phrase.CloudAccountNameDescription]: 'Your Warcraft Recorder account username. This will be shown as your display name when using the chat feature.',
+  [Phrase.CloudAccountPasswordDescription]: 'Your Warcraft Recorder account password.',
+  [Phrase.CloudGuildNameDescription]: 'The guild or group your account is affiliated with.',
+  [Phrase.CloudUpload2v2Description]: 'If 2v2 recordings should be uploaded to the cloud.',
+  [Phrase.CloudUpload3v3Description]: 'If 3v3 recordings should be uploaded to the cloud.',
+  [Phrase.CloudUpload5v5Description]: 'If 5v5 recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadSkirmishDescription]: 'If skirmish recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadSoloShuffleDescription]: 'If solo shuffle recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadDungeonsDescription]: 'If mythic+ recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadRaidsDescription]: 'If raid encounter recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadBattlegroundsDescription]: 'If battleground recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadRaidMinDifficultyDescription]: 'The minimum raid encounter difficulty for automatic cloud uploading.',
+  [Phrase.CloudUploadDungeonMinLevelDescription]: 'The minimum keystone level for automatic cloud uploading.',
   [Phrase.LanguageDescription]: 'The language to use in the application.',
   [Phrase.RecordingsHeading]: 'Recordings',
   [Phrase.SettingsHeading]: 'Settings',
@@ -176,8 +102,7 @@ const ENGLISH: Translations = {
   [Phrase.VideoCategoryClipsLabel]: 'Clips',
   [Phrase.LogsButtonLabel]: 'Logs',
   [Phrase.DiscordButtonLabel]: 'Discord',
-  [Phrase.TestButtonUnable]:
-    'Unable to run a test right now. To run a test, World of Warcraft must be running, your settings must be valid, and you must not currently be in an activity.',
+  [Phrase.TestButtonUnable]: 'Unable to run a test right now. To run a test, World of Warcraft must be running, your settings must be valid, and you must not currently be in an activity.',
   [Phrase.GeneralSettingsLabel]: 'General Settings',
   [Phrase.DiskStorageFolderLabel]: 'Disk Storage Folder',
   [Phrase.SeparateBufferFolderLabel]: 'Separate Buffer Folder',
@@ -198,7 +123,7 @@ const ENGLISH: Translations = {
   [Phrase.RecordClassicPtrLabel]: 'Record Classic PTR',
   [Phrase.ClassicPtrLogPathLabel]: 'Classic PTR Log Path',
   [Phrase.RecordClassicEraLabel]: 'Record Classic Era',
-  [Phrase.ClassicEraLogPathLabel]: 'Classic Era Log Path',
+  [Phrase.ClassicEraLogPathLabel]: 'Classic Era Log Path', 
   [Phrase.PVESettingsLabel]: 'PvE Settings',
   [Phrase.RecordRaidsLabel]: 'Record Raids',
   [Phrase.MinimumEncounterDurationLabel]: 'Minimum Encounter Duration (sec)',
@@ -235,12 +160,9 @@ const ENGLISH: Translations = {
   [Phrase.UploadSkirmishLabel]: 'Upload Skirmish',
   [Phrase.UploadSoloShuffleLabel]: 'Upload Solo Shuffle',
   [Phrase.UploadBattlgroundsLabel]: 'Upload Battlegrounds',
-  [Phrase.SettingsDisabledText]:
-    'These settings cannot be modified while a recording is active.',
-  [Phrase.SomeSettingsDisabledText]:
-    'Some settings in this category are currently hidden as they cannot be modified while a recording is active.',
-  [Phrase.CloudSettingsDisabledText]:
-    'These settings cannot be modified while uploads or downloads are in progress.',
+  [Phrase.SettingsDisabledText]: 'These settings cannot be modified while a recording is active.',
+  [Phrase.SomeSettingsDisabledText]: 'Some settings in this category are currently hidden as they cannot be modified while a recording is active.',
+  [Phrase.CloudSettingsDisabledText]: 'These settings cannot be modified while uploads or downloads are in progress.',
   [Phrase.InvalidRetailLogPathText]: 'Invalid retail log path',
   [Phrase.InvalidClassicLogPathText]: 'Invalid classic log path.',
   [Phrase.InvalidClassicPtrLogPathText]: 'Invalid classic PTR log path.',
@@ -291,22 +213,18 @@ const ENGLISH: Translations = {
   [Phrase.TableHeaderType]: 'Type',
   [Phrase.TableHeaderTag]: 'Tag',
   [Phrase.SearchLabel]: 'Search Filter',
-  [Phrase.SearchSuggestionMythicPlus]:
-    'Try: timed temple yesterday +18 priest bookmarked fortified',
-  [Phrase.SearchSuggestionRaid]:
-    'Try: kill today retail mythic destruction bookmarked',
+  [Phrase.SearchSuggestionMythicPlus]: 'Try: timed temple yesterday +18 priest bookmarked fortified',
+  [Phrase.SearchSuggestionRaid]: 'Try: kill today retail mythic destruction bookmarked',
   [Phrase.SearchSuggestionBattlegrounds]: 'Try: warsong gulch bookmarked',
   [Phrase.SearchSuggestionSoloShuffle]: 'Try: dalaran 6-0 bookmarked',
-  [Phrase.SearchSuggestionDefault]:
-    'Try: win enigma crucible arcane bookmarked',
+  [Phrase.SearchSuggestionDefault]: 'Try: win enigma crucible arcane bookmarked',
   [Phrase.ShowRoundsLabel]: 'Show Rounds',
   [Phrase.ShowDeathsLabel]: 'Show Deaths',
   [Phrase.ShowEncountersLabel]: 'Show Encounters',
   [Phrase.FullScreenTooltip]: 'Fullscreen',
   [Phrase.PlaybackSpeedTooltip]: 'Playback Speed',
   [Phrase.ClipTooltip]: 'Clip',
-  [Phrase.ClipUnavailableTooltip]:
-    'You can only clip locally saved videos, while in single player mode',
+  [Phrase.ClipUnavailableTooltip]: 'You can only clip locally saved videos, while in single player mode',
   [Phrase.ClipSourceTooltip]: 'Go to source',
   [Phrase.ClipSourceUnavailableTooltip]: 'Source unavailable',
   [Phrase.ConfirmTooltip]: 'Confirm',
@@ -316,8 +234,7 @@ const ENGLISH: Translations = {
   [Phrase.UnstarButtonTooltip]: 'Age out',
   [Phrase.OpenFolderButtonTooltip]: 'Open location',
   [Phrase.DeleteButtonTooltip]: 'Delete',
-  [Phrase.BulkDeleteButtonTooltip]:
-    'Permanently delete selected rows, including local and cloud stored videos.',
+  [Phrase.BulkDeleteButtonTooltip]: 'Permanently delete selected rows, including local and cloud stored videos.',
   [Phrase.ShareLinkButtonTooltip]: 'Get shareable link',
   [Phrase.CloudButtonTooltip]: 'Use cloud version',
   [Phrase.DiskButtonTooltip]: 'Use local disk version',
@@ -330,32 +247,21 @@ const ENGLISH: Translations = {
   [Phrase.StatusTitleFatalError]: 'Error',
   [Phrase.StatusTitleOverrunning]: 'Overrunning',
   [Phrase.StatusTitleReconfiguring]: 'Reconfiguring',
-  [Phrase.StatusDescriptionRecording]:
-    'Warcraft Recorder is currently recording',
-  [Phrase.StatusDescriptionForceEnd]:
-    'You can force the recording to end. Normally this should not be required. This can help end a failed Mythic+ run that would otherwise need a few minutes to wrap up.',
+  [Phrase.StatusDescriptionRecording]: 'Warcraft Recorder is currently recording',
+  [Phrase.StatusDescriptionForceEnd]: 'You can force the recording to end. Normally this should not be required. This can help end a failed Mythic+ run that would otherwise need a few minutes to wrap up.',
   [Phrase.StatusDescriptionWaiting]: 'Waiting for World of Warcraft to start',
-  [Phrase.StatusDescriptionConfiguredToRecord]:
-    'Warcraft Recorder is configured to record',
+  [Phrase.StatusDescriptionConfiguredToRecord]: 'Warcraft Recorder is configured to record',
   [Phrase.StatusDescriptionMisconfigured]: 'Warcraft Recorder is misconfigured',
   [Phrase.StatusDescriptionResolveError]: 'Please resolve the error below',
-  [Phrase.StatusDescriptionDetectedRunning]:
-    'Detected World of Warcraft is running',
-  [Phrase.StatusDescriptionWatchingLogs]:
-    'Warcraft Recorder is waiting for a recordable event to appear in the combat log. Watching log paths',
+  [Phrase.StatusDescriptionDetectedRunning]: 'Detected World of Warcraft is running',
+  [Phrase.StatusDescriptionWatchingLogs]: 'Warcraft Recorder is waiting for a recordable event to appear in the combat log. Watching log paths',
   [Phrase.StatusDescriptionTip]: 'Tip',
-  [Phrase.StatusDescriptionIfNoRecording]:
-    'If recordings do not start, check your logging settings in-game and confirm your log path configuration is correct.',
-  [Phrase.StatusDescriptionFatalError]:
-    'Warcraft Recorder has hit a fatal error',
-  [Phrase.StatusDescriptionPleaseResolve]:
-    'Please try to resolve the error below, then restart the application.',
-  [Phrase.StatusDescriptionIfRecurring]:
-    'If this problem is recurring, please ask for help in Discord. See the pins in the #help channel for advice on getting help.',
-  [Phrase.StatusDescriptionOverrunning]:
-    'Warcraft Recorder has detected an activity has completed successfuly and is recording a few seconds extra to catch the aftermath.',
-  [Phrase.StatusDescriptionNothing]:
-    'nothing. You likely want to enable some game modes in the game settings tab.',
+  [Phrase.StatusDescriptionIfNoRecording]: 'If recordings do not start, check your logging settings in-game and confirm your log path configuration is correct.',
+  [Phrase.StatusDescriptionFatalError]: 'Warcraft Recorder has hit a fatal error',
+  [Phrase.StatusDescriptionPleaseResolve]: 'Please try to resolve the error below, then restart the application.',
+  [Phrase.StatusDescriptionIfRecurring]: 'If this problem is recurring, please ask for help in Discord. See the pins in the #help channel for advice on getting help.',
+  [Phrase.StatusDescriptionOverrunning]: 'Warcraft Recorder has detected an activity has completed successfuly and is recording a few seconds extra to catch the aftermath.',
+  [Phrase.StatusDescriptionNothing]: 'nothing. You likely want to enable some game modes in the game settings tab.',
   [Phrase.StatusHeading]: 'Status',
   [Phrase.StatusButtonForceEndLabel]: 'Force Stop',
   [Phrase.Retail]: 'Retail',
@@ -364,8 +270,7 @@ const ENGLISH: Translations = {
   [Phrase.Era]: 'Era',
   [Phrase.MicListeningTooltip]: 'Listening',
   [Phrase.MicMutedTooltip]: 'Muted',
-  [Phrase.CrashHappenedText]:
-    'An error has occured. This can result in dropped videos. You may wish to seek help by sharing your WCR and OBS logs in discord.',
+  [Phrase.CrashHappenedText]: 'An error has occured. This can result in dropped videos. You may wish to seek help by sharing your WCR and OBS logs in discord.',
   [Phrase.SettingsPageApplicationHeader]: 'Application',
   [Phrase.SettingsPageGameHeader]: 'Game',
   [Phrase.SettingsPageProHeader]: 'Pro',
@@ -380,8 +285,7 @@ const ENGLISH: Translations = {
   [Phrase.Depleted]: 'Depleted',
   [Phrase.AreYouSure]: 'Are you sure?',
   [Phrase.ThisWillPermanentlyDelete]: 'This will permanently delete',
-  [Phrase.DeleteSelectionContainsLocked]:
-    'This selection contains locked recordings which will also be permanently deleted.',
+  [Phrase.DeleteSelectionContainsLocked]: 'This selection contains locked recordings which will also be permanently deleted.',
   [Phrase.Recordings]: 'recording(s)',
   [Phrase.From]: 'from',
   [Phrase.Rows]: 'row(s)',
@@ -391,8 +295,7 @@ const ENGLISH: Translations = {
   [Phrase.Clear]: 'Clear',
   [Phrase.Save]: 'Save',
   [Phrase.ShareableLinkTitle]: 'Link Copied to Clipboard',
-  [Phrase.ShareableLinkText]:
-    'This link will be valid as long as the video remains stored in the cloud.',
+  [Phrase.ShareableLinkText]: 'This link will be valid as long as the video remains stored in the cloud.',
   [Phrase.ShareableLinkFailedTitle]: 'Failed to Generate Link',
   [Phrase.ShareableLinkFailedText]: 'Please see logs for more details',
   [Phrase.CloudUsageDescription]: 'Cloud Usage',
@@ -416,20 +319,14 @@ const ENGLISH: Translations = {
   [Phrase.ErrorAccountEmpty]: 'Account name must not be empty.',
   [Phrase.ErrorPasswordEmpty]: 'Account Password must not be empty.',
   [Phrase.ErrorGuildEmpty]: 'Guild name must not be empty.',
-  [Phrase.ErrorUserNotAuthorizedPlayback]:
-    'User is not authorized to access the guild.',
-  [Phrase.ErrorUserNotAuthorizedUpload]:
-    'User is not authorized to upload to the guild.',
+  [Phrase.ErrorUserNotAuthorizedPlayback]: 'User is not authorized to access the guild.',
+  [Phrase.ErrorUserNotAuthorizedUpload]: 'User is not authorized to upload to the guild.',
   [Phrase.ErrorStoragePathInvalid]: 'Storage path is invalid.',
   [Phrase.ErrorBufferPathInvalid]: 'Buffer Storage Path is invalid.',
-  [Phrase.ErrorStoragePathSameAsBufferPath]:
-    'Storage Path is the same as Buffer Path.',
-  [Phrase.ErrorCustomOverlayNotAllowed]:
-    'To use a custom overlay, login to your Pro account.',
-  [Phrase.ErrorNoCustomImage]:
-    'Overlay image was not provided for custom overlay.',
-  [Phrase.ErrorCustomImageFileType]:
-    'Overlay image must be a .png or .gif file.',
+  [Phrase.ErrorStoragePathSameAsBufferPath]: 'Storage Path is the same as Buffer Path.',
+  [Phrase.ErrorCustomOverlayNotAllowed]: 'To use a custom overlay, login to your Pro account.',
+  [Phrase.ErrorNoCustomImage]: 'Overlay image was not provided for custom overlay.',
+  [Phrase.ErrorCustomImageFileType]: 'Overlay image must be a .png or .gif file.',
   [Phrase.ErrorCustomImageNotExist]: 'Specified file does not exist.',
   [Phrase.InvalidRetailLogPath]: 'Invalid retail log path.',
   [Phrase.InvalidClassicLogPath]: 'Invalid classic log path.',
@@ -445,30 +342,25 @@ const ENGLISH: Translations = {
   [Phrase.ClickToClearSort]: 'Click to clear sort',
   [Phrase.Start]: 'Start',
   [Phrase.End]: 'End',
-  [Phrase.Cloud]: 'Cloud',
-  [Phrase.Disk]: 'Disk',
-  [Phrase.Starred]: 'Locked',
-  [Phrase.NotStarred]: 'Unlocked',
-  [Phrase.Tagged]: 'Tagged',
-  [Phrase.Today]: 'Today',
-  [Phrase.Yesterday]: 'Yesterday',
-  [Phrase.Chests]: 'Chests',
-  [Phrase.Timed]: 'Timed',
-  [Phrase.Activity]: 'Activity',
-  [Phrase.Unknown]: 'Unknown',
-  [Phrase.NoneTagged]: 'This row contains no tagged recordings.',
-  [Phrase.MultipleTagged]: 'This row contains multiple tagged recordings.',
-  [Phrase.NoneStarred]:
-    'This row is not locked in. It may be automatically aged out to make space for new recordings.',
-  [Phrase.SomeStarred]:
-    'This row is locked in. It will not be automatically aged out.',
+  [Phrase.Cloud]: "Cloud",
+  [Phrase.Disk]: "Disk",
+  [Phrase.Starred]: "Locked",
+  [Phrase.NotStarred]: "Unlocked",
+  [Phrase.Tagged]: "Tagged",
+  [Phrase.Today]: "Today",
+  [Phrase.Yesterday]: "Yesterday",
+  [Phrase.Chests]: "Chests",
+  [Phrase.Timed]: "Timed",
+  [Phrase.Activity]: "Activity",
+  [Phrase.Unknown]: "Unknown",
+  [Phrase.NoneTagged]: "This row contains no tagged recordings.",
+  [Phrase.MultipleTagged]: "This row contains multiple tagged recordings.",
+  [Phrase.NoneStarred]: "This row is not locked in. It may be automatically aged out to make space for new recordings.",
+  [Phrase.SomeStarred]: 'This row is locked in. It will not be automatically aged out.',
   [Phrase.UploadClipsLabel]: 'Upload Clips',
-  [Phrase.CloudUploadClipsDescription]:
-    'If clipped recordings should be uploaded to the cloud.',
-  [Phrase.RetailPtrLogPathDescription]:
-    'Location of the World of Warcraft logs folder for your retail PTR installation, e.g. "C:\\Program Files\\World of Warcraft\\_xptr_\\Logs". ',
-  [Phrase.RecordRetailPtrDescription]:
-    'Whether the application should record retail PTR. This feature is provided on a best-effort basis and depends on Blizzard maintaining compatibility with the PTR combat log. As a result, functionality may be unpredictable.',
+  [Phrase.CloudUploadClipsDescription]: 'If clipped recordings should be uploaded to the cloud.',
+  [Phrase.RetailPtrLogPathDescription]: 'Location of the World of Warcraft logs folder for your retail PTR installation, e.g. "C:\\Program Files\\World of Warcraft\\_xptr_\\Logs". ',
+  [Phrase.RecordRetailPtrDescription]: 'Whether the application should record retail PTR. This feature is provided on a best-effort basis and depends on Blizzard maintaining compatibility with the PTR combat log. As a result, functionality may be unpredictable.',
   [Phrase.RetailPtr]: 'Retail PTR',
   [Phrase.RecordRetailPtrLabel]: 'Record Retail PTR',
   [Phrase.RetailPtrLogPathLabel]: 'Retail PTR Log Path',
@@ -476,135 +368,106 @@ const ENGLISH: Translations = {
   [Phrase.Details]: 'Details',
   [Phrase.PlayerModeLabel]: 'Player Mode',
   [Phrase.MultiPlayerModeHeading]: 'Multiplayer Mode',
-  [Phrase.MultiPlayerModeAdvice1]:
-    'Select/deselect up to 4 players at once using the grid to the left.',
-  [Phrase.MultiPlayerModeAdvice2]:
-    'To restore buttons normally displayed here, return to single player mode.',
+  [Phrase.MultiPlayerModeAdvice1]: 'Select/deselect up to 4 players at once using the grid to the left.',
+  [Phrase.MultiPlayerModeAdvice2]: 'To restore buttons normally displayed here, return to single player mode.',
   [Phrase.UpdateAvailableTooltip]: 'An update is available. Click to install.',
   [Phrase.UpdateAvailableTitle]: 'Update Available',
-  [Phrase.UpdateAvailableText]:
-    'There is an update available and ready to install.',
+  [Phrase.UpdateAvailableText]: 'There is an update available and ready to install.',
   [Phrase.UpdateAvailableInstallButtonText]: 'Install Now',
   [Phrase.UpdateAvailableRemindButtonText]: 'Remind Me Later',
   [Phrase.Saving]: 'Saving...',
   [Phrase.StartTyping]: 'Start typing...',
   [Phrase.ToggleDrawingMode]: 'Toggle drawing mode',
-  [Phrase.StarSelected]: 'Click to lock this video.',
-  [Phrase.UnstarSelected]: 'Click to unlock this video.',
+  [Phrase.StarSelected]: 'Lock selected rows. Locked rows will not be automatically aged out.',
+  [Phrase.UnstarSelected]: 'Unlock selected rows. Unlocked rows may be automatically aged out to make space for new recordings.',
   [Phrase.Selection]: 'Selection',
   [Phrase.NoCombatants]: 'No combatant data available.',
-  [Phrase.DateFilter]: 'Date Filter',
-  [Phrase.DateFilterSeparator]: 'to',
-  [Phrase.Last7Days]: 'Last 7 days',
-  [Phrase.Last30Days]: 'Last 30 days',
-  [Phrase.ThisMonth]: 'This month',
-  [Phrase.LastMonth]: 'Last month',
-  [Phrase.Cancel]: 'Cancel',
-  [Phrase.Apply]: 'Apply',
-  [Phrase.January]: 'January',
-  [Phrase.February]: 'February',
-  [Phrase.March]: 'March',
-  [Phrase.April]: 'April',
-  [Phrase.May]: 'May',
-  [Phrase.June]: 'June',
-  [Phrase.July]: 'July',
-  [Phrase.August]: 'August',
-  [Phrase.September]: 'September',
-  [Phrase.October]: 'October',
-  [Phrase.November]: 'November',
-  [Phrase.December]: 'December',
-  [Phrase.Sunday]: 'Sunday',
-  [Phrase.Monday]: 'Monday',
-  [Phrase.Tuesday]: 'Tuesday',
-  [Phrase.Wednesday]: 'Wednesday',
-  [Phrase.Thursday]: 'Thursday',
-  [Phrase.Friday]: 'Friday',
-  [Phrase.Saturday]: 'Saturday',
-  [Phrase.PermissionLabel]: 'Permissions',
-  [Phrase.PermissionDescription]:
-    'The access level you have within the currently selected guild as granted by the guild admin.',
-  [Phrase.PermissionReadLabel]: 'Read',
-  [Phrase.PermissionReadDescription]: 'Allows playback of videos.',
-  [Phrase.PermissionWriteLabel]: 'Write',
-  [Phrase.PermissionWriteDescription]:
-    'Allows uploading, tagging, and locking of videos.',
-  [Phrase.PermissionDeleteLabel]: 'Delete',
-  [Phrase.PermissionDeleteDescription]:
-    'Allows deletion and unlocking of videos.',
-  [Phrase.ButtonDiskOnlyDescription]:
-    'Your user has limited access to the configured guild. Enable to apply selection buttons to local videos only, bypassing guild access permissions.',
-  [Phrase.StorageFilterLabel]: 'Storage Filter',
-  [Phrase.ShowDiskOnlyTooltip]: 'Show disk videos only.',
-  [Phrase.ShowCloudOnlyTooltip]: 'Show cloud videos only.',
-  [Phrase.ShowBothTooltip]: 'Group disk and cloud videos and show everything.',
-  [Phrase.GuildNoPermission]:
-    'Insufficient guild permissions to perform this action.',
-  [Phrase.RemoveTagFromList]: 'Remove %value% from the list',
-  [Phrase.DownloadUploadDisabledDueToFilter]:
-    'Disabled due to currently selected storage filter.',
-  [Phrase.ProcessesLabel]: 'Applications',
-  [Phrase.SelectProcess]: 'Select an application',
-  [Phrase.AudioProcessDevicesDescription]:
-    'Applications to capture audio from, in addition to any selected speakers and microphones.',
-  [Phrase.ProcessVolumeDescription]:
-    'The volume of the application in the recording, from 0 to 1.',
-  [Phrase.HideEmptyCategoriesLabel]: 'Hide Empty Categories',
-  [Phrase.HideEmptyCategoriesDescription]:
-    'Hides categories in the side menu that have no videos in them.',
-  [Phrase.HardwareAccelerationLabel]: 'Hardware Rendering',
-  [Phrase.HardwareAccelerationDescription]:
-    'Enable hardware accelerated rendering of the application. This is recommended for users using H265 or AV1 encoding, but may cause issues on some systems. Requires a restart of the application to take effect.',
-  [Phrase.RecordCurrentRaidsOnlyLabel]: 'Current Tier Only',
-  [Phrase.RecordCurrentRaidsOnlyDescription]:
-    'Only record raid encounters from the current tier, this only applies to retail raid encounters.',
-  [Phrase.UploadCurrentRaidsOnlyLabel]: 'Current Tier Only',
-  [Phrase.UploadCurrentRaidsOnlyDescription]:
-    'Only upload raid encounters from the current tier, this only applies to retail raid encounters.',
-  [Phrase.MustNotBeEmpty]: 'Must not be empty',
-  [Phrase.PushToTalkReleaseDelayLabel]: 'Release Delay',
-  [Phrase.ForceSdrLabel]: 'Force SDR',
-  [Phrase.ForceSdrDescription]:
-    'Forces the video to be rendered in SDR instead of HDR.',
-  [Phrase.VideoSourceScaleDescription]: 'The scale of the video source.',
-  [Phrase.VideoSourceXPositionDescription]:
-    'The X position of the video source.',
-  [Phrase.VideoSourceYPositionDescription]:
-    'The Y position of the video source.',
+  [Phrase.DateFilter]: "Date Filter",
+  [Phrase.DateFilterSeparator]: "to",
+  [Phrase.Last7Days]: "Last 7 days",
+  [Phrase.Last30Days]: "Last 30 days",
+  [Phrase.ThisMonth]: "This month",
+  [Phrase.LastMonth]: "Last month",
+  [Phrase.Cancel]: "Cancel",
+  [Phrase.Apply]: "Apply",
+  [Phrase.January]: "January",
+  [Phrase.February]: "February",
+  [Phrase.March]: "March",
+  [Phrase.April]: "April",
+  [Phrase.May]: "May",
+  [Phrase.June]: "June",
+  [Phrase.July]: "July",
+  [Phrase.August]: "August",
+  [Phrase.September]: "September",
+  [Phrase.October]: "October",
+  [Phrase.November]: "November",
+  [Phrase.December]: "December",
+  [Phrase.Sunday]: "Sunday",
+  [Phrase.Monday]: "Monday",
+  [Phrase.Tuesday]: "Tuesday",
+  [Phrase.Wednesday]: "Wednesday",
+  [Phrase.Thursday]: "Thursday",
+  [Phrase.Friday]: "Friday",
+  [Phrase.Saturday]: "Saturday",
+  [Phrase.PermissionLabel]: "Permissions",
+  [Phrase.PermissionDescription]: "The access level you have within the currently selected guild as granted by the guild admin.",
+  [Phrase.PermissionReadLabel]: "Read",
+  [Phrase.PermissionReadDescription]: "Allows playback of videos.",
+  [Phrase.PermissionWriteLabel]: "Write",
+  [Phrase.PermissionWriteDescription]: "Allows uploading, tagging, and locking of videos.",
+  [Phrase.PermissionDeleteLabel]: "Delete",
+  [Phrase.PermissionDeleteDescription]: "Allows deletion and unlocking of videos.",
+  [Phrase.ButtonDiskOnlyDescription]: "Your user has limited access to the configured guild. Enable to apply selection buttons to local videos only, bypassing guild access permissions.",
+  [Phrase.StorageFilterLabel]: "Storage Filter",
+  [Phrase.ShowDiskOnlyTooltip]: "Show disk videos only.",
+  [Phrase.ShowCloudOnlyTooltip]: "Show cloud videos only.",
+  [Phrase.ShowBothTooltip]: "Group disk and cloud videos and show everything.",
+  [Phrase.GuildNoPermission]: "Insufficient guild permissions to perform this action.",
+  [Phrase.RemoveTagFromList]: "Remove %value% from the list",
+  [Phrase.DownloadUploadDisabledDueToFilter]: "Disabled due to currently selected storage filter.",
+  [Phrase.ProcessesLabel]: "Applications",
+  [Phrase.SelectProcess]: "Select an application",
+  [Phrase.AudioProcessDevicesDescription]: "Applications to capture audio from, in addition to any selected speakers and microphones.",
+  [Phrase.ProcessVolumeDescription]: "The volume of the application in the recording, from 0 to 1.",
+  [Phrase.HideEmptyCategoriesLabel]: "Hide Empty Categories",
+  [Phrase.HideEmptyCategoriesDescription]: "Hides categories in the side menu that have no videos in them.",
+  [Phrase.HardwareAccelerationLabel]: "Hardware Rendering",
+  [Phrase.HardwareAccelerationDescription]: "Enable hardware accelerated rendering of the application. This is recommended for users using H265 or AV1 encoding, but may cause issues on some systems. Requires a restart of the application to take effect.",
+  [Phrase.RecordCurrentRaidsOnlyLabel]: "Current Tier Only",
+  [Phrase.RecordCurrentRaidsOnlyDescription]: "Only record raid encounters from the current tier, this only applies to retail raid encounters.",
+  [Phrase.UploadCurrentRaidsOnlyLabel]: "Current Tier Only",
+  [Phrase.UploadCurrentRaidsOnlyDescription]: "Only upload raid encounters from the current tier, this only applies to retail raid encounters.",
+  [Phrase.MustNotBeEmpty]: "Must not be empty",
+  [Phrase.PushToTalkReleaseDelayLabel]: "Release Delay",
+  [Phrase.ForceSdrLabel]: "Force SDR",
+  [Phrase.ForceSdrDescription]: "Forces the video to be rendered in SDR instead of HDR.",
+  [Phrase.VideoSourceScaleDescription]: "The scale of the video source.",
+  [Phrase.VideoSourceXPositionDescription]: "The X position of the video source.",
+  [Phrase.VideoSourceYPositionDescription]: "The Y position of the video source.",
   [Phrase.VideoCategoryManualLabel]: 'Manual',
   [Phrase.ManualRecordSettingsLabel]: 'Manual Settings',
   [Phrase.ManualRecordSwitchLabel]: 'Manual Recording',
   [Phrase.ManualRecordHotKeyLabel]: 'Start/Stop Hotkey',
   [Phrase.ManualRecordUploadLabel]: 'Upload Manual Recordings',
-  [Phrase.ManualRecordDescription]:
-    'Enables manual recording, which a user can start and stop on demand to record things not captured by the combat log.',
-  [Phrase.ManualRecordHotKeyDescription]:
-    'Set a hotkey to manually start and stop recording.',
-  [Phrase.ManualRecordUploadDescription]:
-    'Automatically upload recordings started manually to the cloud.',
+  [Phrase.ManualRecordDescription]: 'Enables manual recording, which a user can start and stop on demand to record things not captured by the combat log.',
+  [Phrase.ManualRecordHotKeyDescription]: 'Set a hotkey to manually start and stop recording.',
+  [Phrase.ManualRecordUploadDescription]: 'Automatically upload recordings started manually to the cloud.',
   [Phrase.ManualRecordSoundAlertLabel]: 'Sound Alert',
-  [Phrase.ManualRecordSoundAlertDescription]:
-    'Play a sound alert when manual recording starts or stops.',
+  [Phrase.ManualRecordSoundAlertDescription]: 'Play a sound alert when manual recording starts or stops.',
   [Phrase.StatusTitleRec]: 'Recorder',
   [Phrase.StatusTitlePro]: 'Pro',
   [Phrase.StatusTitleConnected]: 'Connected',
-  [Phrase.StatusDescrConnected]:
-    'Guild connection established. Pro features are enabled.',
+  [Phrase.StatusDescrConnected]: 'Guild connection established. Pro features are enabled.',
   [Phrase.StatusTitleDisconnected]: 'Disconnected',
-  [Phrase.StatusDescrDisconnected]:
-    'To use Pro features, purchase a guild subscription or join an existing guild and configure your login details in the Pro settings page.',
+  [Phrase.StatusDescrDisconnected]: 'To use Pro features, purchase a guild subscription or join an existing guild and configure your login details in the Pro settings page.',
   [Phrase.StatusTitleNotAuthenticated]: 'Login Failed',
-  [Phrase.StatusDescrNotAuthenticated]:
-    'Login failed, please check your credentials are valid.',
+  [Phrase.StatusDescrNotAuthenticated]: 'Login failed, please check your credentials are valid.',
   [Phrase.StatusTitleNoGuild]: 'No Guild',
-  [Phrase.StatusDescrNoGuild]:
-    'Your login succeeded but you have not selected a guild.',
+  [Phrase.StatusDescrNoGuild]: 'Your login succeeded but you have not selected a guild.',
   [Phrase.StatusTitleNotAuthorized]: 'No Access',
-  [Phrase.StatusDescrNotAuthorized]:
-    'Your login succeeded but you are not authorized to access the selected guild.',
-  [Phrase.FirstTimeSetupDescription]:
-    'This is the first time the user has launched the application.',
-  [Phrase.AutoSelectEncoderTooltip]:
-    'Automatically select a sensible encoder from those available. A good option for most users.',
+  [Phrase.StatusDescrNotAuthorized]: 'Your login succeeded but you are not authorized to access the selected guild.',
+  [Phrase.FirstTimeSetupDescription]: 'This is the first time the user has launched the application.',
+  [Phrase.AutoSelectEncoderTooltip]: 'Automatically select a sensible encoder from those available. A good option for most users.',
   [Phrase.CloudRefreshGuildTooltip]: 'Refresh the list of available guilds.',
   [Phrase.SourceSnappingSwitchText]: 'Snapping',
   [Phrase.SourceSnappingSwitchTooltip]: 'Toggle source snapping.',
@@ -618,28 +481,20 @@ const ENGLISH: Translations = {
   [Phrase.NoAudioSourcesText]: 'Add a source to record audio.',
   [Phrase.SelectADevice]: 'Select a device...',
   [Phrase.SelectAnApplication]: 'Select an application...',
-  [Phrase.BulkUploadButtonTooltip]:
-    'Upload all selected clips from your local disk to the cloud.',
-  [Phrase.BulkDownloadButtonTooltip]:
-    'Download all selected clips from the cloud to your local disk.',
-  [Phrase.BulkUploadDialogText]:
-    'This will queue the upload of all selected clips to the cloud. This may take a long time to complete. The progress can be monitored via the status card in the top-left of the application.',
-  [Phrase.BulkDownloadDialogText]:
-    'This will queue the download of all selected clips from the cloud.  The progress can be monitored via the status card in the top-left of the application.',
-  [Phrase.BulkTransferWarningText]:
-    'This may take a long time to complete. Data charges may apply if you are on a metered connection. Switching off your computer will interrupt the process.',
+  [Phrase.BulkUploadButtonTooltip]: 'Upload all selected clips from your local disk to the cloud.',
+  [Phrase.BulkDownloadButtonTooltip]: 'Download all selected clips from the cloud to your local disk.',
+  [Phrase.BulkUploadDialogText]: 'This will queue the upload of all selected clips to the cloud. This may take a long time to complete. The progress can be monitored via the status card in the top-left of the application.',
+  [Phrase.BulkDownloadDialogText]: 'This will queue the download of all selected clips from the cloud.  The progress can be monitored via the status card in the top-left of the application.',
+  [Phrase.BulkTransferWarningText]: 'This may take a long time to complete. Data charges may apply if you are on a metered connection. Switching off your computer will interrupt the process.',
   [Phrase.UploadButtonText]: 'Queue Uploads',
   [Phrase.DownloadButtonText]: 'Queue Downloads',
   [Phrase.ChatTypeMessageText]: 'Add a comment... use MM:SS for a timestamp.',
   [Phrase.ChatUploadToCloudText]: 'Upload to the cloud to enable video chat.',
   [Phrase.ChatNoMessagesText]: 'No messages to display.',
   [Phrase.ChatErrorLoadingText]: 'Error loading chat messages.',
-  [Phrase.ChatUserText1]:
-    'To use chat, please confirm you are happy for your username to be exposed to other members of your guild.',
-  [Phrase.ChatUserText2]:
-    'To avoid exposing your email address, you may set a custom username on ',
-  [Phrase.ChatUserText3]:
-    ', and then update your username in the app settings.',
+  [Phrase.ChatUserText1]: 'To use chat, please confirm you are happy for your username to be exposed to other members of your guild.',
+  [Phrase.ChatUserText2]: 'To avoid exposing your email address, you may set a custom username on ',
+  [Phrase.ChatUserText3]: ', and then update your username in the app settings.',
   [Phrase.ChatUserText4]: 'Chat as',
   [Phrase.ChatForClipsComingSoon]: 'Chat for clips is coming soon.',
   [Phrase.PatreonButtonLabel]: 'Support us on Patreon',
@@ -652,46 +507,33 @@ const ENGLISH: Translations = {
   [Phrase.SelectLanguage]: 'Select language',
   [Phrase.ChatDeleteMessageTooltip]: 'Delete this chat message',
   [Phrase.ValidateLogPathLabel]: 'Validate Log Paths',
-  [Phrase.ValidateLogPathsDescription]:
-    'Warcraft Recorder checks the log paths you set point to a supported WoW installation. You can disable this checking to allow you to set unsupported game modes. Disable this at your own risk.',
+  [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder checks the log paths you set point to a supported WoW installation. You can disable this checking to allow you to set unsupported game modes. Disable this at your own risk.',
   [Phrase.ValidateNtfsLabel]: 'Validate NTFS',
-  [Phrase.ValidateNtfsDescription]:
-    'Warcraft Recorder checks if the log paths are on an NTFS file system. You can disable this checking to allow you to set unsupported file systems. Disable this at your own risk.',
+  [Phrase.ValidateNtfsDescription]: 'Warcraft Recorder checks if the log paths are on an NTFS file system. You can disable this checking to allow you to set unsupported file systems. Disable this at your own risk.',
   [Phrase.StartManualRecordingTooltip]: 'Start a manual recording.',
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
   [Phrase.EncodedWith]: 'Encoded with',
-  [Phrase.AdvancedCombatLoggingDisabledWarning]:
-    'Advanced Combat Logging is not enabled. Enable it in-game and restart WoW.',
+  [Phrase.AdvancedCombatLoggingDisabledWarning]: 'Advanced Combat Logging is not enabled. Enable it in-game and restart WoW.',
   [Phrase.KillVideoCreatorTooltip]: 'Create a multiview video.',
-  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]:
-    'This feature can only operate on local recordings. Use the download button first.',
-  [Phrase.KillVideoCreatorTooltipNotEnoughPov]:
-    'Must have atleast 2 viewpoints available to use this feature.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughLocal]: 'This feature can only operate on local recordings. Use the download button first.',
+  [Phrase.KillVideoCreatorTooltipNotEnoughPov]: 'Must have atleast 2 viewpoints available to use this feature.',
   [Phrase.KillVideoCreatorTitle]: 'Video Editor',
   [Phrase.KillVideoSingleAudioTrackLabel]: 'Single Player Audio',
-  [Phrase.KillVideoSingleAudioTrackTooltip]:
-    'Use all audio tracks from one player for the whole video. Leave disabled to switch audio with the video.',
+  [Phrase.KillVideoSingleAudioTrackTooltip]: 'Use all audio tracks from one player for the whole video. Leave disabled to switch audio with the video.',
   [Phrase.KillVideoAudioTrackLabel]: 'Audio Player',
-  [Phrase.KillVideoAudioTrackTooltip]:
-    'Select the player whose audio tracks to use.',
+  [Phrase.KillVideoAudioTrackTooltip]: 'Select the player whose audio tracks to use.',
   [Phrase.KillVideoCreating]: 'Encoding multiview video...',
-  [Phrase.KillVideoDescription]:
-    'Combine multiple viewpoints of the same encounter into a single video, automatically splicing clips together with smooth transitions. Requires re-encoding, which is CPU-intensive and may take a few minutes. The finished video will appear in the Clips category.',
+  [Phrase.KillVideoDescription]: 'Combine multiple viewpoints of the same encounter into a single video, automatically splicing clips together with smooth transitions. Requires re-encoding, which is CPU-intensive and may take a few minutes. The finished video will appear in the Clips category.',
   [Phrase.KillVideoRemove]: 'Drop here to remove',
   [Phrase.Reset]: 'Reset',
   [Phrase.Render]: 'Render',
   [Phrase.Preparing]: 'Preparing',
-  [Phrase.CodecDescriptionH264]:
-    'H264 (AVC) is the most widely supported video codec and is compatible with nearly all modern devices. If you are unsure which encoder to use, you should use this one.',
-  [Phrase.CodecDescriptionH265]:
-    'H265 (HEVC) is a proprietary codec that can provide significantly smaller file sizes than H264 at similar quality, but has more limited playback compatibility.',
-  [Phrase.CodecDescriptionAV1]:
-    'AV1 is a royalty-free codec that can provide even better compression efficiency than H265, but like H265 has more limited playback compatibility.',
-  [Phrase.CodecNeedsHardwareRendering]:
-    'Selected encoder requires hardware rendering for playback. Enable it in the Application settings and restart the app, or select a different encoder.',
-  [Phrase.DiagnosticsDialogDescription]:
-    'If you are experiencing an issue, sharing a diagnostics bundle can help us identify and fix the problem.',
+  [Phrase.CodecDescriptionH264]: 'H264 (AVC) is the most widely supported video codec and is compatible with nearly all modern devices. If you are unsure which encoder to use, you should use this one.',
+  [Phrase.CodecDescriptionH265]: 'H265 (HEVC) is a proprietary codec that can provide significantly smaller file sizes than H264 at similar quality, but has more limited playback compatibility.',
+  [Phrase.CodecDescriptionAV1]: 'AV1 is a royalty-free codec that can provide even better compression efficiency than H265, but like H265 has more limited playback compatibility.',
+  [Phrase.CodecNeedsHardwareRendering]: 'Selected encoder requires hardware rendering for playback. Enable it in the Application settings and restart the app, or select a different encoder.', 
+  [Phrase.DiagnosticsDialogDescription]: 'If you are experiencing an issue, sharing a diagnostics bundle can help us identify and fix the problem.',
   [Phrase.DiagnosticsOpenLogButton]: 'Open Log Folder',
   [Phrase.DiagnosticsCreateBundleButton]: 'Create Diagnostics Bundle',
   [Phrase.DiagnosticsZippingInProgress]: 'Zipping Up Logs...',
@@ -699,23 +541,18 @@ const ENGLISH: Translations = {
   [Phrase.StatusTitleMigrated]: 'Migrated',
   [Phrase.StatusDescrMigrated]: 'This guild has been migrated.', // TODO: add more details here.
   [Phrase.InstantReplayEnded]: 'Instant Replay Has Ended.',
-  [Phrase.InstantReplayEndedDescr]:
-    'The recording has ended and the instant replay feature is no longer available.',
+  [Phrase.InstantReplayEndedDescr]: 'The recording has ended and the instant replay feature is no longer available.', 
   [Phrase.InstantReplayRefresh]: 'Refresh',
-  [Phrase.InstantReplayStale]:
-    'A new recording is now active. Click the arrow to go to the latest instant replay.',
+  [Phrase.InstantReplayStale]: 'A new recording is now active. Click the arrow to go to the latest instant replay.',
   [Phrase.CloudUploadSettingsLabel]: 'Upload Settings',
   [Phrase.CloudFilterSettingsLabel]: 'Category Filters',
   [Phrase.CloudAdvancedFilterSettingsLabel]: 'Character Filters',
   [Phrase.CharacterAdd]: 'Add Character',
   [Phrase.CharacterFilterAdd]: 'Add Character Filter',
-  [Phrase.CharacterFilterSelectFromRecent]:
-    'Select a character filter from your recent local recordings.',
+  [Phrase.CharacterFilterSelectFromRecent]: 'Select a character filter from your recent local recordings.',
   [Phrase.CharacterFilterAddManual]: '...or add a character filter manually.',
-  [Phrase.CharacterFilterNone]:
-    'No character upload filter active. Add a character to enable it.',
-  [Phrase.CharacterFilterActive]:
-    'Only recordings made while playing the characters listed below will be uploaded.',
+  [Phrase.CharacterFilterNone]: 'No character upload filter active. Add a character to enable it.',
+  [Phrase.CharacterFilterActive]: 'Only recordings made while playing the characters listed below will be uploaded.',
   [Phrase.ClippedAtLabel]: 'Clipped At',
   [Phrase.Arrows]: 'Arrows',
   [Phrase.Navigate]: 'Navigate',

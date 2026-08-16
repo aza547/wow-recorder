@@ -1,6 +1,5 @@
 import { Translations, Phrase } from './phrases';
 
-/* eslint-disable prettier/prettier */
 const GERMAN: Translations = {
   [Phrase.NoVideosSaved]: 'Du hast keine Videos in dieser Kategorie gespeichert.',
   [Phrase.FirstTimeHere]: 'Wenn du das erste Mal die Anwendung gestartet hast, können Installationsanweisungen dem folgenden Link entnommen werden. Falls du Probleme haben solltest, nutz bitte den Discord #help Kanal um Unterstützung zu bekommen.',

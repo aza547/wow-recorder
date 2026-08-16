@@ -1,6 +1,5 @@
 import { Translations, Phrase } from './phrases';
 
-/* eslint-disable prettier/prettier */
 const KOREAN: Translations = {
   [Phrase.NoVideosSaved]: '이 카테고리에 저장된 동영상이 없습니다.',
   [Phrase.FirstTimeHere]: '처음 사용하는 경우 아래 링크에서 설정 방법을 확인할 수 있습니다.',
