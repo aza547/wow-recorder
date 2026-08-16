@@ -559,6 +559,20 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.SelectRange]: '选择范围',
   [Phrase.SelectMultiple]: '选择多个',
   [Phrase.SelectAll]: '全选',
+  [Phrase.Close]: '关闭',
+  [Phrase.Lock]: '锁定',
+  [Phrase.LockAll]: '全部锁定',
+  [Phrase.UnlockAll]: '全部解锁',
+  [Phrase.LockedDescription]: '已锁定的视频不会被自动删除。未锁定的视频可能会被自动删除，以便为新视频腾出空间。',
+  [Phrase.SafeFromAutomaticDeletion]: '不会被自动删除',
+  [Phrase.EligibleForAutomaticDeletion]: '可自动删除',
+  [Phrase.NoCustomTag]: '无自定义标签',
+  [Phrase.DeleteSelectionContainsNoLocked]: '此选择中没有锁定的录制内容。',
+  [Phrase.DeleteIsPermanent]: '删除视频是永久性的，无法撤销。',
+  [Phrase.TagDescription]: '可以为视频添加标签，以便日后查找。标签不会用于其他用途，也不会影响视频。',
+  [Phrase.ClearAll]: '全部清除',
+  [Phrase.Diagnostics]: '诊断',
+  [Phrase.UnknownDevice]: '未知设备',
 };
 
 export default CHINESE_SIMPLIFIED;

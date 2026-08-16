@@ -71,6 +71,8 @@ export default function TagDialog(props: IProps) {
   const debounceTimer = 2000;
   const [debounceProgress, setDebounceProgress] = useState<number | null>(null);
 
+  const previousOpen = useRef(open);
+
   const previousVideoGroupIds = useRef(
     getVideoGroupIds(targetVideoId, parentLookupMap),
   );
@@ -88,11 +90,12 @@ export default function TagDialog(props: IProps) {
       previousVideoGroupIds.current.includes(id),
     );
 
-    if (open && !overlap) {
+    if (open && previousOpen.current && !overlap) {
       onOpenChange(false);
     }
 
     previousVideoGroupIds.current = currentVideoGroupIds;
+    previousOpen.current = open;
   }, [onOpenChange, open, parentLookupMap, targetVideoId]);
 
   const saveTag = (video: RendererVideo, tag: string) => {
@@ -246,7 +249,7 @@ export default function TagDialog(props: IProps) {
   ) => {
     const { row } = info;
     const { tag } = row.original;
-    const text = tag ? tag : 'No custom tag.'; // TODO localise this text
+    const text = tag ? tag : getLocalePhrase(language, Phrase.NoCustomTag);
     return <div className="truncate text-sm mx-2">{text}</div>;
   };
 
@@ -457,7 +460,7 @@ export default function TagDialog(props: IProps) {
             <CircularProgress
               variant="determinate"
               color="inherit"
-              value={debounceProgress > 100 ? 100 : debounceProgress}
+              value={Math.min(debounceProgress, 100)}
               size={16}
             />
           </div>
@@ -470,23 +473,24 @@ export default function TagDialog(props: IProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          {/* // TODO localize */}
-          <DialogTitle>Tag</DialogTitle>
+          <DialogTitle>
+            {getLocalePhrase(language, Phrase.TableHeaderTag)}
+          </DialogTitle>
         </DialogHeader>
         <div className="text-sm">
-          {/* // TODO localize */}
-          Tags may be added to videos to label them for future reference. Tags
-          are not used for any other purpose and do not affect the video.
+          {getLocalePhrase(language, Phrase.TagDescription)}
         </div>
         {renderTable()}
         {renderTextArea()}
         <DialogFooter>
           <DialogClose asChild>
-            {/* // TODO localize */}
-            <Button variant="ghost">Close</Button>
+            <Button variant="ghost">
+              {getLocalePhrase(language, Phrase.Close)}
+            </Button>
           </DialogClose>
-          {/* // TODO localize */}
-          <Button onClick={clearAllTags}>Clear All</Button>
+          <Button onClick={clearAllTags}>
+            {getLocalePhrase(language, Phrase.ClearAll)}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

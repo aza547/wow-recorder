@@ -556,6 +556,20 @@ enum Phrase {
   SelectMultiple,
   Navigate,
   SelectAll,
+  Close,
+  Lock,
+  LockAll,
+  UnlockAll,
+  LockedDescription,
+  SafeFromAutomaticDeletion,
+  EligibleForAutomaticDeletion,
+  NoCustomTag,
+  DeleteSelectionContainsNoLocked,
+  DeleteIsPermanent,
+  TagDescription,
+  ClearAll,
+  Diagnostics,
+  UnknownDevice,
 }
 
 enum Language {

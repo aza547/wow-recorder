@@ -58,6 +58,8 @@ export default function LockDialog(props: IProps) {
     cloudStatus,
   } = props;
 
+  const previousOpen = useRef(open);
+
   const previousVideoGroupIds = useRef(
     getVideoGroupIds(targetVideoId, parentLookupMap),
   );
@@ -75,11 +77,12 @@ export default function LockDialog(props: IProps) {
       previousVideoGroupIds.current.includes(id),
     );
 
-    if (open && !overlap) {
+    if (open && previousOpen.current && !overlap) {
       onOpenChange(false);
     }
 
     previousVideoGroupIds.current = currentVideoGroupIds;
+    previousOpen.current = open;
   }, [onOpenChange, open, parentLookupMap, targetVideoId]);
 
   const setLock = (videos: Array<RendererVideo>, lock: boolean) => {
@@ -183,7 +186,7 @@ export default function LockDialog(props: IProps) {
     const { player } = video;
 
     if (!player || !player._specID) {
-      return <div>Unknown</div>;
+      return <div>{getLocalePhrase(language, Phrase.Unknown)}</div>;
     }
 
     const playerClass = getPlayerClass(video);
@@ -231,13 +234,13 @@ export default function LockDialog(props: IProps) {
     if (isProtected) {
       return (
         <div className="flex truncate text-sm">
-          Safe from automatic deletion
+          {getLocalePhrase(language, Phrase.SafeFromAutomaticDeletion)}
         </div>
       );
     }
     return (
       <div className="flex truncate text-sm">
-        Eligible for automatic deletion
+        {getLocalePhrase(language, Phrase.EligibleForAutomaticDeletion)}
       </div>
     );
   };
@@ -334,10 +337,11 @@ export default function LockDialog(props: IProps) {
   const renderLockAllButton = () => {
     const actionIsLock = data.some((v) => !v.isProtected);
     const includesCloud = data.some((v) => v.cloud);
-    const label = actionIsLock ? 'Lock All' : 'Unlock All';
-    {
-      /* // TODO localize */
-    }
+
+    const label = actionIsLock
+      ? getLocalePhrase(language, Phrase.LockAll)
+      : getLocalePhrase(language, Phrase.UnlockAll);
+
     const { write, del } = cloudStatus;
     const noPermission = includesCloud && (!write || (!del && !actionIsLock));
 
@@ -358,19 +362,17 @@ export default function LockDialog(props: IProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          {/* // TODO localize */}
-          <DialogTitle>Lock</DialogTitle>
+          <DialogTitle>{getLocalePhrase(language, Phrase.Lock)}</DialogTitle>
         </DialogHeader>
         <div className="text-sm">
-          {/* // TODO localize */}
-          Locked videos are protected from automatic deletion. Unlocked videos
-          may be automatically deleted to make space for new videos.
+          {getLocalePhrase(language, Phrase.LockedDescription)}
         </div>
         {renderTable()}
         <DialogFooter>
           <DialogClose asChild>
-            {/* // TODO localize */}
-            <Button variant="ghost">Close</Button>
+            <Button variant="ghost">
+              {getLocalePhrase(language, Phrase.Close)}
+            </Button>
           </DialogClose>
           {renderLockAllButton()}
         </DialogFooter>

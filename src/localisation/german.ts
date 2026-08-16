@@ -559,6 +559,20 @@ const GERMAN: Translations = {
   [Phrase.SelectRange]: 'Bereich auswählen',
   [Phrase.SelectMultiple]: 'Mehrere auswählen',
   [Phrase.SelectAll]: 'Alle auswählen',
+  [Phrase.Close]: 'Schließen',
+  [Phrase.Lock]: 'Sperren',
+  [Phrase.LockAll]: 'Alle sperren',
+  [Phrase.UnlockAll]: 'Alle entsperren',
+  [Phrase.LockedDescription]: 'Gesperrte Videos sind vor der automatischen Löschung geschützt. Entsperrte Videos können automatisch gelöscht werden, um Platz für neue Videos zu schaffen.',
+  [Phrase.SafeFromAutomaticDeletion]: 'Vor automatischer Löschung geschützt',
+  [Phrase.EligibleForAutomaticDeletion]: 'Kann automatisch gelöscht werden',
+  [Phrase.NoCustomTag]: 'Kein benutzerdefiniertes Tag',
+  [Phrase.DeleteSelectionContainsNoLocked]: 'Diese Auswahl enthält keine gesperrten Aufnahmen.',
+  [Phrase.DeleteIsPermanent]: 'Das Löschen von Videos ist dauerhaft und kann nicht rückgängig gemacht werden.',
+  [Phrase.TagDescription]: 'Videos können mit Tags versehen werden, um sie für zukünftige Referenzen zu kennzeichnen. Tags werden für keinen anderen Zweck verwendet und haben keinen Einfluss auf das Video.',
+  [Phrase.ClearAll]: 'Alle löschen',
+  [Phrase.Diagnostics]: 'Diagnose',
+  [Phrase.UnknownDevice]: 'Unbekanntes Gerät',
 };
 
 export default GERMAN;

@@ -559,6 +559,20 @@ const KOREAN: Translations = {
   [Phrase.SelectRange]: '범위 선택',
   [Phrase.SelectMultiple]: '여러 개 선택',
   [Phrase.SelectAll]: '전체 선택',
+  [Phrase.Close]: '닫기',
+  [Phrase.Lock]: '잠그기',
+  [Phrase.LockAll]: '모두 잠그기',
+  [Phrase.UnlockAll]: '모두 잠금 해제',
+  [Phrase.LockedDescription]: '잠긴 동영상은 자동 삭제로부터 보호됩니다. 잠금이 해제된 동영상은 새 동영상을 저장할 공간을 확보하기 위해 자동으로 삭제될 수 있습니다.',
+  [Phrase.SafeFromAutomaticDeletion]: '자동 삭제로부터 보호됨',
+  [Phrase.EligibleForAutomaticDeletion]: '자동 삭제 대상',
+  [Phrase.NoCustomTag]: '사용자 지정 태그 없음',
+  [Phrase.DeleteSelectionContainsNoLocked]: '이 선택 항목에는 잠긴 녹화가 없습니다.',
+  [Phrase.DeleteIsPermanent]: '동영상 삭제는 영구적이며 취소할 수 없습니다.',
+  [Phrase.TagDescription]: '동영상에 태그를 추가하여 나중에 쉽게 식별할 수 있습니다. 태그는 다른 용도로 사용되지 않으며 동영상에 영향을 주지 않습니다.',
+  [Phrase.ClearAll]: '모두 지우기',
+  [Phrase.Diagnostics]: '진단',
+  [Phrase.UnknownDevice]: '알 수 없는 장치',
 };
 
 export default KOREAN;

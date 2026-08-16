@@ -74,6 +74,8 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   const { cloudStatus } = appState;
   const [rowSelection, setRowSelection] = useState({});
 
+  const previousOpen = useRef(open);
+
   const previousVideoGroupIds = useRef(
     targetVideoIds.flatMap((id) => getVideoGroupIds(id, parentLookupMap)),
   );
@@ -90,11 +92,12 @@ const DeleteDialog = (props: DeleteDialogProps) => {
       previousVideoGroupIds.current.includes(id),
     );
 
-    if (open && !overlap) {
+    if (open && previousOpen.current && !overlap) {
       onOpenChange(false);
     }
 
     previousVideoGroupIds.current = currentVideoGroupIds;
+    previousOpen.current = open;
   }, [open, onOpenChange, targetVideoIds, parentLookupMap]);
 
   const populatePlayerCell = (
@@ -104,7 +107,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     const { player } = video;
 
     if (!player || !player._specID) {
-      return <div>Unknown</div>; // TODO localize
+      return <div>{getLocalePhrase(language, Phrase.Unknown)}</div>;
     }
 
     const playerClass = getPlayerClass(video);
@@ -177,7 +180,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   ) => {
     const { row } = ctx;
     const { tag } = row.original;
-    const text = tag ? tag : 'No custom tag.'; // TODO localise this text
+    const text = tag ? tag : getLocalePhrase(language, Phrase.NoCustomTag);
     return <div className="truncate text-sm mx-2">{text}</div>;
   };
 
@@ -386,7 +389,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     const lockWarning =
       locked.length > 0
         ? getLocalePhrase(language, Phrase.DeleteSelectionContainsLocked)
-        : 'This selection contains no locked recordings.';
+        : getLocalePhrase(language, Phrase.DeleteSelectionContainsNoLocked);
 
     const lockWarningColor = locked.length > 0 ? 'text-destructive' : '';
 
@@ -443,23 +446,24 @@ const DeleteDialog = (props: DeleteDialogProps) => {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          {/* // TODO localize */}
-          <DialogTitle>Delete</DialogTitle>
+          <DialogTitle>
+            {getLocalePhrase(language, Phrase.DeleteButtonTooltip)}
+          </DialogTitle>
         </DialogHeader>
         <div className="text-sm">
-          {/* // TODO localize */}
-          Deleting videos is permanent and cannot be undone.
+          {getLocalePhrase(language, Phrase.DeleteIsPermanent)}
         </div>
         {targetVideoIds.length === 1 && renderTable()}
         {getWarningMessage()}
         <DialogFooter>
           <DialogClose asChild>
-            {/* // TODO localize */}
-            <Button variant="ghost">Close</Button>
+            <Button variant="ghost">
+              {getLocalePhrase(language, Phrase.Close)}
+            </Button>
           </DialogClose>
-          {/* // TODO localize */}
           <Button variant="destructive" onClick={doDelete} disabled={disabled}>
-            Delete ({getVideosToDelete().length})
+            {getLocalePhrase(language, Phrase.DeleteButtonTooltip)} (
+            {getVideosToDelete().length})
           </Button>
         </DialogFooter>
       </DialogContent>
