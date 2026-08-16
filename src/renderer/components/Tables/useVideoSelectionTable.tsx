@@ -570,7 +570,6 @@ const useVideoSelectionTable = (
       // A row is already selected so nothing to do.
       return;
     }
-    console.log(111);
 
     if (selectedVideos.length > 0) {
       // The video player already has a selected video. There can be up to 4
@@ -586,7 +585,6 @@ const useVideoSelectionTable = (
         return;
       }
     }
-    console.log(222);
 
     // If everything so far failed then just select the first row in the table.
     const initial = getInitialSelection();
@@ -600,7 +598,6 @@ const useVideoSelectionTable = (
       setAppState((prev) => ({ ...prev, selectedVideos: [first] }));
       return;
     }
-    console.log(333);
 
     // Possible we get here if there are genuinely no rows in the table due
     // to overzealous filtering, but there isn't anything sensible to do.
