@@ -1010,16 +1010,30 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return renderUploadButton();
     }
 
+    const disableDueToFilter =
+      !isSelected && storageFilter !== StorageFilter.BOTH;
+
+    let tooltip = getLocalePhrase(language, Phrase.CloudButtonTooltip);
+
+    if (disableDueToFilter) {
+      tooltip = getLocalePhrase(
+        language,
+        Phrase.DownloadUploadDisabledDueToFilter,
+      );
+    }
+
     return (
-      <Tooltip content={getLocalePhrase(language, Phrase.CloudButtonTooltip)}>
-        <Button
-          disabled={!cloudVideo}
-          onClick={() => setSelectedVideos(cloudVideo)}
-          variant="ghost"
-          size="xs"
-        >
-          <CloudIcon sx={{ height: '20px', width: '20px', color, opacity }} />
-        </Button>
+      <Tooltip content={tooltip}>
+        <div>
+          <Button
+            disabled={!cloudVideo || disableDueToFilter}
+            onClick={() => setSelectedVideos(cloudVideo)}
+            variant="ghost"
+            size="xs"
+          >
+            <CloudIcon sx={{ height: '20px', width: '20px', color, opacity }} />
+          </Button>
+        </div>
       </Tooltip>
     );
   };
@@ -1036,11 +1050,23 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return renderDownloadButton();
     }
 
+    let tooltip = getLocalePhrase(language, Phrase.DiskButtonTooltip);
+
+    const disableDueToFilter =
+      !isSelected && storageFilter !== StorageFilter.BOTH;
+
+    if (disableDueToFilter) {
+      tooltip = getLocalePhrase(
+        language,
+        Phrase.DownloadUploadDisabledDueToFilter,
+      );
+    }
+
     return (
-      <Tooltip content={getLocalePhrase(language, Phrase.DiskButtonTooltip)}>
+      <Tooltip content={tooltip}>
         <Button
           value="disk"
-          disabled={!diskVideo}
+          disabled={!diskVideo || disableDueToFilter}
           onClick={() => setSelectedVideos(diskVideo)}
           variant="ghost"
           size="xs"

@@ -621,13 +621,21 @@ const CategoryPage = (props: IProps) => {
       const noPermission = upload && !write;
 
       const disabled =
-        toTransfer.length < 1 || noPermission || !cloudStatus.authorized;
+        storageFilter !== StorageFilter.BOTH ||
+        toTransfer.length < 1 ||
+        noPermission ||
+        !cloudStatus.authorized;
 
       let tooltip = upload
         ? getLocalePhrase(language, Phrase.BulkUploadButtonTooltip)
         : getLocalePhrase(language, Phrase.BulkDownloadButtonTooltip);
 
-      if (noPermission) {
+      if (storageFilter !== StorageFilter.BOTH) {
+        tooltip = getLocalePhrase(
+          language,
+          Phrase.DownloadUploadDisabledDueToFilter,
+        );
+      } else if (noPermission) {
         tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
       }
 
