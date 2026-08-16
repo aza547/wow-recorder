@@ -17,11 +17,7 @@ import {
   useTable,
 } from '@tanstack/react-table';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
-import {
-  getVideoGroup,
-  getVideoGroupIds,
-  stopPropagation,
-} from './rendererutils';
+import { getVideoGroup, lockVideos, stopPropagation } from './rendererutils';
 import { getLocalePhrase } from 'localisation/translations';
 import LockButton from './components/Tables/LockButton';
 import {
@@ -29,8 +25,6 @@ import {
   populatePlayerCell,
   populateStorageCell,
 } from './components/Tables/Cells';
-
-const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   open: boolean;
@@ -70,22 +64,6 @@ export default function LockDialog(props: IProps) {
     previousParentId.current = targetVideoId;
     previousOpen.current = open;
   }, [onOpenChange, open, parentLookupMap, targetVideoId]);
-
-  const setLock = (targets: Array<RendererVideo>, lock: boolean) => {
-    const disk = targets.filter((v) => !v.cloud);
-    const cloud = targets.filter((v) => v.cloud);
-
-    ipc.sendMessage('videoButtonDisk', ['protect', lock, disk]);
-    ipc.sendMessage('videoButtonCloud', ['protect', lock, cloud]);
-
-    setVideoState((prev) => {
-      return prev.map((rv) => {
-        return targets.some((target) => rv.uniqueId === target.uniqueId)
-          ? { ...rv, isProtected: lock }
-          : rv;
-      });
-    });
-  };
 
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
     {
@@ -196,7 +174,7 @@ export default function LockDialog(props: IProps) {
         disabled={noPermission}
         onClick={(event) => {
           stopPropagation(event);
-          setLock(data, actionIsLock);
+          lockVideos(data, actionIsLock, setVideoState);
         }}
       >
         {label}

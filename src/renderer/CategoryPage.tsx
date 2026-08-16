@@ -38,6 +38,7 @@ import {
   getVideoCategoryFilter,
   getVideoParent,
   getVideoStorageFilter,
+  lockVideos,
   povDiskFirstNameSort,
 } from './rendererutils';
 import Separator from './components/Separator/Separator';
@@ -481,59 +482,21 @@ const CategoryPage = (props: IProps) => {
     const unique = [...new Set(names)];
     const allowMultiPlayer = unique.length > 1;
 
-    const protectVideo = (
-      _event: React.SyntheticEvent,
-      protect: boolean,
-      videos: RendererVideo[],
-    ) => {
-      const toProtectDisk = videos.filter((v) => !v.cloud);
-      const toProtectCloud = videos.filter((v) => v.cloud);
-
-      window.electron.ipcRenderer.sendMessage('videoButtonDisk', [
-        'protect',
-        protect,
-        toProtectDisk,
-      ]);
-
-      window.electron.ipcRenderer.sendMessage('videoButtonCloud', [
-        'protect',
-        protect,
-        toProtectCloud,
-      ]);
-
-      setVideoState((prev) => {
-        const state = [...prev];
-
-        state.forEach((rv) => {
-          // A video is uniquely identified by its name and storage type.
-          const match = videos.find(
-            (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
-          );
-
-          if (match) {
-            rv.isProtected = protect;
-          }
-        });
-
-        return state;
-      });
-    };
-
-    const renderProtectButton = () => {
-      const toProtect = selectedViewpoints;
+    const renderBulkLockButton = () => {
+      const toLock = selectedViewpoints;
 
       // If any videos in our selection are not protected, then the button's
-      // action is to protect.
-      const lock = !toProtect.every((v) => v.isProtected);
+      // action is to lock.
+      const lock = !toLock.every((v) => v.isProtected);
 
-      // Disable the protect button if there are no selected viewpoints, if we
-      // don't have write permissions, or if the action is to unprotect and we
+      // Disable the lock button if there are no selected viewpoints, if we
+      // don't have write permissions, or if the action is to unlock and we
       // don't have delete permissions.
       const noPermission =
-        (!write && toProtect.some((v) => v.cloud)) || // Some in the selection are cloud videos and no write permission.
-        (!del && !lock && toProtect.some((v) => v.cloud)); // Some in the selection are locked cloud videos no delete permission.
+        (!write && toLock.some((v) => v.cloud)) || // Some in the selection are cloud videos and no write permission.
+        (!del && !lock && toLock.some((v) => v.cloud)); // Some in the selection are locked cloud videos no delete permission.
 
-      const disabled = noPermission || toProtect.length < 1;
+      const disabled = noPermission || toLock.length < 1;
       const icon = lock ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
 
       let tooltip = '';
@@ -553,7 +516,7 @@ const CategoryPage = (props: IProps) => {
               variant="secondary"
               size="sm"
               disabled={disabled}
-              onClick={(e) => protectVideo(e, lock, toProtect)}
+              onClick={() => lockVideos(toLock, lock, setVideoState)}
               className="border border-background"
             >
               {icon}
@@ -563,7 +526,7 @@ const CategoryPage = (props: IProps) => {
       );
     };
 
-    const renderDeleteButton = () => {
+    const renderBulkDeleteButton = () => {
       const toDelete = selectedViewpoints;
       const noPermission = !del && toDelete.some((v) => v.cloud);
       const disabled = toDelete.length < 1 || noPermission;
@@ -733,8 +696,8 @@ const CategoryPage = (props: IProps) => {
             <div className="flex gap-x-1 mr-2 py-[1px]">
               {config.cloudUpload && renderBulkTransferButton(true)}
               {config.cloudStorage && renderBulkTransferButton(false)}
-              {renderProtectButton()}
-              {renderDeleteButton()}
+              {renderBulkLockButton()}
+              {renderBulkDeleteButton()}
             </div>
           </div>
         </div>
