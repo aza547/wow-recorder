@@ -218,7 +218,6 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   };
 
   const renderTable = () => {
-    const rowClassName = 'cursor-pointer hover:bg-secondary/80 ';
     const { rows } = table.getRowModel();
 
     return (
@@ -238,12 +237,12 @@ const DeleteDialog = (props: DeleteDialogProps) => {
                     <tr
                       key={row.id}
                       className={
-                        rowClassName +
+                        'cursor-pointer ' +
                         (row.getIsSelected()
                           ? 'bg-secondary/100'
                           : idx % 2 === 0
-                            ? 'bg-secondary/15'
-                            : 'bg-secondary/40')
+                            ? 'bg-secondary/15 hover:bg-secondary/80'
+                            : 'bg-secondary/40 hover:bg-secondary/80')
                       }
                       onClick={(event) => onRowClick(event, row)}
                     >

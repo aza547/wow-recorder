@@ -21,33 +21,22 @@ export default class VideoCorrelator {
     });
 
     const correlated: RendererVideo[] = [];
-    const lookup = new Map<string, RendererVideo>();
-
     const disk = raw.filter((rv) => !rv.cloud);
     const cloud = raw.filter((rv) => rv.cloud);
 
-    disk.forEach((rv) =>
-      VideoCorrelator.correlateVideo(rv, correlated, lookup),
-    );
-
-    cloud.forEach((rv) =>
-      VideoCorrelator.correlateVideo(rv, correlated, lookup),
-    );
-
+    disk.forEach((rv) => VideoCorrelator.correlateVideo(rv, correlated));
+    cloud.forEach((rv) => VideoCorrelator.correlateVideo(rv, correlated));
     correlated.sort(VideoCorrelator.reverseChronologicalVideoSort);
-    return { correlatedState: correlated, parentLookupMap: lookup };
+
+    return correlated;
   }
 
-  private static correlateVideo(
-    video: RendererVideo,
-    videos: RendererVideo[],
-    lookup: Map<string, RendererVideo>,
-  ) {
+  private static correlateVideo(video: RendererVideo, videos: RendererVideo[]) {
     if (video.uniqueHash === undefined || video.start === undefined) {
       // We don't have the fields required to correlate this video to
       // any other so just add it and move on.
       videos.push(video);
-      lookup.set(video.uniqueId, video);
+
       return;
     }
 
@@ -108,7 +97,6 @@ export default class VideoCorrelator {
         // break, we will never have more than one "parent" video so if we've
         // found it we're good to drop out and save some CPU cycles.
         videoToCompare.multiPov.push(video);
-        lookup.set(video.uniqueId, videoToCompare);
         return;
       }
     }
@@ -116,7 +104,6 @@ export default class VideoCorrelator {
     // We didn't correlate this video with another so just add it like
     // it is a normal video, this is the fallback case.
     videos.push(video);
-    lookup.set(video.uniqueId, video);
   }
 
   private static reverseChronologicalVideoSort(

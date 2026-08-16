@@ -134,17 +134,31 @@ const CategoryPage = (props: IProps) => {
   }, [videoState, category]);
 
   // Filter by storage type before we apply grouping.
-  const { correlatedState, parentLookupMap } = useMemo(() => {
+  const correlatedState = useMemo(() => {
     const storageFilterFn = getVideoStorageFilter(storageFilter);
     const storageFilteredState = categoryState.filter(storageFilterFn);
     return VideoCorrelator.correlate(storageFilteredState);
   }, [categoryState, storageFilter]);
 
   // Now apply filtering based on search tags and date range.
-  const filteredState = useMemo<RendererVideo[]>(() => {
+  const { filteredState, parentLookupMap } = useMemo(() => {
     const queryFilter = (rv: RendererVideo) =>
       new VideoFilter(rv, videoFilterTags, dateRangeFilter, language).filter();
-    return correlatedState.filter(queryFilter);
+
+    const filteredState = correlatedState.filter(queryFilter);
+    const parentLookupMap = new Map<string, RendererVideo>();
+
+    for (let i = 0; i < filteredState.length; i++) {
+      const parent = filteredState[i];
+      parentLookupMap.set(parent.uniqueId, parent);
+
+      for (let j = 0; j < parent.multiPov.length; j++) {
+        const child = parent.multiPov[j];
+        parentLookupMap.set(child.uniqueId, parent);
+      }
+    }
+
+    return { filteredState, parentLookupMap };
   }, [correlatedState, dateRangeFilter, videoFilterTags, language]);
 
   // Tanstack table relies on stable references, so while we have the React
@@ -186,7 +200,9 @@ const CategoryPage = (props: IProps) => {
 
   const table = useVideoSelectionTable(
     filteredState,
+    parentLookupMap,
     appState,
+    setAppState,
     setVideoState,
     getClipParent,
     goToClipParent,
@@ -286,9 +302,16 @@ const CategoryPage = (props: IProps) => {
     } else if (filteredState.length > 0) {
       activeParentVideo = filteredState[0];
     }
+
     // Only try to find a chat video if we have a video with cloud storage,
     // a start time and a hash, else we cannot find the chat correlator.
     let chatVideo: RendererVideo | undefined = undefined;
+
+    if (activeParentVideo) {
+      chatVideo = [activeParentVideo, ...activeParentVideo.multiPov].find(
+        (rv) => rv.cloud && rv.uniqueHash && rv.start,
+      );
+    }
 
     if (activeParentVideo) {
       chatVideo = [activeParentVideo, ...activeParentVideo.multiPov].find(

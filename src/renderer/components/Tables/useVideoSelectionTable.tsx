@@ -3,17 +3,27 @@ import {
   createPaginatedRowModel,
   createSortedRowModel,
   PaginationState,
+  RowSelectionState,
   stockFeatures,
   tableFeatures,
   useTable,
 } from '@tanstack/react-table';
 import { RendererVideo, AppState, RendererClip, DialogType } from 'main/types';
-import { Dispatch, SetStateAction, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import {
   getPullNumber,
   getInstanceDifficultyText,
   videoToDate,
   getDungeonName,
+  povDiskFirstNameSort,
+  getVideoGroup,
+  getVideoParent,
 } from 'renderer/rendererutils';
 import { VideoCategory } from 'types/VideoCategory';
 import {
@@ -58,8 +68,10 @@ import {
 import { getLocaleCategoryLabel } from 'localisation/translations';
 
 const useVideoSelectionTable = (
-  videoState: RendererVideo[],
+  videoState: Array<RendererVideo>,
+  parentLookupMap: Map<string, RendererVideo>,
   appState: AppState,
+  setAppState: Dispatch<SetStateAction<AppState>>,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
   getClipParent: (clip: RendererClip) => RendererVideo | undefined,
   goToClipParent: (clip: RendererClip) => void,
@@ -70,46 +82,25 @@ const useVideoSelectionTable = (
 ) => {
   const { category, language, cloudStatus, selectedVideos } = appState;
 
-  const getInitialRowSelection = (): Record<string, true> => {
-    const videoToParentId = new Map<string, string>();
-
-    videoState.forEach((video) => {
-      videoToParentId.set(video.uniqueId, video.uniqueId);
-
-      video.multiPov.forEach((child) => {
-        videoToParentId.set(child.uniqueId, video.uniqueId);
-      });
-    });
-
-    const selection: Record<string, true> = Object.fromEntries(
-      selectedVideos
-        .map((video) => videoToParentId.get(video.uniqueId))
-        .filter((id): id is string => id !== undefined)
-        .map((id) => [id, true]),
-    );
-
-    if (Object.keys(selection).length > 0) {
-      return selection;
+  const getInitialSelection = useCallback(() => {
+    if (videoState.length < 1) {
+      return null;
     }
 
-    if (videoState.length > 0) {
-      return { [videoState[0].uniqueId]: true };
-    }
-
-    return {};
-  };
+    const [first] = videoState;
+    const { uniqueId } = first;
+    return getVideoParent(uniqueId, parentLookupMap);
+  }, [parentLookupMap, videoState]);
 
   /**
    * Tracks if rows are selected or not in the ReactTable component. Initialize
    * this here with any selected videos, which is important when seeking here
    * programatically (i.e. using the seek to clip source function).
-   *
-   * Historically there has been some tech debt here where it was a valid
-   * state for the table to have no selection. This resulted in lots of
-   * handling where no rows are selected within the table components. I believe
-   * that is no longer possible with the addition of this initialization.
    */
-  const [rowSelection, setRowSelection] = useState(getInitialRowSelection);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>(() => {
+    const initial = getInitialSelection();
+    return initial ? { [initial.uniqueId]: true } : {};
+  });
 
   /**
    * Controls the table pagination.
@@ -571,6 +562,55 @@ const useVideoSelectionTable = (
     // Also see the VideoSelectionTable component where we react to this.
     defaultColumn: { size: Number.MAX_SAFE_INTEGER },
   });
+
+  useEffect(() => {
+    const { rows: selected } = table.getSelectedRowModel();
+
+    if (selected.length > 0) {
+      // A row is already selected so nothing to do.
+      return;
+    }
+    console.log(111);
+
+    if (selectedVideos.length > 0) {
+      // The video player already has a selected video. There can be up to 4
+      // selected videos here but they must all be from the same table row.
+      const [first] = selectedVideos;
+      const { uniqueId } = first;
+      const group = getVideoGroup(uniqueId, parentLookupMap);
+
+      if (group.length > 0) {
+        // No sorting here. The uniqueId must match the parent video which
+        // the row represents to be marked as selected in the table.
+        setRowSelection({ [group[0].uniqueId]: true });
+        return;
+      }
+    }
+    console.log(222);
+
+    // If everything so far failed then just select the first row in the table.
+    const initial = getInitialSelection();
+
+    if (initial) {
+      setRowSelection({ [initial.uniqueId]: true });
+
+      // The viewpoints column and the onRowClick video selection prefers
+      // selection as per povDiskFirstNameSort, so we respect that here too.
+      const [first] = [initial, ...initial.multiPov].sort(povDiskFirstNameSort);
+      setAppState((prev) => ({ ...prev, selectedVideos: [first] }));
+      return;
+    }
+    console.log(333);
+
+    // Possible we get here if there are genuinely no rows in the table due
+    // to overzealous filtering, but there isn't anything sensible to do.
+  }, [
+    getInitialSelection,
+    parentLookupMap,
+    selectedVideos,
+    setAppState,
+    table,
+  ]);
 
   return table;
 };

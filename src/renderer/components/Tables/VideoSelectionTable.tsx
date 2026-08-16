@@ -108,7 +108,9 @@ const VideoSelectionTable = (props: IProps) => {
         toSelect = povs[0];
       }
 
-      persistentProgress.current = 0;
+      if (!row.getIsSelected()) {
+        persistentProgress.current = 0;
+      }
 
       // It's a regular click, so unselect any other selected rows.
       selectedRows.forEach((r) => {
@@ -321,12 +323,14 @@ const VideoSelectionTable = (props: IProps) => {
     sortedIndex: number,
   ) => {
     const cells = row.getVisibleCells();
-    let className = 'cursor-pointer hover:bg-secondary/80 ';
+    let className = 'cursor-pointer  ';
 
     if (selected) {
       className += 'bg-secondary/100 ';
     } else if (sortedIndex % 2 === 0) {
-      className += 'bg-secondary/15 ';
+      className += 'bg-secondary/15 hover:bg-secondary/80 ';
+    } else {
+      className += 'hover:bg-secondary/80 ';
     }
 
     return (
