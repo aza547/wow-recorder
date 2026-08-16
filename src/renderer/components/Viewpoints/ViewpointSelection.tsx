@@ -149,7 +149,7 @@ export default function ViewpointSelection(props: IProps) {
           // Always pause if changing selections in multiplayer mode.
           playing: multiPlayerMode ? false : playing,
           // Update the preferred viewpoint to the newly selected player. This
-          // means  the video table will also update so switching between videos
+          // means the video table will also update so switching between videos
           // will stick to the same player.
           preferredViewpoint: selection.player?._name || '',
         };
