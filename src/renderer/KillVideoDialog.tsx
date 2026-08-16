@@ -68,13 +68,18 @@ const KillVideoDialog = (props: IProps) => {
 
     const segmentDuration = videoDuration / sourcesRef.current.length;
 
-    const segs = sourcesRef.current.map((rv, idx) => ({
-      video: rv,
-      start: idx * segmentDuration,
-      stop: (idx + 1) * segmentDuration,
-    }));
+    setSegments(
+      sourcesRef.current.map((rv, idx) => ({
+        video: rv,
+        start: idx * segmentDuration,
+        stop: (idx + 1) * segmentDuration,
+      })),
+    );
 
-    setSegments(segs);
+    setFps('60');
+    setResolution('1920x1080');
+    setSingleAudio(false);
+    setAudioTrackPlayer(sourcesRef.current[0]?.player?._name || '');
   }, [open]);
 
   // Our select component only accepts strings annoyingly.
