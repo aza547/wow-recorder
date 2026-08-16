@@ -1,5 +1,5 @@
 import { CloudStatus, RendererVideo } from 'main/types';
-import { Dispatch, SetStateAction, useMemo } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from 'react';
 import {
   Dialog,
   DialogClose,
@@ -23,6 +23,7 @@ import {
   getPlayerName,
   getPlayerSpecID,
   getVideoGroup,
+  getVideoGroupIds,
   getWoWClassColor,
   stopPropagation,
 } from './rendererutils';
@@ -56,6 +57,30 @@ export default function LockDialog(props: IProps) {
     language,
     cloudStatus,
   } = props;
+
+  const previousVideoGroupIds = useRef(
+    getVideoGroupIds(targetVideoId, parentLookupMap),
+  );
+
+  useEffect(() => {
+    // If the target videos change (due to a remote delete) such that there
+    // is no overlap with the previous selection, close the dialog to avoid
+    // confusingly retargetting another video group.
+    const currentVideoGroupIds = getVideoGroupIds(
+      targetVideoId,
+      parentLookupMap,
+    );
+
+    const overlap = currentVideoGroupIds.some((id) =>
+      previousVideoGroupIds.current.includes(id),
+    );
+
+    if (open && !overlap) {
+      onOpenChange(false);
+    }
+
+    previousVideoGroupIds.current = currentVideoGroupIds;
+  }, [onOpenChange, open, parentLookupMap, targetVideoId]);
 
   const setLock = (videos: Array<RendererVideo>, lock: boolean) => {
     const disk = videos.filter((v) => !v.cloud);

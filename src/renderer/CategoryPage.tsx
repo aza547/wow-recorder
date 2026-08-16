@@ -36,6 +36,7 @@ import {
   findClipParent,
   getFriendlyCodecName,
   getVideoCategoryFilter,
+  getVideoParent,
   getVideoStorageFilter,
   povDiskFirstNameSort,
 } from './rendererutils';
@@ -572,7 +573,16 @@ const CategoryPage = (props: IProps) => {
         ? getLocalePhrase(language, Phrase.GuildNoPermission)
         : getLocalePhrase(language, Phrase.BulkDeleteButtonTooltip);
 
-      const ids = selectedRows.map((r) => r.original.uniqueId);
+      // Only want to pass the parent IDs into the delete dialog.
+      const ids = [
+        ...new Set(
+          toDelete
+            .map((r) => r.uniqueId)
+            .map((id) => getVideoParent(id, parentLookupMap))
+            .filter((rv): rv is RendererVideo => Boolean(rv))
+            .map((rv) => rv.uniqueId),
+        ),
+      ];
 
       return (
         <Tooltip content={tooltip}>
@@ -584,6 +594,7 @@ const CategoryPage = (props: IProps) => {
               parentLookupMap={parentLookupMap}
               setVideoState={setVideoState}
               language={language}
+              appState={appState}
             >
               <Button
                 variant="secondary"

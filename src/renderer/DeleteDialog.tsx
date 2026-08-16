@@ -1,4 +1,4 @@
-import { RendererVideo } from 'main/types';
+import { AppState, RendererVideo } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
 import {
   Dialog,
@@ -16,6 +16,7 @@ import {
   SetStateAction,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -35,6 +36,7 @@ import {
   getPlayerName,
   getPlayerSpecID,
   getVideoGroup,
+  getVideoGroupIds,
   getWoWClassColor,
 } from './rendererutils';
 import { specImages } from './images';
@@ -54,6 +56,7 @@ type DeleteDialogProps = {
   language: Language;
   parentLookupMap: Map<string, RendererVideo>;
   setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
+  appState: AppState;
 };
 
 const DeleteDialog = (props: DeleteDialogProps) => {
@@ -65,9 +68,34 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     parentLookupMap,
     setVideoState,
     children,
+    appState,
   } = props;
 
+  const { cloudStatus } = appState;
   const [rowSelection, setRowSelection] = useState({});
+
+  const previousVideoGroupIds = useRef(
+    targetVideoIds.flatMap((id) => getVideoGroupIds(id, parentLookupMap)),
+  );
+
+  useEffect(() => {
+    // If the target videos change (due to a remote delete) such that there
+    // is no overlap with the previous selection, close the dialog to avoid
+    // confusingly retargetting another video group.
+    const currentVideoGroupIds = targetVideoIds.flatMap((id) =>
+      getVideoGroupIds(id, parentLookupMap),
+    );
+
+    const overlap = currentVideoGroupIds.some((id) =>
+      previousVideoGroupIds.current.includes(id),
+    );
+
+    if (open && !overlap) {
+      onOpenChange(false);
+    }
+
+    previousVideoGroupIds.current = currentVideoGroupIds;
+  }, [open, onOpenChange, targetVideoIds, parentLookupMap]);
 
   const populatePlayerCell = (
     info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
@@ -76,7 +104,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     const { player } = video;
 
     if (!player || !player._specID) {
-      return <div>Unknown</div>;
+      return <div>Unknown</div>; // TODO localize
     }
 
     const playerClass = getPlayerClass(video);
@@ -339,20 +367,13 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   };
 
   const getWarningMessage = () => {
-    const multipleParentRowsSelected = targetVideoIds.length > 1;
-
-    const videos = multipleParentRowsSelected
-      ? targetVideoIds.flatMap((uniqueId) =>
-          getVideoGroup(uniqueId, parentLookupMap),
-        ).length
-      : table.getSelectedRowModel().rows.length;
-
+    const videos = getVideosToDelete();
     const rows = targetVideoIds.length;
 
-    const general = `${getLocalePhrase(
+    const generalWarning = `${getLocalePhrase(
       language,
       Phrase.ThisWillPermanentlyDelete,
-    )} ${videos} ${getLocalePhrase(
+    )} ${videos.length} ${getLocalePhrase(
       language,
       Phrase.Recordings,
     )} ${getLocalePhrase(
@@ -360,21 +381,22 @@ const DeleteDialog = (props: DeleteDialogProps) => {
       Phrase.From,
     )} ${rows} ${getLocalePhrase(language, Phrase.Rows)}.`;
 
-    const selected = table.getSelectedRowModel().rows;
-    const inScopeLocked = selected.filter((row) => row.original.isProtected);
+    const locked = videos.filter((rv) => rv.isProtected);
 
-    const lock =
-      inScopeLocked.length > 0
+    const lockWarning =
+      locked.length > 0
         ? getLocalePhrase(language, Phrase.DeleteSelectionContainsLocked)
         : 'This selection contains no locked recordings.';
 
-    const color = inScopeLocked.length > 0 ? 'text-destructive' : '';
+    const lockWarningColor = locked.length > 0 ? 'text-destructive' : '';
+
+    // We don't render the table in this case so make the gap match the Dialog.
     const gap = targetVideoIds.length > 1 ? 'gap-4' : 'gap-2';
 
     return (
       <div className={`text-sm ${gap} flex flex-col h-[60px]`}>
-        <p>{general}</p>
-        <p className={color}>{lock}</p>
+        <p>{generalWarning}</p>
+        <p className={lockWarningColor}>{lockWarning}</p>
       </div>
     );
   };
@@ -409,6 +431,13 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     onOpenChange(false);
   };
 
+  // Don't really expect this to happen as we don't allow the delete dialog to
+  // open in the case of no permission, but there are edge cases like a user
+  // opens the delete dialog and then an uploaded video is added while open.
+  const { del } = cloudStatus;
+  const noPermission = !del && getVideosToDelete().some((v) => v.cloud);
+  const disabled = getVideosToDelete().length < 1 || noPermission;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -429,7 +458,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
             <Button variant="ghost">Close</Button>
           </DialogClose>
           {/* // TODO localize */}
-          <Button variant="destructive" onClick={doDelete}>
+          <Button variant="destructive" onClick={doDelete} disabled={disabled}>
             Delete ({getVideosToDelete().length})
           </Button>
         </DialogFooter>

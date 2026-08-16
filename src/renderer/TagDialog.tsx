@@ -32,6 +32,7 @@ import {
   getPlayerName,
   getPlayerSpecID,
   getVideoGroup,
+  getVideoGroupIds,
   getWoWClassColor,
 } from './rendererutils';
 import { specImages } from './images';
@@ -69,6 +70,30 @@ export default function TagDialog(props: IProps) {
   const debounceStartRef = useRef<number | null>(null);
   const debounceTimer = 2000;
   const [debounceProgress, setDebounceProgress] = useState<number | null>(null);
+
+  const previousVideoGroupIds = useRef(
+    getVideoGroupIds(targetVideoId, parentLookupMap),
+  );
+
+  useEffect(() => {
+    // If the target videos change (due to a remote delete) such that there
+    // is no overlap with the previous selection, close the dialog to avoid
+    // confusingly retargetting another video group.
+    const currentVideoGroupIds = getVideoGroupIds(
+      targetVideoId,
+      parentLookupMap,
+    );
+
+    const overlap = currentVideoGroupIds.some((id) =>
+      previousVideoGroupIds.current.includes(id),
+    );
+
+    if (open && !overlap) {
+      onOpenChange(false);
+    }
+
+    previousVideoGroupIds.current = currentVideoGroupIds;
+  }, [onOpenChange, open, parentLookupMap, targetVideoId]);
 
   const saveTag = (video: RendererVideo, tag: string) => {
     if (video.cloud) {

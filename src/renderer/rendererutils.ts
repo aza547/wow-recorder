@@ -1180,12 +1180,28 @@ const findClipParent = (
   return parent;
 };
 
+const getVideoParent = (
+  uniqueId: string | null | undefined,
+  parentLookupMap: Map<string, RendererVideo>,
+): RendererVideo | undefined => {
+  return uniqueId ? parentLookupMap.get(uniqueId) : undefined;
+};
+
 const getVideoGroup = (
   uniqueId: string | null | undefined,
   parentLookupMap: Map<string, RendererVideo>,
 ): Array<RendererVideo> => {
-  const parent = uniqueId ? parentLookupMap.get(uniqueId) : null;
+  const parent = getVideoParent(uniqueId, parentLookupMap);
   return parent ? [parent, ...parent.multiPov] : [];
+};
+
+const getVideoGroupIds = (
+  uniqueId: string | null | undefined,
+  parentLookupMap: Map<string, RendererVideo>,
+): Array<string> => {
+  return getVideoGroup(uniqueId, parentLookupMap).map(
+    (video) => video.uniqueId,
+  );
 };
 
 export {
@@ -1255,5 +1271,7 @@ export {
   getFriendlyCodecName,
   formatRealmNameForDisplay,
   findClipParent,
+  getVideoParent,
   getVideoGroup,
+  getVideoGroupIds,
 };
