@@ -10,10 +10,6 @@ export default class VideoCorrelator {
    * Walk the raw video list and correlate them into a single list. This is
    * done by looking for videos with the same hash and start time, and
    * linking them together.
-   *
-   * Also build a lookup map for fast lookups to the parent video of the
-   * correlated group. This provides a fast mechanism to find the parent of a
-   * video which is a common and otherwise costly action.
    */
   public static correlate(raw: RendererVideo[]) {
     raw.forEach((rv) => {

@@ -140,7 +140,9 @@ const CategoryPage = (props: IProps) => {
     return VideoCorrelator.correlate(storageFilteredState);
   }, [categoryState, storageFilter]);
 
-  // Now apply filtering based on search tags and date range.
+  // Now apply filtering based on search tags and date range. Build a lookup
+  // map here for efficient finding of the parent row of a video, which is a
+  // generally useful thing to have for downstream components.
   const { filteredState, parentLookupMap } = useMemo(() => {
     const queryFilter = (rv: RendererVideo) =>
       new VideoFilter(rv, videoFilterTags, dateRangeFilter, language).filter();
