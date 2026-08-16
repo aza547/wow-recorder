@@ -33,17 +33,17 @@ type LockButtonProps = {
   language: Language;
   cloudStatus: CloudStatus;
   setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
-  parent: RendererVideo;
+  video: RendererVideo;
 };
 
 const LockButton = (props: LockButtonProps) => {
-  const { language, cloudStatus, setVideoState, parent } = props;
+  const { language, cloudStatus, setVideoState, video } = props;
 
   const { write, del } = cloudStatus;
-  const { isProtected } = parent;
+  const { isProtected } = video;
 
   const noPermission =
-    (!write && parent.cloud) || (!del && parent.cloud && isProtected);
+    (!write && video.cloud) || (!del && video.cloud && isProtected);
 
   const icon = isProtected ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
 
@@ -65,7 +65,7 @@ const LockButton = (props: LockButtonProps) => {
           size="xs"
           onClick={(event) => {
             stopPropagation(event);
-            setLock([parent], !isProtected, setVideoState);
+            setLock([video], !isProtected, setVideoState);
           }}
           disabled={noPermission}
         >

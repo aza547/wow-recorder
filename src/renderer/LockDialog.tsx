@@ -54,29 +54,20 @@ export default function LockDialog(props: IProps) {
   } = props;
 
   const previousOpen = useRef(open);
-
-  const previousVideoGroupIds = useRef(
-    getVideoGroupIds(targetVideoId, parentLookupMap),
-  );
+  const previousParentId = useRef(targetVideoId);
 
   useEffect(() => {
-    // If the target videos change (due to a remote delete) such that there
-    // is no overlap with the previous selection, close the dialog to avoid
-    // confusingly retargetting another video group.
-    const currentVideoGroupIds = getVideoGroupIds(
-      targetVideoId,
-      parentLookupMap,
-    );
-
-    const overlap = currentVideoGroupIds.some((id) =>
-      previousVideoGroupIds.current.includes(id),
-    );
-
-    if (open && previousOpen.current && !overlap) {
+    // Close an open dialog if the parent video has been deleted by another
+    // user. That should be rare enough that this isn't too annoying.
+    if (
+      open &&
+      previousOpen.current &&
+      previousParentId.current !== targetVideoId
+    ) {
       onOpenChange(false);
     }
 
-    previousVideoGroupIds.current = currentVideoGroupIds;
+    previousParentId.current = targetVideoId;
     previousOpen.current = open;
   }, [onOpenChange, open, parentLookupMap, targetVideoId]);
 
@@ -102,7 +93,7 @@ export default function LockDialog(props: IProps) {
       accessorFn: (v) => v,
       cell: (ctx) => (
         <LockButton
-          parent={ctx.row.original}
+          video={ctx.row.original}
           language={language}
           cloudStatus={cloudStatus}
           setVideoState={setVideoState}

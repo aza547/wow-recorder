@@ -28,7 +28,7 @@ import {
 } from '@tanstack/react-table';
 import { Language, Phrase } from 'localisation/phrases';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
-import { getVideoGroup, getVideoGroupIds } from './rendererutils';
+import { getVideoGroup } from './rendererutils';
 import SelectAllShortcut from './components/Shortcuts/SelectAllShortcut';
 import SelectRangeShortcut from './components/Shortcuts/SelectRangeShortcut';
 import SelectMultiShortcut from './components/Shortcuts/SelectMultiShortcut';
@@ -38,6 +38,7 @@ import {
   populateStorageCell,
   populateTagStatusCell,
 } from './components/Tables/Cells';
+import { isEqual } from 'lodash';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -68,30 +69,22 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   const [rowSelection, setRowSelection] = useState({});
 
   const previousOpen = useRef(open);
-
-  const previousVideoGroupIds = useRef(
-    targetVideoIds.flatMap((id) => getVideoGroupIds(id, parentLookupMap)),
-  );
+  const previousParentIds = useRef(targetVideoIds);
 
   useEffect(() => {
-    // If the target videos change (due to a remote delete) such that there
-    // is no overlap with the previous selection, close the dialog to avoid
-    // confusingly retargetting another video group.
-    const currentVideoGroupIds = targetVideoIds.flatMap((id) =>
-      getVideoGroupIds(id, parentLookupMap),
-    );
-
-    const overlap = currentVideoGroupIds.some((id) =>
-      previousVideoGroupIds.current.includes(id),
-    );
-
-    if (open && previousOpen.current && !overlap) {
+    // Close an open dialog if any of the parent video has been deleted by
+    // another user. That should be rare enough that this isn't too annoying.
+    if (
+      open &&
+      previousOpen.current &&
+      !isEqual(previousParentIds.current, targetVideoIds)
+    ) {
       onOpenChange(false);
     }
 
-    previousVideoGroupIds.current = currentVideoGroupIds;
+    previousParentIds.current = targetVideoIds;
     previousOpen.current = open;
-  }, [open, onOpenChange, targetVideoIds, parentLookupMap]);
+  }, [onOpenChange, open, targetVideoIds]);
 
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
     {

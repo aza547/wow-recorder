@@ -12,22 +12,16 @@ import { FolderMessageSquare } from 'renderer/icons/FolderMessageSquare';
 type TagButtonProps = {
   language: Language;
   cloudStatus: CloudStatus;
-  parent: RendererVideo;
-  setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
+  video: RendererVideo;
   setDialog: Dispatch<SetStateAction<DialogType>>;
   setTagDialogVideoTargetId: Dispatch<SetStateAction<string | null>>;
 };
 
 const TagButton = (props: TagButtonProps) => {
-  const {
-    parent,
-    language,
-    cloudStatus,
-    setTagDialogVideoTargetId,
-    setDialog,
-  } = props;
+  const { video, language, cloudStatus, setTagDialogVideoTargetId, setDialog } =
+    props;
 
-  const group = [parent, ...parent.multiPov];
+  const group = [video, ...video.multiPov];
   const foundTag = group.map((v) => v.tag).find((t) => t);
 
   if (group.length > 1) {
@@ -39,7 +33,7 @@ const TagButton = (props: TagButtonProps) => {
             size="xs"
             onClick={(event) => {
               stopPropagation(event);
-              setTagDialogVideoTargetId(parent.uniqueId);
+              setTagDialogVideoTargetId(video.uniqueId);
               setDialog(DialogType.TAG);
             }}
           >
@@ -82,7 +76,7 @@ const TagButton = (props: TagButtonProps) => {
           disabled={noPermission}
           onClick={(event) => {
             stopPropagation(event);
-            setTagDialogVideoTargetId(parent.uniqueId);
+            setTagDialogVideoTargetId(video.uniqueId);
             setDialog(DialogType.TAG);
           }}
         >

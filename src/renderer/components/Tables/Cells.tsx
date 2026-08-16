@@ -43,6 +43,7 @@ import TagButton from './TagButton';
 import MultiLockButton from './MultiLockButton';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudIcon from '@mui/icons-material/Cloud';
+import MultiTagButton from './MultiTagButton';
 
 export const populateResultCell = (
   info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
@@ -134,19 +135,28 @@ export const populateDetailsCell = (
         <LockButton
           language={language}
           cloudStatus={cloudStatus}
-          parent={video}
+          video={video}
           setVideoState={setVideoState}
         />
       )}
 
-      <TagButton
-        language={language}
-        cloudStatus={cloudStatus}
-        parent={video}
-        setVideoState={setVideoState}
-        setDialog={setDialog}
-        setTagDialogVideoTargetId={setTagDialogVideoTargetId}
-      />
+      {group.length > 1 ? (
+        <MultiTagButton
+          language={language}
+          cloudStatus={cloudStatus}
+          parent={video}
+          setDialog={setDialog}
+          setTagDialogVideoTargetId={setTagDialogVideoTargetId}
+        />
+      ) : (
+        <TagButton
+          language={language}
+          cloudStatus={cloudStatus}
+          video={video}
+          setDialog={setDialog}
+          setTagDialogVideoTargetId={setTagDialogVideoTargetId}
+        />
+      )}
     </Box>
   );
 };
