@@ -11,7 +11,6 @@ import {
 import { Button } from './components/Button/Button';
 import { Language, Phrase } from 'localisation/phrases';
 import {
-  CellContext,
   ColumnDef,
   flexRender,
   stockFeatures,
@@ -19,21 +18,17 @@ import {
 } from '@tanstack/react-table';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import {
-  getPlayerClass,
-  getPlayerName,
-  getPlayerSpecID,
   getVideoGroup,
   getVideoGroupIds,
-  getWoWClassColor,
   stopPropagation,
 } from './rendererutils';
-import { specImages } from './images';
-import Box from '@mui/material/Box/Box';
-import { LockKeyhole, LockOpen } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
-import { Tooltip } from './components/Tooltip/Tooltip';
-import SaveIcon from '@mui/icons-material/Save';
-import CloudIcon from '@mui/icons-material/Cloud';
+import LockButton from './components/Tables/LockButton';
+import {
+  populateLockedStatusCell,
+  populatePlayerCell,
+  populateStorageCell,
+} from './components/Tables/Cells';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -85,174 +80,34 @@ export default function LockDialog(props: IProps) {
     previousOpen.current = open;
   }, [onOpenChange, open, parentLookupMap, targetVideoId]);
 
-  const setLock = (videos: Array<RendererVideo>, lock: boolean) => {
-    const disk = videos.filter((v) => !v.cloud);
-    const cloud = videos.filter((v) => v.cloud);
+  const setLock = (targets: Array<RendererVideo>, lock: boolean) => {
+    const disk = targets.filter((v) => !v.cloud);
+    const cloud = targets.filter((v) => v.cloud);
 
     ipc.sendMessage('videoButtonDisk', ['protect', lock, disk]);
     ipc.sendMessage('videoButtonCloud', ['protect', lock, cloud]);
 
     setVideoState((prev) => {
       return prev.map((rv) => {
-        return videos.some((v) => v.uniqueId == rv.uniqueId)
+        return targets.some((target) => rv.uniqueId === target.uniqueId)
           ? { ...rv, isProtected: lock }
           : rv;
       });
     });
   };
 
-  const populateLockDialogLockCell = (
-    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-    language: Language,
-    cloudStatus: CloudStatus,
-  ) => {
-    const video = ctx.getValue() as RendererVideo;
-    const { write, del } = cloudStatus;
-    const { isProtected } = video;
-
-    const noPermission =
-      (!write && video.cloud) || (!del && video.cloud && isProtected);
-
-    const icon = isProtected ? (
-      <LockKeyhole size={18} />
-    ) : (
-      <LockOpen size={18} />
-    );
-
-    let tooltip = '';
-
-    if (noPermission) {
-      tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
-    } else if (!isProtected) {
-      tooltip = getLocalePhrase(language, Phrase.StarSelected);
-    } else {
-      tooltip = getLocalePhrase(language, Phrase.UnstarSelected);
-    }
-
-    return (
-      <Tooltip content={tooltip}>
-        <div className="flex justify-center items-center">
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={(event) => {
-              stopPropagation(event);
-              setLock([video], !isProtected);
-            }}
-            disabled={noPermission}
-          >
-            {icon}
-          </Button>
-        </div>
-      </Tooltip>
-    );
-  };
-
-  const populateStorageCell = (
-    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const { row } = ctx;
-    const { cloud } = row.original;
-
-    const icon = cloud ? (
-      <CloudIcon
-        sx={{
-          height: '18px',
-          width: '18px',
-          color: 'white',
-          opacity: 0.3,
-          marginBottom: '3px',
-        }}
-      />
-    ) : (
-      <SaveIcon
-        sx={{
-          height: '18px',
-          width: '18px',
-          color: 'white',
-          opacity: 0.3,
-          marginBottom: '3px',
-        }}
-      />
-    );
-
-    return <div className="flex justify-center items-center">{icon}</div>;
-  };
-
-  const populatePlayerCell = (
-    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const video = info.getValue() as RendererVideo;
-    const { player } = video;
-
-    if (!player || !player._specID) {
-      return <div>{getLocalePhrase(language, Phrase.Unknown)}</div>;
-    }
-
-    const playerClass = getPlayerClass(video);
-    const playerSpecID = getPlayerSpecID(video);
-    const playerName = getPlayerName(video);
-    const playerClassColor = getWoWClassColor(playerClass);
-    const specIcon = specImages[playerSpecID as keyof typeof specImages];
-
-    const renderSpecAndName = () => {
-      return (
-        <div className="flex items-center pl-2 min-w-0">
-          <Box
-            component="img"
-            src={specIcon}
-            className="bg-background-higher shrink-0"
-            sx={{
-              height: '25px',
-              width: '25px',
-              border: '1px solid black',
-              borderRadius: '15%',
-              boxSizing: 'border-box',
-              objectFit: 'cover',
-            }}
-          />
-
-          <div
-            className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate min-w-0"
-            style={{ color: playerClassColor }}
-          >
-            {playerName}
-          </div>
-        </div>
-      );
-    };
-
-    return <div className="flex truncate">{renderSpecAndName()}</div>;
-  };
-
-  const populateLockedStatusCell = (
-    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const { row } = info;
-    const { isProtected } = row.original;
-
-    if (isProtected) {
-      return (
-        <div className="flex truncate text-sm">
-          {getLocalePhrase(language, Phrase.SafeFromAutomaticDeletion)}
-        </div>
-      );
-    }
-    return (
-      <div className="flex truncate text-sm">
-        {getLocalePhrase(language, Phrase.EligibleForAutomaticDeletion)}
-      </div>
-    );
-  };
-
-  {
-    /* // share this stuff where sensible with other dialogs */
-  }
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
     {
       id: 'Lock',
       accessorFn: (v) => v,
-      cell: (ctx) => populateLockDialogLockCell(ctx, language, cloudStatus),
+      cell: (ctx) => (
+        <LockButton
+          parent={ctx.row.original}
+          language={language}
+          cloudStatus={cloudStatus}
+          setVideoState={setVideoState}
+        />
+      ),
     },
     {
       id: 'Storage',
@@ -262,12 +117,12 @@ export default function LockDialog(props: IProps) {
     {
       id: 'Player',
       accessorFn: (v) => v,
-      cell: (ctx) => populatePlayerCell(ctx),
+      cell: (ctx) => populatePlayerCell(ctx, language),
     },
     {
       id: 'Status',
       accessorFn: (v) => v,
-      cell: (ctx) => populateLockedStatusCell(ctx),
+      cell: (ctx) => populateLockedStatusCell(ctx, language),
     },
   ];
 

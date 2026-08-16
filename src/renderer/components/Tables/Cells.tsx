@@ -29,21 +29,20 @@ import { Tooltip } from '../Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';
 import {
   Clapperboard,
+  ExternalLink,
   LockKeyhole,
   LockOpen,
   MessageSquare,
   MessageSquareMore,
-  ExternalLink,
 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
 import wcrIcon from '../../../../assets/icon/small-icon.png';
-import { FolderLocked } from 'renderer/icons/FolderLocked';
-import { FolderUnlocked } from 'renderer/icons/FolderUnlocked';
-import { FolderMessageSquare } from 'renderer/icons/FolderMessageSquare';
-import { FolderMessageSquareMore } from 'renderer/icons/FolderMessageSquareMore';
-
-const ipc = window.electron.ipcRenderer;
+import LockButton from './LockButton';
+import TagButton from './TagButton';
+import MultiLockButton from './MultiLockButton';
+import SaveIcon from '@mui/icons-material/Save';
+import CloudIcon from '@mui/icons-material/Cloud';
 
 export const populateResultCell = (
   info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
@@ -119,192 +118,35 @@ export const populateDetailsCell = (
   setLockDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
   setTagDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
 ) => {
-  const video = ctx.getValue() as RendererVideo;
-  const { write, del } = cloudStatus;
-
-  const renderProtectedIconSingle = () => {
-    // If any videos in our selection are not protected, then the button's
-    // action is to protect.
-    const toProtect = [video, ...video.multiPov];
-    const lock = !toProtect.every((v) => v.isProtected);
-
-    // Disable the protect button if there are no selected viewpoints, or if
-    // the action is to unprotect and we don't have delete permissions.
-    const noPermission =
-      (!write && toProtect.some((v) => v.cloud)) ||
-      (!del && !lock && toProtect.some((v) => v.cloud));
-
-    const disabled = noPermission || toProtect.length < 1;
-
-    const icon = lock ? <LockOpen size={18} /> : <LockKeyhole size={18} />;
-
-    let tooltip = '';
-
-    if (noPermission) {
-      tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
-    } else if (lock) {
-      tooltip = getLocalePhrase(language, Phrase.StarSelected);
-    } else {
-      tooltip = getLocalePhrase(language, Phrase.UnstarSelected);
-    }
-
-    const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
-      stopPropagation(e);
-      const toProtectDisk = toProtect.filter((v) => !v.cloud);
-      const toProtectCloud = toProtect.filter((v) => v.cloud);
-
-      ipc.sendMessage('videoButtonDisk', ['protect', lock, toProtectDisk]);
-      ipc.sendMessage('videoButtonCloud', ['protect', lock, toProtectCloud]);
-
-      setVideoState((prev) => {
-        const state = [...prev];
-
-        state.forEach((rv) => {
-          // A video is uniquely identified by its name and storage type.
-          const match = toProtect.find(
-            (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
-          );
-
-          if (match) {
-            rv.isProtected = lock;
-          }
-        });
-
-        return state;
-      });
-    };
-
-    return (
-      <Tooltip content={tooltip}>
-        <div>
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={toggleProtected}
-            disabled={disabled}
-          >
-            {icon}
-          </Button>
-        </div>
-      </Tooltip>
-    );
-  };
-
-  const renderProtectedIconMulti = () => {
-    const tooltip = 'Open Multilock dialog';
-
-    const icon = [video, ...video.multiPov].some((v) => v.isProtected) ? (
-      <FolderLocked size={20} />
-    ) : (
-      <FolderUnlocked size={20} />
-    );
-
-    return (
-      <Tooltip content={tooltip}>
-        <div>
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={(event) => {
-              stopPropagation(event);
-              setLockDialogVideoTargetId(video.uniqueId);
-              setDialog(DialogType.LOCK);
-            }}
-          >
-            {icon}
-          </Button>
-        </div>
-      </Tooltip>
-    );
-  };
-
-  const renderTagIconSingle = () => {
-    const toTag = [video, ...video.multiPov];
-    const noPermission = !write && toTag.some((v) => v.cloud);
-
-    let tag = '';
-    let icon = <MessageSquare size={18} />;
-
-    let tooltip = noPermission
-      ? getLocalePhrase(language, Phrase.GuildNoPermission)
-      : getLocalePhrase(language, Phrase.TagButtonTooltip);
-
-    const foundTag = toTag.map((v) => v.tag).find((t) => t);
-
-    if (foundTag) {
-      tag = foundTag;
-      icon = <MessageSquareMore size={18} />;
-
-      if (tag.length > 50) {
-        tooltip = `${tag.slice(0, 50)}...`;
-      } else {
-        tooltip = tag;
-      }
-    }
-
-    return (
-      <Tooltip content={tooltip}>
-        <div>
-          <Button
-            variant="ghost"
-            size="xs"
-            disabled={noPermission}
-            onClick={(event) => {
-              stopPropagation(event);
-              setTagDialogVideoTargetId(video.uniqueId);
-              setDialog(DialogType.TAG);
-            }}
-          >
-            {icon}
-          </Button>
-        </div>
-      </Tooltip>
-    );
-  };
-
-  const renderTagIconMulti = () => {
-    const toTag = [video, ...video.multiPov];
-    const noPermission = !write && toTag.some((v) => v.cloud);
-
-    let icon = <FolderMessageSquare size={18} />;
-
-    let tooltip = noPermission
-      ? getLocalePhrase(language, Phrase.GuildNoPermission)
-      : getLocalePhrase(language, Phrase.TagButtonTooltip);
-
-    const foundTag = toTag.map((v) => v.tag).find((t) => t);
-
-    if (foundTag) {
-      icon = <FolderMessageSquareMore size={18} />;
-      tooltip = `Open multitag dialog`;
-    }
-
-    return (
-      <Tooltip content={tooltip}>
-        <div>
-          <Button
-            variant="ghost"
-            size="xs"
-            disabled={noPermission}
-            onClick={(event) => {
-              stopPropagation(event);
-              setTagDialogVideoTargetId(video.uniqueId);
-              setDialog(DialogType.TAG);
-            }}
-          >
-            {icon}
-          </Button>
-        </div>
-      </Tooltip>
-    );
-  };
-
-  const n = [video, ...video.multiPov].length;
+  const video = ctx.row.original;
+  const group = [video, ...video.multiPov];
 
   return (
     <Box className="inline-flex">
-      {n < 2 ? renderProtectedIconSingle() : renderProtectedIconMulti()}
-      {n < 2 ? renderTagIconSingle() : renderTagIconMulti()}
+      {group.length > 1 ? (
+        <MultiLockButton
+          language={language}
+          parent={video}
+          setDialog={setDialog}
+          setLockDialogVideoTargetId={setLockDialogVideoTargetId}
+        />
+      ) : (
+        <LockButton
+          language={language}
+          cloudStatus={cloudStatus}
+          parent={video}
+          setVideoState={setVideoState}
+        />
+      )}
+
+      <TagButton
+        language={language}
+        cloudStatus={cloudStatus}
+        parent={video}
+        setVideoState={setVideoState}
+        setDialog={setDialog}
+        setTagDialogVideoTargetId={setTagDialogVideoTargetId}
+      />
     </Box>
   );
 };
@@ -503,6 +345,141 @@ export const populateViewpointCell = (
     <div className="flex truncate">
       {renderSpecAndName()}
       {renderRemainingCount()}
+    </div>
+  );
+};
+
+export const populateTagCell = (
+  ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+) => {
+  const { row } = ctx;
+  const { tag } = row.original;
+
+  const icon = tag ? (
+    <MessageSquareMore size={18} />
+  ) : (
+    <MessageSquare size={18} />
+  );
+
+  return <div className="flex justify-center items-center">{icon}</div>;
+};
+
+export const populateStorageCell = (
+  ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+) => {
+  const { row } = ctx;
+  const { cloud } = row.original;
+
+  const icon = cloud ? (
+    <CloudIcon
+      sx={{
+        height: '18px',
+        width: '18px',
+        color: 'white',
+        opacity: 0.3,
+        marginBottom: '3px',
+      }}
+    />
+  ) : (
+    <SaveIcon
+      sx={{
+        height: '18px',
+        width: '18px',
+        color: 'white',
+        opacity: 0.3,
+        marginBottom: '3px',
+      }}
+    />
+  );
+
+  return <div className="flex justify-center items-center">{icon}</div>;
+};
+
+export const populatePlayerCell = (
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  language: Language,
+) => {
+  const video = info.getValue() as RendererVideo;
+  const { player } = video;
+
+  if (!player || !player._specID) {
+    return <div>{getLocalePhrase(language, Phrase.Unknown)}</div>;
+  }
+
+  const playerClass = getPlayerClass(video);
+  const playerSpecID = getPlayerSpecID(video);
+  const playerName = getPlayerName(video);
+  const playerClassColor = getWoWClassColor(playerClass);
+  const specIcon = specImages[playerSpecID as keyof typeof specImages];
+
+  const renderSpecAndName = () => {
+    return (
+      <div className="flex items-center pl-2 min-w-0">
+        <Box
+          component="img"
+          src={specIcon}
+          className="bg-background-higher shrink-0"
+          sx={{
+            height: '25px',
+            width: '25px',
+            border: '1px solid black',
+            borderRadius: '15%',
+            boxSizing: 'border-box',
+            objectFit: 'cover',
+          }}
+        />
+
+        <div
+          className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate min-w-0"
+          style={{ color: playerClassColor }}
+        >
+          {playerName}
+        </div>
+      </div>
+    );
+  };
+
+  return <div className="flex truncate">{renderSpecAndName()}</div>;
+};
+
+export const populateTagStatusCell = (
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  language: Language,
+) => {
+  const { row } = info;
+  const { tag } = row.original;
+  const text = tag ? tag : getLocalePhrase(language, Phrase.NoCustomTag);
+  return <div className="truncate text-sm mx-2">{text}</div>;
+};
+
+export const populateLockCell = (
+  ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+) => {
+  const video = ctx.getValue() as RendererVideo;
+  const { isProtected } = video;
+
+  const icon = isProtected ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
+
+  return <div className="flex justify-center items-center">{icon}</div>;
+};
+
+export const populateLockedStatusCell = (
+  info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
+  language: Language,
+) => {
+  const { row } = info;
+  const { isProtected } = row.original;
+
+  if (isProtected) {
+    return (
+      <div className="flex truncate text-sm">
+        {getLocalePhrase(language, Phrase.SafeFromAutomaticDeletion)}
+      </div>
+    );
+  }
+  return (
+    <div className="flex truncate text-sm">
+      {getLocalePhrase(language, Phrase.EligibleForAutomaticDeletion)}
     </div>
   );
 };

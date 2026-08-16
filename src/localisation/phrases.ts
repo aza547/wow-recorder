@@ -570,6 +570,8 @@ enum Phrase {
   ClearAll,
   Diagnostics,
   UnknownDevice,
+  OpenLockDialog,
+  OpenTagDialog,
 }
 
 enum Language {

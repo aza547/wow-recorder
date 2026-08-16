@@ -20,28 +20,21 @@ import { Button } from './components/Button/Button';
 import { Language, Phrase } from 'localisation/phrases';
 import { Textarea } from './components/TextArea/textarea';
 import {
-  CellContext,
   ColumnDef,
   flexRender,
   Row,
   stockFeatures,
   useTable,
 } from '@tanstack/react-table';
-import {
-  getPlayerClass,
-  getPlayerName,
-  getPlayerSpecID,
-  getVideoGroup,
-  getVideoGroupIds,
-  getWoWClassColor,
-} from './rendererutils';
-import { specImages } from './images';
-import Box from '@mui/material/Box/Box';
+import { getVideoGroup, getVideoGroupIds } from './rendererutils';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
-import { MessageSquare, MessageSquareMore } from 'lucide-react';
-import SaveIcon from '@mui/icons-material/Save';
-import CloudIcon from '@mui/icons-material/Cloud';
 import CircularProgress from '@mui/material/CircularProgress/CircularProgress';
+import {
+  populatePlayerCell,
+  populateStorageCell,
+  populateTagCell,
+  populateTagStatusCell,
+} from './components/Tables/Cells';
 
 interface IProps {
   open: boolean;
@@ -152,107 +145,6 @@ export default function TagDialog(props: IProps) {
     onOpenChange(open);
   };
 
-  const populatePlayerCell = (
-    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const video = info.getValue() as RendererVideo;
-    const { player } = video;
-
-    if (!player || !player._specID) {
-      return <div>Unknown</div>;
-    }
-
-    const playerClass = getPlayerClass(video);
-    const playerSpecID = getPlayerSpecID(video);
-    const playerName = getPlayerName(video);
-    const playerClassColor = getWoWClassColor(playerClass);
-    const specIcon = specImages[playerSpecID as keyof typeof specImages];
-
-    const renderSpecAndName = () => {
-      return (
-        <div className="flex items-center pl-2 min-w-0">
-          <Box
-            component="img"
-            src={specIcon}
-            className="bg-background-higher shrink-0"
-            sx={{
-              height: '25px',
-              width: '25px',
-              border: '1px solid black',
-              borderRadius: '15%',
-              boxSizing: 'border-box',
-              objectFit: 'cover',
-            }}
-          />
-
-          <div
-            className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate min-w-0"
-            style={{ color: playerClassColor }}
-          >
-            {playerName}
-          </div>
-        </div>
-      );
-    };
-
-    return <div className="flex truncate">{renderSpecAndName()}</div>;
-  };
-
-  const populateTagCell = (
-    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const { row } = ctx;
-    const { tag } = row.original;
-
-    const icon = tag ? (
-      <MessageSquareMore size={18} />
-    ) : (
-      <MessageSquare size={18} />
-    );
-
-    return <div className="flex justify-center items-center">{icon}</div>;
-  };
-
-  const populateStorageCell = (
-    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const { row } = ctx;
-    const { cloud } = row.original;
-
-    const icon = cloud ? (
-      <CloudIcon
-        sx={{
-          height: '18px',
-          width: '18px',
-          color: 'white',
-          opacity: 0.3,
-          marginBottom: '3px',
-        }}
-      />
-    ) : (
-      <SaveIcon
-        sx={{
-          height: '18px',
-          width: '18px',
-          color: 'white',
-          opacity: 0.3,
-          marginBottom: '3px',
-        }}
-      />
-    );
-
-    return <div className="flex justify-center items-center">{icon}</div>;
-  };
-
-  const populateTagStatusCell = (
-    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const { row } = info;
-    const { tag } = row.original;
-    const text = tag ? tag : getLocalePhrase(language, Phrase.NoCustomTag);
-    return <div className="truncate text-sm mx-2">{text}</div>;
-  };
-
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
     {
       id: 'Tag',
@@ -267,12 +159,12 @@ export default function TagDialog(props: IProps) {
     {
       id: 'Player',
       accessorFn: (v) => v,
-      cell: (ctx) => populatePlayerCell(ctx),
+      cell: (ctx) => populatePlayerCell(ctx, language),
     },
     {
       id: 'Status',
       accessorFn: (v) => v,
-      cell: (ctx) => populateTagStatusCell(ctx),
+      cell: (ctx) => populateTagStatusCell(ctx, language),
     },
   ];
 
@@ -340,9 +232,8 @@ export default function TagDialog(props: IProps) {
 
     if (!row.getIsSelected()) {
       row.getToggleSelectedHandler()(event);
+      setInnerTag(row.original.tag ?? '');
     }
-
-    setInnerTag(row.original.tag ?? '');
   };
 
   const renderTable = () => {

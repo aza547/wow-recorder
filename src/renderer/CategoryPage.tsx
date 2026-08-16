@@ -565,7 +565,6 @@ const CategoryPage = (props: IProps) => {
 
     const renderDeleteButton = () => {
       const toDelete = selectedViewpoints;
-
       const noPermission = !del && toDelete.some((v) => v.cloud);
       const disabled = toDelete.length < 1 || noPermission;
 
@@ -577,7 +576,7 @@ const CategoryPage = (props: IProps) => {
       const ids = [
         ...new Set(
           toDelete
-            .map((r) => r.uniqueId)
+            .map((rv) => rv.uniqueId)
             .map((id) => getVideoParent(id, parentLookupMap))
             .filter((rv): rv is RendererVideo => Boolean(rv))
             .map((rv) => rv.uniqueId),

@@ -78,33 +78,31 @@ const KillVideoDialog = (props: IProps) => {
 
     setFps('60');
     setResolution('1920x1080');
-    setSingleAudio(false);
-    setAudioTrackPlayer(sourcesRef.current[0]?.player?._name || '');
+    setSingleAudioSource(false);
+    setSingleAudioSourcePlayer(sourcesRef.current[0]?.player?._name || '');
   }, [open]);
 
   // Our select component only accepts strings annoyingly.
   const [fps, setFps] = useState('60');
-  const [singleAudio, setSingleAudio] = useState(false);
+  const [singleAudioSource, setSingleAudioSource] = useState(false);
 
-  const [audioTrackPlayer, setAudioTrackPlayer] = useState('');
+  const [singleAudioSourcePlayer, setSingleAudioSourcePlayer] = useState('');
   const [resolution, setResolution] =
     useState<keyof typeof obsResolutions>('1920x1080');
 
   const [segments, setSegments] = useState<KillVideoSegment[]>([]);
 
-  useEffect(() => {}, [open]);
+  const getSingleAudioSourceIndex = () => {
+    return singleAudioSource
+      ? segments.findIndex(
+          (s) => s.video.player?._name === singleAudioSourcePlayer,
+        )
+      : -1;
+  };
 
   const createKillVideo = () => {
     const { width, height } = obsResolutions[resolution];
-    let audioSegmentIndex = -1;
-
-    if (singleAudio) {
-      // If not found, findIndex returns -1 so if something goes wrong will
-      // just fallback to splicing all the audio tracks.
-      audioSegmentIndex = segments.findIndex(
-        (s) => s.video.player?._name === audioTrackPlayer,
-      );
-    }
+    const audioSegmentIndex = getSingleAudioSourceIndex();
 
     ipc.createKillVideo(
       width,
@@ -156,7 +154,10 @@ const KillVideoDialog = (props: IProps) => {
           </Tooltip>
         </Label>
         <div className="flex h-10 items-center">
-          <Switch checked={singleAudio} onCheckedChange={setSingleAudio} />
+          <Switch
+            checked={singleAudioSource}
+            onCheckedChange={setSingleAudioSource}
+          />
         </div>
       </div>
     );
@@ -181,7 +182,10 @@ const KillVideoDialog = (props: IProps) => {
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
-        <Select value={audioTrackPlayer} onValueChange={setAudioTrackPlayer}>
+        <Select
+          value={singleAudioSourcePlayer}
+          onValueChange={setSingleAudioSourcePlayer}
+        >
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -274,7 +278,7 @@ const KillVideoDialog = (props: IProps) => {
             {getFpsSelect()}
             {getResolutionSelect()}
             {getAudioSwitch()}
-            {singleAudio && getAudioTrackSelect()}
+            {singleAudioSource && getAudioTrackSelect()}
           </div>
         </KillVideoSourceTimeline>
 
@@ -288,7 +292,11 @@ const KillVideoDialog = (props: IProps) => {
             {getLocalePhrase(language, Phrase.Reset)}
           </Button>
           <DialogClose asChild>
-            <Button onClick={() => createKillVideo()} type="submit">
+            <Button
+              onClick={() => createKillVideo()}
+              type="submit"
+              disabled={singleAudioSource && getSingleAudioSourceIndex() === -1}
+            >
               {getLocalePhrase(language, Phrase.Render)}
             </Button>
           </DialogClose>

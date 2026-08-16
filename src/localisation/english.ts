@@ -377,8 +377,8 @@ const ENGLISH: Translations = {
   [Phrase.Saving]: 'Saving...',
   [Phrase.StartTyping]: 'Start typing...',
   [Phrase.ToggleDrawingMode]: 'Toggle drawing mode',
-  [Phrase.StarSelected]: 'Lock selected rows. Locked rows will not be automatically aged out.',
-  [Phrase.UnstarSelected]: 'Unlock selected rows. Unlocked rows may be automatically aged out to make space for new recordings.',
+  [Phrase.StarSelected]: 'Lock',
+  [Phrase.UnstarSelected]: 'Unlock',
   [Phrase.Selection]: 'Selection',
   [Phrase.NoCombatants]: 'No combatant data available.',
   [Phrase.DateFilter]: "Date Filter",
@@ -572,6 +572,8 @@ const ENGLISH: Translations = {
   [Phrase.ClearAll]: 'Clear All',
   [Phrase.Diagnostics]: 'Diagnostics',
   [Phrase.UnknownDevice]: 'Unknown Device',
+  [Phrase.OpenLockDialog]: 'Open Lock Dialog',
+  [Phrase.OpenTagDialog]: 'Open Tag Dialog',
 };
 
 export default ENGLISH;

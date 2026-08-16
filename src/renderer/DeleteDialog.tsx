@@ -25,26 +25,19 @@ import {
   useTable,
   stockFeatures,
   Row,
-  CellContext,
 } from '@tanstack/react-table';
-import CloudIcon from '@mui/icons-material/Cloud';
-import SaveIcon from '@mui/icons-material/Save';
 import { Language, Phrase } from 'localisation/phrases';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
-import {
-  getPlayerClass,
-  getPlayerName,
-  getPlayerSpecID,
-  getVideoGroup,
-  getVideoGroupIds,
-  getWoWClassColor,
-} from './rendererutils';
-import { specImages } from './images';
-import Box from '@mui/material/Box/Box';
-import { LockKeyhole, LockOpen } from 'lucide-react';
+import { getVideoGroup, getVideoGroupIds } from './rendererutils';
 import SelectAllShortcut from './components/Shortcuts/SelectAllShortcut';
 import SelectRangeShortcut from './components/Shortcuts/SelectRangeShortcut';
 import SelectMultiShortcut from './components/Shortcuts/SelectMultiShortcut';
+import {
+  populateLockCell,
+  populatePlayerCell,
+  populateStorageCell,
+  populateTagStatusCell,
+} from './components/Tables/Cells';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -100,90 +93,6 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     previousOpen.current = open;
   }, [open, onOpenChange, targetVideoIds, parentLookupMap]);
 
-  const populatePlayerCell = (
-    info: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const video = info.getValue() as RendererVideo;
-    const { player } = video;
-
-    if (!player || !player._specID) {
-      return <div>{getLocalePhrase(language, Phrase.Unknown)}</div>;
-    }
-
-    const playerClass = getPlayerClass(video);
-    const playerSpecID = getPlayerSpecID(video);
-    const playerName = getPlayerName(video);
-    const playerClassColor = getWoWClassColor(playerClass);
-    const specIcon = specImages[playerSpecID as keyof typeof specImages];
-
-    const renderSpecAndName = () => {
-      return (
-        <div className="flex items-center pl-2 min-w-0">
-          <Box
-            component="img"
-            src={specIcon}
-            className="bg-background-higher shrink-0"
-            sx={{
-              height: '25px',
-              width: '25px',
-              border: '1px solid black',
-              borderRadius: '15%',
-              boxSizing: 'border-box',
-              objectFit: 'cover',
-            }}
-          />
-
-          <div
-            className="font-sans font-semibold text-sm text-shadow-instance mx-1 truncate min-w-0"
-            style={{ color: playerClassColor }}
-          >
-            {playerName}
-          </div>
-        </div>
-      );
-    };
-
-    return <div className="flex truncate">{renderSpecAndName()}</div>;
-  };
-
-  const populateLockCell = (
-    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const video = ctx.getValue() as RendererVideo;
-    const { isProtected } = video;
-
-    const icon = isProtected ? (
-      <LockKeyhole size={18} />
-    ) : (
-      <LockOpen size={18} />
-    );
-
-    return <div className="flex justify-center items-center">{icon}</div>;
-  };
-
-  const populateStorageCell = (
-    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const video = ctx.getValue() as RendererVideo;
-
-    const icon = video.cloud ? (
-      <CloudIcon sx={{ height: 18, width: 18 }} />
-    ) : (
-      <SaveIcon sx={{ height: 18, width: 18 }} />
-    );
-
-    return <div className="flex justify-center items-center">{icon}</div>;
-  };
-
-  const populateTagStatusCell = (
-    ctx: CellContext<typeof stockFeatures, RendererVideo, unknown>,
-  ) => {
-    const { row } = ctx;
-    const { tag } = row.original;
-    const text = tag ? tag : getLocalePhrase(language, Phrase.NoCustomTag);
-    return <div className="truncate text-sm mx-2">{text}</div>;
-  };
-
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
     {
       id: 'Lock',
@@ -198,12 +107,12 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     {
       id: 'Name',
       accessorFn: (v) => v,
-      cell: populatePlayerCell,
+      cell: (ctx) => populatePlayerCell(ctx, language),
     },
     {
       id: 'Status',
       accessorFn: (v) => v,
-      cell: (ctx) => populateTagStatusCell(ctx),
+      cell: (ctx) => populateTagStatusCell(ctx, language),
     },
   ];
 
@@ -262,12 +171,14 @@ const DeleteDialog = (props: DeleteDialogProps) => {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    if (open) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [table]);
+  }, [open, table]);
 
   const onRowClick = (
     event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,

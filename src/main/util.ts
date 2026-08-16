@@ -441,15 +441,20 @@ const checkAdvancedCombatLogging = async (
     return false;
   }
 
-  const content = (await fs.promises.readFile(configWtfFile)).toString();
-  const match = content.match(/^SET advancedCombatLogging\s+"(\d+)"/m);
+  try {
+    const content = (await fs.promises.readFile(configWtfFile)).toString();
+    const match = content.match(/^SET advancedCombatLogging\s+"(\d+)"/m);
 
-  if (match && match[1] === '1') {
+    if (match && match[1] === '1') {
+      return true;
+    }
+
+    console.warn('[Util] Advanced combat logging is disabled', configWtfFile);
+    return false;
+  } catch (error) {
+    console.warn('[Util] Failed to read Config.wtf at', configWtfFile, error);
     return true;
   }
-
-  console.warn('[Util] Advanced combat logging is disabled', configWtfFile);
-  return false;
 };
 
 /**
