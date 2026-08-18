@@ -74,7 +74,10 @@ const VideoSelectionTable = (props: IProps) => {
         return;
       }
 
-      if (event.ctrlKey) {
+      const isClickedRowOnlySelected =
+        selectedRows.length === 1 && row.getIsSelected();
+
+      if (event.ctrlKey && !isClickedRowOnlySelected) {
         // Add a single row to the Selection.
         row.getToggleSelectedHandler()(event);
         return;

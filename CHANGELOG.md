@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 891](https://github.com/aza547/wow-recorder/issues/891) - Fix a bug where opening the drawer while filtering could crash the UI.
+- Ctrl + clicking a selected row will no longer unselect it when it is the only selected row.
 
 ## [7.11.1] - 2026-07-25
 ### Fixed
