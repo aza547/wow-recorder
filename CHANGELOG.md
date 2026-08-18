@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 886](https://github.com/aza547/wow-recorder/issues/886) - Fix the delete dialog which had misaligned indexing.
-- [Issue 891](https://github.com/aza547/wow-recorder/issues/891) - Fix a big where opening the drawer and filtering could crash the UI.
+- [Issue 891](https://github.com/aza547/wow-recorder/issues/891) - Fix a bug where opening the drawer while filtering could crash the UI.
 - Disable the upload, download and source controls when storage filters are applied.
 - Ctrl + clicking a selected row will no longer unselect it.
 - Fixed a handful of phrases that were not getting translated.
