@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [7.12.0] - 2026-08-18
+### Added
 - [Issue 730](https://github.com/aza547/wow-recorder/issues/730) - Add per-source audio track routing.
 - Update M+ timers for Midnight season 2.
 
