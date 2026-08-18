@@ -243,17 +243,22 @@ const CategoryPage = (props: IProps) => {
     // Only the first row in the selection is relevant for the drawer display.
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedRow = selectedRows[0];
+    let activeParentVideo = null;
 
-    const activeParentVideo = selectedRow
-      ? selectedRow.original
-      : filteredState[0];
-
+    if (selectedRow) {
+      activeParentVideo = selectedRow.original;
+    } else if (filteredState.length > 0) {
+      activeParentVideo = filteredState[0];
+    }
     // Only try to find a chat video if we have a video with cloud storage,
     // a start time and a hash, else we cannot find the chat correlator.
-    const chatVideo = [activeParentVideo, ...activeParentVideo.multiPov].find(
-      (rv) => rv.cloud && rv.uniqueHash && rv.start,
-    );
+    let chatVideo: RendererVideo | undefined = undefined;
 
+    if (activeParentVideo) {
+      chatVideo = [activeParentVideo, ...activeParentVideo.multiPov].find(
+        (rv) => rv.cloud && rv.uniqueHash && rv.start,
+      );
+    }
     const renderTextDescr = () => {
       return (
         <div className="flex items-center justify-start w-full h-[40px] pt-2 mx-2 text-sm font-bold text-foreground">
@@ -288,12 +293,14 @@ const CategoryPage = (props: IProps) => {
           {renderTextDescr()}
         </div>
         <div className="flex items-center justify-center w-full">
-          <ViewpointSelection
-            video={activeParentVideo}
-            appState={appState}
-            setAppState={setAppState}
-            persistentProgress={persistentProgress}
-          />
+          {activeParentVideo && (
+            <ViewpointSelection
+              video={activeParentVideo}
+              appState={appState}
+              setAppState={setAppState}
+              persistentProgress={persistentProgress}
+            />
+          )}
         </div>
         {renderChat(chatVideo)}
       </div>
