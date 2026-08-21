@@ -747,7 +747,8 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   161: [28 * 60, 22 * 60 + 36, 16 * 60 + 42], // Skyreach
 
   // Midnight S2
-  // Placeholder values for now. Needs updated before season starts.
+  // Timings from https://www.wowhead.com/guide/midnight/mythic-plus-season-overview.
+  // Assumed 0.8 and 0.6 multipliers for 2 and 3 chest times.
   399: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Ruby Life Pools
   587: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Murder Row
   586: [32 * 60, 32 * 60 * 0.8, 32 * 60 * 0.6], // Den of Nalorakk
