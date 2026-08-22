@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 879](https://github.com/aza547/wow-recorder/issues/879) - Fix clip source navigation not scrolling to recordings on later table pages.
 
 ## [7.12.0] - 2026-08-18
 ### Added
