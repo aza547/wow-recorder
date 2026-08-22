@@ -661,7 +661,7 @@ export default class Manager {
         height: number,
         fps: number,
         segments: KillVideoSegment[],
-        audioTrackIndex: number,
+        audioSegmentIndex: number,
       ) => {
         console.info(
           '[Manager] Creating kill video with settings:',
@@ -690,7 +690,7 @@ export default class Manager {
           height,
           fps,
           segments,
-          audioTrackIndex,
+          audioSegmentIndex,
         };
 
         VideoProcessQueue.getInstance().queueCreateKillVideo(item);

@@ -43,7 +43,7 @@ import {
 } from './types';
 import { getOBSAudioSourceType } from './obsAudioSourceTypes';
 import ConfigService from '../config/ConfigService';
-import { obsResolutions } from './constants';
+import { defaultAudioTrack, obsResolutions } from './constants';
 import {
   getObsAudioConfig,
   getObsVideoConfig,
@@ -384,7 +384,7 @@ export default class Recorder extends EventEmitter {
 
     ipcMain.handle(
       'createAudioSource',
-      (event, id: string, type: AudioSourceType) => {
+      (_event, id: string, type: AudioSourceType) => {
         const obsType = getOBSAudioSourceType(type);
         console.info('[Manager] Creating audio source', id, 'of type', obsType);
         const name = noobs.CreateSource(id, obsType);
@@ -399,7 +399,14 @@ export default class Recorder extends EventEmitter {
           noobs.SetSourceSettings(name, settings);
         }
         console.info('[Manager] Created audio source', name);
+        this.configureAudioSourceTracks(name, defaultAudioTrack);
         noobs.AddSourceToScene(name);
+        this.audioSources.push({
+          id: name,
+          type,
+          volume: 1,
+          tracks: defaultAudioTrack,
+        });
         return name;
       },
     );
@@ -411,7 +418,11 @@ export default class Recorder extends EventEmitter {
 
     ipcMain.on('deleteAudioSource', (_event, id: string) => {
       console.info('[Manager] Deleting audio source', id);
+      noobs.RemoveSourceFromScene(id);
       noobs.DeleteSource(id);
+      this.audioSources = this.audioSources.filter(
+        (source) => source.id !== id,
+      );
     });
 
     ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
@@ -456,6 +467,10 @@ export default class Recorder extends EventEmitter {
         value,
       );
       noobs.SetSourceVolume(id, value);
+    });
+
+    ipcMain.on('setAudioSourceTracks', (_event, id: string, tracks: number) => {
+      this.configureAudioSourceTracks(id, tracks);
     });
 
     ipcMain.on('setForceMono', (_event, enabled: boolean) => {
@@ -864,6 +879,14 @@ export default class Recorder extends EventEmitter {
     noobs.SetSceneItemOrder(this.overlaySource, ObsOrderMovement.OBS_ORDER_MOVE_TOP);
   }
 
+  private configureAudioSourceTracks(sourceId: string, tracks: number) {
+    console.info('[Recorder] Set audio tracks for source', {
+      sourceId,
+      tracks,
+    });
+    noobs.SetSourceAudioTracks(sourceId, tracks);
+  }
+
   /**
    * Add the configured audio sources to the OBS scene. This is public
    * so it can be called externally when WoW is opened.
@@ -954,6 +977,7 @@ export default class Recorder extends EventEmitter {
         console.warn('[Recorder] Unable to configure audio source', src);
       }
 
+      this.configureAudioSourceTracks(name, src.tracks ?? defaultAudioTrack);
       noobs.AddSourceToScene(name);
       this.audioSources.push({ ...src, id: name });
     });

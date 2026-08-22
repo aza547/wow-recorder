@@ -13,14 +13,14 @@ import {
  */
 const obsResolutions = {
   /* eslint-disable prettier/prettier */
-  '1024x768':  { width: 1024, height: 768 },
-  '1280x720':  { width: 1280, height: 720 },
-  '1280x800':  { width: 1280, height: 800 },
+  '1024x768': { width: 1024, height: 768 },
+  '1280x720': { width: 1280, height: 720 },
+  '1280x800': { width: 1280, height: 800 },
   '1280x1024': { width: 1280, height: 1024 },
-  '1360x768':  { width: 1360, height: 768 },
-  '1366x768':  { width: 1366, height: 768 },
-  '1440x900':  { width: 1440, height: 900 },
-  '1600x900':  { width: 1600, height: 900 },
+  '1360x768': { width: 1360, height: 768 },
+  '1366x768': { width: 1366, height: 768 },
+  '1440x900': { width: 1440, height: 900 },
+  '1600x900': { width: 1600, height: 900 },
   '1680x1050': { width: 1680, height: 1050 },
   '1920x1080': { width: 1920, height: 1080 },
   '1920x1200': { width: 1920, height: 1200 },
@@ -30,7 +30,7 @@ const obsResolutions = {
   '3360x1440': { width: 3360, height: 1440 },
   '3440x1440': { width: 3440, height: 1440 },
   '3440x1200': { width: 3440, height: 1200 },
-  '3520x990':  { width: 3520, height: 990 },
+  '3520x990': { width: 3520, height: 990 },
   '3840x1080': { width: 3840, height: 1080 },
   '3840x1440': { width: 3840, height: 1440 },
   '3840x1600': { width: 3840, height: 1600 },
@@ -747,15 +747,16 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   161: [28 * 60, 22 * 60 + 36, 16 * 60 + 42], // Skyreach
 
   // Midnight S2
-  // Placeholder values for now. Needs updated before season starts.
-  399: [30 * 60, 24 * 60, 18 * 60], // Ruby Life Pools
-  587: [30 * 60, 24 * 60, 18 * 60], // Murder Row
-  586: [30 * 60, 24 * 60, 18 * 60], // Den of Nalorakk
-  584: [30 * 60, 24 * 60, 18 * 60], // The Blinding Vale
-  585: [30 * 60, 24 * 60, 18 * 60], // Voidscar Arena
-  588: [30 * 60, 24 * 60, 18 * 60], // Altar of Fangs
-  250: [30 * 60, 24 * 60, 18 * 60], // Temple of Sethraliss
-  249: [30 * 60, 24 * 60, 18 * 60], // Kings' Rest
+  // Timings from https://www.wowhead.com/guide/midnight/mythic-plus-season-overview.
+  // Assumed 0.8 and 0.6 multipliers for 2 and 3 chest times.
+  399: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Ruby Life Pools
+  587: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Murder Row
+  586: [32 * 60, 32 * 60 * 0.8, 32 * 60 * 0.6], // Den of Nalorakk
+  584: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // The Blinding Vale
+  585: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Voidscar Arena
+  588: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Altar of Fangs
+  250: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // Temple of Sethraliss
+  249: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // Kings' Rest
 };
 
 // Useful database for grabbing this stuff:
@@ -1939,6 +1940,15 @@ const wowInstallSearchPaths = [
 //   - '6/26/2026 22:59:54.4311 ENCOUNTER_START,3594,"Hazardous Healer",3,10,3105',
 const dummyDomeEncounterIds = [3590, 3591, 3593, 3594];
 
+// We have exactly 6 audio tracks. They are represented here as bit flags.
+const audioTrack1 = 1 << 0;
+const audioTrack2 = 1 << 1;
+const audioTrack3 = 1 << 2;
+const audioTrack4 = 1 << 3;
+const audioTrack5 = 1 << 4;
+const audioTrack6 = 1 << 5;
+const defaultAudioTrack = audioTrack1;
+
 export {
   months,
   categoryTabSx,
@@ -1974,4 +1984,11 @@ export {
   mopChallengeModesTimers,
   wowInstallSearchPaths,
   dummyDomeEncounterIds,
+  audioTrack1,
+  audioTrack2,
+  audioTrack3,
+  audioTrack4,
+  audioTrack5,
+  audioTrack6,
+  defaultAudioTrack,
 };

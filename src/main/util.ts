@@ -47,6 +47,7 @@ import { ZipArchive } from 'archiver';
 import ChallengeModeDungeon from 'activitys/ChallengeModeDungeon';
 import Activity from 'activitys/Activity';
 import SoloShuffle from 'activitys/SoloShuffle';
+import semver from 'semver';
 
 /**
  * When packaged, we need to fix some paths
@@ -1318,6 +1319,10 @@ const refreshInstantReplayState = (activity: Activity) => {
   send('updateInstantReplayState', current);
 };
 
+const getAudioTrackCount = (video: RendererVideo): number => {
+  return video.appVersion && semver.gt(video.appVersion, '7.11.1') ? 6 : 1;
+};
+
 export {
   setupApplicationLogging,
   writeMetadataFile,
@@ -1368,4 +1373,5 @@ export {
   pushActivityStatus,
   resetInstantReplayState,
   refreshInstantReplayState,
+  getAudioTrackCount,
 };
