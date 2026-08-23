@@ -193,14 +193,15 @@ const VideoSelectionTable = (props: IProps) => {
       return undefined;
     }
 
-    hasScrolledToSelection.current = true;
     const selectedIndex = table.getSelectedRowModel().rows[0]?.index ?? 0;
     const selectedPageIndex = Math.floor(selectedIndex / pageSize);
 
     if (selectedPageIndex !== pageIndex) {
       table.setPageIndex(selectedPageIndex);
+      return undefined;
     }
 
+    hasScrolledToSelection.current = true;
     const animationFrame = window.requestAnimationFrame(() => {
       if (!selectedRowRef.current) {
         return;
