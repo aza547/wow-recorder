@@ -1,9 +1,11 @@
+import path from 'path';
 import { FileInfo, FileSortDirection } from '../main/types';
 import ConfigService from '../config/ConfigService';
 import {
   deleteVideoDisk,
   getMetadataForVideo,
   getSortedVideos,
+  isFolderOwned,
 } from '../main/util';
 import AsyncQueue from '../utils/AsyncQueue';
 import DiskClient from './DiskClient';
@@ -52,7 +54,21 @@ const queueDiskSizeMonitorRun = (task: () => Promise<void>): Promise<void> => {
 };
 
 export default class DiskSizeMonitor {
+  private static readonly activeVideoOutputs = new Set<string>();
+
   private cfg = ConfigService.getInstance();
+
+  static markVideoOutputInProgress(videoPath: string): void {
+    this.activeVideoOutputs.add(path.resolve(videoPath));
+  }
+
+  static unmarkVideoOutputInProgress(videoPath: string): void {
+    this.activeVideoOutputs.delete(path.resolve(videoPath));
+  }
+
+  private static isVideoOutputInProgress(videoPath: string): boolean {
+    return this.activeVideoOutputs.has(path.resolve(videoPath));
+  }
 
   run(): Promise<void> {
     return queueDiskSizeMonitorRun(() => this.runOnce());
@@ -67,10 +83,19 @@ export default class DiskSizeMonitor {
       return;
     }
 
+    if (!storageDir || !(await isFolderOwned(storageDir))) {
+      console.warn(
+        '[DiskSizeMonitor] Refusing cleanup for unowned storage directory',
+        storageDir,
+      );
+      return;
+    }
+
     const maxStorageBytes = maxStorageGB * 1024 ** 3;
-    const usage = await this.usage();
+    const usage = await this.usage(storageDir);
     const bytesToFree = usage - maxStorageBytes * 0.95; // Remain slightly under the threshold.
     let bytesFreed = 0;
+    let storageChanged = false;
 
     const files = await getSortedVideos(
       storageDir,
@@ -86,15 +111,33 @@ export default class DiskSizeMonitor {
     const unprotectedFiles = await asyncFilter(
       files,
       async (file: FileInfo) => {
+        if (DiskSizeMonitor.isVideoOutputInProgress(file.name)) {
+          console.info(
+            '[DiskSizeMonitor] Skipping active video output',
+            file.name,
+          );
+          return false;
+        }
+
         try {
           const metadata = await getMetadataForVideo(file.name);
           const isUnprotected = !(metadata.protected || false);
           return isUnprotected;
-        } catch {
+        } catch (error) {
+          if (DiskSizeMonitor.isVideoOutputInProgress(file.name)) {
+            console.info(
+              '[DiskSizeMonitor] Skipping active video output',
+              file.name,
+            );
+            return false;
+          }
+
           console.error(
-            '[DiskSizeMonitor] Failed to get metadata for',
+            '[DiskSizeMonitor] Failed to get metadata, deleting video',
             file.name,
+            error,
           );
+          storageChanged = true;
           await deleteVideoDisk(file.name);
           return false;
         }
@@ -116,14 +159,19 @@ export default class DiskSizeMonitor {
       }),
     );
 
-    if (filesForDeletion.length > 0) {
-      DiskClient.getInstance().refreshStatus();
-      DiskClient.getInstance().refreshVideos();
+    storageChanged ||= filesForDeletion.length > 0;
+
+    if (storageChanged) {
+      await Promise.all([
+        DiskClient.getInstance().refreshStatus(),
+        DiskClient.getInstance().refreshVideos(),
+      ]);
     }
   }
 
-  public async usage() {
-    const storageDir = this.cfg.get<string>('storagePath');
+  public async usage(
+    storageDir = this.cfg.get<string>('storagePath'),
+  ): Promise<number> {
     const files = await getSortedVideos(storageDir);
 
     if (files.length < 1) {

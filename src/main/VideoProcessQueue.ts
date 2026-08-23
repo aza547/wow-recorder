@@ -258,9 +258,11 @@ export default class VideoProcessQueue {
     data: VideoQueueItem,
     done: () => void,
   ): Promise<void> {
-    try {
-      const outputDir = this.cfg.get<string>('storagePath');
+    const outputDir = this.cfg.get<string>('storagePath');
+    const outputPath = VideoProcessQueue.getOutputVideoPath(data, outputDir);
+    DiskSizeMonitor.markVideoOutputInProgress(outputPath);
 
+    try {
       // In a lot of cases this is basically just a copy. But this also
       // covers the cases where we're cutting a section off the end of
       // the video due to a timeout.
@@ -285,9 +287,10 @@ export default class VideoProcessQueue {
         '[VideoProcessQueue] Error processing video:',
         String(error),
       );
+    } finally {
+      DiskSizeMonitor.unmarkVideoOutputInProgress(outputPath);
+      done();
     }
-
-    done();
   }
 
   /**
@@ -373,6 +376,7 @@ export default class VideoProcessQueue {
   ): Promise<void> {
     const storageDir = this.cfg.get<string>('storagePath');
     const { videoName, videoSource } = video;
+    const videoPath = path.join(storageDir, `${videoName}.mp4`);
 
     let lastProgress = 0;
 
@@ -386,6 +390,7 @@ export default class VideoProcessQueue {
     };
 
     const client = CloudClient.getInstance();
+    DiskSizeMonitor.markVideoOutputInProgress(videoPath);
 
     try {
       await client.getAsFile(
@@ -400,16 +405,16 @@ export default class VideoProcessQueue {
       // the entry from the inProgressDownloads when done, meaning that a repeated
       // attempt to download would fail.
       const metadata = rendererVideoToMetadata({ ...video });
-      const videoPath = path.join(storageDir, `${videoName}.mp4`);
       await writeMetadataFile(videoPath, metadata);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error downloading video:',
         String(error),
       );
+    } finally {
+      DiskSizeMonitor.unmarkVideoOutputInProgress(videoPath);
+      done();
     }
-
-    done();
   }
 
   /**
@@ -454,6 +459,8 @@ export default class VideoProcessQueue {
         fn.input(src);
       });
 
+    DiskSizeMonitor.markVideoOutputInProgress(videoPath);
+
     try {
       console.time(`[VideoProcessQueue] Create ${item.uuid} kill video`);
 
@@ -480,6 +487,7 @@ export default class VideoProcessQueue {
         this.queueUpload(item);
       }
     } finally {
+      DiskSizeMonitor.unmarkVideoOutputInProgress(videoPath);
       done();
     }
   }
@@ -667,7 +675,7 @@ export default class VideoProcessQueue {
   private async downloadQueueEmpty() {
     console.info('[VideoProcessQueue] Download processing queue empty');
     const sizeMonitor = new DiskSizeMonitor();
-    sizeMonitor.run();
+    await sizeMonitor.run();
     const usage = await sizeMonitor.usage();
 
     const status: DiskStatus = {

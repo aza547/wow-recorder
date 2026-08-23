@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 867](https://github.com/aza547/wow-recorder/issues/867) - Add an action to run disk storage cleanup immediately.
 ### Fixed
 - [Issue 879](https://github.com/aza547/wow-recorder/issues/879) - Fix clip source navigation not scrolling to recordings on later table pages.
 

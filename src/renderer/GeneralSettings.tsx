@@ -32,12 +32,6 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const initialRenderVideoConfig = useRef(true);
 
   useEffect(() => {
-    return ipc.on('diskSizeMonitorComplete', () => {
-      setIsRunningDiskSizeMonitor(false);
-    });
-  }, []);
-
-  useEffect(() => {
     if (initialRenderVideoConfig.current) {
       // Drop out if initial render, we don't care about settings
       // changes until the user has had a chance to make some.
@@ -287,9 +281,14 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const runDiskSizeMonitor = () => {
+  const runDiskSizeMonitor = async () => {
     setIsRunningDiskSizeMonitor(true);
-    void ipc.runDiskSizeMonitor();
+
+    try {
+      await ipc.runDiskSizeMonitor();
+    } finally {
+      setIsRunningDiskSizeMonitor(false);
+    }
   };
 
   const getDiskUsageBar = () => {
@@ -310,7 +309,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         </Label>
 
         <div
-          className={`flex flex-row items-center justify-start ${shouldShowRunButton ? 'w-[430px]' : 'w-80'} gap-x-2 py-2`}
+          className={`flex flex-row items-center justify-start ${shouldShowRunButton ? 'w-full max-w-[430px]' : 'w-80'} gap-x-2 py-2`}
         >
           <Tooltip
             content={getLocalePhrase(language, Phrase.DiskUsageDescription)}
@@ -345,7 +344,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       {getDisabledText()}
       {getStoragePathField()}
 
-      <div className="flex flex-row items-center gap-x-10">
+      <div className="flex flex-row flex-wrap items-center gap-x-10 gap-y-2">
         {getMaxStorageField()}
         {getDiskUsageBar()}
       </div>
