@@ -49,7 +49,7 @@ const getMentionSearch = (
   // Only the @ token touching the caret should open the menu. This keeps older
   // mentions elsewhere in the draft from hijacking normal typing.
   const prefix = value.slice(0, caretPosition);
-  const match = /(^|\s)@([^\s@]*)$/.exec(prefix);
+  const match = /(^|[\s([{])@([^\s@]*)$/.exec(prefix);
 
   if (!match) {
     return null;
@@ -417,7 +417,7 @@ const VideoChat = (props: IProps) => {
         return;
       }
 
-      if (event.key === 'Enter' || event.key === 'Tab') {
+      if ((event.key === 'Enter' || event.key === 'Tab') && !event.shiftKey) {
         event.preventDefault();
         ignoreNextMentionKeyUpRef.current = true;
         const selectedSuggestion =

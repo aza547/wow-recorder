@@ -224,12 +224,22 @@ const CategoryPage = (props: IProps) => {
           ? availablePovs[0]
           : undefined;
 
-    const switchToViewpoint = (target: RendererVideo) => {
+    const switchToViewpoint = (target: RendererVideo, timestamp?: number) => {
+      const currentActivity = selectedVideos[0] || availablePovs[0];
+      const sameActivity = currentActivity?.uniqueHash === target.uniqueHash;
+
+      if (!sameActivity || timestamp !== undefined) {
+        persistentProgress.current = timestamp ?? 0;
+      }
+
       setAppState((prevState) => ({
         ...prevState,
         selectedVideos: [target],
         multiPlayerMode: false,
-        playing: prevState.multiPlayerMode ? false : prevState.playing,
+        playing:
+          sameActivity && !prevState.multiPlayerMode
+            ? prevState.playing
+            : false,
         preferredViewpoint:
           target.player?._name || prevState.preferredViewpoint,
       }));
@@ -259,11 +269,9 @@ const CategoryPage = (props: IProps) => {
         return;
       }
 
-      persistentProgress.current = seconds;
-
       // Switching videos remounts VideoPlayer; persistentProgress carries the
       // clicked timestamp into the new POV's initial seek.
-      switchToViewpoint(target);
+      switchToViewpoint(target, seconds);
     };
 
     const handleViewpointClick = (viewpoint: string) => {
