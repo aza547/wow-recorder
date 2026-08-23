@@ -179,6 +179,19 @@ export default class Recorder extends EventEmitter {
   private currentFile: string | null = null;
 
   /**
+   * How the current OBS output is expected to stop. This lets us distinguish an
+   * output failure from a stop initiated by the application.
+   */
+  private stopRequest: 'none' | 'save' | 'discard' = 'none';
+
+  /**
+   * A fragmented recording left behind after an unexpected output failure.
+   * Keep this separate from currentFile so it is not exposed as an active
+   * instant replay after OBS has deactivated.
+   */
+  private interruptedRecordingFile: string | null = null;
+
+  /**
    * The instant replay feature lets the user play the fragmented MP4 as it is
    * being written. We don't want to interrupt the viewer by deleting the file
    * while they are watching it.
@@ -1031,11 +1044,16 @@ export default class Recorder extends EventEmitter {
       FileSortDirection.NewestFirst, // This sorting is redundant in this context.
     );
 
-    // Don't delete an open instant replay. The open instant replay path, if
-    // relevant, has already been normalized when set.
+    // Don't delete an open instant replay or an interrupted recording that has
+    // not yet been handed to the processing queue. Both paths are normalized
+    // when set.
     const files = videos
       .map((f) => path.normalize(f.name))
-      .filter((n) => n !== this.openInstantReplayFile);
+      .filter(
+        (n) =>
+          n !== this.openInstantReplayFile &&
+          n !== this.interruptedRecordingFile,
+      );
 
     const promises = files.map(tryUnlink);
     await Promise.all(promises);
@@ -1102,37 +1120,72 @@ export default class Recorder extends EventEmitter {
     }
 
     if (this.obsState === ERecordingState.None) {
+      if (await this.recoverInterruptedRecording()) {
+        return;
+      }
+
       console.info('[Recorder] Already stopped');
       return;
     }
 
     this.stopQueue.empty();
-    noobs.StopRecording();
-    const wrote = this.stopQueue.shift();
+    this.stopRequest = 'save';
 
     try {
-      await Promise.race([wrote, getPromiseBomb(60, 'Failed to stop')]);
-      console.info('[Recorder] Stopped successfully');
-    } catch (error) {
-      console.error('[Recorder]', error, 'will force stop.');
+      noobs.StopRecording();
+      const wrote = this.stopQueue.shift();
 
-      emitErrorReport(
-        'Failed to stop OBS cleanly. This may lead to miscut videos and is typically a symptom of encoder overload.',
-      );
+      try {
+        await Promise.race([wrote, getPromiseBomb(60, 'Failed to stop')]);
+        console.info('[Recorder] Stopped successfully');
+      } catch (error) {
+        console.error('[Recorder]', error, 'will force stop.');
 
-      noobs.ForceStopRecording();
+        emitErrorReport(
+          'Failed to stop OBS cleanly. This may lead to miscut videos and is typically a symptom of encoder overload.',
+        );
 
-      await Promise.race([
-        wrote,
-        getPromiseBomb(3, 'Failed to recover by force stopping'),
-      ]);
+        noobs.ForceStopRecording();
 
-      console.info('[Recorder] Force stopped successfully');
+        await Promise.race([
+          wrote,
+          getPromiseBomb(3, 'Failed to recover by force stopping'),
+        ]);
+
+        console.info('[Recorder] Force stopped successfully');
+      }
+
+      if (!(await this.recoverInterruptedRecording())) {
+        this.lastFile = noobs.GetLastRecording();
+      }
+    } finally {
+      this.stopRequest = 'none';
+    }
+  }
+
+  /**
+   * Promote a preserved fragmented recording so it can enter the normal video
+   * processing flow.
+   */
+  private async recoverInterruptedRecording() {
+    if (!this.interruptedRecordingFile) {
+      return false;
     }
 
-    // Now that we record in MKV we can still attempt to save
-    // a recording here even if we failed to stop cleanly.
-    this.lastFile = noobs.GetLastRecording();
+    const interruptedFile = this.interruptedRecordingFile;
+
+    if (!(await exists(interruptedFile))) {
+      console.error(
+        '[Recorder] Interrupted recording no longer exists:',
+        interruptedFile,
+      );
+      this.interruptedRecordingFile = null;
+      return false;
+    }
+
+    console.warn('[Recorder] Recover interrupted recording:', interruptedFile);
+    this.lastFile = interruptedFile;
+    return true;
   }
 
   /**
@@ -1150,29 +1203,37 @@ export default class Recorder extends EventEmitter {
 
     if (this.obsState === ERecordingState.None) {
       console.info('[Recorder] Already stopped');
+      this.stopRequest = 'none';
+      this.lastFile = null;
+      this.interruptedRecordingFile = null;
       return;
     }
 
     this.stopQueue.empty();
-    noobs.ForceStopRecording();
+    this.stopRequest = 'discard';
 
-    const wrote = this.stopQueue.shift();
+    try {
+      noobs.ForceStopRecording();
+      const wrote = this.stopQueue.shift();
 
-    if (timeout) {
-      // In the normal case we expect to be done within a short timeout,
-      // so enforce that here.
-      const bomb = getPromiseBomb(3, 'Failed to force stop');
-      await Promise.race([wrote, bomb]);
-    } else {
-      // We allow this to be called without a timeout to enable waiting
-      // indefinitely on Windows sleeping. Often the deactivate signal
-      // is not received until Windows wakes, which could be an arbitrary
-      // amount of time later. This isn't perfect as we could in theory
-      // get stuck here forever, but it's hopefully good enough.
-      await wrote;
+      if (timeout) {
+        // In the normal case we expect to be done within a short timeout,
+        // so enforce that here.
+        const bomb = getPromiseBomb(3, 'Failed to force stop');
+        await Promise.race([wrote, bomb]);
+      } else {
+        // We allow this to be called without a timeout to enable waiting
+        // indefinitely on Windows sleeping. Often the deactivate signal
+        // is not received until Windows wakes, which could be an arbitrary
+        // amount of time later. This isn't perfect as we could in theory
+        // get stuck here forever, but it's hopefully good enough.
+        await wrote;
+      }
+    } finally {
+      this.stopRequest = 'none';
+      this.lastFile = null;
+      this.interruptedRecordingFile = null;
     }
-
-    this.lastFile = null;
   }
 
   /**
@@ -1254,15 +1315,35 @@ export default class Recorder extends EventEmitter {
       case EOBSOutputSignal.Start:
         this.startQueue.push(signal);
         this.obsState = ERecordingState.Recording;
+        this.stopRequest = 'none';
         this.currentFile = null;
         this.instantReplayFile = null;
         this.emit('state-change');
         console.info('[Recorder] State is now:', this.obsState);
         break;
 
+      case EOBSOutputSignal.Stop:
+        if (
+          !this.interruptedRecordingFile &&
+          (this.stopRequest === 'none' ||
+            (this.stopRequest === 'save' && signal.code !== 0))
+        ) {
+          this.preserveInterruptedRecording(signal);
+        }
+        break;
+
       case EOBSOutputSignal.Deactivate:
+        if (
+          !this.interruptedRecordingFile &&
+          this.stopRequest === 'none' &&
+          this.currentFile
+        ) {
+          this.preserveInterruptedRecording(signal);
+        }
+
         this.stopQueue.push(signal);
         this.obsState = ERecordingState.None;
+        this.stopRequest = 'none';
         this.currentFile = null;
         this.instantReplayFile = null;
         this.emit('state-change');
@@ -1278,6 +1359,21 @@ export default class Recorder extends EventEmitter {
         console.info('[Recorder] No action needed on this signal');
         break;
     }
+  }
+
+  /**
+   * Preserve the active fragmented recording after OBS stops unexpectedly.
+   */
+  private preserveInterruptedRecording(signal: Signal) {
+    const recordingFile = this.currentFile
+      ? path.normalize(this.currentFile)
+      : null;
+
+    console.error(
+      `[Recorder] OBS output stopped unexpectedly: signal=${signal.id}, code=${signal.code}, error=${signal.error ?? 'none'}, path=${recordingFile ?? 'none'}`,
+    );
+
+    this.interruptedRecordingFile = recordingFile;
   }
 
   /**
@@ -1939,6 +2035,11 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Get and clear last file', this.lastFile);
     const last = this.lastFile;
     this.lastFile = null;
+
+    if (last === this.interruptedRecordingFile) {
+      this.interruptedRecordingFile = null;
+    }
+
     return last;
   }
 }
