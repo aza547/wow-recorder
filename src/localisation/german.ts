@@ -573,6 +573,8 @@ const GERMAN: Translations = {
   [Phrase.ClearAll]: 'Alle löschen',
   [Phrase.Diagnostics]: 'Diagnose',
   [Phrase.UnknownDevice]: 'Unbekanntes Gerät',
+  [Phrase.OpenLockDialog]: 'Sperrmenü öffnen',
+  [Phrase.OpenTagDialog]: 'Tag-Menü öffnen',
 };
 
 export default GERMAN;

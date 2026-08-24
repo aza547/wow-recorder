@@ -573,6 +573,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ClearAll]: '全部清除',
   [Phrase.Diagnostics]: '诊断',
   [Phrase.UnknownDevice]: '未知设备',
+  [Phrase.OpenLockDialog]: '打开锁定菜单',
+  [Phrase.OpenTagDialog]: '打开标签菜单',
 };
 
 export default CHINESE_SIMPLIFIED;

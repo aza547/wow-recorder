@@ -573,6 +573,8 @@ const KOREAN: Translations = {
   [Phrase.ClearAll]: '모두 지우기',
   [Phrase.Diagnostics]: '진단',
   [Phrase.UnknownDevice]: '알 수 없는 장치',
+  [Phrase.OpenLockDialog]: '잠금 메뉴 열기',
+  [Phrase.OpenTagDialog]: '태그 메뉴 열기',
 };
 
 export default KOREAN;
