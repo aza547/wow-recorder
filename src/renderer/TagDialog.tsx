@@ -71,7 +71,7 @@ export default function TagDialog(props: IProps) {
   const previousParentId = useRef(targetVideoId);
 
   useEffect(() => {
-    const openNotOpening = !open && !previousOpen.current;
+    const openNotOpening = open && previousOpen.current;
     const group = getVideoGroup(targetVideoId, parentLookupMap);
 
     if (openNotOpening && previousParentId.current !== targetVideoId) {
