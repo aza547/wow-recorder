@@ -1,6 +1,6 @@
 import { Language, Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
-import { RendererVideo, CloudStatus, DialogType } from 'main/types';
+import { RendererVideo, DialogType } from 'main/types';
 import { stopPropagation } from 'renderer/rendererutils';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
@@ -10,7 +10,6 @@ import { FolderMessageSquare } from 'renderer/icons/FolderMessageSquare';
 
 type MultiTagButtonProps = {
   language: Language;
-  cloudStatus: CloudStatus;
   parent: RendererVideo;
   setDialog: Dispatch<SetStateAction<DialogType>>;
   setTagDialogVideoTargetId: Dispatch<SetStateAction<string | null>>;

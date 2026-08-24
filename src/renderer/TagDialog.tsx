@@ -122,7 +122,7 @@ export default function TagDialog(props: IProps) {
     });
   };
 
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange = (value: boolean) => {
     if (debounceRef.current) {
       clearInterval(debounceRef.current);
       debounceRef.current = null;
@@ -136,7 +136,7 @@ export default function TagDialog(props: IProps) {
     }
 
     setDebounceProgress(null);
-    onOpenChange(open);
+    onOpenChange(value);
   };
 
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
@@ -276,8 +276,6 @@ export default function TagDialog(props: IProps) {
 
   const renderTextArea = () => {
     const selected = table.getSelectedRowModel().rows;
-    const { write } = cloudStatus;
-
     let tooltip = getLocalePhrase(language, Phrase.TagButtonTooltip);
     let disabled = false;
 
@@ -308,9 +306,7 @@ export default function TagDialog(props: IProps) {
 
             const tag = e.target.value;
             setInnerTag(tag);
-
-            const selected = table.getSelectedRowModel().rows;
-            const video = selected[0]?.original;
+            const video = table.getSelectedRowModel().rows[0]?.original;
 
             if (!video) {
               return;

@@ -143,7 +143,6 @@ export const populateDetailsCell = (
       {group.length > 1 ? (
         <MultiTagButton
           language={language}
-          cloudStatus={cloudStatus}
           parent={video}
           setDialog={setDialog}
           setTagDialogVideoTargetId={setTagDialogVideoTargetId}
