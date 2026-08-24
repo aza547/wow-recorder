@@ -572,8 +572,8 @@ const ENGLISH: Translations = {
   [Phrase.ClearAll]: 'Clear All',
   [Phrase.Diagnostics]: 'Diagnostics',
   [Phrase.UnknownDevice]: 'Unknown Device',
-  [Phrase.OpenLockDialog]: 'Open Lock Dialog',
-  [Phrase.OpenTagDialog]: 'Open Tag Dialog',
+  [Phrase.OpenLockDialog]: 'Open Lock Menu',
+  [Phrase.OpenTagDialog]: 'Open Tag Menu',
 };
 
 export default ENGLISH;

@@ -19,10 +19,22 @@ type MultiTagButtonProps = {
 const MultiTagButton = (props: MultiTagButtonProps) => {
   const { parent, language, setTagDialogVideoTargetId, setDialog } = props;
   const group = [parent, ...parent.multiPov];
-  const foundTag = group.map((v) => v.tag).find((t) => t);
+
+  const tagged = group.filter((rv) => rv.tag).length;
+  const total = group.length;
+
+  const tooltip =
+    getLocalePhrase(language, Phrase.OpenTagDialog) + ` (${tagged}/${total})`;
+
+  const icon =
+    tagged > 0 ? (
+      <FolderMessageSquareMore size={18} />
+    ) : (
+      <FolderMessageSquare size={18} />
+    );
 
   return (
-    <Tooltip content={getLocalePhrase(language, Phrase.OpenTagDialog)}>
+    <Tooltip content={tooltip}>
       <div>
         <Button
           variant="ghost"
@@ -33,11 +45,7 @@ const MultiTagButton = (props: MultiTagButtonProps) => {
             setDialog(DialogType.TAG);
           }}
         >
-          {foundTag ? (
-            <FolderMessageSquareMore size={18} />
-          ) : (
-            <FolderMessageSquare size={18} />
-          )}
+          {icon}
         </Button>
       </div>
     </Tooltip>

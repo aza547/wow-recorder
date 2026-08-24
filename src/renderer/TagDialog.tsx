@@ -74,11 +74,11 @@ export default function TagDialog(props: IProps) {
     const openNotOpening = !open && !previousOpen.current;
     const group = getVideoGroup(targetVideoId, parentLookupMap);
 
-    if (!openNotOpening && previousParentId.current !== targetVideoId) {
+    if (openNotOpening && previousParentId.current !== targetVideoId) {
       // Close an open dialog if the parent video has been deleted by another
       // user. That should be rare enough that this isn't too annoying.
       onOpenChange(false);
-    } else if (!openNotOpening && group.length < 1) {
+    } else if (openNotOpening && group.length < 1) {
       // Close an open dialog if it is now excluded by the filter. For example
       // a user with a tag filter removes a tag.
       onOpenChange(false);
