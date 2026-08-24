@@ -16,7 +16,14 @@ type MultiLockButtonProps = {
 
 const MultiLockButton = (props: MultiLockButtonProps) => {
   const { language, parent, setDialog, setLockDialogVideoTargetId } = props;
-  const tooltip = getLocalePhrase(language, Phrase.OpenLockDialog);
+
+  const group = [parent, ...parent.multiPov];
+
+  const locked = group.filter((rv) => rv.isProtected).length;
+  const total = group.length;
+
+  const tooltip =
+    getLocalePhrase(language, Phrase.OpenLockDialog) + ` (${locked}/${total})`;
 
   const icon = [parent, ...parent.multiPov].some((rv) => rv.isProtected) ? (
     <FolderLocked size={20} />

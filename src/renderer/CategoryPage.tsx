@@ -444,7 +444,7 @@ const CategoryPage = (props: IProps) => {
             instantReplay={null}
             key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
             videos={videosToPlay}
-            categoryState={categoryState}
+            filteredState={filteredState}
             persistentProgress={persistentProgress}
             config={config}
             appState={appState}
@@ -603,7 +603,7 @@ const CategoryPage = (props: IProps) => {
         .filter(
           (rv) =>
             selectedViewpoints.filter((v) => v.videoName === rv.videoName)
-              .length < 2, // If we have more 2 viewpoints with the same name then one must be disk and one cloud.
+              .length < 2, // If we have 2 or more viewpoints with the same name then one must be disk and one cloud.
         );
 
       const noPermission = upload && !write;
@@ -619,10 +619,7 @@ const CategoryPage = (props: IProps) => {
         : getLocalePhrase(language, Phrase.BulkDownloadButtonTooltip);
 
       if (storageFilter !== StorageFilter.BOTH) {
-        tooltip = getLocalePhrase(
-          language,
-          Phrase.DownloadUploadDisabledDueToFilter,
-        );
+        tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
       } else if (noPermission) {
         tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
       }
@@ -743,6 +740,7 @@ const CategoryPage = (props: IProps) => {
             parentLookupMap={parentLookupMap}
             setVideoState={setVideoState}
             language={language}
+            cloudStatus={cloudStatus}
           />
           <KillVideoDialog
             open={dialog === DialogType.KILL}

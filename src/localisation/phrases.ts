@@ -424,7 +424,7 @@ enum Phrase {
   ShowBothTooltip,
   GuildNoPermission,
   RemoveTagFromList,
-  DownloadUploadDisabledDueToFilter,
+  DisabledDueToFilter,
   ProcessesLabel,
   SelectProcess,
   AudioProcessDevicesDescription,

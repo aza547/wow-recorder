@@ -67,7 +67,7 @@ interface IProps {
   videos: RendererVideo[];
   // Instant replay takes precedence over the videos prop if present.
   instantReplay: InstantReplayData | null;
-  categoryState: RendererVideo[];
+  filteredState: Array<RendererVideo>;
   persistentProgress: RefObject<number>;
   config: ConfigurationSchema;
   appState: AppState;
@@ -114,7 +114,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     config,
     appState,
     setAppState,
-    categoryState,
+    filteredState,
     instantReplay,
   } = props;
 
@@ -201,7 +201,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   if (!instantReplay) {
     const videoName = videos[0].videoName;
-    nameMatches = categoryState
+    nameMatches = filteredState
       .flatMap((v) => [v, ...v.multiPov])
       .filter((v) => v.videoName === videoName);
   }
@@ -913,7 +913,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const renderDownloadButton = () => {
     const disabled = storageFilter !== StorageFilter.BOTH;
     const tooltip = disabled
-      ? getLocalePhrase(language, Phrase.DownloadUploadDisabledDueToFilter)
+      ? getLocalePhrase(language, Phrase.DisabledDueToFilter)
       : getLocalePhrase(language, Phrase.DownloadButtonTooltip);
 
     return (
@@ -938,7 +938,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const renderUploadButton = () => {
     const disabled = storageFilter !== StorageFilter.BOTH;
     const tooltip = disabled
-      ? getLocalePhrase(language, Phrase.DownloadUploadDisabledDueToFilter)
+      ? getLocalePhrase(language, Phrase.DisabledDueToFilter)
       : getLocalePhrase(language, Phrase.UploadButtonTooltip);
 
     return (
@@ -1016,10 +1016,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     let tooltip = getLocalePhrase(language, Phrase.CloudButtonTooltip);
 
     if (disableDueToFilter) {
-      tooltip = getLocalePhrase(
-        language,
-        Phrase.DownloadUploadDisabledDueToFilter,
-      );
+      tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
     }
 
     return (
@@ -1056,10 +1053,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       !isSelected && storageFilter !== StorageFilter.BOTH;
 
     if (disableDueToFilter) {
-      tooltip = getLocalePhrase(
-        language,
-        Phrase.DownloadUploadDisabledDueToFilter,
-      );
+      tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
     }
 
     return (
@@ -1104,16 +1098,24 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Render the open folder button.
    */
   const renderOpenFolderButton = () => {
+    let disabled = false;
+    let tooltip = getLocalePhrase(language, Phrase.OpenFolderButtonTooltip);
+
+    if (storageFilter === StorageFilter.CLOUD) {
+      disabled = true;
+      tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
+    } else if (!diskVideo) {
+      disabled = true;
+    }
+
     return (
-      <Tooltip
-        content={getLocalePhrase(language, Phrase.OpenFolderButtonTooltip)}
-      >
+      <Tooltip content={tooltip}>
         <div>
           <Button
             variant="ghost"
             size="xs"
             onClick={openLocation}
-            disabled={diskVideo === undefined}
+            disabled={disabled}
           >
             <FolderOpen size={20} color="white" />
           </Button>
@@ -1160,16 +1162,24 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Render the get link button.
    */
   const renderGetLinkButton = () => {
+    let disabled = false;
+    let tooltip = getLocalePhrase(language, Phrase.ShareLinkButtonTooltip);
+
+    if (storageFilter === StorageFilter.DISK) {
+      disabled = true;
+      tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
+    } else if (!cloudVideo) {
+      disabled = true;
+    }
+
     return (
-      <Tooltip
-        content={getLocalePhrase(language, Phrase.ShareLinkButtonTooltip)}
-      >
+      <Tooltip content={tooltip}>
         <div>
           <Button
             variant="ghost"
             size="xs"
             onClick={getShareableLink}
-            disabled={cloudVideo === undefined}
+            disabled={disabled}
           >
             <Link size={20} color="white" />
           </Button>

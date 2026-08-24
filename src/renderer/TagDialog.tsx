@@ -1,4 +1,4 @@
-import { RendererVideo } from 'main/types';
+import { CloudStatus, RendererVideo } from 'main/types';
 import {
   Dispatch,
   SetStateAction,
@@ -26,7 +26,7 @@ import {
   stockFeatures,
   useTable,
 } from '@tanstack/react-table';
-import { getVideoGroup, getVideoGroupIds } from './rendererutils';
+import { getVideoGroup } from './rendererutils';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import CircularProgress from '@mui/material/CircularProgress/CircularProgress';
 import {
@@ -43,6 +43,7 @@ interface IProps {
   parentLookupMap: Map<string, RendererVideo>;
   setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>;
   language: Language;
+  cloudStatus: CloudStatus;
 }
 
 const ipc = window.electron.ipcRenderer;
@@ -55,8 +56,10 @@ export default function TagDialog(props: IProps) {
     setVideoState,
     language,
     targetVideoId,
+    cloudStatus,
   } = props;
 
+  const { write } = cloudStatus;
   const [rowSelection, setRowSelection] = useState({});
   const [innerTag, setInnerTag] = useState<string>('');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -68,13 +71,16 @@ export default function TagDialog(props: IProps) {
   const previousParentId = useRef(targetVideoId);
 
   useEffect(() => {
-    // Close an open dialog if the parent video has been deleted by another
-    // user. That should be rare enough that this isn't too annoying.
-    if (
-      open &&
-      previousOpen.current &&
-      previousParentId.current !== targetVideoId
-    ) {
+    const openNotOpening = !open && !previousOpen.current;
+    const group = getVideoGroup(targetVideoId, parentLookupMap);
+
+    if (!openNotOpening && previousParentId.current !== targetVideoId) {
+      // Close an open dialog if the parent video has been deleted by another
+      // user. That should be rare enough that this isn't too annoying.
+      onOpenChange(false);
+    } else if (!openNotOpening && group.length < 1) {
+      // Close an open dialog if it is now excluded by the filter. For example
+      // a user with a tag filter removes a tag.
       onOpenChange(false);
     }
 
@@ -273,7 +279,17 @@ export default function TagDialog(props: IProps) {
 
   const renderTextArea = () => {
     const selected = table.getSelectedRowModel().rows;
-    const tooltip = getLocalePhrase(language, Phrase.TagButtonTooltip);
+    const { write } = cloudStatus;
+
+    let tooltip = getLocalePhrase(language, Phrase.TagButtonTooltip);
+    let disabled = false;
+
+    if (selected.length !== 1) {
+      disabled = true;
+    } else if (!write && selected[0].original.cloud) {
+      disabled = true;
+      tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
+    }
 
     return (
       <div className="relative">
@@ -286,7 +302,7 @@ export default function TagDialog(props: IProps) {
           placeholder={tooltip}
           spellCheck={false}
           value={innerTag}
-          disabled={selected.length !== 1}
+          disabled={disabled}
           onChange={(e) => {
             if (debounceRef.current) {
               clearInterval(debounceRef.current);
@@ -349,6 +365,10 @@ export default function TagDialog(props: IProps) {
     );
   };
 
+  const includesAnyCloud = table
+    .getRowModel()
+    .rows.some((r) => r.original.cloud);
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
@@ -368,7 +388,7 @@ export default function TagDialog(props: IProps) {
               {getLocalePhrase(language, Phrase.Close)}
             </Button>
           </DialogClose>
-          <Button onClick={clearAllTags}>
+          <Button onClick={clearAllTags} disabled={includesAnyCloud && !write}>
             {getLocalePhrase(language, Phrase.ClearAll)}
           </Button>
         </DialogFooter>

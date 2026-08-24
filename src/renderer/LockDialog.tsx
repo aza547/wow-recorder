@@ -25,6 +25,7 @@ import {
   populatePlayerCell,
   populateStorageCell,
 } from './components/Tables/Cells';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 interface IProps {
   open: boolean;
@@ -51,13 +52,16 @@ export default function LockDialog(props: IProps) {
   const previousParentId = useRef(targetVideoId);
 
   useEffect(() => {
-    // Close an open dialog if the parent video has been deleted by another
-    // user. That should be rare enough that this isn't too annoying.
-    if (
-      open &&
-      previousOpen.current &&
-      previousParentId.current !== targetVideoId
-    ) {
+    const openNotOpening = open && previousOpen.current;
+    const group = getVideoGroup(targetVideoId, parentLookupMap);
+
+    if (openNotOpening && previousParentId.current !== targetVideoId) {
+      // Close an open dialog if the parent video has been deleted by another
+      // user. That should be rare enough that this isn't too annoying.
+      onOpenChange(false);
+    } else if (openNotOpening && group.length < 1) {
+      // Close an open dialog if it is now excluded by the filter. For example
+      // a user with a lock filter removes the lock.
       onOpenChange(false);
     }
 
@@ -167,11 +171,17 @@ export default function LockDialog(props: IProps) {
       : getLocalePhrase(language, Phrase.UnlockAll);
 
     const { write, del } = cloudStatus;
-    const noPermission = includesCloud && (!write || (!del && !actionIsLock));
+    let permission = true;
 
-    return (
+    if (includesCloud && actionIsLock) {
+      permission = write;
+    } else if (includesCloud && !actionIsLock) {
+      permission = write && del;
+    }
+
+    const button = (
       <Button
-        disabled={noPermission}
+        disabled={!permission}
         onClick={(event) => {
           stopPropagation(event);
           lockVideos(data, actionIsLock, setVideoState);
@@ -180,6 +190,16 @@ export default function LockDialog(props: IProps) {
         {label}
       </Button>
     );
+
+    if (!permission) {
+      return (
+        <Tooltip content={getLocalePhrase(language, Phrase.GuildNoPermission)}>
+          <div>{button}</div>
+        </Tooltip>
+      );
+    }
+
+    return button;
   };
 
   return (
