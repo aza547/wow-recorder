@@ -83,6 +83,13 @@ const useVideoSelectionTable = (
   const { category, language, cloudStatus, selectedVideos } = appState;
 
   const getInitialSelection = useCallback(() => {
+    const [selected] = selectedVideos;
+    const selectedParent = getVideoParent(selected?.uniqueId, parentLookupMap);
+
+    if (selectedParent) {
+      return selectedParent;
+    }
+
     if (videoState.length < 1) {
       return null;
     }
@@ -90,7 +97,7 @@ const useVideoSelectionTable = (
     const [first] = videoState;
     const { uniqueId } = first;
     return getVideoParent(uniqueId, parentLookupMap);
-  }, [parentLookupMap, videoState]);
+  }, [parentLookupMap, selectedVideos, videoState]);
 
   /**
    * Tracks if rows are selected or not in the ReactTable component. Initialize
