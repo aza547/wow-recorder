@@ -6,11 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [7.13.0] - 2026-08-27
+### Changed
 - [Issue 843](https://github.com/aza547/wow-recorder/issues/843) - Revamp the Lock, Tag and Delete dialogs to enable per-video control.
 - Migrate to React Table v9.
 - Tidy the shortcut indicators.
 
-### Added
 ### Fixed
 - [Issue 879](https://github.com/aza547/wow-recorder/issues/879) - Fix clip source navigation not scrolling to recordings on later table pages.
 
