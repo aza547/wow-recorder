@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Add the 2560x720 resolution option.
 ### Fixed
 
 ## [7.13.0] - 2026-08-27
