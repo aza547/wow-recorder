@@ -696,6 +696,14 @@ type InstantReplayState = {
   open: InstantReplayData | null;
 };
 
+enum DialogType {
+  NONE,
+  LOCK,
+  TAG,
+  KILL,
+  DELETE,
+}
+
 export {
   RecStatus,
   SaveStatus,
@@ -767,4 +775,5 @@ export {
   CharacterFilter,
   InstantReplayData,
   InstantReplayState,
+  DialogType,
 };

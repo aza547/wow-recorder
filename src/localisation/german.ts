@@ -1,6 +1,5 @@
 import { Translations, Phrase } from './phrases';
 
-/* eslint-disable prettier/prettier */
 const GERMAN: Translations = {
   [Phrase.NoVideosSaved]: 'Du hast keine Videos in dieser Kategorie gespeichert.',
   [Phrase.FirstTimeHere]: 'Wenn du das erste Mal die Anwendung gestartet hast, können Installationsanweisungen dem folgenden Link entnommen werden. Falls du Probleme haben solltest, nutz bitte den Discord #help Kanal um Unterstützung zu bekommen.',
@@ -418,7 +417,7 @@ const GERMAN: Translations = {
   [Phrase.ShowBothTooltip]: "Gruppieren Sie Disk- und Cloud-Videos und zeigen Sie alles",
   [Phrase.GuildNoPermission]: "Nicht genügend Gildenberechtigungen, um diese Aktion auszuführen.",
   [Phrase.RemoveTagFromList]: "%value% aus der Liste entfernen",
-  [Phrase.DownloadUploadDisabledDueToFilter]: "Aufgrund des aktuell ausgewählten Speicherfilters deaktiviert.",
+  [Phrase.DisabledDueToFilter]: "Aufgrund des aktuell ausgewählten Speicherfilters deaktiviert.",
   [Phrase.ProcessesLabel]: "Anwendungen",
   [Phrase.SelectProcess]: "Wählen Sie eine Anwendung aus",
   [Phrase.AudioProcessDevicesDescription]: "Anwendungen zum Aufnehmen von Audiodaten, zusätzlich zu allen ausgewählten Lautsprechern und Mikrofonen.",
@@ -560,6 +559,22 @@ const GERMAN: Translations = {
   [Phrase.SelectRange]: 'Bereich auswählen',
   [Phrase.SelectMultiple]: 'Mehrere auswählen',
   [Phrase.SelectAll]: 'Alle auswählen',
+  [Phrase.Close]: 'Schließen',
+  [Phrase.Lock]: 'Sperren',
+  [Phrase.LockAll]: 'Alle sperren',
+  [Phrase.UnlockAll]: 'Alle entsperren',
+  [Phrase.LockedDescription]: 'Gesperrte Videos sind vor der automatischen Löschung geschützt. Entsperrte Videos können automatisch gelöscht werden, um Platz für neue Videos zu schaffen.',
+  [Phrase.SafeFromAutomaticDeletion]: 'Vor automatischer Löschung geschützt',
+  [Phrase.EligibleForAutomaticDeletion]: 'Kann automatisch gelöscht werden',
+  [Phrase.NoCustomTag]: 'Kein benutzerdefiniertes Tag',
+  [Phrase.DeleteSelectionContainsNoLocked]: 'Diese Auswahl enthält keine gesperrten Aufnahmen.',
+  [Phrase.DeleteIsPermanent]: 'Das Löschen von Videos ist dauerhaft und kann nicht rückgängig gemacht werden.',
+  [Phrase.TagDescription]: 'Videos können mit Tags versehen werden, um sie für zukünftige Referenzen zu kennzeichnen. Tags werden für keinen anderen Zweck verwendet und haben keinen Einfluss auf das Video.',
+  [Phrase.ClearAll]: 'Alle löschen',
+  [Phrase.Diagnostics]: 'Diagnose',
+  [Phrase.UnknownDevice]: 'Unbekanntes Gerät',
+  [Phrase.OpenLockDialog]: 'Sperrmenü öffnen',
+  [Phrase.OpenTagDialog]: 'Tag-Menü öffnen',
 };
 
 export default GERMAN;

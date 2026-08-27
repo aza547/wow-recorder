@@ -1,4 +1,4 @@
-import { Row } from '@tanstack/react-table';
+import { Row, stockFeatures } from '@tanstack/react-table';
 import { getLocalePhrase } from 'localisation/translations';
 import { Language, Phrase } from 'localisation/phrases';
 import { RendererVideo } from 'main/types';
@@ -12,8 +12,8 @@ import {
 } from 'renderer/rendererutils';
 
 export const resultSort = (
-  a: Row<RendererVideo>,
-  b: Row<RendererVideo>,
+  a: Row<typeof stockFeatures, RendererVideo>,
+  b: Row<typeof stockFeatures, RendererVideo>,
   language: Language,
 ) => {
   if (isRaidUtil(a.original) && isRaidUtil(b.original)) {
@@ -49,21 +49,27 @@ export const resultSort = (
   return resultB.localeCompare(resultA);
 };
 
-export const levelSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
+export const levelSort = (
+  a: Row<typeof stockFeatures, RendererVideo>,
+  b: Row<typeof stockFeatures, RendererVideo>,
+) => {
   const resultA = a.original.keystoneLevel || a.original.level || 0;
   const resultB = b.original.keystoneLevel || b.original.level || 0;
   return resultA - resultB;
 };
 
-export const durationSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
+export const durationSort = (
+  a: Row<typeof stockFeatures, RendererVideo>,
+  b: Row<typeof stockFeatures, RendererVideo>,
+) => {
   const resultA = a.original.duration;
   const resultB = b.original.duration;
   return resultA - resultB;
 };
 
 export const viewPointCountSort = (
-  a: Row<RendererVideo>,
-  b: Row<RendererVideo>,
+  a: Row<typeof stockFeatures, RendererVideo>,
+  b: Row<typeof stockFeatures, RendererVideo>,
 ) => {
   const countA = countUniqueViewpoints(a.original);
   const countB = countUniqueViewpoints(b.original);
@@ -77,7 +83,10 @@ export const viewPointCountSort = (
   return playerB.localeCompare(playerA);
 };
 
-export const detailSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
+export const detailSort = (
+  a: Row<typeof stockFeatures, RendererVideo>,
+  b: Row<typeof stockFeatures, RendererVideo>,
+) => {
   const aProtected = a.original.isProtected;
   const bProtected = b.original.isProtected;
 
@@ -95,7 +104,10 @@ export const detailSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
   return 0;
 };
 
-export const creatorSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
+export const killVideoCreatorSort = (
+  a: Row<typeof stockFeatures, RendererVideo>,
+  b: Row<typeof stockFeatures, RendererVideo>,
+) => {
   const disabledA =
     [a.original, ...a.original.multiPov].filter((rv) => !rv.cloud).length < 2;
   const disabledB =
@@ -113,8 +125,8 @@ export const creatorSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
 };
 
 export const clipActivitySort = (
-  a: Row<RendererVideo>,
-  b: Row<RendererVideo>,
+  a: Row<typeof stockFeatures, RendererVideo>,
+  b: Row<typeof stockFeatures, RendererVideo>,
   language: Language,
 ) => {
   let activityA = getLocalePhrase(language, Phrase.Unknown);

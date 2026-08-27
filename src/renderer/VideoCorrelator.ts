@@ -17,14 +17,13 @@ export default class VideoCorrelator {
     });
 
     const correlated: RendererVideo[] = [];
+    const disk = raw.filter((rv) => !rv.cloud);
+    const cloud = raw.filter((rv) => rv.cloud);
 
-    const disk = raw.filter((video) => !video.cloud);
     disk.forEach((rv) => VideoCorrelator.correlateVideo(rv, correlated));
-
-    const cloud = raw.filter((video) => video.cloud);
     cloud.forEach((rv) => VideoCorrelator.correlateVideo(rv, correlated));
-
     correlated.sort(VideoCorrelator.reverseChronologicalVideoSort);
+
     return correlated;
   }
 
@@ -33,7 +32,8 @@ export default class VideoCorrelator {
       // We don't have the fields required to correlate this video to
       // any other so just add it and move on.
       videos.push(video);
-      return videos.length;
+
+      return;
     }
 
     // We might be able to correlate this, so loop over each of the videos we
@@ -92,16 +92,14 @@ export default class VideoCorrelator {
         // The video is a different POV of the same activity, link them and
         // break, we will never have more than one "parent" video so if we've
         // found it we're good to drop out and save some CPU cycles.
-
         videoToCompare.multiPov.push(video);
-        return i;
+        return;
       }
     }
 
     // We didn't correlate this video with another so just add it like
     // it is a normal video, this is the fallback case.
     videos.push(video);
-    return videos.length;
   }
 
   private static reverseChronologicalVideoSort(

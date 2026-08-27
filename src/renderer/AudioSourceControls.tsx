@@ -551,7 +551,7 @@ const AudioSourceControls = (props: IProps) => {
       if (!found && src.device) {
         const text =
           src.type !== AudioSourceType.PROCESS
-            ? `⚠ Unknown device: ${src.friendly}` // TODO: Localise
+            ? `⚠ ${getLocalePhrase(language, Phrase.UnknownDevice)}: ${src.friendly}`
             : src.device;
 
         items.push(

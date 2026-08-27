@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- [Issue 843](https://github.com/aza547/wow-recorder/issues/843) - Revamp the Lock, Tag and Delete dialogs to enable per-video control.
+- Migrate to React Table v9.
+- Tidy the shortcut indicators.
+
 ### Added
 ### Fixed
 - [Issue 879](https://github.com/aza547/wow-recorder/issues/879) - Fix clip source navigation not scrolling to recordings on later table pages.
@@ -16,8 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update M+ timers for Midnight season 2.
 
 ### Fixed
+- [Issue 886](https://github.com/aza547/wow-recorder/issues/886) - Fix the delete dialog which had misaligned indexing.
 - [Issue 891](https://github.com/aza547/wow-recorder/issues/891) - Fix a bug where opening the drawer while filtering could crash the UI.
-- Ctrl + clicking a selected row will no longer unselect it when it is the only selected row.
+- Disable the upload, download and source controls when storage filters are applied.
+- Ctrl + clicking a selected row will no longer unselect it.
+- Fixed a handful of phrases that were not getting translated.
+
 
 ## [7.11.1] - 2026-07-25
 ### Fixed

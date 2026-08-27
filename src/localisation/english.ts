@@ -1,6 +1,5 @@
 import { Translations, Phrase } from './phrases';
 
-/* eslint-disable prettier/prettier */
 const ENGLISH: Translations = {
   [Phrase.NoVideosSaved]: 'You have no videos saved for this category',
   [Phrase.FirstTimeHere]: 'If it is your first time here, setup instructions can be found at the link below. If you have problems, please use the Discord #help channel to get support.',
@@ -357,8 +356,7 @@ const ENGLISH: Translations = {
   [Phrase.NoneTagged]: "This row contains no tagged recordings.",
   [Phrase.MultipleTagged]: "This row contains multiple tagged recordings.",
   [Phrase.NoneStarred]: "This row is not locked in. It may be automatically aged out to make space for new recordings.",
-  [Phrase.SomeStarred]: 'This row is locked in. It will not be automatically aged out.',
-  [Phrase.UploadClipsLabel]: 'Upload Clips',
+  [Phrase.SomeStarred]: 'This row is locked in. It will not be automatically aged out.',[Phrase.UploadClipsLabel]: 'Upload Clips',
   [Phrase.CloudUploadClipsDescription]: 'If clipped recordings should be uploaded to the cloud.',
   [Phrase.RetailPtrLogPathDescription]: 'Location of the World of Warcraft logs folder for your retail PTR installation, e.g. "C:\\Program Files\\World of Warcraft\\_xptr_\\Logs". ',
   [Phrase.RecordRetailPtrDescription]: 'Whether the application should record retail PTR. This feature is provided on a best-effort basis and depends on Blizzard maintaining compatibility with the PTR combat log. As a result, functionality may be unpredictable.',
@@ -379,8 +377,8 @@ const ENGLISH: Translations = {
   [Phrase.Saving]: 'Saving...',
   [Phrase.StartTyping]: 'Start typing...',
   [Phrase.ToggleDrawingMode]: 'Toggle drawing mode',
-  [Phrase.StarSelected]: 'Lock selected rows. Locked rows will not be automatically aged out.',
-  [Phrase.UnstarSelected]: 'Unlock selected rows. Unlocked rows may be automatically aged out to make space for new recordings.',
+  [Phrase.StarSelected]: 'Lock',
+  [Phrase.UnstarSelected]: 'Unlock',
   [Phrase.Selection]: 'Selection',
   [Phrase.NoCombatants]: 'No combatant data available.',
   [Phrase.DateFilter]: "Date Filter",
@@ -425,7 +423,7 @@ const ENGLISH: Translations = {
   [Phrase.ShowBothTooltip]: "Group disk and cloud videos and show everything.",
   [Phrase.GuildNoPermission]: "Insufficient guild permissions to perform this action.",
   [Phrase.RemoveTagFromList]: "Remove %value% from the list",
-  [Phrase.DownloadUploadDisabledDueToFilter]: "Disabled due to currently selected storage filter.",
+  [Phrase.DisabledDueToFilter]: "Disabled due to currently selected storage filter.",
   [Phrase.ProcessesLabel]: "Applications",
   [Phrase.SelectProcess]: "Select an application",
   [Phrase.AudioProcessDevicesDescription]: "Applications to capture audio from, in addition to any selected speakers and microphones.",
@@ -484,7 +482,7 @@ const ENGLISH: Translations = {
   [Phrase.SelectAnApplication]: 'Select an application...',
   [Phrase.BulkUploadButtonTooltip]: 'Upload all selected clips from your local disk to the cloud.',
   [Phrase.BulkDownloadButtonTooltip]: 'Download all selected clips from the cloud to your local disk.',
-  [Phrase.BulkUploadDialogText]: 'This will queue the upload of all selected clips to the cloud. This may take a long time to complete. The progress can be monitored via the status card in the top-left of the application.',
+  [Phrase.BulkUploadDialogText]: 'This will queue the upload of all selected clips to the cloud. The progress can be monitored via the status card in the top-left of the application.',
   [Phrase.BulkDownloadDialogText]: 'This will queue the download of all selected clips from the cloud.  The progress can be monitored via the status card in the top-left of the application.',
   [Phrase.BulkTransferWarningText]: 'This may take a long time to complete. Data charges may apply if you are on a metered connection. Switching off your computer will interrupt the process.',
   [Phrase.UploadButtonText]: 'Queue Uploads',
@@ -560,6 +558,22 @@ const ENGLISH: Translations = {
   [Phrase.SelectRange]: 'Select Range',
   [Phrase.SelectMultiple]: 'Select Multiple',
   [Phrase.SelectAll]: 'Select All',
+  [Phrase.Close]: 'Close',
+  [Phrase.Lock]: 'Lock',
+  [Phrase.LockAll]: 'Lock All',
+  [Phrase.UnlockAll]: 'Unlock All',
+  [Phrase.LockedDescription]: 'Locked videos are protected from automatic deletion. Unlocked videos may be automatically deleted to make space for new videos.',
+  [Phrase.SafeFromAutomaticDeletion]: 'Safe from automatic deletion',
+  [Phrase.EligibleForAutomaticDeletion]: 'Eligible for automatic deletion',
+  [Phrase.NoCustomTag]: 'No custom tag',
+  [Phrase.DeleteSelectionContainsNoLocked]: 'This selection contains no locked recordings.',
+  [Phrase.DeleteIsPermanent]: 'Deleting videos is permanent and cannot be undone.',
+  [Phrase.TagDescription]: 'Tags may be added to videos to label them for future reference. Tags are not used for any other purpose and do not affect the video.',
+  [Phrase.ClearAll]: 'Clear All',
+  [Phrase.Diagnostics]: 'Diagnostics',
+  [Phrase.UnknownDevice]: 'Unknown Device',
+  [Phrase.OpenLockDialog]: 'Open Lock Menu',
+  [Phrase.OpenTagDialog]: 'Open Tag Menu',
 };
 
 export default ENGLISH;
