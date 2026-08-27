@@ -2,32 +2,10 @@ import { Language, Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
 import { LockKeyhole, LockOpen } from 'lucide-react';
 import { RendererVideo, CloudStatus } from 'main/types';
-import { stopPropagation } from 'renderer/rendererutils';
+import { lockVideos, stopPropagation } from 'renderer/rendererutils';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { Dispatch, SetStateAction } from 'react';
-
-const ipc = window.electron.ipcRenderer;
-
-const setLock = (
-  videos: Array<RendererVideo>,
-  lock: boolean,
-  setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>,
-) => {
-  const disk = videos.filter((v) => !v.cloud);
-  const cloud = videos.filter((v) => v.cloud);
-
-  ipc.sendMessage('videoButtonDisk', ['protect', lock, disk]);
-  ipc.sendMessage('videoButtonCloud', ['protect', lock, cloud]);
-
-  setVideoState((prev) => {
-    return prev.map((rv) => {
-      return videos.some((v) => v.uniqueId === rv.uniqueId)
-        ? { ...rv, isProtected: lock }
-        : rv;
-    });
-  });
-};
 
 type LockButtonProps = {
   language: Language;
@@ -65,7 +43,7 @@ const LockButton = (props: LockButtonProps) => {
           size="xs"
           onClick={(event) => {
             stopPropagation(event);
-            setLock([video], !isProtected, setVideoState);
+            lockVideos([video], !isProtected, setVideoState);
           }}
           disabled={noPermission}
         >

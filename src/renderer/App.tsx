@@ -356,19 +356,16 @@ const WarcraftRecorder = () => {
   const displayProtectCloudVideos = (videoNames: unknown) => {
     const names = videoNames as string[];
 
-    setVideoState((prev) => {
-      const matches = prev.filter(
-        (rv) => rv.cloud && names.includes(rv.videoName),
-      );
+    setVideoState((prev) =>
+      prev.map((rv) => {
+        if (!rv.cloud || !names.includes(rv.videoName)) {
+          return rv;
+        }
 
-      matches.forEach((match) => {
         // Pretty sure only one of these matters.
-        match.protected = true;
-        match.isProtected = true;
-      });
-
-      return prev;
-    });
+        return { ...rv, protected: true, isProtected: true };
+      }),
+    );
 
     setAppState((prevState) => {
       return {
@@ -383,19 +380,16 @@ const WarcraftRecorder = () => {
   const displayUnprotectCloudVideos = (videoNames: unknown) => {
     const names = videoNames as string[];
 
-    setVideoState((prev) => {
-      const matches = prev.filter(
-        (rv) => rv.cloud && names.includes(rv.videoName),
-      );
+    setVideoState((prev) =>
+      prev.map((rv) => {
+        if (!rv.cloud || !names.includes(rv.videoName)) {
+          return rv;
+        }
 
-      matches.forEach((match) => {
         // Pretty sure only one of these matters.
-        match.protected = false;
-        match.isProtected = false;
-      });
-
-      return prev;
-    });
+        return { ...rv, protected: false, isProtected: false };
+      }),
+    );
 
     setAppState((prevState) => {
       return {
@@ -410,15 +404,15 @@ const WarcraftRecorder = () => {
   const displayTagCloudVideo = (videoName: unknown, tag: unknown) => {
     const name = videoName as string;
 
-    setVideoState((prev) => {
-      const match = prev.find((rv) => rv.cloud && videoMatchName(rv, name));
+    setVideoState((prev) =>
+      prev.map((rv) => {
+        if (!rv.cloud || !videoMatchName(rv, name)) {
+          return rv;
+        }
 
-      if (match) {
-        match.tag = tag as string;
-      }
-
-      return prev;
-    });
+        return { ...rv, tag: tag as string };
+      }),
+    );
 
     setAppState((prevState) => {
       return {
