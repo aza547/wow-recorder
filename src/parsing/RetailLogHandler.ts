@@ -40,60 +40,20 @@ export default class RetailLogHandler extends LogHandler {
 
     /* eslint-disable prettier/prettier */
     this.combatLogWatcher
-      .on('ENCOUNTER_START', (line: LogLine) => {
-        this.logProcessQueue.add(async () =>
-          this.handleEncounterStartLine(line),
-        );
-      })
-      .on('ENCOUNTER_END', (line: LogLine) => {
-        this.logProcessQueue.add(async () => this.handleEncounterEndLine(line));
-      })
-      .on('ZONE_CHANGE', (line: LogLine) => {
-        this.logProcessQueue.add(async () => this.handleZoneChange(line));
-      })
-      .on('SPELL_AURA_APPLIED', (line: LogLine) => {
-        this.logProcessQueue.add(async () =>
-          this.handleSpellAuraAppliedLine(line),
-        );
-      })
-      .on('SPELL_AURA_REMOVED', (line: LogLine) => {
-        this.logProcessQueue.add(async () =>
-          this.handleSpellAuraRemovedLine(line),
-        );
-      })
-      .on('UNIT_DIED', (line: LogLine) => {
-        this.logProcessQueue.add(async () => this.handleUnitDiedLine(line));
-      })
-      .on('ARENA_MATCH_START', (line: LogLine) => {
-        this.logProcessQueue.add(async () => this.handleArenaStartLine(line));
-      })
-      .on('ARENA_MATCH_END', (line: LogLine) => {
-        this.logProcessQueue.add(async () => this.handleArenaEndLine(line));
-      })
-      .on('CHALLENGE_MODE_START', (line: LogLine) => {
-        this.logProcessQueue.add(async () =>
-          this.handleChallengeModeStartLine(line),
-        );
-      })
-      .on('CHALLENGE_MODE_END', (line: LogLine) => {
-        this.logProcessQueue.add(async () =>
-          this.handleChallengeModeEndLine(line),
-        );
-      })
-      .on('COMBATANT_INFO', (line: LogLine) => {
-        this.logProcessQueue.add(async () =>
-          this.handleCombatantInfoLine(line),
-        );
-      })
-      .on('SPELL_CAST_START', (line: LogLine) => {
-        this.logProcessQueue.add(async () => this.handleSpellCastStart(line));
-      })
-      .on('SPELL_CAST_SUCCESS', (line: LogLine) => {
-        this.logProcessQueue.add(async () => this.handleSpellCastSuccess(line));
-      })
-      .on('SPELL_DAMAGE', (line: LogLine) => {
-        this.logProcessQueue.add(async () => this.handleSpellDamage(line));
-      });
+      .on('ENCOUNTER_START',      (line: LogLine) => { this.logProcessQueue.add(async () =>  this.handleEncounterStartLine(line));})
+      .on('ENCOUNTER_END',        (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterEndLine(line)); })
+      .on('ZONE_CHANGE',          (line: LogLine) => { this.logProcessQueue.add(async () => this.handleZoneChange(line)); })
+      .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellAuraAppliedLine(line)); })
+      .on('SPELL_AURA_REMOVED',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellAuraRemovedLine(line)); })
+      .on('UNIT_DIED',            (line: LogLine) => { this.logProcessQueue.add(async () => this.handleUnitDiedLine(line)); })
+      .on('ARENA_MATCH_START',    (line: LogLine) => { this.logProcessQueue.add(async () => this.handleArenaStartLine(line)); })
+      .on('ARENA_MATCH_END',      (line: LogLine) => { this.logProcessQueue.add(async () => this.handleArenaEndLine(line)); })
+      .on('CHALLENGE_MODE_START', (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeStartLine(line)); })
+      .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeEndLine(line)); })
+      .on('COMBATANT_INFO',       (line: LogLine) => { this.logProcessQueue.add(async () => this.handleCombatantInfoLine(line)); })
+      .on('SPELL_CAST_START',     (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellCastStart(line)); })
+      .on('SPELL_CAST_SUCCESS',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellCastSuccess(line)); })
+      .on('SPELL_DAMAGE',         (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellDamage(line)); });
     /* eslint-enable prettier/prettier */
   }
 
