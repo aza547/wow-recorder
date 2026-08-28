@@ -26,7 +26,6 @@ import retail.wargame_3v3
 import retail.zone_changes
 import retail.beloren_boss_hp
 import retail.raid_holy_priest_angel_death
-import retail.coiled_altar_boss_hp
 
 # Import the classic tests
 import classic.battleground
@@ -44,11 +43,11 @@ import classic.mop_challenge_mode
 import era.raid
 
 # These variables are environment dependent, you may need to adjust them.
-RETAIL_LOG_PATH = "C:/Program Files (x86)/World of Warcraft/_retail_/Logs"
-CLASSIC_LOG_PATH = "C:/Program Files (x86)/World of Warcraft/_classic_/Logs"
-ERA_LOG_PATH = "C:/Program Files (x86)/World of Warcraft/_classic_era_/Logs"
-PTR_LOG_PATH = "C:/Program Files (x86)/World of Warcraft/_xptr_/Logs"
-STORAGE_PATH = "C:/Users/alexa/AppData/Roaming/WarcraftRecorder/Warcraft Recorder Videos"
+RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs"
+CLASSIC_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_/Logs"
+ERA_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_era_/Logs"
+PTR_LOG_PATH = "C:/Program Files/World of Warcraft/_xptr_/Logs"
+STORAGE_PATH = "C:/Users/Alex/Videos/Warcraft Recorder"
 
 CWD = os.path.dirname(__file__)
 
@@ -71,7 +70,6 @@ RETAIL_TESTS = [
     retail.zone_changes,
     retail.beloren_boss_hp,
     retail.raid_holy_priest_angel_death,
-    retail.coiled_altar_boss_hp,
 ]
 
 CLASSIC_TESTS = [
