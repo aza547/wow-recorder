@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// linux-specific library loading to ensure the vended binaries have preference
 exports.default = async function(context) {
   if (context.electronPlatformName !== 'linux') {
     return;
@@ -22,21 +21,10 @@ exports.default = async function(context) {
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 NOOBS_BIN="$SCRIPT_DIR/resources/app.asar.unpacked/node_modules/noobs/dist/bin/linux"
-export LD_LIBRARY_PATH="$NOOBS_BIN:$LD_LIBRARY_PATH"
 export PATH="$NOOBS_BIN:$PATH"
 
-# Force avutil for VAAPI
-AVUTIL_PATH="$NOOBS_BIN/libavutil.so.60"
-# Force avcodec for aac_encode
-AVCODEC_PATH="$NOOBS_BIN/libavcodec.so.62"
-# Force avformat for graphics-ffmpeg in OBS to enable file protocol when opening overlay images
-AVFORMAT_PATH="$NOOBS_BIN/libavformat.so.62"
-# Force our libobs to load after that, to resolve its deps
-LIBOBS_PATH="$NOOBS_BIN/libobs.so.30"
-# Force x264 without memalign/huge pages
-LIBX264_PATH="$NOOBS_BIN/libx264.so.165"
-
-export LD_PRELOAD="$AVUTIL_PATH $AVCODEC_PATH $AVFORMAT_PATH $LIBOBS_PATH $LIBX264_PATH"
+# Electron's libffmpeg.so exports the same av_* symbols and loads first.
+export LD_PRELOAD="$NOOBS_BIN/libavutil-noobs.so.60 $NOOBS_BIN/libavcodec-noobs.so.62 $NOOBS_BIN/libavformat-noobs.so.62"
 
 # Force the X11 Ozone backend. Chromium 140 / Electron 42 defaults
 # --ozone-platform-hint to auto, so a Wayland wins.

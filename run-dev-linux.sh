@@ -4,33 +4,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 NOOBS_BIN="$SCRIPT_DIR/release/app/node_modules/noobs/dist/bin/linux"
-BIN_PATH="$NOOBS_BIN:$PATH"
 
-# setup LD_LIBRARY_PATH to point to noobs for self-resolution
-LD_LIB_PATH="$NOOBS_BIN${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# Electron's libffmpeg.so exports the same av_* symbols and loads first.
+PRELOAD="$NOOBS_BIN/libavutil-noobs.so.60 $NOOBS_BIN/libavcodec-noobs.so.62 $NOOBS_BIN/libavformat-noobs.so.62"
 
-# Force avutil for VAAPI
-AVUTIL_PATH="$NOOBS_BIN/libavutil.so.60"
-# Force avcodec for aac_encode
-AVCODEC_PATH="$NOOBS_BIN/libavcodec.so.62"
-# Force avformat for graphics-ffmpeg in OBS to enable jpg/png
-AVFORMAT_PATH="$NOOBS_BIN/libavformat.so.62"
-# Force our libobs to load after that, to resolve its des
-LIBOBS_PATH="$NOOBS_BIN/libobs.so.30"
-# Force x264 without memalign/huge pages
-LIBX264_PATH="$NOOBS_BIN/libx264.so.165"
-
-# Optional: sanity checks so it fails loudly instead of silently not preloading
-for so in "$AVUTIL_PATH" "$AVCODEC_PATH" "$LIBX264_PATH"; do
+for so in $PRELOAD; do
   [[ -r "$so" ]] || { echo "missing: $so" >&2; exit 1; }
 done
 
-# force our vended ffmpeg and x264 binaries
-# the kids in the electron sandbox are fighting
-# load order matters
 # Force the X11 Ozone backend. Electron 42+ defaults to Wayland.
-LD_PRELOAD="$AVUTIL_PATH $AVCODEC_PATH $AVFORMAT_PATH $LIBOBS_PATH $LIBX264_PATH" \
-  LD_LIBRARY_PATH="$LD_LIB_PATH" \
-  PATH="$BIN_PATH" \
+LD_PRELOAD="$PRELOAD" \
+  PATH="$NOOBS_BIN:$PATH" \
   XDG_SESSION_TYPE=x11 \
   exec npm run start
