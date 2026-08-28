@@ -154,14 +154,25 @@ export default class CombatLogWatcher extends EventEmitter {
       return;
     }
 
-    await this.parseFileChunk(fullPath, bytesToRead, startPosition);
-    this.state[fullPath] = currentInfo;
+    const consumed = await this.parseFileChunk(
+      fullPath,
+      bytesToRead,
+      startPosition,
+    );
+    // for this path, the size represents the bytes parsed in total, not
+    // necessarily the reported fs.stat of the file, which could be from
+    // a partial line chunk write.
+    this.state[fullPath] = { ...currentInfo, size: startPosition + consumed };
   }
 
   /**
    * Parse a chunk of the file of length bytes from a specified position.
    */
-  private async parseFileChunk(file: string, bytes: number, position: number) {
+  private async parseFileChunk(
+    file: string,
+    bytes: number,
+    position: number,
+  ): Promise<number> {
     const buffer = Buffer.alloc(bytes);
     const handle = await open(file, 'r');
     const { bytesRead } = await read(handle, buffer, 0, bytes, position);
@@ -178,15 +189,42 @@ export default class CombatLogWatcher extends EventEmitter {
 
     this.emit('WARCRAFT_RECORDER_LOG_ACTIVITY');
 
-    const lines = buffer
+    // On some platforms (eg, anything VFS based, especially ntfs-3g), the notify can be sent mid-line.
+    // We can't assume that the last data of the read is a completed log line.
+    // Instead, only parse up to the last new line char return how much we parsed
+    // so that the next read can start from that position.
+    const valid = buffer.subarray(0, bytesRead);
+    const newline = valid.lastIndexOf(0x0a); // \n
+
+    if (newline < 0) {
+      return 0;
+    }
+
+    const consumed = newline + 1;
+
+    const lines = valid
+      .subarray(0, consumed)
       .toString('utf-8')
       .split('\n')
       .map((s) => s.trim())
       .filter((s) => s);
 
     lines.forEach((line) => {
-      this.handleLogLine(line);
+      // If parsing the line fails, at least allow the parser to continue.
+      // State could be undefined, but the alternative is that all
+      // log watching is bricked until an app restart.
+      try {
+        this.handleLogLine(line);
+      } catch (error) {
+        console.error(
+          '[CombatLogWatcher] Failed to handle log line:',
+          line,
+          error,
+        );
+      }
     });
+
+    return consumed;
   }
 
   /**

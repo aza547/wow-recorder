@@ -1,8 +1,28 @@
 import LogLine from '../../parsing/LogLine';
 import CombatLogWatcher from '../../parsing/CombatLogWatcher';
 
+jest.mock('../../main/util', () => {
+  const nodeFs = jest.requireActual<typeof import('fs')>('fs');
+  const nodePath = jest.requireActual<typeof import('path')>('path');
+
+  return {
+    getFileInfo: async (pathSpec: string) => {
+      const filePath = nodePath.resolve(pathSpec);
+      const stats = await nodeFs.promises.stat(filePath);
+
+      return {
+        name: filePath,
+        size: stats.size,
+        mtime: stats.mtime.getTime(),
+        birthTime: stats.birthtime.getTime(),
+      };
+    },
+    getSortedFiles: async () => [],
+  };
+});
+
 test('Basic Retail', async () => {
-  const combatLogParser = new CombatLogWatcher('', 2);
+  const combatLogParser = new CombatLogWatcher('');
   let promiseResolve: (value: LogLine | PromiseLike<LogLine>) => void;
 
   const testLogLinePromise: Promise<LogLine> = new Promise((resolve) => {
@@ -13,13 +33,15 @@ test('Basic Retail', async () => {
     promiseResolve(line);
   });
 
+  const currYear = new Date().getFullYear();
+
   const arenaMatchStartLine =
     '8/3 22:12:04.000  ARENA_MATCH_START,2547,33,5v5,1';
 
   combatLogParser.handleLogLine(arenaMatchStartLine);
 
   const testLogLine = await testLogLinePromise;
-  const expectedDate = new Date('2025-08-03T22:12:04');
+  const expectedDate = new Date(`${currYear}-08-03T22:12:04`);
 
   expect(testLogLine.date()).toStrictEqual(expectedDate);
   expect(testLogLine.type()).toBe('ARENA_MATCH_START');
@@ -32,9 +54,10 @@ test('Basic Retail', async () => {
 
 test('Date Parsing', async () => {
   // Pre The War Within expansion there were note years or timezones.
+  const currYear = new Date().getFullYear();
   const preTWW = '8/3 22:12:04.000  ARENA_MATCH_START,2547,33,5v5,1';
   const parsedPreTWW = new LogLine(preTWW);
-  const expectedPreTww = new Date('2025-08-03T22:12:04');
+  const expectedPreTww = new Date(`${currYear}-08-03T22:12:04`);
   expect(parsedPreTWW.date()).toStrictEqual(expectedPreTww);
 
   // Year but no TZ.
