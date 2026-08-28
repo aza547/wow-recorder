@@ -108,6 +108,10 @@
     }
   },
   "jest": {
+    "moduleDirectories": [
+      "node_modules",
+      "<rootDir>/src"
+    ],
     "transform": {
       "\\.(ts|tsx|js|jsx)$": "ts-jest"
     }
