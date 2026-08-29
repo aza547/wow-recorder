@@ -572,6 +572,8 @@ enum Phrase {
   UnknownDevice,
   OpenLockDialog,
   OpenTagDialog,
+  InstantReplayLabel,
+  InstantReplayDisabled,
 }
 
 enum Language {

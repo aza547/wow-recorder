@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Always show instant replay button, but disable it when not available.
 ### Added
 - Add the 2560x720 resolution option.
 ### Fixed

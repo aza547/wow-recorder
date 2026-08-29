@@ -575,6 +575,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.UnknownDevice]: '未知设备',
   [Phrase.OpenLockDialog]: '打开锁定菜单',
   [Phrase.OpenTagDialog]: '打开标签菜单',
+  [Phrase.InstantReplayLabel]: '即时回放',
+  [Phrase.InstantReplayDisabled]: '只有在录制进行时才能使用即时回放功能。',
 };
 
 export default CHINESE_SIMPLIFIED;

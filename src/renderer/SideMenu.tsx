@@ -229,17 +229,42 @@ const SideMenu = (props: IProps) => {
   };
 
   const renderInstantReplayTab = () => {
-    return (
-      <Menu.Item value={Pages.InstantReplay} className="py-[4px] my-2">
-        <span className="inline-flex items-center animate-pulse">
-          <Menu.Item.Icon>
-            <Radio className="text-[#bb4420] " />
-          </Menu.Item.Icon>
+    const disabled = !(
+      instantReplayState.current || appState.page === Pages.InstantReplay
+    );
 
-          <span className="font-semibold text-[#bb4420] drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]">
-            Instant Replay
+    let spanClassName = 'inline-flex items-center';
+    let radioClassName = '';
+    let textClassName = 'font-semibold';
+
+    if (!disabled) {
+      spanClassName += ' animate-pulse';
+      radioClassName = 'text-[#bb4420]';
+      textClassName += ' text-[#bb4420]';
+      textClassName += ' drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]';
+    }
+
+    const tooltip = disabled
+      ? getLocalePhrase(language, Phrase.InstantReplayDisabled)
+      : getLocalePhrase(language, Phrase.InstantReplayLabel);
+
+    return (
+      <Menu.Item
+        value={Pages.InstantReplay}
+        className="py-[4px] my-2"
+        disabled={disabled}
+      >
+        <Tooltip content={tooltip}>
+          <span className={spanClassName}>
+            <Menu.Item.Icon>
+              <Radio className={radioClassName} />
+            </Menu.Item.Icon>
+
+            <span className={textClassName}>
+              {getLocalePhrase(language, Phrase.InstantReplayLabel)}
+            </span>
           </span>
-        </span>
+        </Tooltip>
       </Menu.Item>
     );
   };
@@ -311,20 +336,17 @@ const SideMenu = (props: IProps) => {
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
       >
-        {(instantReplayState.current ||
-          appState.page === Pages.InstantReplay) && (
-          <>
-            <Separator />
-            <Menu
-              initialValue={
-                appState.page === Pages.InstantReplay ? appState.page : false
-              }
-              onChange={handleChangePage}
-            >
-              {renderInstantReplayTab()}
-            </Menu>
-          </>
-        )}
+        <>
+          <Separator />
+          <Menu
+            initialValue={
+              appState.page === Pages.InstantReplay ? appState.page : false
+            }
+            onChange={handleChangePage}
+          >
+            {renderInstantReplayTab()}
+          </Menu>
+        </>
 
         <Menu
           initialValue={appState.page === Pages.None ? category : false}
