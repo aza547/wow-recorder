@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add the 2560x720 resolution option.
 ### Fixed
 - Better tracking of Coiled Altar fight progress.
+- Fix localisation of the Instant Replay button.
 
 ## [7.13.0] - 2026-08-27
 ### Changed
