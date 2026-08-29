@@ -450,8 +450,8 @@ const checkAdvancedCombatLogging = async (
     }
 
     return false;
-  } catch (error) {
-    console.warn('[Util] Failed to read Config.wtf at', configWtfFile, error);
+  } catch {
+    console.warn('[Util] Failed to read Config.wtf at', configWtfFile);
     return true;
   }
 };

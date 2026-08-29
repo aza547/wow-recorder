@@ -46,8 +46,8 @@ import era.raid
 RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs"
 CLASSIC_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_/Logs"
 ERA_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_era_/Logs"
-PTR_LOG_PATH = "C:/Program Files/World of Warcraft/_xptr_/Logs"
-STORAGE_PATH = "C:/Users/Alex/Videos/Warcraft Recorder"
+PTR_LOG_PATH = "C:/Program Files/World of Warcraft/_ptr_/Logs"
+STORAGE_PATH = "D:/wr-test"
 
 CWD = os.path.dirname(__file__)
 
@@ -270,8 +270,12 @@ def find_test_by_name(flavour, test_name):
         test = list(filter(lambda test: test.NAME == test_name, RETAIL_TESTS))[0]
     elif flavour == "classic":
         test = list(filter(lambda test: test.NAME == test_name, CLASSIC_TESTS))[0]
-    else:
+    elif flavour == "era":
         test = list(filter(lambda test: test.NAME == test_name, ERA_TESTS))[0]
+    elif flavour == "ptr":
+        test = list(filter(lambda test: test.NAME == test_name, PTR_TESTS))[0]
+    else:
+        raise ValueError(f"Unknown flavour: {flavour}")
 
     return test
 
