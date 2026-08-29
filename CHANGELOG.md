@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Always show instant replay button, but disable it when not available.
 ### Added
 - Add the 2560x720 resolution option.
+- [Issue 894](https://github.com/aza547/wow-recorder/issues/894) - Game settings now displays the age of the latest combat log to make it easier to spot misconfigurations.
+- There is now a "open location" button for configured log paths for ease of access.
 ### Fixed
 - [Issue 879](https://github.com/aza547/wow-recorder/issues/879) - Restore clip source navigation after the React Table v9 migration.
 - Better tracking of Coiled Altar fight progress.
