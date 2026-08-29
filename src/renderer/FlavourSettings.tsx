@@ -264,7 +264,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </span>
             )}
             {!combatLoggingStatus.retail.advanced && (
-              <span className="text-error text-sm mt-1">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
@@ -367,7 +367,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </span>
             )}
             {!combatLoggingStatus.classic.advanced && (
-              <span className="text-error text-sm mt-1">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
@@ -482,7 +482,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </span>
             )}
             {!combatLoggingStatus.era.advanced && (
-              <span className="text-error text-sm mt-1">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
@@ -596,7 +596,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </span>
             )}
             {!combatLoggingStatus.retailPtr.advanced && (
-              <span className="text-error text-sm mt-1">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
@@ -715,7 +715,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </span>
             )}
             {!combatLoggingStatus.classicPtr.advanced && (
-              <span className="text-error text-sm mt-1">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
