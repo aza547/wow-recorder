@@ -50,6 +50,7 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
+import { isEqual } from 'lodash';
 
 /**
  * Manager class.
@@ -317,7 +318,7 @@ export default class Manager {
    * if advanced combat logging is not enabled.
    */
   public async checkAdvancedLogging() {
-    this.advancedLoggingStatus = {
+    const updatedAdvancedLoggingStatus = {
       retail:
         !this.cfg.get<boolean>('recordRetail') ||
         (await checkAdvancedCombatLogging(
@@ -343,7 +344,14 @@ export default class Manager {
         )),
     };
 
-    this.pushAdvancedLoggingStatus();
+    if (!isEqual(this.advancedLoggingStatus, updatedAdvancedLoggingStatus)) {
+      console.info(
+        '[Manager] Advanced combat logging status changed',
+        updatedAdvancedLoggingStatus,
+      );
+      this.advancedLoggingStatus = updatedAdvancedLoggingStatus;
+      this.pushAdvancedLoggingStatus();
+    }
   }
 
   /**

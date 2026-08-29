@@ -449,7 +449,6 @@ const checkAdvancedCombatLogging = async (
       return true;
     }
 
-    console.warn('[Util] Advanced combat logging is disabled', configWtfFile);
     return false;
   } catch (error) {
     console.warn('[Util] Failed to read Config.wtf at', configWtfFile, error);
