@@ -1225,7 +1225,13 @@ const instanceEncountersById: NumberKeyToStringValueMapType = {
 };
 
 type InstanceDifficultyPartyType = 'party' | 'raid' | 'pvp';
-type InstanceDifficultyIdType = 'lfr' | 'normal' | 'heroic' | 'mythic' | 'pvp';
+type InstanceDifficultyIdType =
+  | 'lfr'
+  | 'normal'
+  | 'heroic'
+  | 'mythic'
+  | 'pvp'
+  | 'delve';
 type InstanceDifficultyType = {
   difficultyID: InstanceDifficultyIdType;
   difficulty: string;
@@ -1412,6 +1418,12 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   233: {
     difficultyID: 'mythic', // Mythic flex (Rotmire)
     difficulty: 'M',
+    partyType: 'raid',
+    phrase: Phrase.Mythic,
+  },
+  208: {
+    difficultyID: 'delve', // Delve "??" boss?
+    difficulty: '??',
     partyType: 'raid',
     phrase: Phrase.Mythic,
   },
