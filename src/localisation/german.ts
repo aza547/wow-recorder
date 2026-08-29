@@ -575,6 +575,8 @@ const GERMAN: Translations = {
   [Phrase.UnknownDevice]: 'Unbekanntes Gerät',
   [Phrase.OpenLockDialog]: 'Sperrmenü öffnen',
   [Phrase.OpenTagDialog]: 'Tag-Menü öffnen',
+  [Phrase.InstantReplayLabel]: 'Sofortwiedergabe',
+  [Phrase.InstantReplayDisabled]: 'Die Sofortwiedergabe ist nur verfügbar, wenn eine Aufnahme aktiv ist.',
 };
 
 export default GERMAN;

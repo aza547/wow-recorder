@@ -574,6 +574,8 @@ const ENGLISH: Translations = {
   [Phrase.UnknownDevice]: 'Unknown Device',
   [Phrase.OpenLockDialog]: 'Open Lock Menu',
   [Phrase.OpenTagDialog]: 'Open Tag Menu',
+  [Phrase.InstantReplayLabel]: 'Instant Replay',
+  [Phrase.InstantReplayDisabled]: 'Instant replay is only available when a recording is active.',
 };
 
 export default ENGLISH;

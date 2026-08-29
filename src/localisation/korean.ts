@@ -575,6 +575,8 @@ const KOREAN: Translations = {
   [Phrase.UnknownDevice]: '알 수 없는 장치',
   [Phrase.OpenLockDialog]: '잠금 메뉴 열기',
   [Phrase.OpenTagDialog]: '태그 메뉴 열기',
+  [Phrase.InstantReplayLabel]: '인스턴트 리플레이',
+  [Phrase.InstantReplayDisabled]: '녹화가 활성화되어 있을 때만 인스턴트 리플레이를 사용할 수 있습니다.',
 };
 
 export default KOREAN;

@@ -6,10 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Always show instant replay button, but disable it when not available.
 ### Added
 - Add the 2560x720 resolution option.
 ### Fixed
 - [Issue 879](https://github.com/aza547/wow-recorder/issues/879) - Restore clip source navigation after the React Table v9 migration.
+- Better tracking of Coiled Altar fight progress.
+- Fix localisation of the Instant Replay button.
 
 ## [7.13.0] - 2026-08-27
 ### Changed
