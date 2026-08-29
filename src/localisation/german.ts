@@ -577,6 +577,11 @@ const GERMAN: Translations = {
   [Phrase.OpenTagDialog]: 'Tag-Menü öffnen',
   [Phrase.InstantReplayLabel]: 'Sofortwiedergabe',
   [Phrase.InstantReplayDisabled]: 'Die Sofortwiedergabe ist nur verfügbar, wenn eine Aufnahme aktiv ist.',
+  [Phrase.LatestCombatLogFileText]: 'Das neueste Kampflog in diesem Ordner ist:',
+  [Phrase.LatestCombatLogFileNotFound]: 'keine Logs gefunden',
+  [Phrase.LatestCombatLogFileOverAMonthOld]: 'über einen Monat alt',
+  [Phrase.LatestCombatLogFileDaysOld]: 'Tage alt',
+  [Phrase.LatestCombatLogFileLessThanADayOld]: 'weniger als einen Tag alt'
 };
 
 export default GERMAN;

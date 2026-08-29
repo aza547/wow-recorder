@@ -373,12 +373,17 @@ type AppState = {
   preferredViewpoint: string;
 };
 
-type AdvancedLoggingStatus = {
-  retail: boolean;
-  classic: boolean;
-  era: boolean;
-  retailPtr: boolean;
-  classicPtr: boolean;
+type CombatLogPathStatus = {
+  advanced: boolean;
+  latestLogAgeMs: number;
+};
+
+type CombatLoggingStatus = {
+  retail: CombatLogPathStatus;
+  classic: CombatLogPathStatus;
+  era: CombatLogPathStatus;
+  retailPtr: CombatLogPathStatus;
+  classicPtr: CombatLogPathStatus;
 };
 
 type CloudState = {
@@ -767,7 +772,8 @@ export {
   SoundAlerts,
   CloudState,
   ActivityStatus,
-  AdvancedLoggingStatus,
+  CombatLoggingStatus,
+  CombatLogPathStatus,
   KillVideoQueueItem,
   KillVideoSegment,
   KillVideoStatus,

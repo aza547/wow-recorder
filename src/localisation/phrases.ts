@@ -574,6 +574,11 @@ enum Phrase {
   OpenTagDialog,
   InstantReplayLabel,
   InstantReplayDisabled,
+  LatestCombatLogFileText,
+  LatestCombatLogFileNotFound,
+  LatestCombatLogFileOverAMonthOld,
+  LatestCombatLogFileDaysOld,
+  LatestCombatLogFileLessThanADayOld,
 }
 
 enum Language {

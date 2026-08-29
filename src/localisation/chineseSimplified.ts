@@ -577,6 +577,11 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.OpenTagDialog]: '打开标签菜单',
   [Phrase.InstantReplayLabel]: '即时回放',
   [Phrase.InstantReplayDisabled]: '只有在录制进行时才能使用即时回放功能。',
+  [Phrase.LatestCombatLogFileText]: '此文件夹中的最新战斗日志是：',
+  [Phrase.LatestCombatLogFileNotFound]: '未找到日志',
+  [Phrase.LatestCombatLogFileOverAMonthOld]: '超过一个月前',
+  [Phrase.LatestCombatLogFileDaysOld]: '天前',
+  [Phrase.LatestCombatLogFileLessThanADayOld]: '不到一天前',
 };
 
 export default CHINESE_SIMPLIFIED;

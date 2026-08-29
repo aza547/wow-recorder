@@ -251,7 +251,7 @@ const createWindow = async () => {
       cloud.refreshVideos(),
     ]);
 
-    manager.pushAdvancedLoggingStatus();
+    manager.pushCombatLoggingStatus();
   });
 
   window.on('focus', () => {

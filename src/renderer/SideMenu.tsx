@@ -18,7 +18,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDungeon, faDragon } from '@fortawesome/free-solid-svg-icons';
 import {
   ActivityStatus,
-  AdvancedLoggingStatus,
+  CombatLoggingStatus,
   AppState,
   ErrorReport,
   InstantReplayState,
@@ -73,7 +73,7 @@ interface IProps {
   updateAvailable: boolean;
   recorderCategory: VideoCategory | undefined;
   activityStatus: ActivityStatus | null;
-  advancedLoggingStatus: AdvancedLoggingStatus;
+  combatLoggingStatus: CombatLoggingStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
   instantReplayState: InstantReplayState;
   setInstantReplayState: Dispatch<SetStateAction<InstantReplayState>>;
@@ -94,7 +94,7 @@ const SideMenu = (props: IProps) => {
     config,
     updateAvailable,
     activityStatus,
-    advancedLoggingStatus,
+    combatLoggingStatus,
     setPreviewEnabled,
     instantReplayState,
     setInstantReplayState,
@@ -324,7 +324,7 @@ const SideMenu = (props: IProps) => {
         savingStatus={savingStatus}
         config={config}
         appState={appState}
-        advancedLoggingStatus={advancedLoggingStatus}
+        combatLoggingStatus={combatLoggingStatus}
         setPreviewEnabled={setPreviewEnabled}
       />
       <CloudStatusCard

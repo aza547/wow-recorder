@@ -1,11 +1,10 @@
-import fs, { FSWatcher } from 'fs';
+import { FSWatcher } from 'fs';
 import { app, ipcMain, powerMonitor } from 'electron';
 import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
   buildClipMetadata,
   checkAdvancedCombatLogging,
-  getConfigWtfPath,
   getOBSFormattedDate,
   isManualRecordHotKey,
   nextKeyPressPromise,
@@ -15,6 +14,8 @@ import {
   refreshInstantReplayState,
   rendererVideoToMetadata,
   resetActivityStatus,
+  getMostRecentCombatLogModifiedTime,
+  startWatchingConfigWtf,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -28,10 +29,11 @@ import {
   MicStatus,
   WowProcessEvent,
   BaseConfig,
-  AdvancedLoggingStatus,
+  CombatLoggingStatus,
   KillVideoQueueItem,
   RendererVideo,
   KillVideoSegment,
+  CombatLogPathStatus,
 } from './types';
 import {
   getObsVideoConfig,
@@ -50,7 +52,6 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
-import { isEqual } from 'lodash';
 
 /**
  * Manager class.
@@ -111,12 +112,12 @@ export default class Manager {
   /**
    * Cached advanced logging status per flavour, pushed to the frontend.
    */
-  private advancedLoggingStatus: AdvancedLoggingStatus = {
-    retail: true,
-    classic: true,
-    era: true,
-    retailPtr: true,
-    classicPtr: true,
+  private combatLoggingStatus: CombatLoggingStatus = {
+    retail: { advanced: true, latestLogAgeMs: -1 },
+    classic: { advanced: true, latestLogAgeMs: -1 },
+    era: { advanced: true, latestLogAgeMs: -1 },
+    retailPtr: { advanced: true, latestLogAgeMs: -1 },
+    classicPtr: { advanced: true, latestLogAgeMs: -1 },
   };
 
   /**
@@ -162,7 +163,7 @@ export default class Manager {
       this.setConfigValid();
       this.poller.start();
       await this.watchConfigWtfFiles();
-      await this.checkAdvancedLogging();
+      await this.refreshCombatLoggingStatus();
     }
 
     this.reconfiguring = false;
@@ -207,7 +208,7 @@ export default class Manager {
     await DiskClient.getInstance().refreshVideos();
 
     await this.watchConfigWtfFiles();
-    await this.checkAdvancedLogging();
+    await this.refreshCombatLoggingStatus();
   }
 
   /**
@@ -313,52 +314,158 @@ export default class Manager {
     }
   }
 
-  /**
-   * Check Config.wtf for each configured WoW flavour and warn the user
-   * if advanced combat logging is not enabled.
-   */
-  public async checkAdvancedLogging() {
-    const updatedAdvancedLoggingStatus = {
-      retail:
-        !this.cfg.get<boolean>('recordRetail') ||
-        (await checkAdvancedCombatLogging(
-          this.cfg.get<string>('retailLogPath'),
-        )),
-      classic:
-        !this.cfg.get<boolean>('recordClassic') ||
-        (await checkAdvancedCombatLogging(
-          this.cfg.get<string>('classicLogPath'),
-        )),
-      era:
-        !this.cfg.get<boolean>('recordEra') ||
-        (await checkAdvancedCombatLogging(this.cfg.get<string>('eraLogPath'))),
-      retailPtr:
-        !this.cfg.get<boolean>('recordRetailPtr') ||
-        (await checkAdvancedCombatLogging(
-          this.cfg.get<string>('retailPtrLogPath'),
-        )),
-      classicPtr:
-        !this.cfg.get<boolean>('recordClassicPtr') ||
-        (await checkAdvancedCombatLogging(
-          this.cfg.get<string>('classicPtrLogPath'),
-        )),
+  public async refreshCombatLoggingStatus() {
+    const recordRetail = this.cfg.get<boolean>('recordRetail');
+    const retailLogPath = this.cfg.get<string>('retailLogPath');
+
+    const recordClassic = this.cfg.get<boolean>('recordClassic');
+    const classicLogPath = this.cfg.get<string>('classicLogPath');
+
+    const recordEra = this.cfg.get<boolean>('recordEra');
+    const eraLogPath = this.cfg.get<string>('eraLogPath');
+
+    const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
+    const retailPtrLogPath = this.cfg.get<string>('retailPtrLogPath');
+
+    const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
+    const classicPtrLogPath = this.cfg.get<string>('classicPtrLogPath');
+
+    const retail: CombatLogPathStatus = {
+      latestLogAgeMs: recordRetail
+        ? await getMostRecentCombatLogModifiedTime(retailLogPath)
+        : -1,
+      advanced:
+        !recordRetail || (await checkAdvancedCombatLogging(retailLogPath)),
     };
 
-    if (!isEqual(this.advancedLoggingStatus, updatedAdvancedLoggingStatus)) {
-      console.info(
-        '[Manager] Advanced combat logging status changed',
-        updatedAdvancedLoggingStatus,
-      );
-      this.advancedLoggingStatus = updatedAdvancedLoggingStatus;
-      this.pushAdvancedLoggingStatus();
+    const classic: CombatLogPathStatus = {
+      latestLogAgeMs: recordClassic
+        ? await getMostRecentCombatLogModifiedTime(classicLogPath)
+        : -1,
+      advanced:
+        !recordClassic || (await checkAdvancedCombatLogging(classicLogPath)),
+    };
+
+    const era: CombatLogPathStatus = {
+      latestLogAgeMs: recordEra
+        ? await getMostRecentCombatLogModifiedTime(eraLogPath)
+        : -1,
+      advanced: !recordEra || (await checkAdvancedCombatLogging(eraLogPath)),
+    };
+
+    const retailPtr: CombatLogPathStatus = {
+      latestLogAgeMs: recordRetailPtr
+        ? await getMostRecentCombatLogModifiedTime(retailPtrLogPath)
+        : -1,
+      advanced:
+        !recordRetailPtr ||
+        (await checkAdvancedCombatLogging(retailPtrLogPath)),
+    };
+
+    const classicPtr: CombatLogPathStatus = {
+      latestLogAgeMs: recordClassicPtr
+        ? await getMostRecentCombatLogModifiedTime(classicPtrLogPath)
+        : -1,
+      advanced:
+        !recordClassicPtr ||
+        (await checkAdvancedCombatLogging(classicPtrLogPath)),
+    };
+
+    this.combatLoggingStatus = {
+      retail,
+      classic,
+      era,
+      retailPtr,
+      classicPtr,
+    };
+
+    console.info(
+      '[Manager] Combat logging status is',
+      this.combatLoggingStatus,
+    );
+
+    this.pushCombatLoggingStatus();
+  }
+
+  private async checkAdvancedCombatLoggingForGameType(
+    key: keyof CombatLoggingStatus,
+  ) {
+    if (key === 'retail') {
+      const recordRetail = this.cfg.get<boolean>('recordRetail');
+      const retailLogPath = this.cfg.get<string>('retailLogPath');
+
+      const enabled = recordRetail
+        ? await checkAdvancedCombatLogging(retailLogPath)
+        : false;
+
+      if (this.combatLoggingStatus.retail.advanced !== enabled) {
+        console.info('[Manager] Advanced logging status changed', key, enabled);
+        this.combatLoggingStatus.retail.advanced = enabled;
+        this.pushCombatLoggingStatus();
+      }
+    } else if (key === 'classic') {
+      const recordClassic = this.cfg.get<boolean>('recordClassic');
+      const classicLogPath = this.cfg.get<string>('classicLogPath');
+
+      const enabled = recordClassic
+        ? await checkAdvancedCombatLogging(classicLogPath)
+        : false;
+
+      if (this.combatLoggingStatus.classic.advanced !== enabled) {
+        console.info('[Manager] Advanced logging status changed', key, enabled);
+        this.combatLoggingStatus.classic.advanced = enabled;
+        this.pushCombatLoggingStatus();
+      }
+    } else if (key === 'era') {
+      const recordEra = this.cfg.get<boolean>('recordEra');
+      const eraLogPath = this.cfg.get<string>('eraLogPath');
+
+      const enabled = recordEra
+        ? await checkAdvancedCombatLogging(eraLogPath)
+        : false;
+
+      if (this.combatLoggingStatus.era.advanced !== enabled) {
+        console.info('[Manager] Advanced logging status changed', key, enabled);
+        this.combatLoggingStatus.era.advanced = enabled;
+        this.pushCombatLoggingStatus();
+      }
+    } else if (key === 'retailPtr') {
+      const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
+      const retailPtrLogPath = this.cfg.get<string>('retailPtrLogPath');
+
+      const enabled = recordRetailPtr
+        ? await checkAdvancedCombatLogging(retailPtrLogPath)
+        : false;
+
+      if (this.combatLoggingStatus.retailPtr.advanced !== enabled) {
+        console.info('[Manager] Advanced logging status changed', key, enabled);
+        this.combatLoggingStatus.retailPtr.advanced = enabled;
+        this.pushCombatLoggingStatus();
+      }
+    } else if (key === 'classicPtr') {
+      const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
+      const classicPtrLogPath = this.cfg.get<string>('classicPtrLogPath');
+
+      const enabled = recordClassicPtr
+        ? await checkAdvancedCombatLogging(classicPtrLogPath)
+        : false;
+
+      if (this.combatLoggingStatus.classicPtr.advanced !== enabled) {
+        console.info('[Manager] Advanced logging status changed', key, enabled);
+        this.combatLoggingStatus.classicPtr.advanced = enabled;
+        this.pushCombatLoggingStatus();
+      }
+    } else {
+      console.error('[Manager] Invalid combat logging status key', key);
+      throw new Error('Invalid combat logging status key');
     }
   }
 
   /**
-   * Push the cached advanced logging status to the frontend.
+   * Push the cached combat logging status to the frontend.
    */
-  public pushAdvancedLoggingStatus() {
-    send('updateAdvancedLoggingStatus', this.advancedLoggingStatus);
+  public pushCombatLoggingStatus() {
+    send('updateCombatLoggingStatus', this.combatLoggingStatus);
   }
 
   /**
@@ -366,36 +473,83 @@ export default class Manager {
    * updates reactively when the user toggles the setting in WoW.
    */
   private watchConfigWtfFiles() {
-    console.info('Close any existing Config.wtf file watchers');
+    console.info('[Manager] Close any existing Config.wtf file watchers');
     this.configWtfWatchers.forEach((w) => w.close());
     this.configWtfWatchers = [];
 
-    const logPaths = new Set<string>();
+    const recordRetail = this.cfg.get<boolean>('recordRetail');
+    const recordClassic = this.cfg.get<boolean>('recordClassic');
+    const recordEra = this.cfg.get<boolean>('recordEra');
+    const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
+    const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
 
-    if (this.cfg.get<boolean>('recordRetail'))
-      logPaths.add(this.cfg.get<string>('retailLogPath'));
-    if (this.cfg.get<boolean>('recordClassic'))
-      logPaths.add(this.cfg.get<string>('classicLogPath'));
-    if (this.cfg.get<boolean>('recordEra'))
-      logPaths.add(this.cfg.get<string>('eraLogPath'));
-    if (this.cfg.get<boolean>('recordRetailPtr'))
-      logPaths.add(this.cfg.get<string>('retailPtrLogPath'));
-    if (this.cfg.get<boolean>('recordClassicPtr'))
-      logPaths.add(this.cfg.get<string>('classicPtrLogPath'));
+    if (recordRetail) {
+      const logPath = this.cfg.get<string>('retailLogPath');
+      const key: keyof CombatLoggingStatus = 'retail';
 
-    console.info('Start watching Config.wtf files for', [...logPaths]);
+      const watcher = startWatchingConfigWtf(logPath, () => {
+        this.checkAdvancedCombatLoggingForGameType(key);
+      });
 
-    for (const logPath of logPaths) {
-      const configPath = getConfigWtfPath(logPath);
-
-      try {
-        const watcher = fs.watch(configPath, () => {
-          this.checkAdvancedLogging();
-        });
-
+      if (watcher) {
+        console.info('[Manager] Watching Config.wtf for', key, logPath);
         this.configWtfWatchers.push(watcher);
-      } catch (err) {
-        console.warn('[Manager] Failed to watch Config.wtf:', configPath, err);
+      }
+    }
+
+    if (recordClassic) {
+      const logPath = this.cfg.get<string>('classicLogPath');
+      const key: keyof CombatLoggingStatus = 'classic';
+
+      const watcher = startWatchingConfigWtf(logPath, () => {
+        this.checkAdvancedCombatLoggingForGameType(key);
+      });
+
+      if (watcher) {
+        console.info('[Manager] Watching Config.wtf for', key, logPath);
+        this.configWtfWatchers.push(watcher);
+      }
+    }
+
+    if (recordEra) {
+      const logPath = this.cfg.get<string>('eraLogPath');
+      const key: keyof CombatLoggingStatus = 'era';
+
+      const watcher = startWatchingConfigWtf(logPath, () => {
+        this.checkAdvancedCombatLoggingForGameType(key);
+      });
+
+      if (watcher) {
+        console.info('[Manager] Watching Config.wtf for', key, logPath);
+        this.configWtfWatchers.push(watcher);
+      }
+    }
+
+    if (recordRetailPtr) {
+      const logPath = this.cfg.get<string>('retailPtrLogPath');
+      const key: keyof CombatLoggingStatus = 'retailPtr';
+
+      const watcher = startWatchingConfigWtf(logPath, () => {
+        this.checkAdvancedCombatLoggingForGameType(key);
+      });
+
+      if (watcher) {
+        console.info('[Manager] Watching Config.wtf for', key, logPath);
+        this.configWtfWatchers.push(watcher);
+      }
+    }
+
+    if (recordClassicPtr) {
+      const logPath = this.cfg.get<string>('classicPtrLogPath');
+      const key: keyof CombatLoggingStatus = 'classicPtr';
+
+      const watcher = startWatchingConfigWtf(logPath, () => {
+        this.checkAdvancedCombatLoggingForGameType(key);
+      });
+
+      if (watcher) {
+        console.info('[Manager] Watching Config.wtf for', key, logPath);
+        this.configWtfWatchers.push(watcher);
       }
     }
   }
@@ -723,6 +877,25 @@ export default class Manager {
 
       this.manualHotKeyDisabled = false;
       return event;
+    });
+
+    ipcMain.on(
+      'refreshCombatLogStatus',
+      async (): Promise<PTTKeyPressEvent> => {
+        this.manualHotKeyDisabled = true;
+
+        const event = await Promise.race([
+          nextKeyPressPromise(),
+          nextMousePressPromise(),
+        ]);
+
+        this.manualHotKeyDisabled = false;
+        return event;
+      },
+    );
+
+    ipcMain.on('refreshCombatLogStatus', () => {
+      this.refreshCombatLoggingStatus();
     });
 
     /**

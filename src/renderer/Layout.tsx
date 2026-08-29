@@ -1,12 +1,11 @@
 import * as React from 'react';
 import {
-  AdvancedLoggingStatus,
+  CombatLoggingStatus,
   Pages,
   RecStatus,
   AppState,
   RendererVideo,
   InstantReplayState,
-  ActivityStatus,
 } from 'main/types';
 import { Dispatch, RefObject, SetStateAction } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
@@ -25,7 +24,7 @@ interface IProps {
   playerHeight: RefObject<number>;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
-  advancedLoggingStatus: AdvancedLoggingStatus;
+  combatLoggingStatus: CombatLoggingStatus;
   previewEnabled: boolean;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
   instantReplayState: InstantReplayState;
@@ -46,7 +45,7 @@ const Layout = (props: IProps) => {
     playerHeight,
     config,
     setConfig,
-    advancedLoggingStatus,
+    combatLoggingStatus,
     previewEnabled,
     setPreviewEnabled,
     instantReplayState,
@@ -77,7 +76,7 @@ const Layout = (props: IProps) => {
         setConfig={setConfig}
         appState={appState}
         setAppState={setAppState}
-        advancedLoggingStatus={advancedLoggingStatus}
+        combatLoggingStatus={combatLoggingStatus}
         videoState={videoState}
       />
     );

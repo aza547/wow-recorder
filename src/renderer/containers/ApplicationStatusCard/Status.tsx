@@ -4,7 +4,7 @@ import { HardDriveDownload, TriangleAlert } from 'lucide-react';
 import { ConfigurationSchema } from 'config/configSchema';
 import {
   ActivityStatus,
-  AdvancedLoggingStatus,
+  CombatLoggingStatus,
   AppState,
   RecStatus,
   SaveStatus,
@@ -37,7 +37,7 @@ type StatusProps = {
   config: ConfigurationSchema;
   appState: AppState;
   activityStatus: ActivityStatus | null;
-  advancedLoggingStatus: AdvancedLoggingStatus;
+  combatLoggingStatus: CombatLoggingStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 };
 
@@ -48,7 +48,7 @@ const Status = ({
   config,
   appState,
   activityStatus,
-  advancedLoggingStatus,
+  combatLoggingStatus,
   setPreviewEnabled,
 }: StatusProps) => {
   const { language } = appState;
@@ -216,7 +216,7 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.Retail)}
                 {': '}
               </span>
-              {!advancedLoggingStatus.retail && (
+              {!combatLoggingStatus.retail.advanced && (
                 <Tooltip
                   content={getLocalePhrase(
                     language,
@@ -239,7 +239,7 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.Classic)}
                 {': '}
               </span>
-              {!advancedLoggingStatus.classic && (
+              {!combatLoggingStatus.classic.advanced && (
                 <Tooltip
                   content={getLocalePhrase(
                     language,
@@ -262,7 +262,7 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.Era)}
                 {': '}
               </span>
-              {!advancedLoggingStatus.era && (
+              {!combatLoggingStatus.era.advanced && (
                 <Tooltip
                   content={getLocalePhrase(
                     language,
@@ -285,7 +285,7 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.RetailPtr)}
                 {': '}
               </span>
-              {!advancedLoggingStatus.retailPtr && (
+              {!combatLoggingStatus.retailPtr.advanced && (
                 <Tooltip
                   content={getLocalePhrase(
                     language,
@@ -308,7 +308,7 @@ const Status = ({
                 {getLocalePhrase(language, Phrase.ClassicPtr)}
                 {': '}
               </span>
-              {!advancedLoggingStatus.classicPtr && (
+              {!combatLoggingStatus.classicPtr.advanced && (
                 <Tooltip
                   content={getLocalePhrase(
                     language,

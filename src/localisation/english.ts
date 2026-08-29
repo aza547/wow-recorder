@@ -232,7 +232,7 @@ const ENGLISH: Translations = {
   [Phrase.TagButtonTooltip]: 'Add a custom tag.',
   [Phrase.StarButtonTooltip]: 'Never age out',
   [Phrase.UnstarButtonTooltip]: 'Age out',
-  [Phrase.OpenFolderButtonTooltip]: 'Open location',
+  [Phrase.OpenFolderButtonTooltip]: 'Open Location',
   [Phrase.DeleteButtonTooltip]: 'Delete',
   [Phrase.BulkDeleteButtonTooltip]: 'Permanently delete selected rows, including local and cloud stored videos.',
   [Phrase.ShareLinkButtonTooltip]: 'Get shareable link',
@@ -576,6 +576,11 @@ const ENGLISH: Translations = {
   [Phrase.OpenTagDialog]: 'Open Tag Menu',
   [Phrase.InstantReplayLabel]: 'Instant Replay',
   [Phrase.InstantReplayDisabled]: 'Instant replay is only available when a recording is active.',
+  [Phrase.LatestCombatLogFileText]: 'Latest combat log in this folder is:',
+  [Phrase.LatestCombatLogFileNotFound]: 'no logs found',
+  [Phrase.LatestCombatLogFileOverAMonthOld]: 'over a month old',
+  [Phrase.LatestCombatLogFileDaysOld]: 'days old',
+  [Phrase.LatestCombatLogFileLessThanADayOld]: 'less than a day old',
 };
 
 export default ENGLISH;

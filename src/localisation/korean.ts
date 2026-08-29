@@ -577,6 +577,11 @@ const KOREAN: Translations = {
   [Phrase.OpenTagDialog]: '태그 메뉴 열기',
   [Phrase.InstantReplayLabel]: '인스턴트 리플레이',
   [Phrase.InstantReplayDisabled]: '녹화가 활성화되어 있을 때만 인스턴트 리플레이를 사용할 수 있습니다.',
+  [Phrase.LatestCombatLogFileText]: '이 폴더의 가장 최근 전투 기록은:',
+  [Phrase.LatestCombatLogFileNotFound]: '로그를 찾을 수 없음',
+  [Phrase.LatestCombatLogFileOverAMonthOld]: '한 달 이상 지남',
+  [Phrase.LatestCombatLogFileDaysOld]: '일 지남',
+  [Phrase.LatestCombatLogFileLessThanADayOld]: '하루 미만 지남'
 };
 
 export default KOREAN;
