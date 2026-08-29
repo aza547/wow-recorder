@@ -8,15 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Always show instant replay button, but disable it when not available.
 ### Added
-- Add the 2560x720 resolution option.
-- [Issue 894](https://github.com/aza547/wow-recorder/issues/894) - Game settings now displays the age of the latest combat log to make it easier to spot misconfigurations.
+- Add the `2560x720` resolution option.
+- [Issue 894](https://github.com/aza547/wow-recorder/issues/894) - Displays the age of the latest combat log in settings to make it easier to spot misconfigurations.
 - There is now a "open location" button for configured log paths for ease of access.
-- Azra'tec recording support (it's a bit lazy and will just record as a "Mythic" raid encounter).
+- Azra'tec recording support (delve boss, it will record as if it were a Mythic raid encounter).
 ### Fixed
 - [Issue 879](https://github.com/aza547/wow-recorder/issues/879) - Restore clip source navigation after the React Table v9 migration.
 - Better tracking of Coiled Altar fight progress.
 - Fix localisation of the Instant Replay button.
-- [Issue 880](https://github.com/aza547/wow-recorder/issues/880), [Issue 900](https://github.com/aza547/wow-recorder/issues/900) - Fix a handful of potential race conditions in the WCR fork of OBS, by bumping the version of noobs to `0.0.205`. 
+- [Issue 880](https://github.com/aza547/wow-recorder/issues/880), [Issue 900](https://github.com/aza547/wow-recorder/issues/900) - Take noobs `0.0.205` which has a bunch of mutex protection around the replay buffer. 
 
 ## [7.13.0] - 2026-08-27
 ### Changed
