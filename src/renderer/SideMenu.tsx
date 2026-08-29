@@ -233,7 +233,7 @@ const SideMenu = (props: IProps) => {
       instantReplayState.current || appState.page === Pages.InstantReplay
     );
 
-    let spanClassName = 'inline-flex items-center';
+    let spanClassName = 'inline-flex items-center w-full';
     let radioClassName = '';
     let textClassName = 'font-semibold';
 
