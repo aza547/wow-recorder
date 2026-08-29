@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 879](https://github.com/aza547/wow-recorder/issues/879) - Restore clip source navigation after the React Table v9 migration.
 - Better tracking of Coiled Altar fight progress.
 - Fix localisation of the Instant Replay button.
+- [Issue 880](https://github.com/aza547/wow-recorder/issues/880), [Issue 900](https://github.com/aza547/wow-recorder/issues/900) - Fix a handful of potential race conditions in the WCR fork of OBS, by bumping the version of noobs to `0.0.205`. 
 
 ## [7.13.0] - 2026-08-27
 ### Changed
