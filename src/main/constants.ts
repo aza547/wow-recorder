@@ -751,7 +751,7 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   399: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Ruby Life Pools
   587: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Murder Row
   586: [32 * 60, 32 * 60 * 0.8, 32 * 60 * 0.6], // Den of Nalorakk
-  584: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // The Blinding Vale
+  584: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // The Blinding Vale
   585: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Voidscar Arena
   588: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Altar of Fangs
   250: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // Temple of Sethraliss
