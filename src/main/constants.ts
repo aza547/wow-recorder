@@ -754,7 +754,7 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   584: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // The Blinding Vale
   585: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Voidscar Arena
   588: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Altar of Fangs
-  250: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // Temple of Sethraliss
+  250: [32 * 60, 32 * 60 * 0.8, 32 * 60 * 0.6], // Temple of Sethraliss
   249: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // Kings' Rest
 };
 
