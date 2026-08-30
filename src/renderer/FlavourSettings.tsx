@@ -1,7 +1,7 @@
 import { ConfigurationSchema, configSchema } from 'config/configSchema';
 import React, { Dispatch, SetStateAction } from 'react';
-import { AdvancedLoggingStatus, AppState, RecStatus } from 'main/types';
-import { Info } from 'lucide-react';
+import { AppState, CombatLoggingStatus, RecStatus } from 'main/types';
+import { FolderOpen, Info } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
 import { pathSelect } from './rendererutils';
@@ -11,26 +11,29 @@ import { Input } from './components/Input/Input';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import TextBanner from './components/TextBanner/TextBanner';
 import { Phrase } from 'localisation/phrases';
+import { Button } from './components/Button/Button';
 
 interface IProps {
   recorderStatus: RecStatus;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   appState: AppState;
-  advancedLoggingStatus: AdvancedLoggingStatus;
+  combatLoggingStatus: CombatLoggingStatus;
 }
 
 const ipc = window.electron.ipcRenderer;
 
 const FlavourSettings: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, config, setConfig, appState, advancedLoggingStatus } =
+  const { recorderStatus, config, setConfig, appState, combatLoggingStatus } =
     props;
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
-    // Don't fire on the initial render.
     if (initialRender.current) {
-      initialRender.current = false;
+      // Refresh the combat log status on the initial render of this component.
+      // There is no mechanism to refresh that live, unlike the advanced combat
+      // logging status because I can't be bothered to implement that.
+      ipc.refreshCombatLogStatus();
       return;
     }
 
@@ -129,6 +132,67 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     });
   };
 
+  const getLastLogAgeDisplay = (
+    path: string,
+    key: keyof CombatLoggingStatus,
+  ) => {
+    if (!path) {
+      return <></>;
+    }
+
+    let ageDays;
+
+    if (combatLoggingStatus[key].latestLogAgeMs === -1) {
+      ageDays = -1;
+    } else {
+      ageDays = Math.floor(
+        (Date.now() - combatLoggingStatus[key].latestLogAgeMs) /
+          (1000 * 60 * 60 * 24),
+      );
+    }
+
+    let ageHumanReadable;
+    let ageClassName;
+
+    if (ageDays === -1) {
+      ageClassName = 'text-warning opacity-80';
+      ageHumanReadable = getLocalePhrase(
+        appState.language,
+        Phrase.LatestCombatLogFileNotFound,
+      );
+    } else if (ageDays > 31) {
+      ageClassName = 'text-warning opacity-80';
+      ageHumanReadable = getLocalePhrase(
+        appState.language,
+        Phrase.LatestCombatLogFileOverAMonthOld,
+      );
+    } else if (ageDays >= 1) {
+      ageClassName = 'text-success opacity-80';
+
+      ageHumanReadable = `${ageDays} ${getLocalePhrase(
+        appState.language,
+        Phrase.LatestCombatLogFileDaysOld,
+      )}`;
+    } else {
+      ageClassName = 'text-success opacity-80';
+      ageHumanReadable = getLocalePhrase(
+        appState.language,
+        Phrase.LatestCombatLogFileLessThanADayOld,
+      );
+    }
+
+    return (
+      <>
+        {path && (
+          <div className="inline-flex ml-2 text-xs font-normal gap-1 text-foreground">
+            {getLocalePhrase(appState.language, Phrase.LatestCombatLogFileText)}
+            <div className={ageClassName}>{ageHumanReadable}</div>
+          </div>
+        )}
+      </>
+    );
+  };
+
   const getRetailSettings = () => {
     if (isComponentDisabled()) {
       return <></>;
@@ -166,13 +230,31 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               >
                 <Info size={20} className="inline-flex ml-2" />
               </Tooltip>
+              {getLastLogAgeDisplay(config.retailLogPath, 'retail')}
             </Label>
-            <Input
-              value={config.retailLogPath}
-              onClick={setRetailLogPath}
-              readOnly
-              required
-            />
+            <div className="flex">
+              <Input
+                value={config.retailLogPath}
+                onClick={setRetailLogPath}
+                readOnly
+                required
+              />
+              <Tooltip
+                content={getLocalePhrase(
+                  appState.language,
+                  Phrase.OpenFolderButtonTooltip,
+                )}
+                side="top"
+              >
+                <Button
+                  variant="ghost"
+                  disabled={!config.retailLogPath}
+                  onClick={() => ipc.openSystemExplorer(config.retailLogPath)}
+                >
+                  <FolderOpen size={20} />
+                </Button>
+              </Tooltip>
+            </div>
             {config.retailLogPath === '' && (
               <span className="text-error text-sm">
                 {getLocalePhrase(
@@ -181,8 +263,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {!advancedLoggingStatus.retail && (
-              <span className="text-error text-sm">
+            {!combatLoggingStatus.retail.advanced && (
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
@@ -251,13 +333,31 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               >
                 <Info size={20} className="inline-flex ml-2" />
               </Tooltip>
+              {getLastLogAgeDisplay(config.classicLogPath, 'classic')}
             </Label>
-            <Input
-              value={config.classicLogPath}
-              onClick={setClassicLogPath}
-              readOnly
-              required
-            />
+            <div className="flex">
+              <Input
+                value={config.classicLogPath}
+                onClick={setClassicLogPath}
+                readOnly
+                required
+              />
+              <Tooltip
+                content={getLocalePhrase(
+                  appState.language,
+                  Phrase.OpenFolderButtonTooltip,
+                )}
+                side="top"
+              >
+                <Button
+                  variant="ghost"
+                  disabled={!config.classicLogPath}
+                  onClick={() => ipc.openSystemExplorer(config.classicLogPath)}
+                >
+                  <FolderOpen size={20} />
+                </Button>
+              </Tooltip>
+            </div>
             {config.classicLogPath === '' && (
               <span className="text-error text-sm">
                 {getLocalePhrase(
@@ -266,8 +366,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {!advancedLoggingStatus.classic && (
-              <span className="text-error text-sm">
+            {!combatLoggingStatus.classic.advanced && (
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
@@ -348,13 +448,31 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               >
                 <Info size={20} className="inline-flex ml-2" />
               </Tooltip>
+              {getLastLogAgeDisplay(config.eraLogPath, 'era')}
             </Label>
-            <Input
-              value={config.eraLogPath}
-              onClick={setEraLogPath}
-              readOnly
-              required
-            />
+            <div className="flex">
+              <Input
+                value={config.eraLogPath}
+                onClick={setEraLogPath}
+                readOnly
+                required
+              />
+              <Tooltip
+                content={getLocalePhrase(
+                  appState.language,
+                  Phrase.OpenFolderButtonTooltip,
+                )}
+                side="top"
+              >
+                <Button
+                  variant="ghost"
+                  disabled={!config.eraLogPath}
+                  onClick={() => ipc.openSystemExplorer(config.eraLogPath)}
+                >
+                  <FolderOpen size={20} />
+                </Button>
+              </Tooltip>
+            </div>
             {config.eraLogPath === '' && (
               <span className="text-error text-xs font-semibold mt-1">
                 {getLocalePhrase(
@@ -363,8 +481,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {!advancedLoggingStatus.era && (
-              <span className="text-error text-sm">
+            {!combatLoggingStatus.era.advanced && (
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
@@ -442,13 +560,33 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               >
                 <Info size={20} className="inline-flex ml-2" />
               </Tooltip>
+              {getLastLogAgeDisplay(config.retailPtrLogPath, 'retailPtr')}
             </Label>
-            <Input
-              value={config.retailPtrLogPath}
-              onClick={setRetailPtrLogPath}
-              readOnly
-              required
-            />
+            <div className="flex">
+              <Input
+                value={config.retailPtrLogPath}
+                onClick={setRetailPtrLogPath}
+                readOnly
+                required
+              />
+              <Tooltip
+                content={getLocalePhrase(
+                  appState.language,
+                  Phrase.OpenFolderButtonTooltip,
+                )}
+                side="top"
+              >
+                <Button
+                  variant="ghost"
+                  disabled={!config.retailPtrLogPath}
+                  onClick={() =>
+                    ipc.openSystemExplorer(config.retailPtrLogPath)
+                  }
+                >
+                  <FolderOpen size={20} />
+                </Button>
+              </Tooltip>
+            </div>
             {config.retailPtrLogPath === '' && (
               <span className="text-error text-xs font-semibold mt-1">
                 {getLocalePhrase(
@@ -457,8 +595,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {!advancedLoggingStatus.retailPtr && (
-              <span className="text-error text-sm">
+            {!combatLoggingStatus.retailPtr.advanced && (
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
@@ -541,13 +679,33 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               >
                 <Info size={20} className="inline-flex ml-2" />
               </Tooltip>
+              {getLastLogAgeDisplay(config.classicPtrLogPath, 'classicPtr')}
             </Label>
-            <Input
-              value={config.classicPtrLogPath}
-              onClick={setClassicPtrLogPath}
-              readOnly
-              required
-            />
+            <div className="flex">
+              <Input
+                value={config.classicPtrLogPath}
+                onClick={setClassicPtrLogPath}
+                readOnly
+                required
+              />
+              <Tooltip
+                content={getLocalePhrase(
+                  appState.language,
+                  Phrase.OpenFolderButtonTooltip,
+                )}
+                side="top"
+              >
+                <Button
+                  variant="ghost"
+                  disabled={!config.classicPtrLogPath}
+                  onClick={() =>
+                    ipc.openSystemExplorer(config.classicPtrLogPath)
+                  }
+                >
+                  <FolderOpen size={20} />
+                </Button>
+              </Tooltip>
+            </div>
             {config.classicPtrLogPath === '' && (
               <span className="text-error text-xs font-semibold mt-1">
                 {getLocalePhrase(
@@ -556,8 +714,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
                 )}
               </span>
             )}
-            {!advancedLoggingStatus.classicPtr && (
-              <span className="text-error text-sm">
+            {!combatLoggingStatus.classicPtr.advanced && (
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
@@ -587,7 +745,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[160px]">
-          <Label htmlFor="recordClassicPtr" className="flex items-center">
+          <Label htmlFor="validateLogPath" className="flex items-center">
             {getLocalePhrase(appState.language, Phrase.ValidateLogPathLabel)}
             <Tooltip
               content={getLocalePhrase(

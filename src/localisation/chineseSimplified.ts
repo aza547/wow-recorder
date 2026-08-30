@@ -1,6 +1,5 @@
 import { Translations, Phrase } from './phrases';
 
-/* eslint-disable prettier/prettier */
 const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.NoVideosSaved]: '你还没有为此分类保存任何视频',
   [Phrase.FirstTimeHere]: '如果这是你第一次使用，下面的链接中可以找到设置说明。如果你遇到问题，请在 Discord 的 #help 频道寻求支持。',
@@ -418,7 +417,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ShowBothTooltip]: "将磁盘和云视频分组并显示所有内容",
   [Phrase.GuildNoPermission]: "公会权限不足，无法执行此操作。",
   [Phrase.RemoveTagFromList]: "从列表中删除 %value%",
-  [Phrase.DownloadUploadDisabledDueToFilter]: "由于当前选择的存储过滤器而被禁用。",
+  [Phrase.DisabledDueToFilter]: "由于当前选择的存储过滤器而被禁用。",
   [Phrase.ProcessesLabel]: "应用程序",
   [Phrase.SelectProcess]: "选择一个应用程序",
   [Phrase.AudioProcessDevicesDescription]: "除了任何选定的扬声器和麦克风之外，还可以从中捕获音频的应用程序。",
@@ -569,6 +568,29 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.SelectRange]: '选择范围',
   [Phrase.SelectMultiple]: '选择多个',
   [Phrase.SelectAll]: '全选',
+  [Phrase.Close]: '关闭',
+  [Phrase.Lock]: '锁定',
+  [Phrase.LockAll]: '全部锁定',
+  [Phrase.UnlockAll]: '全部解锁',
+  [Phrase.LockedDescription]: '已锁定的视频不会被自动删除。未锁定的视频可能会被自动删除，以便为新视频腾出空间。',
+  [Phrase.SafeFromAutomaticDeletion]: '不会被自动删除',
+  [Phrase.EligibleForAutomaticDeletion]: '可自动删除',
+  [Phrase.NoCustomTag]: '无自定义标签',
+  [Phrase.DeleteSelectionContainsNoLocked]: '此选择中没有锁定的录制内容。',
+  [Phrase.DeleteIsPermanent]: '删除视频是永久性的，无法撤销。',
+  [Phrase.TagDescription]: '可以为视频添加标签，以便日后查找。标签不会用于其他用途，也不会影响视频。',
+  [Phrase.ClearAll]: '全部清除',
+  [Phrase.Diagnostics]: '诊断',
+  [Phrase.UnknownDevice]: '未知设备',
+  [Phrase.OpenLockDialog]: '打开锁定菜单',
+  [Phrase.OpenTagDialog]: '打开标签菜单',
+  [Phrase.InstantReplayLabel]: '即时回放',
+  [Phrase.InstantReplayDisabled]: '只有在录制进行时才能使用即时回放功能。',
+  [Phrase.LatestCombatLogFileText]: '此文件夹中的最新战斗日志是：',
+  [Phrase.LatestCombatLogFileNotFound]: '未找到日志',
+  [Phrase.LatestCombatLogFileOverAMonthOld]: '超过一个月前',
+  [Phrase.LatestCombatLogFileDaysOld]: '天前',
+  [Phrase.LatestCombatLogFileLessThanADayOld]: '不到一天前',
 };
 
 export default CHINESE_SIMPLIFIED;

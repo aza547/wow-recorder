@@ -118,8 +118,9 @@ const DiagnosticsDialog = (props: IProps) => {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          {/* // TODO: Localize this title */}
-          <DialogTitle>Diagnostics</DialogTitle>
+          <DialogTitle>
+            {getLocalePhrase(language, Phrase.Diagnostics)}
+          </DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-foreground">

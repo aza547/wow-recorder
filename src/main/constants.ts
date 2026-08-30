@@ -12,7 +12,6 @@ import {
  * The set of resolutions we allow users to select.
  */
 const obsResolutions = {
-  /* eslint-disable prettier/prettier */
   '1024x768': { width: 1024, height: 768 },
   '1280x720': { width: 1280, height: 720 },
   '1280x800': { width: 1280, height: 800 },
@@ -24,6 +23,7 @@ const obsResolutions = {
   '1680x1050': { width: 1680, height: 1050 },
   '1920x1080': { width: 1920, height: 1080 },
   '1920x1200': { width: 1920, height: 1200 },
+  '2560x720': { width: 2560, height: 720 },
   '2560x1080': { width: 2560, height: 1080 },
   '2560x1440': { width: 2560, height: 1440 },
   '2560x1600': { width: 2560, height: 1600 },
@@ -39,7 +39,6 @@ const obsResolutions = {
   '5120x2160': { width: 5120, height: 2160 },
   '5760x1080': { width: 5760, height: 1080 },
   '7680x2160': { width: 7680, height: 2160 },
-  /* eslint-enable prettier/prettier */
 };
 
 interface ICategoryRecordingSettings {
@@ -1226,7 +1225,13 @@ const instanceEncountersById: NumberKeyToStringValueMapType = {
 };
 
 type InstanceDifficultyPartyType = 'party' | 'raid' | 'pvp';
-type InstanceDifficultyIdType = 'lfr' | 'normal' | 'heroic' | 'mythic' | 'pvp';
+type InstanceDifficultyIdType =
+  | 'lfr'
+  | 'normal'
+  | 'heroic'
+  | 'mythic'
+  | 'pvp'
+  | 'delve';
 type InstanceDifficultyType = {
   difficultyID: InstanceDifficultyIdType;
   difficulty: string;
@@ -1413,6 +1418,12 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   233: {
     difficultyID: 'mythic', // Mythic flex (Rotmire)
     difficulty: 'M',
+    partyType: 'raid',
+    phrase: Phrase.Mythic,
+  },
+  208: {
+    difficultyID: 'delve', // Delve "??" boss?
+    difficulty: '??',
     partyType: 'raid',
     phrase: Phrase.Mythic,
   },

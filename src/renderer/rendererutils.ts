@@ -50,6 +50,7 @@ import {
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Language } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
+import { Dispatch, SetStateAction } from 'react';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -1208,6 +1209,51 @@ const findClipParent = (
   return parent;
 };
 
+const getVideoParent = (
+  uniqueId: string | null | undefined,
+  parentLookupMap: Map<string, RendererVideo>,
+): RendererVideo | undefined => {
+  return uniqueId ? parentLookupMap.get(uniqueId) : undefined;
+};
+
+const getVideoGroup = (
+  uniqueId: string | null | undefined,
+  parentLookupMap: Map<string, RendererVideo>,
+): Array<RendererVideo> => {
+  const parent = getVideoParent(uniqueId, parentLookupMap);
+  return parent ? [parent, ...parent.multiPov] : [];
+};
+
+const getVideoGroupIds = (
+  uniqueId: string | null | undefined,
+  parentLookupMap: Map<string, RendererVideo>,
+): Array<string> => {
+  return getVideoGroup(uniqueId, parentLookupMap).map(
+    (video) => video.uniqueId,
+  );
+};
+
+const lockVideos = (
+  targets: Array<RendererVideo>,
+  lock: boolean,
+  setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>,
+) => {
+  const disk = targets.filter((v) => !v.cloud);
+  const cloud = targets.filter((v) => v.cloud);
+
+  const ipc = window.electron.ipcRenderer;
+  ipc.sendMessage('videoButtonDisk', ['protect', lock, disk]);
+  ipc.sendMessage('videoButtonCloud', ['protect', lock, cloud]);
+
+  setVideoState((prev) => {
+    return prev.map((rv) => {
+      return targets.some((target) => rv.uniqueId === target.uniqueId)
+        ? { ...rv, isProtected: lock }
+        : rv;
+    });
+  });
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1276,4 +1322,8 @@ export {
   isHevcEncoder,
   formatRealmNameForDisplay,
   findClipParent,
+  getVideoParent,
+  getVideoGroup,
+  getVideoGroupIds,
+  lockVideos,
 };

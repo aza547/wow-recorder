@@ -7,11 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from './components/Dialog/Dialog';
 import { Button } from './components/Button/Button';
 import { Language, Phrase } from 'localisation/phrases';
-import { ReactNode, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import {
   Select,
   SelectContent,
@@ -25,75 +24,103 @@ import { Info } from 'lucide-react';
 import { obsResolutions } from 'main/constants';
 import KillVideoSourceTimeline from './KillVideoSourceTimeline';
 import Switch from './components/Switch/Switch';
+import { getVideoGroup } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
-  sources: RendererVideo[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  targetVideoId: string | null;
+  parentLookupMap: Map<string, RendererVideo>;
   language: Language;
   isLinux: boolean;
   /** Linux only. True when the user has H.265 playback transcoding enabled. */
   hevcTranscodeEnabled: boolean;
   /** Open the Settings page. Called when the unsupported-HEVC button is clicked. */
   onOpenSettings: () => void;
-  children: ReactNode;
 }
 
 const KillVideoDialog = (props: IProps) => {
-  const [open, setOpen] = useState(false);
   const {
-    children,
+    open,
+    onOpenChange,
+    targetVideoId,
+    parentLookupMap,
     language,
-    sources,
     isLinux,
     hevcTranscodeEnabled,
     onOpenSettings,
   } = props;
 
   const handleOpenSettings = () => {
-    setOpen(false);
+    onOpenChange(false);
     onOpenSettings();
   };
 
-  // Our select component only accepts strings annoyingly.
-  const [fps, setFps] = useState('60');
-  const [singleAudio, setSingleAudio] = useState(false);
-  const [audioTrackPlayer, setAudioTrackPlayer] = useState(
-    sources[0]?.player?._name || '',
-  );
-  const [resolution, setResolution] =
-    useState<keyof typeof obsResolutions>('1920x1080');
+  // This React logic is super gross but we need the kill video dialog to
+  // snapshot the sources when it opens so that we can calculate the segments,
+  // which shouldn't be reset on an update to the parentLookupMap, triggered
+  // by another user in the guild. It's not possible for a change another user
+  // makes to impact this dialog as it only operates on local videos.
+  const sources = useMemo(() => {
+    const group = getVideoGroup(targetVideoId, parentLookupMap);
+    return group.filter((rv) => !rv.cloud);
+  }, [targetVideoId, parentLookupMap]);
 
-  const [segments, setSegments] = useState<KillVideoSegment[]>(() => {
+  const sourcesRef = useRef<Array<RendererVideo>>([]);
+
+  useEffect(() => {
+    sourcesRef.current = sources;
+  }, [sources]);
+
+  useEffect(() => {
     // Calculate the length of the video as the shortest source. That
     // avoids weird conditions due to misclipped videos. Not perfect
     // but should be good enough for now.
     let videoDuration = Number.MAX_SAFE_INTEGER;
 
-    sources.forEach((rv) => {
+    sourcesRef.current.forEach((rv) => {
       videoDuration = Math.min(videoDuration, rv.duration);
     });
 
-    const segmentDuration = videoDuration / sources.length;
+    const segmentDuration = videoDuration / sourcesRef.current.length;
 
-    return sources.map((rv, idx) => ({
-      video: rv,
-      start: idx * segmentDuration,
-      stop: (idx + 1) * segmentDuration,
-    }));
-  });
+    setSegments(
+      sourcesRef.current.map((rv, idx) => ({
+        video: rv,
+        start: idx * segmentDuration,
+        stop: (idx + 1) * segmentDuration,
+      })),
+    );
+
+    setFps('60');
+    setResolution('1920x1080');
+    setSingleAudioSource(false);
+    setSingleAudioSourcePlayer(sourcesRef.current[0]?.player?._name || '');
+  }, [open]);
+
+  // Our select component only accepts strings annoyingly.
+  const [fps, setFps] = useState('60');
+  const [singleAudioSource, setSingleAudioSource] = useState(false);
+
+  const [singleAudioSourcePlayer, setSingleAudioSourcePlayer] = useState('');
+  const [resolution, setResolution] =
+    useState<keyof typeof obsResolutions>('1920x1080');
+
+  const [segments, setSegments] = useState<KillVideoSegment[]>([]);
+
+  const getSingleAudioSourceIndex = () => {
+    return singleAudioSource
+      ? segments.findIndex(
+          (s) => s.video.player?._name === singleAudioSourcePlayer,
+        )
+      : -1;
+  };
 
   const createKillVideo = () => {
     const { width, height } = obsResolutions[resolution];
-    let audioSegmentIndex = -1;
-
-    if (singleAudio) {
-      // If not found, findIndex returns -1 so if something goes wrong will
-      // just fallback to splicing all the audio tracks.
-      audioSegmentIndex = segments.findIndex(
-        (s) => s.video.player?._name === audioTrackPlayer,
-      );
-    }
+    const audioSegmentIndex = getSingleAudioSourceIndex();
 
     ipc.createKillVideo(
       width,
@@ -145,7 +172,10 @@ const KillVideoDialog = (props: IProps) => {
           </Tooltip>
         </Label>
         <div className="flex h-10 items-center">
-          <Switch checked={singleAudio} onCheckedChange={setSingleAudio} />
+          <Switch
+            checked={singleAudioSource}
+            onCheckedChange={setSingleAudioSource}
+          />
         </div>
       </div>
     );
@@ -170,7 +200,10 @@ const KillVideoDialog = (props: IProps) => {
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
-        <Select value={audioTrackPlayer} onValueChange={setAudioTrackPlayer}>
+        <Select
+          value={singleAudioSourcePlayer}
+          onValueChange={setSingleAudioSourcePlayer}
+        >
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -242,18 +275,8 @@ const KillVideoDialog = (props: IProps) => {
     setResolution('1920x1080');
   };
 
-  if (!open) {
-    // Lazy render the dialog for performance.
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>{children}</DialogTrigger>
-      </Dialog>
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[70%]">
         <DialogHeader>
           <DialogTitle>
@@ -276,7 +299,7 @@ const KillVideoDialog = (props: IProps) => {
             {getFpsSelect()}
             {getResolutionSelect()}
             {getAudioSwitch()}
-            {singleAudio && getAudioTrackSelect()}
+            {singleAudioSource && getAudioTrackSelect()}
           </div>
         </KillVideoSourceTimeline>
 
@@ -290,7 +313,11 @@ const KillVideoDialog = (props: IProps) => {
             {getLocalePhrase(language, Phrase.Reset)}
           </Button>
           <DialogClose asChild>
-            <Button onClick={() => createKillVideo()} type="submit">
+            <Button
+              onClick={() => createKillVideo()}
+              type="submit"
+              disabled={singleAudioSource && getSingleAudioSourceIndex() === -1}
+            >
               {getLocalePhrase(language, Phrase.Render)}
             </Button>
           </DialogClose>

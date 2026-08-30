@@ -1,7 +1,7 @@
 import {
   ActivityStatus,
-  AdvancedLoggingStatus,
   AppState,
+  CombatLoggingStatus,
   ErrorReport,
   MicStatus,
   RecStatus,
@@ -23,7 +23,7 @@ type ApplicationStatusCardProps = {
   config: ConfigurationSchema;
   appState: AppState;
   activityStatus: ActivityStatus | null;
-  advancedLoggingStatus: AdvancedLoggingStatus;
+  combatLoggingStatus: CombatLoggingStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 };
 
@@ -36,7 +36,7 @@ const ApplicationStatusCard = ({
   config,
   appState,
   activityStatus,
-  advancedLoggingStatus,
+  combatLoggingStatus,
   setPreviewEnabled,
 }: ApplicationStatusCardProps) => {
   const hasExtraBar = !!(micStatus || errorReports?.length);
@@ -64,7 +64,7 @@ const ApplicationStatusCard = ({
           config={config}
           appState={appState}
           activityStatus={activityStatus}
-          advancedLoggingStatus={advancedLoggingStatus}
+          combatLoggingStatus={combatLoggingStatus}
           setPreviewEnabled={setPreviewEnabled}
         />
       </div>

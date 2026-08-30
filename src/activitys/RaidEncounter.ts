@@ -19,23 +19,35 @@ export default class RaidEncounter extends Activity {
 
   private _encounterName: string;
 
-  private currentHp = 1;
+  /**
+   * A simple encounter can be tracked purely by the boss HP.
+   */
+  protected simpleEncounterProgress = true;
 
-  private maxHp = 1;
+  /**
+   * If the boss isn't the highest HP unit in the encounter, then set this.
+   */
+  protected bossUnitId = -1;
 
-  private bossUnitId = -1;
+  /**
+   * Most encounters the boss is the highest HP unit, so track that as the
+   * criteria for progress updates.
+   */
+  private encounterMaxHp = -1;
 
-  private bossUnitActive = true;
+  /**
+   * The actual progress of the encounter as a percent. Usually this is just
+   * boss HP but it can be more complex for some encounters.
+   */
+  private encounterProgressPercent = 100;
 
+  /**
+   * Exists for handling the big shield at the start of the Gallywix encounter,
+   * as there are no damage SPELL_DAMAGE events for a while due to the absorb.
+   */
   private static minRetailBossHp = 100 * 10 ** 6;
 
-  private static alleriaNpcId = 244300;
-
-  private static belorenNpcId = 240387;
-
-  private static belorenRebirthSpellId = 1241313;
-
-  constructor(
+  public constructor(
     startDate: Date,
     encounterID: number,
     encounterName: string,
@@ -47,14 +59,6 @@ export default class RaidEncounter extends Activity {
     this._encounterID = encounterID;
     this._encounterName = encounterName;
     this.overrun = 3; // Even for wipes it's nice to have some overrun.
-
-    if (this.encounterID === 3182) {
-      this.bossUnitId = RaidEncounter.belorenNpcId;
-      this.bossUnitActive = false; // Starts in normal phase.
-    } else if (this.encounterID === 3181) {
-      // Alleria Windrunner (Voidspire)
-      this.bossUnitId = RaidEncounter.alleriaNpcId;
-    }
   }
 
   get difficultyID() {
@@ -145,8 +149,6 @@ export default class RaidEncounter extends Activity {
       (combatant: Combatant) => combatant.getRaw(),
     );
 
-    const bossPercent = Math.round((100 * this.currentHp) / this.maxHp);
-
     return {
       category: VideoCategory.Raids,
       zoneID: this.zoneID,
@@ -164,7 +166,7 @@ export default class RaidEncounter extends Activity {
       combatants: rawCombatants,
       start: this.startDate.getTime(),
       uniqueHash: this.getUniqueHash(),
-      bossPercent,
+      bossPercent: this.encounterProgressPercent,
       appVersion: app.getVersion(),
     };
   }
@@ -192,42 +194,37 @@ export default class RaidEncounter extends Activity {
    *  "Creature-0-4244-2913-38715-240387-000073A7B0"
    * The stable encounter ID is the 5th hypen seperated element.
    */
-  private getNpcIdFromGuid(guid: string): number {
+  protected getNpcIdFromGuid(guid: string): number {
     return parseInt(guid.split('-')[5], 10);
   }
 
-  /**
-   * Update the max and current HP of the boss. Used to calculate the
-   * boss HP percent at the end of the fight.
-   */
-  public updateBossHp(spellDamageEvent: LogLine): void {
-    if (!this.bossUnitActive) {
-      // Boss is explicitly flagged as inactive (e.g. Belo'ren not in egg phase).
+  public onSpellDamage(spellDamageEvent: LogLine): void {
+    if (!this.simpleEncounterProgress) {
       return;
     }
+
+    const unitMaxHp = parseInt(spellDamageEvent.arg(15), 10);
+    const unitCurrentHp = parseInt(spellDamageEvent.arg(14), 10);
 
     if (this.bossUnitId > 0) {
       const guid = spellDamageEvent.arg(5);
       const unitId = this.getNpcIdFromGuid(guid);
 
-      if (unitId !== this.bossUnitId) {
-        // We know the boss unit and it's not it.
-        return;
+      if (unitId === this.bossUnitId) {
+        this.encounterProgressPercent = Math.round(
+          (100 * unitCurrentHp) / unitMaxHp,
+        );
       }
 
-      this.maxHp = parseInt(spellDamageEvent.arg(15), 10);
-      this.currentHp = parseInt(spellDamageEvent.arg(14), 10);
       return;
     }
 
     // We don't know the boss unit name so fall back to assuming the
     // unit with the highest max HP is the boss, which is true for 90%
     // of encounters.
-    const max = parseInt(spellDamageEvent.arg(15), 10);
-
     if (
       this.flavour === Flavour.Retail &&
-      max < RaidEncounter.minRetailBossHp
+      unitMaxHp < RaidEncounter.minRetailBossHp
     ) {
       // Assume that if the HP is less than 100 million then it's not a boss.
       // That avoids us marking bosses as 0% when they haven't been touched
@@ -238,33 +235,39 @@ export default class RaidEncounter extends Activity {
       return;
     }
 
-    if (max < this.maxHp) {
+    if (unitMaxHp < this.encounterMaxHp) {
       // This unit has less max HP than the highest HP unit.
       return;
     }
 
-    this.maxHp = max;
-    this.currentHp = parseInt(spellDamageEvent.arg(14), 10);
+    this.encounterMaxHp = unitMaxHp;
+    this.encounterProgressPercent = Math.round(
+      (100 * unitCurrentHp) / unitMaxHp,
+    );
   }
 
-  /**
-   * Basically exists for Belo'ren and future similar bosses where the unit
-   * is the same but there is an egg phase where damage actually counts.
-   */
-  public updateBossStatus(line: LogLine): void {
-    const event = line.arg(0);
-
-    if (typeof event !== 'string') {
-      // Obviously should never happen.
-      console.error('Invalid log line event:', event);
-      return;
+  protected setEncounterPercent(percent: number): void {
+    if (this.simpleEncounterProgress) {
+      throw new Error('Bad programmer, only call this on complex encounters.');
     }
 
-    const spellId = parseInt(line.arg(9), 10);
+    const updated = Math.round(percent);
 
-    if (spellId === RaidEncounter.belorenRebirthSpellId) {
-      this.bossUnitActive = event === 'SPELL_CAST_START';
-      return;
+    if (updated < this.encounterProgressPercent) {
+      // Some encounters like Coiled Altar heal, don't backtrack the progress.
+      this.encounterProgressPercent = updated;
     }
   }
+
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  public onSpellCastStart(line: LogLine) {}
+
+  public onSpellCastSuccess(line: LogLine) {}
+
+  public onUnitDied(line: LogLine) {}
+
+  public onSpellAuraApplied(line: LogLine) {}
+
+  public onSpellAuraRemoved(line: LogLine) {}
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 }
