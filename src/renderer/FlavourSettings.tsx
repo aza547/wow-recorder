@@ -29,12 +29,14 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
-    // Refresh the combat log status if settings change or on mount. There is no
-    // mechanism to refresh that live, unlike the advanced combat logging status
-    // because I can't be bothered to implement that.
-    ipc.refreshCombatLogStatus();
-
     if (initialRender.current) {
+      initialRender.current = false;
+
+      // Refresh the combat log status on the initial render of this component.
+      // There is no mechanism to refresh that live, unlike the advanced combat
+      // logging status because I can't be bothered to implement that.
+      ipc.refreshCombatLogStatus();
+
       // Don't change config on the initial render.
       initialRender.current = false;
       return;
