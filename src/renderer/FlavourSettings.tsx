@@ -34,6 +34,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       // There is no mechanism to refresh that live, unlike the advanced combat
       // logging status because I can't be bothered to implement that.
       ipc.refreshCombatLogStatus();
+      initialRender.current = false;
       return;
     }
 
