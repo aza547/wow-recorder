@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [7.13.2] - 2026-08-30
+### Fixed
+- Fix log path config not being applied correctly.
+
 ## [7.13.1] - 2026-08-30
 ### Changed
 - Always show instant replay button, but disable it when not available.
