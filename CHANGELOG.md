@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Preserve recordings when storage retention cannot read their metadata.
 
 ## [7.13.0] - 2026-08-27
 ### Changed
