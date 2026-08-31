@@ -580,6 +580,7 @@ const KOREAN: Translations = {
   [Phrase.LatestCombatLogFileText]: '이 폴더의 가장 최근 전투 기록은:',
   [Phrase.LatestCombatLogFileNotFound]: '로그를 찾을 수 없음',
   [Phrase.LatestCombatLogFileOverAMonthOld]: '한 달 이상 지남',
+  [Phrase.LatestCombatLogFileDayOld]: '1일 지남',
   [Phrase.LatestCombatLogFileDaysOld]: '일 지남',
   [Phrase.LatestCombatLogFileLessThanADayOld]: '하루 미만 지남'
 };

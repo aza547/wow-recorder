@@ -580,6 +580,7 @@ const GERMAN: Translations = {
   [Phrase.LatestCombatLogFileText]: 'Das neueste Kampflog in diesem Ordner ist:',
   [Phrase.LatestCombatLogFileNotFound]: 'keine Logs gefunden',
   [Phrase.LatestCombatLogFileOverAMonthOld]: 'über einen Monat alt',
+  [Phrase.LatestCombatLogFileDayOld]: '1 Tag alt',
   [Phrase.LatestCombatLogFileDaysOld]: 'Tage alt',
   [Phrase.LatestCombatLogFileLessThanADayOld]: 'weniger als einen Tag alt'
 };

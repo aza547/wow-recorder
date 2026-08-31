@@ -579,6 +579,7 @@ const ENGLISH: Translations = {
   [Phrase.LatestCombatLogFileText]: 'Latest combat log in this folder is:',
   [Phrase.LatestCombatLogFileNotFound]: 'no logs found',
   [Phrase.LatestCombatLogFileOverAMonthOld]: 'over a month old',
+  [Phrase.LatestCombatLogFileDayOld]: '1 day old',
   [Phrase.LatestCombatLogFileDaysOld]: 'days old',
   [Phrase.LatestCombatLogFileLessThanADayOld]: 'less than a day old',
 };

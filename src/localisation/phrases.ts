@@ -577,6 +577,7 @@ enum Phrase {
   LatestCombatLogFileText,
   LatestCombatLogFileNotFound,
   LatestCombatLogFileOverAMonthOld,
+  LatestCombatLogFileDayOld,
   LatestCombatLogFileDaysOld,
   LatestCombatLogFileLessThanADayOld,
 }

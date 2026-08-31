@@ -580,6 +580,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.LatestCombatLogFileText]: '此文件夹中的最新战斗日志是：',
   [Phrase.LatestCombatLogFileNotFound]: '未找到日志',
   [Phrase.LatestCombatLogFileOverAMonthOld]: '超过一个月前',
+  [Phrase.LatestCombatLogFileDayOld]: '1天前',
   [Phrase.LatestCombatLogFileDaysOld]: '天前',
   [Phrase.LatestCombatLogFileLessThanADayOld]: '不到一天前',
 };
