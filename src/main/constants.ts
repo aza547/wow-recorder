@@ -1427,6 +1427,12 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
     partyType: 'raid',
     phrase: Phrase.Mythic,
   },
+  250: {
+    difficultyID: 'lfr', // World LFR (Nymrissa)
+    difficulty: 'LFR',
+    partyType: 'raid',
+    phrase: Phrase.LFR,
+  },
 };
 
 const categoryTabSx = {
