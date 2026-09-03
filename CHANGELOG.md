@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Add Nymrissa "World LFR" difficulty.
 
 ## [7.13.2] - 2026-08-30
 ### Fixed
