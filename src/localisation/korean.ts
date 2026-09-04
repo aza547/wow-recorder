@@ -582,7 +582,10 @@ const KOREAN: Translations = {
   [Phrase.LatestCombatLogFileOverAMonthOld]: '한 달 이상 지남',
   [Phrase.LatestCombatLogFileDayOld]: '1일 지남',
   [Phrase.LatestCombatLogFileDaysOld]: '일 지남',
-  [Phrase.LatestCombatLogFileLessThanADayOld]: '하루 미만 지남'
+  [Phrase.LatestCombatLogFileLessThanADayOld]: '하루 미만 지남',
+  [Phrase.HotKeySettingsLabel]: '단축키',
+  [Phrase.ForceStopHotKeyLabel]: '강제 중지 단축키',
+  [Phrase.ForceStopHotKeyDescription]: '현재 기록을 강제로 종료하는 단축키를 설정합니다.',
 };
 
 export default KOREAN;

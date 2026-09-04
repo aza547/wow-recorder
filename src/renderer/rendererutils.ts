@@ -785,24 +785,33 @@ const getPTTKeyPressEventFromConfig = (
   };
 };
 
-const getManualRecordHotKeyFromConfig = (
-  config: ConfigurationSchema,
+const getHotKeyFromConfig = (
+  keyCode: number,
+  modifiers: string,
 ): PTTKeyPressEvent => {
-  const ctrl = config.manualRecordHotKeyModifiers.includes('ctrl');
-  const win = config.manualRecordHotKeyModifiers.includes('win');
-  const shift = config.manualRecordHotKeyModifiers.includes('shift');
-  const alt = config.manualRecordHotKeyModifiers.includes('alt');
-
   return {
-    altKey: alt,
-    ctrlKey: ctrl,
-    metaKey: win,
-    shiftKey: shift,
-    keyCode: config.manualRecordHotKey,
-    mouseButton: -1, // No mouse click support for manual record.
+    altKey: modifiers.includes('alt'),
+    ctrlKey: modifiers.includes('ctrl'),
+    metaKey: modifiers.includes('win'),
+    shiftKey: modifiers.includes('shift'),
+    keyCode,
+    mouseButton: -1, // No mouse click support for these hotkeys.
     type: PTTEventType.EVENT_KEY_PRESSED,
   };
 };
+
+const getManualRecordHotKeyFromConfig = (
+  config: ConfigurationSchema,
+): PTTKeyPressEvent =>
+  getHotKeyFromConfig(
+    config.manualRecordHotKey,
+    config.manualRecordHotKeyModifiers,
+  );
+
+const getForceStopHotKeyFromConfig = (
+  config: ConfigurationSchema,
+): PTTKeyPressEvent =>
+  getHotKeyFromConfig(config.forceStopHotKey, config.forceStopHotKeyModifiers);
 
 const getKeyByValue = (object: any, value: any) => {
   return Object.keys(object).find((key) => object[key] === value);
@@ -1264,6 +1273,7 @@ export {
   isHighRes,
   getPTTKeyPressEventFromConfig,
   getManualRecordHotKeyFromConfig,
+  getForceStopHotKeyFromConfig,
   getKeyByValue,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,

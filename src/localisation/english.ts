@@ -582,6 +582,9 @@ const ENGLISH: Translations = {
   [Phrase.LatestCombatLogFileDayOld]: '1 day old',
   [Phrase.LatestCombatLogFileDaysOld]: 'days old',
   [Phrase.LatestCombatLogFileLessThanADayOld]: 'less than a day old',
+  [Phrase.HotKeySettingsLabel]: 'Hotkeys',
+  [Phrase.ForceStopHotKeyLabel]: 'Force Stop Hotkey',
+  [Phrase.ForceStopHotKeyDescription]: 'Set a hotkey to force the current recording to stop.',
 };
 
 export default ENGLISH;

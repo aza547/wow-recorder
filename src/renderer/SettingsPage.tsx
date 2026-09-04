@@ -24,6 +24,7 @@ import LocaleSettings from './LocaleSettings';
 import WindowsSettings from './WindowsSettings';
 import { Phrase } from 'localisation/phrases';
 import ManualSettings from './ManualSettings';
+import HotKeySettings from './HotKeySettings';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -95,6 +96,20 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <WindowsSettings
+                  appState={appState}
+                  config={config}
+                  setConfig={setConfig}
+                />
+              </div>
+              <div>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.HotKeySettingsLabel,
+                  )}
+                </CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <HotKeySettings
                   appState={appState}
                   config={config}
                   setConfig={setConfig}
