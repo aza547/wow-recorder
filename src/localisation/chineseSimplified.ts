@@ -583,6 +583,9 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.LatestCombatLogFileDayOld]: '1天前',
   [Phrase.LatestCombatLogFileDaysOld]: '天前',
   [Phrase.LatestCombatLogFileLessThanADayOld]: '不到一天前',
+  [Phrase.HotKeySettingsLabel]: '快捷键',
+  [Phrase.ForceStopHotKeyLabel]: '强制停止快捷键',
+  [Phrase.ForceStopHotKeyDescription]: '设置一个快捷键来强制结束当前录制。',
 };
 
 export default CHINESE_SIMPLIFIED;

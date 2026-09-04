@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Add a force stop hotkey, which ends the current recording.
 ### Fixed
 - Add Nymrissa "World LFR" difficulty.
 
