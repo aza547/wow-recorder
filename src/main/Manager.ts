@@ -7,6 +7,7 @@ import {
   checkAdvancedCombatLogging,
   getOBSFormattedDate,
   isManualRecordHotKey,
+  isForceStopHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
   pushActivityStatus,
@@ -896,6 +897,23 @@ export default class Manager {
 
     ipcMain.on('refreshCombatLogStatus', () => {
       this.refreshCombatLoggingStatus();
+    });
+
+    /**
+     * Force stop the current recording.
+     */
+    uIOhook.on('keydown', (event: UiohookKeyboardEvent) => {
+      if (this.manualHotKeyDisabled) {
+        // This user is updating their settings. Don't do anything.
+        return;
+      }
+
+      if (!isForceStopHotKey(event)) {
+        return;
+      }
+
+      console.info('[Manager] Force stop hotkey pressed');
+      this.forceStop();
     });
 
     /**

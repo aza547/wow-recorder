@@ -503,37 +503,58 @@ const isPushToTalkHotkey = (
   return buttonMatch && modifierMatch;
 };
 
-const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
+/**
+ * Check if a key press event matches a configured hotkey. An unbound hotkey
+ * has a key code of -1, which can never match as we require a positive key
+ * code, so unbound hotkeys are safely inert here.
+ */
+const isConfiguredHotKey = (
+  event: UiohookKeyboardEvent,
+  hotKey: number,
+  hotKeyModifiers: string,
+) => {
   const { keycode, altKey, ctrlKey, shiftKey, metaKey, type } = event;
-  const cfg = ConfigService.getInstance();
 
   if (type !== EventType.EVENT_KEY_PRESSED) {
     // We should never hit this but just being safe.
     return false;
   }
 
-  const manualRecordHotKey = cfg.get<number>('manualRecordHotKey');
-  const manualRecordHotKeyModifiers = cfg.get<string>(
-    'manualRecordHotKeyModifiers',
-  );
-
-  const buttonMatch = keycode > 0 && keycode === manualRecordHotKey;
+  const buttonMatch = keycode > 0 && keycode === hotKey;
 
   // Deliberately permissive here, we check all the modifiers we have in
   // config are met but we don't enforce the inverse, i.e. we'll accept
   // an additional modifier present (so CTRL + SHIFT + E will trigger
   // a CTRL + E hotkey).
-  const modifierMatch = manualRecordHotKeyModifiers
-    .split(',')
-    .reduce((acc, mod) => {
-      if (mod === 'alt') return acc && altKey;
-      if (mod === 'ctrl') return acc && ctrlKey;
-      if (mod === 'shift') return acc && shiftKey;
-      if (mod === 'win') return acc && metaKey;
-      return acc; // Ignore unknown modifiers
-    }, true);
+  const modifierMatch = hotKeyModifiers.split(',').reduce((acc, mod) => {
+    if (mod === 'alt') return acc && altKey;
+    if (mod === 'ctrl') return acc && ctrlKey;
+    if (mod === 'shift') return acc && shiftKey;
+    if (mod === 'win') return acc && metaKey;
+    return acc; // Ignore unknown modifiers
+  }, true);
 
   return buttonMatch && modifierMatch;
+};
+
+const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
+  const cfg = ConfigService.getInstance();
+
+  return isConfiguredHotKey(
+    event,
+    cfg.get<number>('manualRecordHotKey'),
+    cfg.get<string>('manualRecordHotKeyModifiers'),
+  );
+};
+
+const isForceStopHotKey = (event: UiohookKeyboardEvent) => {
+  const cfg = ConfigService.getInstance();
+
+  return isConfiguredHotKey(
+    event,
+    cfg.get<number>('forceStopHotKey'),
+    cfg.get<string>('forceStopHotKeyModifiers'),
+  );
 };
 
 const convertUioHookKeyPressEvent = (
@@ -1371,6 +1392,7 @@ export {
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
   isManualRecordHotKey,
+  isForceStopHotKey,
   delayedDeleteVideo,
   logAxiosError,
   handleSafeVodRequest,
