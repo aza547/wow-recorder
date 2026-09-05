@@ -34,11 +34,29 @@ interface IProps {
   targetVideoId: string | null;
   parentLookupMap: Map<string, RendererVideo>;
   language: Language;
+  isLinux: boolean;
+  /** Linux only. True when the user has H.265 playback transcoding enabled. */
+  hevcTranscodeEnabled: boolean;
+  /** Open the Settings page. Called when the unsupported-HEVC button is clicked. */
+  onOpenSettings: () => void;
 }
 
 const KillVideoDialog = (props: IProps) => {
-  const { open, onOpenChange, targetVideoId, parentLookupMap, language } =
-    props;
+  const {
+    open,
+    onOpenChange,
+    targetVideoId,
+    parentLookupMap,
+    language,
+    isLinux,
+    hevcTranscodeEnabled,
+    onOpenSettings,
+  } = props;
+
+  const handleOpenSettings = () => {
+    onOpenChange(false);
+    onOpenSettings();
+  };
 
   // This React logic is super gross but we need the kill video dialog to
   // snapshot the sources when it opens so that we can calculate the segments,
@@ -273,6 +291,9 @@ const KillVideoDialog = (props: IProps) => {
           segments={segments}
           setSegments={setSegments}
           language={language}
+          isLinux={isLinux}
+          hevcTranscodeEnabled={hevcTranscodeEnabled}
+          onOpenSettings={handleOpenSettings}
         >
           <div className="flex flex-col gap-4">
             {getFpsSelect()}
