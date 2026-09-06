@@ -7,6 +7,7 @@ import {
   CreateMultiPartUploadResponseBody,
   RendererVideo,
   UploadQueueItem,
+  VideoAction,
 } from 'main/types';
 import path from 'path';
 import { z } from 'zod';
@@ -398,6 +399,7 @@ export default class CloudClient implements StorageClient {
     });
 
     console.info('[CloudClient] Successfully deleted videos', videoNames);
+    return videoNames;
   }
 
   /**
@@ -423,6 +425,7 @@ export default class CloudClient implements StorageClient {
       `[CloudClient] Successfully ${protect ? 'protected' : 'unprotected'}`,
       videoNames,
     );
+    return videoNames;
   }
 
   /**
@@ -442,6 +445,7 @@ export default class CloudClient implements StorageClient {
     });
 
     console.info('[CloudClient] Successfully set tag', tag, 'on', videoNames);
+    return videoNames;
   }
 
   /**
@@ -1235,11 +1239,50 @@ export default class CloudClient implements StorageClient {
       clipboard.writeText(shareable);
     });
 
-    ipcMain.on('deleteVideosCloud', async (_event, args) => {
-      const videos = args as RendererVideo[];
-      const toDelete = videos.filter((v) => v.cloud).map((v) => v.videoName);
-      if (toDelete.length < 1) return;
-      this.deleteVideos(toDelete);
+    ipcMain.handle('videoActionCloud', async (_event, args) => {
+      const action = args[0] as VideoAction;
+      const videos = (args[1] as RendererVideo[]).filter((v) => v.cloud);
+      const videoNames = videos.map((v) => v.videoName);
+
+      if (videos.length === 0) {
+        return [];
+      }
+
+      if (!(await this.ready())) {
+        console.error('[CloudClient] Failed to process video action', {
+          action: action.type,
+          names: videoNames,
+          error: 'Cloud client is not ready',
+        });
+        return [];
+      }
+
+      try {
+        let successfulNames: string[];
+
+        if (action.type === 'protect') {
+          successfulNames = await this.protectVideos(videoNames, action.value);
+        } else if (action.type === 'tag') {
+          successfulNames = await this.tagVideos(videoNames, action.value);
+        } else if (action.type === 'delete') {
+          successfulNames = await this.deleteVideos(videoNames);
+        } else {
+          console.error('[CloudClient] Unsupported video action');
+          return [];
+        }
+
+        const successful = new Set(successfulNames);
+        return videos
+          .filter((video) => successful.has(video.videoName))
+          .map((video) => video.uniqueId);
+      } catch (error) {
+        console.error('[CloudClient] Failed to process video action', {
+          action: action.type,
+          names: videoNames,
+          error: String(error),
+        });
+        return [];
+      }
     });
 
     // VideoButton event listeners.
@@ -1250,24 +1293,6 @@ export default class CloudClient implements StorageClient {
       if (!ready) {
         console.warn('[Manager] Cannot process event', action, args);
         return;
-      }
-
-      if (action === 'protect') {
-        const protect = args[1] as boolean;
-        const videos = args[2] as RendererVideo[];
-        const cloud = videos.filter((v) => v.cloud);
-        const toProtect = cloud.map((v) => v.videoName);
-        if (toProtect.length < 1) return;
-        this.protectVideos(toProtect, protect);
-      }
-
-      if (action === 'tag') {
-        const tag = args[1] as string;
-        const videos = args[2] as RendererVideo[];
-        const cloud = videos.filter((v) => v.cloud);
-        const toTag = cloud.map((v) => v.videoName);
-        if (toTag.length < 1) return;
-        this.tagVideos(toTag, tag);
       }
 
       if (action === 'download') {
@@ -1320,12 +1345,18 @@ export default class CloudClient implements StorageClient {
 
     if (key === VideoMessages.PROTECT) {
       console.info('[CloudClient] Batching cloud video protection', value);
+      this.videoUnprotectBatch = this.videoUnprotectBatch.filter(
+        (videoName) => videoName !== value,
+      );
       this.videoProtectBatch.push(value);
       return;
     }
 
     if (key === VideoMessages.UNPROTECT) {
       console.info('[CloudClient] Batching cloud video unprotection', value);
+      this.videoProtectBatch = this.videoProtectBatch.filter(
+        (videoName) => videoName !== value,
+      );
       this.videoUnprotectBatch.push(value);
       return;
     }

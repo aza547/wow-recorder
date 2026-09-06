@@ -38,7 +38,6 @@ import {
   getVideoCategoryFilter,
   getVideoParent,
   getVideoStorageFilter,
-  lockVideos,
   povDiskFirstNameSort,
 } from './rendererutils';
 import Separator from './components/Separator/Separator';
@@ -64,6 +63,8 @@ import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
 import LockDialog from './LockDialog';
 import TagDialog from './TagDialog';
 import KillVideoDialog from './KillVideoDialog';
+import useVideoActions from './useVideoActions';
+import CircularProgress from '@mui/material/CircularProgress';
 
 interface IProps {
   category: VideoCategory;
@@ -100,6 +101,7 @@ const CategoryPage = (props: IProps) => {
   } = appState;
 
   const { write, del } = cloudStatus;
+  const { run, isPending } = useVideoActions(setVideoState, language);
   const [config, setConfig] = useSettings();
   const [dialog, setDialog] = useState<DialogType>(DialogType.NONE);
 
@@ -521,7 +523,8 @@ const CategoryPage = (props: IProps) => {
         (!write && toLock.some((v) => v.cloud)) || // Some in the selection are cloud videos and no write permission.
         (!del && !lock && toLock.some((v) => v.cloud)); // Some in the selection are locked cloud videos no delete permission.
 
-      const disabled = noPermission || toLock.length < 1;
+      const pending = isPending(toLock);
+      const disabled = noPermission || toLock.length < 1 || pending;
       const icon = lock ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
 
       let tooltip = '';
@@ -541,10 +544,10 @@ const CategoryPage = (props: IProps) => {
               variant="secondary"
               size="sm"
               disabled={disabled}
-              onClick={() => lockVideos(toLock, lock, setVideoState)}
+              onClick={() => run({ type: 'protect', value: lock }, toLock)}
               className="border border-background"
             >
-              {icon}
+              {pending ? <CircularProgress color="inherit" size={18} /> : icon}
             </Button>
           </div>
         </Tooltip>
