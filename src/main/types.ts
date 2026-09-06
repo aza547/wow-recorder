@@ -373,12 +373,17 @@ type AppState = {
   preferredViewpoint: string;
 };
 
-type AdvancedLoggingStatus = {
-  retail: boolean;
-  classic: boolean;
-  era: boolean;
-  retailPtr: boolean;
-  classicPtr: boolean;
+type CombatLogPathStatus = {
+  advanced: boolean;
+  latestLogAgeMs: number;
+};
+
+type CombatLoggingStatus = {
+  retail: CombatLogPathStatus;
+  classic: CombatLogPathStatus;
+  era: CombatLogPathStatus;
+  retailPtr: CombatLogPathStatus;
+  classicPtr: CombatLogPathStatus;
 };
 
 type CloudState = {
@@ -696,6 +701,14 @@ type InstantReplayState = {
   open: InstantReplayData | null;
 };
 
+enum DialogType {
+  NONE,
+  LOCK,
+  TAG,
+  KILL,
+  DELETE,
+}
+
 export {
   RecStatus,
   SaveStatus,
@@ -759,7 +772,8 @@ export {
   SoundAlerts,
   CloudState,
   ActivityStatus,
-  AdvancedLoggingStatus,
+  CombatLoggingStatus,
+  CombatLogPathStatus,
   KillVideoQueueItem,
   KillVideoSegment,
   KillVideoStatus,
@@ -767,4 +781,5 @@ export {
   CharacterFilter,
   InstantReplayData,
   InstantReplayState,
+  DialogType,
 };

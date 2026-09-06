@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
   AppState,
+  DialogType,
   RendererClip,
   RendererVideo,
   StorageFilter,
@@ -13,6 +14,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import {
   GripHorizontal,
@@ -34,7 +36,9 @@ import {
   findClipParent,
   getFriendlyCodecName,
   getVideoCategoryFilter,
+  getVideoParent,
   getVideoStorageFilter,
+  lockVideos,
   povDiskFirstNameSort,
 } from './rendererutils';
 import Separator from './components/Separator/Separator';
@@ -58,6 +62,9 @@ import BulkTransferDialog from './BulkTransferDialog';
 import VideoChat from './VideoChat';
 import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
 import { findVideoChatViewpoint } from './videoChatLinks';
+import LockDialog from './LockDialog';
+import TagDialog from './TagDialog';
+import KillVideoDialog from './KillVideoDialog';
 
 interface IProps {
   category: VideoCategory;
@@ -95,6 +102,31 @@ const CategoryPage = (props: IProps) => {
 
   const { write, del } = cloudStatus;
   const [config, setConfig] = useSettings();
+  const [dialog, setDialog] = useState<DialogType>(DialogType.NONE);
+
+  const setLockDialog = (open: boolean) =>
+    setDialog(open ? DialogType.LOCK : DialogType.NONE);
+
+  const setTagDialog = (open: boolean) =>
+    setDialog(open ? DialogType.TAG : DialogType.NONE);
+
+  const setDeleteDialog = (open: boolean) =>
+    setDialog(open ? DialogType.DELETE : DialogType.NONE);
+
+  const setKillVideoDialog = (open: boolean) =>
+    setDialog(open ? DialogType.KILL : DialogType.NONE);
+
+  const [lockDialogVideoTargetId, setLockDialogVideoTargetId] = useState<
+    string | null
+  >(null);
+
+  const [tagDialogVideoTargetId, setTagDialogVideoTargetId] = useState<
+    string | null
+  >(null);
+
+  const [killDialogVideoTargetId, setKillDialogVideoTargetId] = useState<
+    string | null
+  >(null);
 
   // The category state, recalculated only when required.
   const categoryState = useMemo<RendererVideo[]>(() => {
@@ -103,17 +135,33 @@ const CategoryPage = (props: IProps) => {
   }, [videoState, category]);
 
   // Filter by storage type before we apply grouping.
-  const correlatedState = useMemo<RendererVideo[]>(() => {
+  const correlatedState = useMemo(() => {
     const storageFilterFn = getVideoStorageFilter(storageFilter);
     const storageFilteredState = categoryState.filter(storageFilterFn);
     return VideoCorrelator.correlate(storageFilteredState);
   }, [categoryState, storageFilter]);
 
-  // Now apply filtering based on search tags and date range.
-  const filteredState = useMemo<RendererVideo[]>(() => {
+  // Now apply filtering based on search tags and date range. Build a lookup
+  // map here for efficient finding of the parent row of a video, which is a
+  // generally useful thing to have for downstream components.
+  const { filteredState, parentLookupMap } = useMemo(() => {
     const queryFilter = (rv: RendererVideo) =>
       new VideoFilter(rv, videoFilterTags, dateRangeFilter, language).filter();
-    return correlatedState.filter(queryFilter);
+
+    const filteredState = correlatedState.filter(queryFilter);
+    const parentLookupMap = new Map<string, RendererVideo>();
+
+    for (let i = 0; i < filteredState.length; i++) {
+      const parent = filteredState[i];
+      parentLookupMap.set(parent.uniqueId, parent);
+
+      for (let j = 0; j < parent.multiPov.length; j++) {
+        const child = parent.multiPov[j];
+        parentLookupMap.set(child.uniqueId, parent);
+      }
+    }
+
+    return { filteredState, parentLookupMap };
   }, [correlatedState, dateRangeFilter, videoFilterTags, language]);
 
   // Tanstack table relies on stable references, so while we have the React
@@ -155,10 +203,16 @@ const CategoryPage = (props: IProps) => {
 
   const table = useVideoSelectionTable(
     filteredState,
+    parentLookupMap,
     appState,
+    setAppState,
     setVideoState,
     getClipParent,
     goToClipParent,
+    setDialog,
+    setLockDialogVideoTargetId,
+    setTagDialogVideoTargetId,
+    setKillDialogVideoTargetId,
   );
 
   const haveVideos = categoryState.length > 0;
@@ -462,7 +516,7 @@ const CategoryPage = (props: IProps) => {
             instantReplay={null}
             key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
             videos={videosToPlay}
-            categoryState={categoryState}
+            filteredState={filteredState}
             persistentProgress={persistentProgress}
             config={config}
             appState={appState}
@@ -525,59 +579,21 @@ const CategoryPage = (props: IProps) => {
     const unique = [...new Set(names)];
     const allowMultiPlayer = unique.length > 1;
 
-    const protectVideo = (
-      _event: React.SyntheticEvent,
-      protect: boolean,
-      videos: RendererVideo[],
-    ) => {
-      const toProtectDisk = videos.filter((v) => !v.cloud);
-      const toProtectCloud = videos.filter((v) => v.cloud);
-
-      window.electron.ipcRenderer.sendMessage('videoButtonDisk', [
-        'protect',
-        protect,
-        toProtectDisk,
-      ]);
-
-      window.electron.ipcRenderer.sendMessage('videoButtonCloud', [
-        'protect',
-        protect,
-        toProtectCloud,
-      ]);
-
-      setVideoState((prev) => {
-        const state = [...prev];
-
-        state.forEach((rv) => {
-          // A video is uniquely identified by its name and storage type.
-          const match = videos.find(
-            (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
-          );
-
-          if (match) {
-            rv.isProtected = protect;
-          }
-        });
-
-        return state;
-      });
-    };
-
-    const renderProtectButton = () => {
-      const toProtect = selectedViewpoints;
+    const renderBulkLockButton = () => {
+      const toLock = selectedViewpoints;
 
       // If any videos in our selection are not protected, then the button's
-      // action is to protect.
-      const lock = !toProtect.every((v) => v.isProtected);
+      // action is to lock.
+      const lock = !toLock.every((v) => v.isProtected);
 
-      // Disable the protect button if there are no selected viewpoints, if we
-      // don't have write permissions, or if the action is to unprotect and we
+      // Disable the lock button if there are no selected viewpoints, if we
+      // don't have write permissions, or if the action is to unlock and we
       // don't have delete permissions.
       const noPermission =
-        (!write && toProtect.some((v) => v.cloud)) || // Some in the selection are cloud videos and no write permission.
-        (!del && !lock && toProtect.some((v) => v.cloud)); // Some in the selection are locked cloud videos no delete permission.
+        (!write && toLock.some((v) => v.cloud)) || // Some in the selection are cloud videos and no write permission.
+        (!del && !lock && toLock.some((v) => v.cloud)); // Some in the selection are locked cloud videos no delete permission.
 
-      const disabled = noPermission || toProtect.length < 1;
+      const disabled = noPermission || toLock.length < 1;
       const icon = lock ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
 
       let tooltip = '';
@@ -597,7 +613,7 @@ const CategoryPage = (props: IProps) => {
               variant="secondary"
               size="sm"
               disabled={disabled}
-              onClick={(e) => protectVideo(e, lock, toProtect)}
+              onClick={() => lockVideos(toLock, lock, setVideoState)}
               className="border border-background"
             >
               {icon}
@@ -607,9 +623,8 @@ const CategoryPage = (props: IProps) => {
       );
     };
 
-    const renderDeleteButton = () => {
+    const renderBulkDeleteButton = () => {
       const toDelete = selectedViewpoints;
-
       const noPermission = !del && toDelete.some((v) => v.cloud);
       const disabled = toDelete.length < 1 || noPermission;
 
@@ -617,15 +632,28 @@ const CategoryPage = (props: IProps) => {
         ? getLocalePhrase(language, Phrase.GuildNoPermission)
         : getLocalePhrase(language, Phrase.BulkDeleteButtonTooltip);
 
+      // Only want to pass the parent IDs into the delete dialog.
+      const ids = [
+        ...new Set(
+          toDelete
+            .map((rv) => rv.uniqueId)
+            .map((id) => getVideoParent(id, parentLookupMap))
+            .filter((rv): rv is RendererVideo => Boolean(rv))
+            .map((rv) => rv.uniqueId),
+        ),
+      ];
+
       return (
         <Tooltip content={tooltip}>
           <div>
             <DeleteDialog
-              key={toDelete.map((v) => v.videoName).join(',')} // Forces a remount on selection change.
-              inScope={toDelete}
-              appState={appState}
+              open={dialog === DialogType.DELETE}
+              onOpenChange={setDeleteDialog}
+              targetVideoIds={ids}
+              parentLookupMap={parentLookupMap}
               setVideoState={setVideoState}
-              selectedRowCount={selectedRows.length}
+              language={language}
+              appState={appState}
             >
               <Button
                 variant="secondary"
@@ -647,19 +675,24 @@ const CategoryPage = (props: IProps) => {
         .filter(
           (rv) =>
             selectedViewpoints.filter((v) => v.videoName === rv.videoName)
-              .length < 2, // If we have more 2 viewpoints with the same name then one must be disk and one cloud.
+              .length < 2, // If we have 2 or more viewpoints with the same name then one must be disk and one cloud.
         );
 
       const noPermission = upload && !write;
 
       const disabled =
-        toTransfer.length < 1 || noPermission || !cloudStatus.authorized;
+        storageFilter !== StorageFilter.BOTH ||
+        toTransfer.length < 1 ||
+        noPermission ||
+        !cloudStatus.authorized;
 
       let tooltip = upload
         ? getLocalePhrase(language, Phrase.BulkUploadButtonTooltip)
         : getLocalePhrase(language, Phrase.BulkDownloadButtonTooltip);
 
-      if (noPermission) {
+      if (storageFilter !== StorageFilter.BOTH) {
+        tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
+      } else if (noPermission) {
         tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
       }
 
@@ -748,7 +781,6 @@ const CategoryPage = (props: IProps) => {
                 categoryState={categoryState}
                 appState={appState}
                 setAppState={setAppState}
-                table={table}
               />
             </div>
           </div>
@@ -758,17 +790,43 @@ const CategoryPage = (props: IProps) => {
             <div className="flex gap-x-1 mr-2 py-[1px]">
               {config.cloudUpload && renderBulkTransferButton(true)}
               {config.cloudStorage && renderBulkTransferButton(false)}
-              {renderProtectButton()}
-              {renderDeleteButton()}
+              {renderBulkLockButton()}
+              {renderBulkDeleteButton()}
             </div>
           </div>
         </div>
         <div className="w-full h-full overflow-hidden">
+          <LockDialog
+            open={dialog === DialogType.LOCK}
+            onOpenChange={setLockDialog}
+            targetVideoId={lockDialogVideoTargetId}
+            parentLookupMap={parentLookupMap}
+            setVideoState={setVideoState}
+            language={language}
+            cloudStatus={cloudStatus}
+          />
+          <TagDialog
+            open={dialog === DialogType.TAG}
+            onOpenChange={setTagDialog}
+            targetVideoId={tagDialogVideoTargetId}
+            parentLookupMap={parentLookupMap}
+            setVideoState={setVideoState}
+            language={language}
+            cloudStatus={cloudStatus}
+          />
+          <KillVideoDialog
+            open={dialog === DialogType.KILL}
+            onOpenChange={setKillVideoDialog}
+            targetVideoId={killDialogVideoTargetId}
+            parentLookupMap={parentLookupMap}
+            language={language}
+          />
           <VideoSelectionTable
             table={table}
             appState={appState}
             setAppState={setAppState}
             persistentProgress={persistentProgress}
+            dialogOpen={dialog !== DialogType.NONE}
           />
         </div>
       </>
