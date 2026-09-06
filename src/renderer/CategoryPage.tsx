@@ -61,6 +61,7 @@ import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
 import VideoChat from './VideoChat';
 import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
+import { findVideoChatViewpoint } from './videoChatLinks';
 import LockDialog from './LockDialog';
 import TagDialog from './TagDialog';
 import KillVideoDialog from './KillVideoDialog';
@@ -247,7 +248,10 @@ const CategoryPage = (props: IProps) => {
     };
   }, [playerHeight]);
 
-  const renderChat = (video: RendererVideo | undefined) => {
+  const renderChat = (
+    video: RendererVideo | undefined,
+    availablePovs: RendererVideo[],
+  ) => {
     if (!video) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center text-foreground text-sm font-bold">
@@ -267,13 +271,85 @@ const CategoryPage = (props: IProps) => {
       );
     }
 
+    const currentPov =
+      selectedVideos.length === 1
+        ? selectedVideos[0]
+        : selectedVideos.length === 0
+          ? availablePovs[0]
+          : undefined;
+
+    const switchToViewpoint = (target: RendererVideo, timestamp?: number) => {
+      const currentActivity = selectedVideos[0] || availablePovs[0];
+      const sameActivity = currentActivity?.uniqueHash === target.uniqueHash;
+
+      if (!sameActivity || timestamp !== undefined) {
+        persistentProgress.current = timestamp ?? 0;
+      }
+
+      setAppState((prevState) => ({
+        ...prevState,
+        selectedVideos: [target],
+        multiPlayerMode: false,
+        playing:
+          sameActivity && !prevState.multiPlayerMode
+            ? prevState.playing
+            : false,
+        preferredViewpoint:
+          target.player?._name || prevState.preferredViewpoint,
+      }));
+    };
+
+    const isViewpointSelected = (target: RendererVideo) => {
+      return (
+        currentPov?.videoName === target.videoName &&
+        currentPov.cloud === target.cloud
+      );
+    };
+
+    const handleTimestampClick = (seconds: number, viewpoint?: string) => {
+      if (!viewpoint) {
+        videoPlayerRef.current?.seekAllPlayersTo(seconds);
+        return;
+      }
+
+      const target = findVideoChatViewpoint(availablePovs, viewpoint);
+
+      if (!target) {
+        return;
+      }
+
+      if (isViewpointSelected(target)) {
+        videoPlayerRef.current?.seekAllPlayersTo(seconds);
+        return;
+      }
+
+      // Switching videos remounts VideoPlayer; persistentProgress carries the
+      // clicked timestamp into the new POV's initial seek.
+      switchToViewpoint(target, seconds);
+    };
+
+    const handleViewpointClick = (viewpoint: string) => {
+      const target = findVideoChatViewpoint(availablePovs, viewpoint);
+
+      if (!target || isViewpointSelected(target)) {
+        return;
+      }
+
+      // For @Player without a timestamp, keep the current playback position
+      // carried in persistentProgress and only change the selected POV.
+      switchToViewpoint(target);
+    };
+
     return (
       <VideoChat
         key={video.videoName}
-        videoPlayerRef={videoPlayerRef}
         video={video}
+        availablePovs={availablePovs}
+        currentPov={currentPov}
         language={language}
         deletePermissions={del}
+        onTimestampClick={handleTimestampClick}
+        onViewpointClick={handleViewpointClick}
       />
     );
   };
@@ -305,21 +381,17 @@ const CategoryPage = (props: IProps) => {
       activeParentVideo = filteredState[0];
     }
 
+    const activePovs = activeParentVideo
+      ? [activeParentVideo, ...activeParentVideo.multiPov].sort(
+          povDiskFirstNameSort,
+        )
+      : [];
+
     // Only try to find a chat video if we have a video with cloud storage,
     // a start time and a hash, else we cannot find the chat correlator.
-    let chatVideo: RendererVideo | undefined = undefined;
-
-    if (activeParentVideo) {
-      chatVideo = [activeParentVideo, ...activeParentVideo.multiPov].find(
-        (rv) => rv.cloud && rv.uniqueHash && rv.start,
-      );
-    }
-
-    if (activeParentVideo) {
-      chatVideo = [activeParentVideo, ...activeParentVideo.multiPov].find(
-        (rv) => rv.cloud && rv.uniqueHash && rv.start,
-      );
-    }
+    const chatVideo = activePovs.find(
+      (rv) => rv.cloud && rv.uniqueHash && rv.start,
+    );
     const renderTextDescr = () => {
       return (
         <div className="flex items-center justify-start w-full h-[40px] pt-2 mx-2 text-sm font-bold text-foreground">
@@ -363,7 +435,7 @@ const CategoryPage = (props: IProps) => {
             />
           )}
         </div>
-        {renderChat(chatVideo)}
+        {renderChat(chatVideo, activePovs)}
       </div>
     );
   };

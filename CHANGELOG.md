@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 808](https://github.com/aza547/wow-recorder/issues/808) - Add clickable viewpoint and timestamp links to video chat messages.
 ### Fixed
 - Add Nymrissa "World LFR" difficulty.
 
