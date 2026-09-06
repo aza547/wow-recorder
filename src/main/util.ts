@@ -853,21 +853,9 @@ const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
  * video open by the player.
  */
 const markForVideoForDelete = async (videoPath: string) => {
-  try {
-    const metadata = await getMetadataForVideo(videoPath);
-    metadata.delete = true;
-    await writeMetadataFile(videoPath, metadata);
-  } catch (error) {
-    // This isn't a total disaster, but might cause some duplicates to
-    // display in the UI; i.e. a cloud and disk version of the same video.
-    // Just log it so it's diagnosable, a user could fix it easily with a
-    // manual delete.
-    console.error(
-      '[Util] Failed to mark a video for deletion',
-      videoPath,
-      String(error),
-    );
-  }
+  const metadata = await getMetadataForVideo(videoPath);
+  metadata.delete = true;
+  await writeMetadataFile(videoPath, metadata);
 };
 
 /**

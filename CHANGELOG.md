@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - Add Nymrissa "World LFR" difficulty.
+- [Issue 875](https://github.com/aza547/wow-recorder/issues/875) - Confirm recording lock, tag and delete actions before updating their state, and report failures.
 
 ## [7.13.2] - 2026-08-30
 ### Fixed

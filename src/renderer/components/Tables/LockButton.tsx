@@ -2,7 +2,9 @@ import { Language, Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
 import { LockKeyhole, LockOpen } from 'lucide-react';
 import { RendererVideo, CloudStatus } from 'main/types';
-import { lockVideos, stopPropagation } from 'renderer/rendererutils';
+import { stopPropagation } from 'renderer/rendererutils';
+import useVideoActions from 'renderer/useVideoActions';
+import CircularProgress from '@mui/material/CircularProgress';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { Dispatch, SetStateAction } from 'react';
@@ -16,6 +18,8 @@ type LockButtonProps = {
 
 const LockButton = (props: LockButtonProps) => {
   const { language, cloudStatus, setVideoState, video } = props;
+  const { run, isPending } = useVideoActions(setVideoState, language);
+  const pending = isPending([video]);
 
   const { write, del } = cloudStatus;
   const { isProtected } = video;
@@ -43,11 +47,11 @@ const LockButton = (props: LockButtonProps) => {
           size="xs"
           onClick={(event) => {
             stopPropagation(event);
-            lockVideos([video], !isProtected, setVideoState);
+            run({ type: 'protect', value: !isProtected }, [video]);
           }}
-          disabled={noPermission}
+          disabled={noPermission || pending}
         >
-          {icon}
+          {pending ? <CircularProgress color="inherit" size={18} /> : icon}
         </Button>
       </div>
     </Tooltip>
