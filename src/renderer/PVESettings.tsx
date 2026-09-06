@@ -46,8 +46,6 @@ const PVESettings = (props: IProps) => {
       minRaidDifficulty: config.minRaidDifficulty,
       recordDungeons: config.recordDungeons,
       recordChallengeModes: config.recordChallengeModes,
-      raidOverrun: config.raidOverrun,
-      dungeonOverrun: config.dungeonOverrun,
       recordCurrentRaidEncountersOnly: config.recordCurrentRaidEncountersOnly,
     };
 
