@@ -54,20 +54,30 @@ const queueDiskSizeMonitorRun = (task: () => Promise<void>): Promise<void> => {
 };
 
 export default class DiskSizeMonitor {
-  private static readonly activeVideoOutputs = new Set<string>();
+  // Multiple queued jobs can depend on the same recording.
+  private static readonly videosInUse = new Map<string, number>();
 
   private cfg = ConfigService.getInstance();
 
-  static markVideoOutputInProgress(videoPath: string): void {
-    this.activeVideoOutputs.add(path.resolve(videoPath));
+  static markVideoInUse(videoPath: string): void {
+    const resolvedPath = path.resolve(videoPath);
+    const uses = this.videosInUse.get(resolvedPath) ?? 0;
+    this.videosInUse.set(resolvedPath, uses + 1);
   }
 
-  static unmarkVideoOutputInProgress(videoPath: string): void {
-    this.activeVideoOutputs.delete(path.resolve(videoPath));
+  static unmarkVideoInUse(videoPath: string): void {
+    const resolvedPath = path.resolve(videoPath);
+    const uses = this.videosInUse.get(resolvedPath) ?? 0;
+
+    if (uses > 1) {
+      this.videosInUse.set(resolvedPath, uses - 1);
+    } else {
+      this.videosInUse.delete(resolvedPath);
+    }
   }
 
-  private static isVideoOutputInProgress(videoPath: string): boolean {
-    return this.activeVideoOutputs.has(path.resolve(videoPath));
+  private static isVideoInUse(videoPath: string): boolean {
+    return this.videosInUse.has(path.resolve(videoPath));
   }
 
   run(): Promise<void> {
@@ -111,11 +121,8 @@ export default class DiskSizeMonitor {
     const unprotectedFiles = await asyncFilter(
       files,
       async (file: FileInfo) => {
-        if (DiskSizeMonitor.isVideoOutputInProgress(file.name)) {
-          console.info(
-            '[DiskSizeMonitor] Skipping active video output',
-            file.name,
-          );
+        if (DiskSizeMonitor.isVideoInUse(file.name)) {
+          console.info('[DiskSizeMonitor] Skipping video in use', file.name);
           return false;
         }
 
@@ -124,11 +131,8 @@ export default class DiskSizeMonitor {
           const isUnprotected = !(metadata.protected || false);
           return isUnprotected;
         } catch (error) {
-          if (DiskSizeMonitor.isVideoOutputInProgress(file.name)) {
-            console.info(
-              '[DiskSizeMonitor] Skipping active video output',
-              file.name,
-            );
+          if (DiskSizeMonitor.isVideoInUse(file.name)) {
+            console.info('[DiskSizeMonitor] Skipping video in use', file.name);
             return false;
           }
 
@@ -145,6 +149,9 @@ export default class DiskSizeMonitor {
     );
 
     const filesForDeletion = unprotectedFiles.filter((file) => {
+      // A job may have been queued while the metadata was being read.
+      if (DiskSizeMonitor.isVideoInUse(file.name)) return false;
+
       bytesFreed += file.size;
       return bytesFreed < bytesToFree;
     });

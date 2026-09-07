@@ -199,6 +199,7 @@ export default class VideoProcessQueue {
    */
   public queueVideo = async (item: VideoQueueItem) => {
     console.info('[VideoProcessQueue] Queuing video for processing', item);
+    DiskSizeMonitor.markVideoInUse(item.source);
     this.videoQueue.write(item);
   };
 
@@ -246,6 +247,11 @@ export default class VideoProcessQueue {
    */
   public queueCreateKillVideo = async (item: KillVideoQueueItem) => {
     console.info('[VideoProcessQueue] Queue kill video for processing');
+    item.segments
+      .filter((segment) => !segment.video.cloud)
+      .forEach((segment) => {
+        DiskSizeMonitor.markVideoInUse(segment.video.videoSource);
+      });
     this.inProgressKillVideos.push(item.uuid);
     this.killVideoQueue.write(item);
   };
@@ -260,7 +266,7 @@ export default class VideoProcessQueue {
   ): Promise<void> {
     const outputDir = this.cfg.get<string>('storagePath');
     const outputPath = VideoProcessQueue.getOutputVideoPath(data, outputDir);
-    DiskSizeMonitor.markVideoOutputInProgress(outputPath);
+    DiskSizeMonitor.markVideoInUse(outputPath);
 
     try {
       // In a lot of cases this is basically just a copy. But this also
@@ -288,7 +294,7 @@ export default class VideoProcessQueue {
         String(error),
       );
     } finally {
-      DiskSizeMonitor.unmarkVideoOutputInProgress(outputPath);
+      DiskSizeMonitor.unmarkVideoInUse(outputPath);
       done();
     }
   }
@@ -390,7 +396,7 @@ export default class VideoProcessQueue {
     };
 
     const client = CloudClient.getInstance();
-    DiskSizeMonitor.markVideoOutputInProgress(videoPath);
+    DiskSizeMonitor.markVideoInUse(videoPath);
 
     try {
       await client.getAsFile(
@@ -412,7 +418,7 @@ export default class VideoProcessQueue {
         String(error),
       );
     } finally {
-      DiskSizeMonitor.unmarkVideoOutputInProgress(videoPath);
+      DiskSizeMonitor.unmarkVideoInUse(videoPath);
       done();
     }
   }
@@ -459,7 +465,7 @@ export default class VideoProcessQueue {
         fn.input(src);
       });
 
-    DiskSizeMonitor.markVideoOutputInProgress(videoPath);
+    DiskSizeMonitor.markVideoInUse(videoPath);
 
     try {
       console.time(`[VideoProcessQueue] Create ${item.uuid} kill video`);
@@ -487,7 +493,7 @@ export default class VideoProcessQueue {
         this.queueUpload(item);
       }
     } finally {
-      DiskSizeMonitor.unmarkVideoOutputInProgress(videoPath);
+      DiskSizeMonitor.unmarkVideoInUse(videoPath);
       done();
     }
   }
@@ -544,6 +550,7 @@ export default class VideoProcessQueue {
    */
   private async finishProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Finished processing video', item.source);
+    DiskSizeMonitor.unmarkVideoInUse(item.source);
     send('updateSaveStatus', SaveStatus.NotSaving);
     DiskClient.getInstance().refreshStatus();
     DiskClient.getInstance().refreshVideos();
@@ -568,6 +575,12 @@ export default class VideoProcessQueue {
    */
   private finishProcessingKillVideo(item: KillVideoQueueItem) {
     console.info('[VideoProcessQueue] Finished processing kill video');
+
+    item.segments
+      .filter((segment) => !segment.video.cloud)
+      .forEach((segment) => {
+        DiskSizeMonitor.unmarkVideoInUse(segment.video.videoSource);
+      });
 
     this.inProgressKillVideos = this.inProgressKillVideos.filter(
       (id) => id !== item.uuid,
