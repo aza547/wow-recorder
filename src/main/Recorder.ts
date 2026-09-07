@@ -1158,8 +1158,13 @@ export default class Recorder extends EventEmitter {
       if (!(await this.recoverInterruptedRecording())) {
         this.lastFile = noobs.GetLastRecording();
       }
-    } finally {
-      this.stopRequest = 'none';
+    } catch (error) {
+      // The caller discards this activity if stopping fails. Late signals must
+      // not attach its file to a subsequent recording.
+      this.stopRequest = 'discard';
+      this.lastFile = null;
+      this.interruptedRecordingFile = null;
+      throw error;
     }
   }
 
@@ -1230,7 +1235,7 @@ export default class Recorder extends EventEmitter {
         await wrote;
       }
     } finally {
-      this.stopRequest = 'none';
+      // Keep the discard request until Deactivate, even if this wait times out.
       this.lastFile = null;
       this.interruptedRecordingFile = null;
     }
@@ -2034,12 +2039,13 @@ export default class Recorder extends EventEmitter {
   public getAndClearLastFile() {
     console.info('[Recorder] Get and clear last file', this.lastFile);
     const last = this.lastFile;
+    const interrupted = last !== null && last === this.interruptedRecordingFile;
     this.lastFile = null;
 
-    if (last === this.interruptedRecordingFile) {
+    if (interrupted) {
       this.interruptedRecordingFile = null;
     }
 
-    return last;
+    return last ? { path: last, interrupted } : null;
   }
 }

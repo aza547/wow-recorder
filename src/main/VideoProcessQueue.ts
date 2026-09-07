@@ -754,9 +754,43 @@ export default class VideoProcessQueue {
       .outputOption('-movflags +faststart')
       .output(outputPath);
 
+    let timemark: string | undefined;
+
+    if (data.interrupted) {
+      // The activity can continue after OBS stops writing the recording.
+      fn.on('progress', (progress: { timemark: string }) => {
+        timemark = progress.timemark;
+      });
+    }
+
     console.time('[VideoProcessQueue] Video cut took:');
     await VideoProcessQueue.ffmpegWrapper(fn, 'Video cut');
     console.timeEnd('[VideoProcessQueue] Video cut took:');
+
+    if (data.interrupted) {
+      const outputDuration = timemark
+        ? timemark
+            .split(':')
+            .reduce((seconds, part) => seconds * 60 + Number(part), 0)
+        : NaN;
+
+      if (!Number.isFinite(outputDuration) || outputDuration <= 0) {
+        throw new Error(
+          `[VideoProcessQueue] Failed to determine interrupted recording duration for ${outputPath}: invalid FFmpeg timemark ${timemark ?? 'none'}`,
+        );
+      }
+
+      const duration = Math.min(data.duration, outputDuration);
+
+      if (duration !== data.metadata.duration) {
+        console.info(
+          `[VideoProcessQueue] Adjust interrupted recording duration for ${outputPath} from ${data.metadata.duration} to ${duration} seconds`,
+        );
+      }
+
+      data.metadata.duration = duration;
+    }
+
     return outputPath;
   }
 
