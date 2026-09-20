@@ -2,9 +2,15 @@ import * as React from 'react';
 
 import { cn } from '../utils';
 
-function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
+// Consumers such as chat mention completion need direct access to focus and
+// caret APIs after updating the controlled value.
+const Textarea = React.forwardRef<
+  HTMLTextAreaElement,
+  React.ComponentProps<'textarea'>
+>(({ className, ...props }, ref) => {
   return (
     <textarea
+      ref={ref}
       data-slot="textarea"
       className={cn(
         'border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50',
@@ -17,6 +23,8 @@ function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
       {...props}
     />
   );
-}
+});
+
+Textarea.displayName = 'Textarea';
 
 export { Textarea };
