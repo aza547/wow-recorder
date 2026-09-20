@@ -17,15 +17,12 @@ import { getLocalePhrase, Language } from 'localisation/translations';
 import {
   resolveHtmlPath,
   openSystemExplorer,
-  setupApplicationLogging,
   getAvailableDisplays,
   getAssetPath,
   handleSafeVodRequest,
   runFirstTimeSetupActionsObs,
   runFirstTimeSetupActionsNoObs,
   createDiagsBundle,
-  fixPathWhenPackaged,
-  getApplicationLogDir,
 } from './util';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
@@ -38,8 +35,9 @@ import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
+import { getApplicationLogDir, setupApplicationLogging } from './logging';
 
-const logDir = setupApplicationLogging();
+setupApplicationLogging();
 const appVersion = app.getVersion();
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const tzOffset = new Date().getTimezoneOffset() * -1; // Offset is wrong direction so flip it.
