@@ -48,7 +48,7 @@ import Activity from 'activitys/Activity';
 import SoloShuffle from 'activitys/SoloShuffle';
 import semver from 'semver';
 import log from 'electron-log/main';
-import Logger, { LogFile } from 'electron-log';
+import { LogFile } from 'electron-log';
 
 /**
  * When packaged, we need to fix some paths
@@ -76,9 +76,9 @@ const setupApplicationLogging = () => {
 
 const getApplicationLogDir = () => {
   const parent = fixPathWhenPackaged(__dirname);
-  const dir = "logs";
-  return path.join(parent, dir)
-}
+  const dir = 'logs';
+  return path.join(parent, dir);
+};
 
 const getApplicationLogPath = () => {
   const dir = getApplicationLogDir();
@@ -92,19 +92,19 @@ const getApplicationLogPath = () => {
 
   const fileName = `WarcraftRecorder-${date}.log`;
   return path.join(dir, fileName);
-}
+};
 
 const rotateApplicationLog = (oldLogFile: LogFile) => {
   const oldLogFilePath = oldLogFile.toString();
   const parsed = path.parse(oldLogFilePath);
 
   try {
-    const rotatedFileName = `${parsed.name}.${logIndex++}${parsed.ext}`
+    const rotatedFileName = `${parsed.name}.${logIndex++}${parsed.ext}`;
     fs.renameSync(oldLogFilePath, path.join(parsed.dir, rotatedFileName));
   } catch (e) {
     console.error('Could not rotate log', e);
-  } 
-}
+  }
+};
 
 const getResolvedHtmlPath = () => {
   if (process.env.NODE_ENV === 'development') {
