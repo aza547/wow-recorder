@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - Add Nymrissa "World LFR" difficulty.
+- [PR 907](https://github.com/aza547/wow-recorder/pull/907) - Better rotation of application logs.
 
 ## [7.13.2] - 2026-08-30
 ### Fixed

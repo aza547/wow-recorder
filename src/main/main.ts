@@ -24,6 +24,8 @@ import {
   runFirstTimeSetupActionsObs,
   runFirstTimeSetupActionsNoObs,
   createDiagsBundle,
+  fixPathWhenPackaged,
+  getApplicationLogDir,
 } from './util';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
@@ -389,6 +391,7 @@ ipcMain.handle('selectImage', async () => {
  */
 ipcMain.on('logPath', (_event, args) => {
   if (args[0] === 'open') {
+    const logDir = getApplicationLogDir();
     openSystemExplorer(logDir);
   }
 });
@@ -397,6 +400,7 @@ ipcMain.on('logPath', (_event, args) => {
  * Zips a diags bundle up in the log folder and return the path.
  */
 ipcMain.handle('createDiagsBundle', async () => {
+  const logDir = getApplicationLogDir();
   return createDiagsBundle(logDir);
 });
 

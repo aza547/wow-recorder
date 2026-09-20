@@ -47,6 +47,8 @@ import ChallengeModeDungeon from 'activitys/ChallengeModeDungeon';
 import Activity from 'activitys/Activity';
 import SoloShuffle from 'activitys/SoloShuffle';
 import semver from 'semver';
+import log from 'electron-log/main';
+import { LogFile } from 'electron-log';
 
 /**
  * When packaged, we need to fix some paths
@@ -63,14 +65,45 @@ const fixPathWhenPackaged = (p: string) => {
  *
  * This only applies to main process console logs, not the renderer logs.
  */
+let logIndex = 0;
+let logDate = new Date().toISOString().slice(0, 10);
+
 const setupApplicationLogging = () => {
-  const log = require('electron-log');
-  const date = new Date().toISOString().slice(0, 10);
-  const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
-  const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath));
-  log.transports.file.resolvePath = () => logPath;
+  log.transports.file.resolvePathFn = getApplicationLogPath;
+  log.transports.file.archiveLogFn = rotateApplicationLog;
   Object.assign(console, log.functions);
-  return path.dirname(logPath);
+};
+
+const getApplicationLogDir = () => {
+  const parent = fixPathWhenPackaged(__dirname);
+  const dir = 'logs';
+  return path.join(parent, dir);
+};
+
+const getApplicationLogPath = () => {
+  const dir = getApplicationLogDir();
+  const date = new Date().toISOString().slice(0, 10);
+
+  if (date !== logDate) {
+    // Reset the rotation index if the date changed.
+    logIndex = 0;
+    logDate = date;
+  }
+
+  const fileName = `WarcraftRecorder-${date}.log`;
+  return path.join(dir, fileName);
+};
+
+const rotateApplicationLog = (oldLogFile: LogFile) => {
+  const oldLogFilePath = oldLogFile.toString();
+  const parsed = path.parse(oldLogFilePath);
+
+  try {
+    const rotatedFileName = `${parsed.name}.${logIndex++}${parsed.ext}`;
+    fs.renameSync(oldLogFilePath, path.join(parsed.dir, rotatedFileName));
+  } catch (e) {
+    console.error('Could not rotate log', e);
+  }
 };
 
 const getResolvedHtmlPath = () => {
@@ -1336,6 +1369,7 @@ const startWatchingConfigWtf = (logPath: string, callback: () => void) => {
 
 export {
   setupApplicationLogging,
+  getApplicationLogDir,
   writeMetadataFile,
   deleteVideoDisk,
   openSystemExplorer,
