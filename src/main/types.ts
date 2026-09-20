@@ -181,6 +181,7 @@ type VideoQueueItem = {
   offset: number;
   duration: number;
   clip: boolean;
+  interrupted?: boolean;
   metadata: Metadata;
 };
 
