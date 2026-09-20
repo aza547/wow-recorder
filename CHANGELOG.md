@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- [Issue 895](https://github.com/aza547/wow-recorder/issues/895) - Add a separate filter for locked and unlocked recordings.
 ### Added
 ### Fixed
 - Add Nymrissa "World LFR" difficulty.

@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   AppState,
   DialogType,
+  LockFilter,
   RendererClip,
   RendererVideo,
   StorageFilter,
@@ -56,6 +57,7 @@ import useVideoSelectionTable from './components/Tables/useVideoSelectionTable';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import DateRangePicker from './DateRangePicker';
 import StorageFilterToggle from './StorageFilterToggle';
+import LockFilterToggle from './LockFilterToggle';
 import VideoCorrelator from './VideoCorrelator';
 import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
@@ -96,6 +98,7 @@ const CategoryPage = (props: IProps) => {
     dateRangeFilter,
     cloudStatus,
     storageFilter,
+    lockFilter,
     chatOpen,
   } = appState;
 
@@ -133,12 +136,17 @@ const CategoryPage = (props: IProps) => {
     return videoState.filter(categoryFilter);
   }, [videoState, category]);
 
-  // Filter by storage type before we apply grouping.
+  // Filter individual recordings before we apply grouping.
   const correlatedState = useMemo(() => {
     const storageFilterFn = getVideoStorageFilter(storageFilter);
-    const storageFilteredState = categoryState.filter(storageFilterFn);
-    return VideoCorrelator.correlate(storageFilteredState);
-  }, [categoryState, storageFilter]);
+    const filtered = categoryState.filter((video) => {
+      if (!storageFilterFn(video)) return false;
+      if (lockFilter === LockFilter.LOCKED) return video.isProtected;
+      if (lockFilter === LockFilter.UNLOCKED) return !video.isProtected;
+      return true;
+    });
+    return VideoCorrelator.correlate(filtered);
+  }, [categoryState, storageFilter, lockFilter]);
 
   // Now apply filtering based on search tags and date range. Build a lookup
   // map here for efficient finding of the parent row of a video, which is a
@@ -190,6 +198,7 @@ const CategoryPage = (props: IProps) => {
           playing: false,
           videoFilterTags: [],
           storageFilter: StorageFilter.BOTH,
+          lockFilter: LockFilter.ALL,
           dateRangeFilter: {
             startDate: null,
             endDate: null,
@@ -391,11 +400,16 @@ const CategoryPage = (props: IProps) => {
    * changed category) then just play the first video in the table.
    */
   const getVideoPlayer = () => {
-    const toShow = filteredState[0] ? filteredState[0] : categoryState[0];
+    const toShow = filteredState[0];
+    if (!toShow) return null;
+
     const povs = [toShow, ...toShow.multiPov].sort(povDiskFirstNameSort);
+    const visibleSelection = selectedVideos.filter((video) =>
+      parentLookupMap.has(video.uniqueId),
+    );
 
     const videosToPlay =
-      selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
+      visibleSelection.length > 0 ? visibleSelection : povs.slice(0, 1);
 
     const selectedVideoAppVersion =
       videosToPlay.length > 1 ? undefined : videosToPlay[0].appVersion;
@@ -468,8 +482,8 @@ const CategoryPage = (props: IProps) => {
       return parents.concat(children);
     }
 
-    const first = filteredState[0] ? filteredState[0] : categoryState[0];
-    return [first, ...first.multiPov];
+    const first = filteredState[0];
+    return first ? [first, ...first.multiPov] : [];
   };
 
   const getVideoSelection = () => {
@@ -498,7 +512,7 @@ const CategoryPage = (props: IProps) => {
         ? [selectedRow.original, ...selectedRow.original.multiPov]
         : filteredState[0]
           ? [filteredState[0], ...filteredState[0].multiPov]
-          : [categoryState[0], ...categoryState[0].multiPov]
+          : []
     )
       .sort(povDiskFirstNameSort)
       .filter(dedup);
@@ -610,6 +624,7 @@ const CategoryPage = (props: IProps) => {
 
       const disabled =
         storageFilter !== StorageFilter.BOTH ||
+        lockFilter !== LockFilter.ALL ||
         toTransfer.length < 1 ||
         noPermission ||
         !cloudStatus.authorized;
@@ -618,7 +633,10 @@ const CategoryPage = (props: IProps) => {
         ? getLocalePhrase(language, Phrase.BulkUploadButtonTooltip)
         : getLocalePhrase(language, Phrase.BulkDownloadButtonTooltip);
 
-      if (storageFilter !== StorageFilter.BOTH) {
+      if (
+        storageFilter !== StorageFilter.BOTH ||
+        lockFilter !== LockFilter.ALL
+      ) {
         tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
       } else if (noPermission) {
         tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
@@ -709,6 +727,14 @@ const CategoryPage = (props: IProps) => {
                 categoryState={categoryState}
                 appState={appState}
                 setAppState={setAppState}
+              />
+            </div>
+            <div>
+              <Label>{getLocalePhrase(language, Phrase.LockFilterLabel)}</Label>
+              <LockFilterToggle
+                appState={appState}
+                setAppState={setAppState}
+                persistentProgress={persistentProgress}
               />
             </div>
           </div>
