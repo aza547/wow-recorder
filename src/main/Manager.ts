@@ -6,8 +6,8 @@ import {
   buildClipMetadata,
   checkAdvancedCombatLogging,
   getOBSFormattedDate,
-  isManualRecordHotKey,
-  isForceStopHotKey,
+  resolveHotKey,
+  isHotKeyMatch,
   nextKeyPressPromise,
   nextMousePressPromise,
   pushActivityStatus,
@@ -35,6 +35,7 @@ import {
   RendererVideo,
   KillVideoSegment,
   CombatLogPathStatus,
+  ResolvedHotKey,
 } from './types';
 import {
   getObsVideoConfig,
@@ -53,6 +54,17 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
+
+/**
+ * Config keys that feed the cached hotkeys, see refreshHotKeys.
+ */
+const hotKeyConfigKeys: string[] = [
+  'manualRecord',
+  'manualRecordHotKey',
+  'manualRecordHotKeyModifiers',
+  'forceStopHotKey',
+  'forceStopHotKeyModifiers',
+];
 
 /**
  * Manager class.
@@ -99,10 +111,25 @@ export default class Manager {
   private audioSettingsOpen = false;
 
   /**
-   * It's confusing if you try to change the hotkey to something similar and
-   * it starts a recording mid changing it, so set this to true while doing so.
+   * It's confusing if you try to change a hotkey to something similar and it
+   * acts on the key press mid changing it, so set this to true while doing so.
    */
-  private manualHotKeyDisabled = false;
+  private hotKeysDisabled = false;
+
+  /**
+   * Hotkeys resolved out of config. We check these against every single key
+   * press the user makes, and reading config isn't free (it hits the disk and
+   * validates the schema), so cache them and refresh on config changes.
+   */
+  private manualRecordHotKey: ResolvedHotKey = resolveHotKey(-1, '');
+
+  private forceStopHotKey: ResolvedHotKey = resolveHotKey(-1, '');
+
+  /**
+   * If manual recording is enabled. Cached for the same reason as the
+   * hotkeys above.
+   */
+  private manualRecordEnabled = false;
 
   /**
    * File watchers for Config.wtf files, used to detect changes to
@@ -719,6 +746,24 @@ export default class Manager {
   }
 
   /**
+   * Refresh our cached copy of the hotkey config. Called on start-up and
+   * whenever any of the hotkey config changes.
+   */
+  private refreshHotKeys() {
+    this.manualRecordEnabled = this.cfg.get<boolean>('manualRecord');
+
+    this.manualRecordHotKey = resolveHotKey(
+      this.cfg.get<number>('manualRecordHotKey'),
+      this.cfg.get<string>('manualRecordHotKeyModifiers'),
+    );
+
+    this.forceStopHotKey = resolveHotKey(
+      this.cfg.get<number>('forceStopHotKey'),
+      this.cfg.get<string>('forceStopHotKeyModifiers'),
+    );
+  }
+
+  /**
    * Setup event listeneres the app relies on.
    */
   private setupListeners() {
@@ -733,7 +778,13 @@ export default class Manager {
           openAtLogin: isStartUp,
         });
       }
+
+      if (hotKeyConfigKeys.includes(key)) {
+        this.refreshHotKeys();
+      }
     });
+
+    this.refreshHotKeys();
 
     // Test listener, to enable the test button to start a test.
     ipcMain.on('test', (_event, args) => {
@@ -869,28 +920,28 @@ export default class Manager {
      * specific to Push to Talk, it's just like that for historical reasons.
      */
     ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
-      this.manualHotKeyDisabled = true;
+      this.hotKeysDisabled = true;
 
       const event = await Promise.race([
         nextKeyPressPromise(),
         nextMousePressPromise(),
       ]);
 
-      this.manualHotKeyDisabled = false;
+      this.hotKeysDisabled = false;
       return event;
     });
 
     ipcMain.on(
       'refreshCombatLogStatus',
       async (): Promise<PTTKeyPressEvent> => {
-        this.manualHotKeyDisabled = true;
+        this.hotKeysDisabled = true;
 
         const event = await Promise.race([
           nextKeyPressPromise(),
           nextMousePressPromise(),
         ]);
 
-        this.manualHotKeyDisabled = false;
+        this.hotKeysDisabled = false;
         return event;
       },
     );
@@ -900,38 +951,31 @@ export default class Manager {
     });
 
     /**
-     * Force stop the current recording.
+     * Hotkey handling. This fires on every single key press the user makes so
+     * be careful what you do in here, and be careful with the logs as they
+     * get very spammy.
      */
     uIOhook.on('keydown', (event: UiohookKeyboardEvent) => {
-      if (this.manualHotKeyDisabled) {
+      if (this.hotKeysDisabled) {
         // This user is updating their settings. Don't do anything.
         return;
       }
 
-      if (!isForceStopHotKey(event)) {
+      if (isHotKeyMatch(event, this.forceStopHotKey)) {
+        // Force stop wins if both hotkeys match. The bindings can overlap as
+        // we accept additional modifiers, and we don't want a single key
+        // press to force stop and then immediately start a manual recording.
+        console.info('[Manager] Force stop hotkey pressed');
+        this.forceStop();
         return;
       }
 
-      console.info('[Manager] Force stop hotkey pressed');
-      this.forceStop();
-    });
-
-    /**
-     * Manually start/stop recording. Being careful with the logs here as
-     * some of this is very spammy as it fires on every key press.
-     */
-    uIOhook.on('keydown', (event: UiohookKeyboardEvent) => {
-      if (this.manualHotKeyDisabled) {
-        // This user is updating their settings. Don't do anything.
-        return;
-      }
-
-      if (!this.cfg.get('manualRecord')) {
+      if (!this.manualRecordEnabled) {
         // Manual recording is not enabled.
         return;
       }
 
-      if (!isManualRecordHotKey(event)) {
+      if (!isHotKeyMatch(event, this.manualRecordHotKey)) {
         // It's not the manual record hotkey.
         return;
       }

@@ -789,11 +789,13 @@ const getHotKeyFromConfig = (
   keyCode: number,
   modifiers: string,
 ): PTTKeyPressEvent => {
+  const split = modifiers.split(',');
+
   return {
-    altKey: modifiers.includes('alt'),
-    ctrlKey: modifiers.includes('ctrl'),
-    metaKey: modifiers.includes('win'),
-    shiftKey: modifiers.includes('shift'),
+    altKey: split.includes('alt'),
+    ctrlKey: split.includes('ctrl'),
+    metaKey: split.includes('win'),
+    shiftKey: split.includes('shift'),
     keyCode,
     mouseButton: -1, // No mouse click support for these hotkeys.
     type: PTTEventType.EVENT_KEY_PRESSED,
