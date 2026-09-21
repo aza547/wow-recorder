@@ -31,7 +31,7 @@ interface IProps {
   table: ReturnType<typeof useVideoSelectionTable>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
-  persistentProgress: RefObject<number>;
+  persistentProgressRef: RefObject<number>;
   dialogOpen: boolean;
 }
 
@@ -40,7 +40,7 @@ interface IProps {
  * columns for a quick overview, the ability to sort by column.
  */
 const VideoSelectionTable = (props: IProps) => {
-  const { appState, setAppState, persistentProgress, table, dialogOpen } =
+  const { appState, setAppState, persistentProgressRef, table, dialogOpen } =
     props;
 
   const {
@@ -109,7 +109,7 @@ const VideoSelectionTable = (props: IProps) => {
       }
 
       if (!row.getIsSelected()) {
-        persistentProgress.current = 0;
+        persistentProgressRef.current = 0;
       }
 
       // It's a regular click, so unselect any other selected rows.
@@ -131,7 +131,7 @@ const VideoSelectionTable = (props: IProps) => {
         playing: false,
       }));
     },
-    [persistentProgress, setAppState, table, preferredViewpoint],
+    [persistentProgressRef, setAppState, table, preferredViewpoint],
   );
 
   /**

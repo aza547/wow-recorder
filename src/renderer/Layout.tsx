@@ -20,8 +20,8 @@ interface IProps {
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
-  persistentProgress: RefObject<number>;
-  playerHeight: RefObject<number>;
+  persistentProgressRef: RefObject<number>;
+  playerHeightRef: RefObject<number>;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   combatLoggingStatus: CombatLoggingStatus;
@@ -41,8 +41,8 @@ const Layout = (props: IProps) => {
     setVideoState,
     appState,
     setAppState,
-    persistentProgress,
-    playerHeight,
+    persistentProgressRef,
+    playerHeightRef,
     config,
     setConfig,
     combatLoggingStatus,
@@ -62,8 +62,8 @@ const Layout = (props: IProps) => {
         setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}
-        persistentProgress={persistentProgress}
-        playerHeight={playerHeight}
+        persistentProgressRef={persistentProgressRef}
+        playerHeightRef={playerHeightRef}
       />
     );
   };
@@ -102,7 +102,7 @@ const Layout = (props: IProps) => {
         setInstantReplayState={setInstantReplayState}
         appState={appState}
         setAppState={setAppState}
-        persistentProgress={persistentProgress}
+        persistentProgressRef={persistentProgressRef}
         config={config}
       />
     );
