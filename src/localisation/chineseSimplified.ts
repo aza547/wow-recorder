@@ -586,6 +586,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.HotKeySettingsLabel]: '快捷键',
   [Phrase.ForceStopHotKeyLabel]: '强制停止快捷键',
   [Phrase.ForceStopHotKeyDescription]: '设置一个快捷键来强制结束当前录制。',
+  [Phrase.HotKeyConflictText]: '该按键组合已被其他快捷键占用。',
 };
 
 export default CHINESE_SIMPLIFIED;

@@ -586,6 +586,7 @@ const KOREAN: Translations = {
   [Phrase.HotKeySettingsLabel]: '단축키',
   [Phrase.ForceStopHotKeyLabel]: '강제 중지 단축키',
   [Phrase.ForceStopHotKeyDescription]: '현재 기록을 강제로 종료하는 단축키를 설정합니다.',
+  [Phrase.HotKeyConflictText]: '이 키 조합은 이미 다른 단축키에서 사용 중입니다.',
 };
 
 export default KOREAN;
