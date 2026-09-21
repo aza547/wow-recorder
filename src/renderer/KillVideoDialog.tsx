@@ -40,6 +40,16 @@ const KillVideoDialog = (props: IProps) => {
   const { open, onOpenChange, targetVideoId, parentLookupMap, language } =
     props;
 
+  // Our select component only accepts strings annoyingly.
+  const [fps, setFps] = useState('60');
+  const [singleAudioSource, setSingleAudioSource] = useState(false);
+
+  const [singleAudioSourcePlayer, setSingleAudioSourcePlayer] = useState('');
+  const [resolution, setResolution] =
+    useState<keyof typeof obsResolutions>('1920x1080');
+
+  const [segments, setSegments] = useState<KillVideoSegment[]>([]);
+
   // This React logic is super gross but we need the kill video dialog to
   // snapshot the sources when it opens so that we can calculate the segments,
   // which shouldn't be reset on an update to the parentLookupMap, triggered
@@ -81,16 +91,6 @@ const KillVideoDialog = (props: IProps) => {
     setSingleAudioSource(false);
     setSingleAudioSourcePlayer(sourcesRef.current[0]?.player?._name || '');
   }, [open]);
-
-  // Our select component only accepts strings annoyingly.
-  const [fps, setFps] = useState('60');
-  const [singleAudioSource, setSingleAudioSource] = useState(false);
-
-  const [singleAudioSourcePlayer, setSingleAudioSourcePlayer] = useState('');
-  const [resolution, setResolution] =
-    useState<keyof typeof obsResolutions>('1920x1080');
-
-  const [segments, setSegments] = useState<KillVideoSegment[]>([]);
 
   const getSingleAudioSourceIndex = () => {
     return singleAudioSource
