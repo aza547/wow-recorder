@@ -80,7 +80,6 @@ const AudioSourceControls = (props: IProps) => {
   const { language } = appState;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
-  const [audioChoicesLoaded, setAudioChoicesLoaded] = useState(false);
   const pttInputRef = useRef<HTMLInputElement>(null);
 
   // Available choices per source.
@@ -192,29 +191,28 @@ const AudioSourceControls = (props: IProps) => {
     });
   };
 
-  // On initial load we don't know the available choices for existing
-  // sources in the config, so retrieve it here.
-  const initAudioSourceChoices = async () => {
-    const promises = config.audioSources.map(async (s) => ({
-      id: s.id,
-      choices: await getAudioSourceChoices(s),
-    }));
-
-    const choices = await Promise.all(promises);
-    const updated: Record<string, ObsListItem[]> = {};
-
-    choices.forEach((choice) => {
-      updated[choice.id] = choice.choices;
-    });
-
-    setSourceChoices(updated);
-    setAudioChoicesLoaded(true);
-  };
-
   useEffect(() => {
     ipc.on('volmeter', (id: unknown, magnitude: unknown) =>
       volmeterRefresh(id as string, magnitude as number),
     );
+
+    // On initial load we don't know the available choices for existing
+    // sources in the config, so retrieve it here.
+    const initAudioSourceChoices = async () => {
+      const promises = config.audioSources.map(async (s) => ({
+        id: s.id,
+        choices: await getAudioSourceChoices(s),
+      }));
+
+      const choices = await Promise.all(promises);
+      const updated: Record<string, ObsListItem[]> = {};
+
+      choices.forEach((choice) => {
+        updated[choice.id] = choice.choices;
+      });
+
+      setSourceChoices(updated);
+    };
 
     const initAudioSettings = async () => {
       await ipc.audioSettingsOpen();
@@ -527,7 +525,7 @@ const AudioSourceControls = (props: IProps) => {
     }
 
     const renderSelectItems = () => {
-      if (!audioChoicesLoaded) {
+      if (choices.length < 1) {
         return <></>;
       }
 
