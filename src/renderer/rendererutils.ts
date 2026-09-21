@@ -815,6 +815,19 @@ const getForceStopHotKeyFromConfig = (
 ): PTTKeyPressEvent =>
   getHotKeyFromConfig(config.forceStopHotKey, config.forceStopHotKeyModifiers);
 
+/**
+ * Check if two hotkeys are the same combination. Hotkey matching in the main
+ * process is strict about modifiers, so two bindings only collide if they are
+ * identical. An unbound hotkey has a key code of -1 and never collides.
+ */
+const isSameHotKey = (a: PTTKeyPressEvent, b: PTTKeyPressEvent) =>
+  a.keyCode > 0 &&
+  a.keyCode === b.keyCode &&
+  a.altKey === b.altKey &&
+  a.ctrlKey === b.ctrlKey &&
+  a.shiftKey === b.shiftKey &&
+  a.metaKey === b.metaKey;
+
 const getKeyByValue = (object: any, value: any) => {
   return Object.keys(object).find((key) => object[key] === value);
 };
@@ -1276,6 +1289,7 @@ export {
   getPTTKeyPressEventFromConfig,
   getManualRecordHotKeyFromConfig,
   getForceStopHotKeyFromConfig,
+  isSameHotKey,
   getKeyByValue,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,

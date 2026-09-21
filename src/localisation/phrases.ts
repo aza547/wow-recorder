@@ -583,6 +583,7 @@ enum Phrase {
   HotKeySettingsLabel,
   ForceStopHotKeyLabel,
   ForceStopHotKeyDescription,
+  HotKeyConflictText,
 }
 
 enum Language {

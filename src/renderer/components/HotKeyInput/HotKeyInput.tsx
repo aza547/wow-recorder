@@ -29,9 +29,17 @@ interface IProps {
   hotKey: PTTKeyPressEvent;
 
   /**
-   * Called with the new binding once the user has pressed a key.
+   * Called with the new binding once the user has pressed a key. It's up to
+   * the caller whether to accept it; the displayed value comes from the
+   * hotKey prop, so a rejected binding simply leaves the field unchanged.
    */
   onRebind: (event: PTTKeyPressEvent) => void;
+
+  /**
+   * Message to show under the field, e.g. to explain a rejected binding.
+   * Hidden while listening so it doesn't sit there contradicting the prompt.
+   */
+  error?: string;
 }
 
 /**
@@ -40,7 +48,7 @@ interface IProps {
  * hotkeys this is used for support mouse buttons.
  */
 const HotKeyInput = (props: IProps) => {
-  const { appState, id, label, description, hotKey, onRebind } = props;
+  const { appState, id, label, description, hotKey, onRebind, error } = props;
   const inputRef = useRef<HTMLInputElement>(null);
   const [listening, setListening] = useState(false);
 
@@ -127,6 +135,9 @@ const HotKeyInput = (props: IProps) => {
         onBlur={() => setListening(false)}
         readOnly
       />
+      {error && !listening && (
+        <span className="text-error text-xs mt-2">{error}</span>
+      )}
     </div>
   );
 };

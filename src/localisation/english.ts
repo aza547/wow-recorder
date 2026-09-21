@@ -585,6 +585,8 @@ const ENGLISH: Translations = {
   [Phrase.HotKeySettingsLabel]: 'Hotkeys',
   [Phrase.ForceStopHotKeyLabel]: 'Force Stop Hotkey',
   [Phrase.ForceStopHotKeyDescription]: 'Set a hotkey to force the current recording to stop.',
+  [Phrase.HotKeyConflictText]:
+    'That key combination is already used by another hotkey.',
 };
 
 export default ENGLISH;
