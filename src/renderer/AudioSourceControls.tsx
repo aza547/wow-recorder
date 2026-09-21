@@ -80,7 +80,7 @@ const AudioSourceControls = (props: IProps) => {
   const { language } = appState;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
-  const audioChoicesLoaded = useRef(false);
+  const [audioChoicesLoaded, setAudioChoicesLoaded] = useState(false);
   const pttInputRef = useRef<HTMLInputElement>(null);
 
   // Available choices per source.
@@ -208,7 +208,7 @@ const AudioSourceControls = (props: IProps) => {
     });
 
     setSourceChoices(updated);
-    audioChoicesLoaded.current = true;
+    setAudioChoicesLoaded(true);
   };
 
   useEffect(() => {
@@ -527,7 +527,7 @@ const AudioSourceControls = (props: IProps) => {
     }
 
     const renderSelectItems = () => {
-      if (!audioChoicesLoaded.current) {
+      if (!audioChoicesLoaded) {
         return <></>;
       }
 
