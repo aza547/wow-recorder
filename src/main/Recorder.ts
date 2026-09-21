@@ -49,6 +49,7 @@ import {
 } from '../utils/configUtils';
 import noobs, {
   ObsData,
+  ObsListItem,
   SceneItemPosition,
   Signal,
   SourceDimensions,
@@ -97,27 +98,14 @@ export default class Recorder extends EventEmitter {
   private cfg = ConfigService.getInstance();
 
   /**
-   * Timer for latching onto a window for either game capture or
-   * window capture. Often this does not appear immediately on
-   * the WoW process starting.
+   * Timer for finding and tracking the game or window capture target.
    */
   private findWindowTimer?: NodeJS.Timeout;
 
   /**
-   * We wait 5s between each attempt to latch on to game or window
-   * capture sources.
+   * Check the capture target every 5s while WoW is running.
    */
   private findWindowIntervalDuration = 5000;
-
-  /**
-   * The current number of attempts to find a window to capture.
-   */
-  private findWindowAttempts = 0;
-
-  /**
-   * The maximum number of attempts to find a window to capture.
-   */
-  private findWindowAttemptLimit = 10;
 
   /**
    * Resolution selected by the user in settings.
@@ -945,8 +933,6 @@ export default class Recorder extends EventEmitter {
    * Cancel the find window interval timer.
    */
   public clearFindWindowInterval() {
-    this.findWindowAttempts = 0;
-
     if (this.findWindowTimer) {
       clearInterval(this.findWindowTimer);
       this.findWindowTimer = undefined;
@@ -958,6 +944,7 @@ export default class Recorder extends EventEmitter {
    */
   public shutdownOBS() {
     console.info('[Recorder] OBS shutting down');
+    this.clearFindWindowInterval();
     clearInterval(this.instantReplayTimer);
 
     if (!this.obsInitialized) {
@@ -1588,13 +1575,14 @@ export default class Recorder extends EventEmitter {
   /**
    * Check if the name of the window matches one of the known WoW window names.
    */
-  private static windowMatch(item: { name: string; value: string | number }) {
+  private static windowMatch(item: ObsListItem) {
     return (
-      item.name.startsWith('[Wow.exe]: ') ||
-      item.name.startsWith('[WowT.exe]: ') ||
-      item.name.startsWith('[WowB.exe]: ') ||
-      item.name.startsWith('[WowClassic.exe]: ') ||
-      item.name.startsWith('[WowClassicT.exe]: ')
+      !item.disabled &&
+      (item.name.startsWith('[Wow.exe]: ') ||
+        item.name.startsWith('[WowT.exe]: ') ||
+        item.name.startsWith('[WowB.exe]: ') ||
+        item.name.startsWith('[WowClassic.exe]: ') ||
+        item.name.startsWith('[WowClassicT.exe]: '))
     );
   }
 
@@ -1602,8 +1590,6 @@ export default class Recorder extends EventEmitter {
    * Attach the current game_capture or window_capture source to the WoW client.
    */
   public attachCaptureSource() {
-    console.info('[Recorder] Attaching capture source', this.captureSource);
-
     if (
       this.captureMode !== CaptureMode.WINDOW &&
       this.captureMode !== CaptureMode.GAME
@@ -1631,34 +1617,41 @@ export default class Recorder extends EventEmitter {
       throw new Error('Window setting is not a list');
     }
 
-    const opts = windows.items;
-    const match = opts.find(Recorder.windowMatch);
+    const firstAttempt = !this.findWindowTimer;
+
+    if (firstAttempt) {
+      // Source size signals depend on the preview being enabled in noobs.
+      this.findWindowTimer = setInterval(() => {
+        if (!Poller.getInstance().isWowRunning()) {
+          this.clearFindWindowInterval();
+          return;
+        }
+
+        this.attachCaptureSource();
+      }, this.findWindowIntervalDuration);
+    }
+
+    const settings = noobs.GetSourceSettings(this.captureSource);
+    const opts = windows.items.filter(Recorder.windowMatch);
+    const match =
+      opts.find((item) => item.value === settings.window) ?? opts[0];
 
     if (match) {
-      console.info('[Recorder] Found matching window for game capture:', match);
-      const settings = noobs.GetSourceSettings(this.captureSource);
-      const updated = { ...settings, window: match.value };
-      noobs.SetSourceSettings(this.captureSource, updated);
+      if (match.value !== settings.window) {
+        console.info(
+          '[Recorder] Found matching window for game capture:',
+          match,
+        );
+        const updated = { ...settings, window: match.value };
+        noobs.SetSourceSettings(this.captureSource, updated);
+      }
+
       return;
     }
 
-    if (this.findWindowAttempts < this.findWindowAttemptLimit) {
+    if (firstAttempt) {
       console.info('[Recorder] No matching window yet');
-      this.findWindowAttempts++;
-
-      this.findWindowTimer = setTimeout(
-        () => this.attachCaptureSource(),
-        this.findWindowIntervalDuration,
-      );
-
-      return;
     }
-
-    console.warn(
-      '[Recorder] Failed to find WoW window after',
-      this.findWindowAttempts,
-      'attempts. Giving up.',
-    );
   }
 
   /**
