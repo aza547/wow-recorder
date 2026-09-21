@@ -542,15 +542,21 @@ const isHotKeyMatch = (event: UiohookKeyboardEvent, hotKey: ResolvedHotKey) => {
     return false;
   }
 
-  // Deliberately permissive here, we check all the modifiers we have in
-  // config are met but we don't enforce the inverse, i.e. we'll accept
-  // an additional modifier present (so CTRL + SHIFT + E will trigger
-  // a CTRL + E hotkey).
+  // Modifiers must match exactly, the same as an in-game keybind: CTRL + E
+  // and CTRL + SHIFT + E are separate hotkeys and neither triggers the other.
+  // That's what lets us treat two hotkeys as distinct as long as they don't
+  // share a combination, which the settings enforce when binding.
+  //
+  // Note push to talk is deliberately more permissive than this, see
+  // isPushToTalkHotkey. It gets held down during play, when the user may
+  // already have a modifier down for an unrelated reason, and it has to cope
+  // with a naked modifier key not reporting itself on release. Neither
+  // applies here as these hotkeys are discrete presses.
   return (
-    (!hotKey.altKey || event.altKey) &&
-    (!hotKey.ctrlKey || event.ctrlKey) &&
-    (!hotKey.shiftKey || event.shiftKey) &&
-    (!hotKey.metaKey || event.metaKey)
+    hotKey.altKey === event.altKey &&
+    hotKey.ctrlKey === event.ctrlKey &&
+    hotKey.shiftKey === event.shiftKey &&
+    hotKey.metaKey === event.metaKey
   );
 };
 

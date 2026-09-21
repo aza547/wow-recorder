@@ -962,9 +962,12 @@ export default class Manager {
       }
 
       if (isHotKeyMatch(event, this.forceStopHotKey)) {
-        // Force stop wins if both hotkeys match. The bindings can overlap as
-        // we accept additional modifiers, and we don't want a single key
-        // press to force stop and then immediately start a manual recording.
+        // Modifiers must match exactly and the settings reject a binding
+        // already used by the other hotkey, so normally only one of these can
+        // match a given press. This ordering is just a backstop for a config
+        // that has them bound the same anyway, e.g. one edited by hand: give
+        // force stop the press rather than letting both act on it, which
+        // would stop the recording and then immediately start a new one.
         console.info('[Manager] Force stop hotkey pressed');
         this.forceStop();
         return;

@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Recording hotkeys now require an exact modifier match, so CTRL + E and CTRL + SHIFT + E are separate hotkeys. Push to talk is unchanged.
 ### Added
 - Add a force stop hotkey, which ends the current recording.
 ### Fixed
