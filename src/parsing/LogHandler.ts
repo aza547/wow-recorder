@@ -448,8 +448,12 @@ export default abstract class LogHandler {
     LogHandler.activity.overrun = 0;
 
     LogHandler.activity.end(endDate, false);
+
+    // Don't clear the activity after this, endActivity already does so before
+    // it awaits anything. Clearing it again here would wipe out any activity
+    // that started while we were awaiting, e.g. a manual recording started
+    // straight after a force stop.
     await LogHandler.endActivity();
-    LogHandler.activity = undefined;
   }
 
   public static dropActivity() {
