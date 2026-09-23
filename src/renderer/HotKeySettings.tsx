@@ -97,6 +97,34 @@ const HotKeySettings = (props: IProps) => {
     });
   };
 
+  /**
+   * Unbind a hotkey. A key code of -1 is the unbound sentinel, which never
+   * matches a key press.
+   */
+  const clearManualRecordHotKey = () => {
+    setConflict(undefined);
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        manualRecordHotKey: -1,
+        manualRecordHotKeyModifiers: '',
+      };
+    });
+  };
+
+  const clearForceStopHotKey = () => {
+    setConflict(undefined);
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        forceStopHotKey: -1,
+        forceStopHotKeyModifiers: '',
+      };
+    });
+  };
+
   const getConflictText = (field: HotKeyConflict) => {
     if (conflict !== field) {
       return undefined;
@@ -114,6 +142,7 @@ const HotKeySettings = (props: IProps) => {
         description={Phrase.ManualRecordHotKeyDescription}
         hotKey={manualRecordHotKey}
         onRebind={setManualRecordHotKey}
+        onClear={clearManualRecordHotKey}
         error={getConflictText('manualRecord')}
       />
       <HotKeyInput
@@ -123,6 +152,7 @@ const HotKeySettings = (props: IProps) => {
         description={Phrase.ForceStopHotKeyDescription}
         hotKey={forceStopHotKey}
         onRebind={setForceStopHotKey}
+        onClear={clearForceStopHotKey}
         error={getConflictText('forceStop')}
       />
     </div>

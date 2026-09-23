@@ -9,6 +9,7 @@ import {
   getNextKeyOrMouseEvent,
 } from '../../rendererutils';
 import Label from '../Label/Label';
+import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { Input } from '../Input/Input';
 
@@ -36,6 +37,11 @@ interface IProps {
   onRebind: (event: PTTKeyPressEvent) => void;
 
   /**
+   * Called to unbind the hotkey.
+   */
+  onClear: () => void;
+
+  /**
    * Message to show under the field, e.g. to explain a rejected binding.
    * Hidden while listening so it doesn't sit there contradicting the prompt.
    */
@@ -48,7 +54,8 @@ interface IProps {
  * hotkeys this is used for support mouse buttons.
  */
 const HotKeyInput = (props: IProps) => {
-  const { appState, id, label, description, hotKey, onRebind, error } = props;
+  const { appState, id, label, description, hotKey, onRebind, onClear, error } =
+    props;
   const inputRef = useRef<HTMLInputElement>(null);
   const [listening, setListening] = useState(false);
 
@@ -117,15 +124,34 @@ const HotKeyInput = (props: IProps) => {
 
   return (
     <div className="flex flex-col">
-      <Label htmlFor={id} className="flex items-center">
-        {getLocalePhrase(appState.language, label)}
-        <Tooltip
-          content={getLocalePhrase(appState.language, description)}
-          side="right"
-        >
-          <Info size={20} className="inline-flex ml-2" />
-        </Tooltip>
-      </Label>
+      {/*
+        The clear button deliberately sits outside the Label. Anything inside
+        it inherits the label's click handling and would focus the input,
+        putting us straight into listening for a rebind.
+      */}
+      <div className="flex items-center justify-between gap-x-2 mb-2">
+        <Label htmlFor={id} className="flex items-center mb-0">
+          {getLocalePhrase(appState.language, label)}
+          <Tooltip
+            content={getLocalePhrase(appState.language, description)}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        {hotKey.keyCode > 0 && (
+          <Button
+            type="button"
+            variant="link"
+            // Typography deliberately matches the Label beside it; the
+            // colour is the only difference.
+            className="h-auto p-0 text-xs font-bold leading-none"
+            onClick={onClear}
+          >
+            {getLocalePhrase(appState.language, Phrase.Clear)}
+          </Button>
+        )}
+      </div>
       <Input
         ref={inputRef}
         id={id}
