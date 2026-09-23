@@ -931,21 +931,6 @@ export default class Manager {
       return event;
     });
 
-    ipcMain.on(
-      'refreshCombatLogStatus',
-      async (): Promise<PTTKeyPressEvent> => {
-        this.hotKeysDisabled = true;
-
-        const event = await Promise.race([
-          nextKeyPressPromise(),
-          nextMousePressPromise(),
-        ]);
-
-        this.hotKeysDisabled = false;
-        return event;
-      },
-    );
-
     ipcMain.on('refreshCombatLogStatus', () => {
       this.refreshCombatLoggingStatus();
     });
