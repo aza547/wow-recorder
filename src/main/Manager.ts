@@ -36,6 +36,7 @@ import {
   KillVideoSegment,
   CombatLogPathStatus,
   ResolvedHotKey,
+  SoundAlerts,
 } from './types';
 import {
   getObsVideoConfig,
@@ -52,7 +53,7 @@ import {
 import VideoProcessQueue from './VideoProcessQueue';
 import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
-import { send } from './main';
+import { send, playSoundAlert } from './main';
 import DiskClient from 'storage/DiskClient';
 
 /**
@@ -249,7 +250,8 @@ export default class Manager {
   }
 
   /**
-   * Force a recording to stop regardless of the scenario.
+   * Force a recording to stop regardless of the scenario. This is the user
+   * asking for it, via the hotkey or the button.
    */
   public async forceStop() {
     if (!LogHandler.activity) {
@@ -257,8 +259,18 @@ export default class Manager {
       return;
     }
 
+    // A force stop ends a manual recording just as the manual hotkey would,
+    // so give the same audio cue for it. Check before ending the activity,
+    // as that clears it.
+    const isManual = LogHandler.activity.category === VideoCategory.Manual;
+    const sounds = this.cfg.get<boolean>('manualRecordSoundAlert');
+
     console.info('[Manager] Force ending activity');
     LogHandler.forceEndActivity();
+
+    if (isManual && sounds) {
+      playSoundAlert(SoundAlerts.MANUAL_RECORDING_STOP);
+    }
   }
 
   /**
@@ -901,7 +913,7 @@ export default class Manager {
 
     // Handles a click of the force stop button.
     ipcMain.on('forceStopRecording', async () => {
-      LogHandler.forceEndActivity();
+      this.forceStop();
     });
 
     // Test listener, to enable the test button to start a test.
