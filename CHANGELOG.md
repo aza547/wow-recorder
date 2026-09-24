@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- [Issue 911](https://github.com/aza547/wow-recorder/issues/911) - Colour recording lock and tag icons, distinguishing partially and fully locked groups.
 ### Added
 ### Fixed
 - [Issue 863](https://github.com/aza547/wow-recorder/issues/863) - Preserve the last valid overrun setting when its input is cleared.
