@@ -580,6 +580,10 @@ enum Phrase {
   LatestCombatLogFileDayOld,
   LatestCombatLogFileDaysOld,
   LatestCombatLogFileLessThanADayOld,
+  HotKeySettingsLabel,
+  ForceStopHotKeyLabel,
+  ForceStopHotKeyDescription,
+  HotKeyConflictText,
 }
 
 enum Language {

@@ -785,24 +785,48 @@ const getPTTKeyPressEventFromConfig = (
   };
 };
 
-const getManualRecordHotKeyFromConfig = (
-  config: ConfigurationSchema,
+const getHotKeyFromConfig = (
+  keyCode: number,
+  modifiers: string,
 ): PTTKeyPressEvent => {
-  const ctrl = config.manualRecordHotKeyModifiers.includes('ctrl');
-  const win = config.manualRecordHotKeyModifiers.includes('win');
-  const shift = config.manualRecordHotKeyModifiers.includes('shift');
-  const alt = config.manualRecordHotKeyModifiers.includes('alt');
+  const split = modifiers.split(',');
 
   return {
-    altKey: alt,
-    ctrlKey: ctrl,
-    metaKey: win,
-    shiftKey: shift,
-    keyCode: config.manualRecordHotKey,
-    mouseButton: -1, // No mouse click support for manual record.
+    altKey: split.includes('alt'),
+    ctrlKey: split.includes('ctrl'),
+    metaKey: split.includes('win'),
+    shiftKey: split.includes('shift'),
+    keyCode,
+    mouseButton: -1, // No mouse click support for these hotkeys.
     type: PTTEventType.EVENT_KEY_PRESSED,
   };
 };
+
+const getManualRecordHotKeyFromConfig = (
+  config: ConfigurationSchema,
+): PTTKeyPressEvent =>
+  getHotKeyFromConfig(
+    config.manualRecordHotKey,
+    config.manualRecordHotKeyModifiers,
+  );
+
+const getForceStopHotKeyFromConfig = (
+  config: ConfigurationSchema,
+): PTTKeyPressEvent =>
+  getHotKeyFromConfig(config.forceStopHotKey, config.forceStopHotKeyModifiers);
+
+/**
+ * Check if two hotkeys are the same combination. Hotkey matching in the main
+ * process is strict about modifiers, so two bindings only collide if they are
+ * identical. An unbound hotkey has a key code of -1 and never collides.
+ */
+const isSameHotKey = (a: PTTKeyPressEvent, b: PTTKeyPressEvent) =>
+  a.keyCode > 0 &&
+  a.keyCode === b.keyCode &&
+  a.altKey === b.altKey &&
+  a.ctrlKey === b.ctrlKey &&
+  a.shiftKey === b.shiftKey &&
+  a.metaKey === b.metaKey;
 
 const getKeyByValue = (object: any, value: any) => {
   return Object.keys(object).find((key) => object[key] === value);
@@ -1264,6 +1288,8 @@ export {
   isHighRes,
   getPTTKeyPressEventFromConfig,
   getManualRecordHotKeyFromConfig,
+  getForceStopHotKeyFromConfig,
+  isSameHotKey,
   getKeyByValue,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,

@@ -113,6 +113,8 @@ export const getSettings = (): ConfigurationSchema => {
     manualRecordHotKeyModifiers: getConfigValue<string>('manualRecordHotKeyModifiers'),
     manualRecordSoundAlert: getConfigValue<boolean>('manualRecordSoundAlert'),
     manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
+    forceStopHotKey: getConfigValue<number>('forceStopHotKey'),
+    forceStopHotKeyModifiers: getConfigValue<string>('forceStopHotKeyModifiers'),
     firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     chatUserNameAgreed: getConfigValue<string>('chatUserNameAgreed'),
     validateLogPaths: getConfigValue<boolean>('validateLogPaths'),
