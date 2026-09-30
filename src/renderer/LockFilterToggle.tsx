@@ -12,11 +12,11 @@ import { Phrase } from 'localisation/phrases';
 interface IProps {
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
-  persistentProgress: RefObject<number>;
+  persistentProgressRef: RefObject<number>;
 }
 
 const LockFilterToggle = (props: IProps) => {
-  const { appState, setAppState, persistentProgress } = props;
+  const { appState, setAppState, persistentProgressRef } = props;
   const { lockFilter, language } = appState;
 
   const setLockFilter = (lockFilter: LockFilter) => {
@@ -25,7 +25,7 @@ const LockFilterToggle = (props: IProps) => {
       return;
     }
 
-    persistentProgress.current = 0;
+    persistentProgressRef.current = 0;
     setAppState((prevState) => ({
       ...prevState,
       lockFilter,

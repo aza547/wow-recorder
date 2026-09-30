@@ -182,9 +182,10 @@ const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
 
     if (!matched) {
       console.info(
-        '[configUtils] Not uploading as did not match character filter',
+        '[configUtils] Not uploading as',
         _name,
         _realm,
+        'did not match any of the configured character filters.',
       );
       return false;
     }
