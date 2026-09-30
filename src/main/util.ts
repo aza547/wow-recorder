@@ -55,24 +55,6 @@ const fixPathWhenPackaged = (p: string) => {
   return p.replace('app.asar', 'app.asar.unpacked');
 };
 
-/**
- * Setup logging.
- *
- * This works by overriding console log methods. All console log method will
- * go to both the console if it exists, and a file on disk.
- *
- * This only applies to main process console logs, not the renderer logs.
- */
-const setupApplicationLogging = () => {
-  const log = require('electron-log');
-  const date = new Date().toISOString().slice(0, 10);
-  const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
-  const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath));
-  log.transports.file.resolvePath = () => logPath;
-  Object.assign(console, log.functions);
-  return path.dirname(logPath);
-};
-
 const getResolvedHtmlPath = () => {
   if (process.env.NODE_ENV === 'development') {
     const port = process.env.PORT || 1212;
@@ -441,15 +423,19 @@ const checkAdvancedCombatLogging = async (
     return false;
   }
 
-  const content = (await fs.promises.readFile(configWtfFile)).toString();
-  const match = content.match(/^SET advancedCombatLogging\s+"(\d+)"/m);
+  try {
+    const content = (await fs.promises.readFile(configWtfFile)).toString();
+    const match = content.match(/^SET advancedCombatLogging\s+"(\d+)"/m);
 
-  if (match && match[1] === '1') {
+    if (match && match[1] === '1') {
+      return true;
+    }
+
+    return false;
+  } catch {
+    console.warn('[Util] Failed to read Config.wtf at', configWtfFile);
     return true;
   }
-
-  console.warn('[Util] Advanced combat logging is disabled', configWtfFile);
-  return false;
 };
 
 /**
@@ -1305,8 +1291,32 @@ const getAudioTrackCount = (video: RendererVideo): number => {
   return video.appVersion && semver.gt(video.appVersion, '7.11.1') ? 6 : 1;
 };
 
+const getMostRecentCombatLogModifiedTime = async (
+  logPath: string,
+): Promise<number> => {
+  const logFiles = await getSortedFiles(
+    logPath,
+    'WoWCombatLog.*.txt',
+    FileSortDirection.NewestFirst,
+  );
+
+  return logFiles.length > 0 ? logFiles[0].mtime : -1;
+};
+
+const startWatchingConfigWtf = (logPath: string, callback: () => void) => {
+  const configPath = getConfigWtfPath(logPath);
+
+  try {
+    const watcher = fs.watch(configPath, callback);
+    return watcher;
+  } catch (err) {
+    console.error('[Util] Failed to watch Config.wtf:', configPath, err);
+  }
+
+  return null;
+};
+
 export {
-  setupApplicationLogging,
   writeMetadataFile,
   deleteVideoDisk,
   openSystemExplorer,
@@ -1356,4 +1366,6 @@ export {
   resetInstantReplayState,
   refreshInstantReplayState,
   getAudioTrackCount,
+  getMostRecentCombatLogModifiedTime,
+  startWatchingConfigWtf,
 };

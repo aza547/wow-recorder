@@ -44,6 +44,7 @@ export default class RetailLogHandler extends LogHandler {
       .on('ENCOUNTER_END',        (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterEndLine(line)); })
       .on('ZONE_CHANGE',          (line: LogLine) => { this.logProcessQueue.add(async () => this.handleZoneChange(line)); })
       .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellAuraAppliedLine(line)); })
+      .on('SPELL_AURA_REMOVED',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellAuraRemovedLine(line)); })
       .on('UNIT_DIED',            (line: LogLine) => { this.logProcessQueue.add(async () => this.handleUnitDiedLine(line)); })
       .on('ARENA_MATCH_START',    (line: LogLine) => { this.logProcessQueue.add(async () => this.handleArenaStartLine(line)); })
       .on('ARENA_MATCH_END',      (line: LogLine) => { this.logProcessQueue.add(async () => this.handleArenaEndLine(line)); })
@@ -545,12 +546,24 @@ export default class RetailLogHandler extends LogHandler {
 
       LogHandler.activity.addDeath(playerDeath);
     }
+
+    if (this.isRaid()) {
+      const raid = LogHandler.activity as RaidEncounter;
+      raid.onSpellAuraApplied(line);
+    }
+  }
+
+  private handleSpellAuraRemovedLine(line: LogLine) {
+    if (this.isRaid()) {
+      const raid = LogHandler.activity as RaidEncounter;
+      raid.onSpellAuraRemoved(line);
+    }
   }
 
   private handleSpellCastStart(line: LogLine) {
     if (this.isRaid()) {
       const raid = LogHandler.activity as RaidEncounter;
-      raid.updateBossStatus(line);
+      raid.onSpellCastStart(line);
     }
   }
 
@@ -562,7 +575,7 @@ export default class RetailLogHandler extends LogHandler {
 
     if (this.isRaid()) {
       const raid = LogHandler.activity as RaidEncounter;
-      raid.updateBossStatus(line);
+      raid.onSpellCastSuccess(line);
     }
 
     const srcGUID = line.arg(1);
