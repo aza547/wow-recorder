@@ -456,7 +456,7 @@ const CategoryPage = (props: IProps) => {
           <VideoPlayer
             ref={videoPlayerRef}
             instantReplay={null}
-            key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
+            key={`${lockFilter}:${videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}`}
             videos={videosToPlay}
             filteredState={filteredState}
             persistentProgressRef={persistentProgressRef}
