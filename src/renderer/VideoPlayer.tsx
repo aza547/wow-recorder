@@ -68,7 +68,7 @@ interface IProps {
   // Instant replay takes precedence over the videos prop if present.
   instantReplay: InstantReplayData | null;
   filteredState: Array<RendererVideo>;
-  persistentProgress: RefObject<number>;
+  persistentProgressRef: RefObject<number>;
   config: ConfigurationSchema;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
@@ -110,7 +110,7 @@ export interface VideoPlayerRef {
 export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const {
     videos,
-    persistentProgress,
+    persistentProgressRef,
     config,
     appState,
     setAppState,
@@ -143,7 +143,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   const seekAllPlayers = (seconds: number) => {
     players.forEach((p) => seekPlayer(p, seconds));
-    persistentProgress.current = seconds;
+    persistentProgressRef.current = seconds;
   };
 
   // Allows triggering seek from outside the component.
@@ -188,10 +188,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     useState<boolean>(false);
 
   // On the initial seek we will attempt to resume playback from the
-  // persistentProgress prop. The ideas is that when switching between
+  // persistentProgressRef prop. The ideas is that when switching between
   // different POVs of the same activity we want to play from the same
   // point.
-  const timestamp = useRef(`#t=${persistentProgress.current}`);
+  const timestamp = useRef(`#t=${persistentProgressRef.current}`);
 
   // Check the category state to see if we have a cloud and/or disk
   // copy of this video. These variables refer to the total state of
@@ -538,7 +538,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       }
 
       setProgress(player1.current.currentTime);
-      persistentProgress.current = player1.current.currentTime;
+      persistentProgressRef.current = player1.current.currentTime;
     }, 100); // 10fps-ish smooth UI
   };
 
@@ -673,9 +673,9 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return;
     }
 
-    if (persistentProgress.current > 0) {
+    if (persistentProgressRef.current > 0) {
       // Without this the progress bar will show zero until playback starts.
-      setProgress(persistentProgress.current);
+      setProgress(persistentProgressRef.current);
     }
 
     if (!instantReplay) {
@@ -744,15 +744,34 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     );
   };
 
-  const onPlay = (primary: boolean) => {
-    if (primary) {
+  // Queued media events may describe a playback state that has already changed.
+  const onPlay = (
+    primary: boolean,
+    event: React.SyntheticEvent<HTMLVideoElement>,
+  ) => {
+    if (primary && !event.currentTarget.paused) {
       setPlaying(true);
       startProgressBarSync();
     }
   };
 
-  const onPause = (primary: boolean) => {
+  const onPause = (
+    primary: boolean,
+    event: React.SyntheticEvent<HTMLVideoElement>,
+  ) => {
+    if (primary && event.currentTarget.paused) {
+      setPlaying(false);
+      stopProgressBarSync();
+    }
+  };
+
+  const onEnded = (
+    primary: boolean,
+    event: React.SyntheticEvent<HTMLVideoElement>,
+  ) => {
     if (primary) {
+      // ReactPlayer may have restarted before this queued event is handled.
+      event.currentTarget.pause();
       setPlaying(false);
       stopProgressBarSync();
     }
@@ -791,8 +810,9 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         onDurationChange={primary ? onDurationChange : undefined}
         onClick={togglePlaying}
         onDoubleClick={toggleFullscreen}
-        onPlay={() => onPlay(primary)}
-        onPause={() => onPause(primary)}
+        onPlay={(event) => onPlay(primary, event)}
+        onPause={(event) => onPause(primary, event)}
+        onEnded={(event) => onEnded(primary, event)}
         onReady={onReady}
         onSeeked={onReady}
         onError={onError}
@@ -979,7 +999,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     const sameActivity = selectedVideos[0]?.uniqueHash === v.uniqueHash;
 
     if (!sameActivity) {
-      persistentProgress.current = 0;
+      persistentProgressRef.current = 0;
     }
 
     setAppState((prevState) => {
@@ -1318,7 +1338,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     setSpinner(true);
 
     player1.current.pause();
-    player1.current.src = `vod://wcr/${instantReplay.path}?${Date.now()}#t=${persistentProgress.current}`;
+    player1.current.src = `vod://wcr/${instantReplay.path}?${Date.now()}#t=${persistentProgressRef.current}`;
     player1.current.load();
   };
 

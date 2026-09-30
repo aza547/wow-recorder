@@ -72,8 +72,8 @@ interface IProps {
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
-  persistentProgress: RefObject<number>;
-  playerHeight: RefObject<number>;
+  persistentProgressRef: RefObject<number>;
+  playerHeightRef: RefObject<number>;
 }
 
 /**
@@ -86,8 +86,8 @@ const CategoryPage = (props: IProps) => {
     setVideoState,
     appState,
     setAppState,
-    persistentProgress,
-    playerHeight,
+    persistentProgressRef,
+    playerHeightRef,
   } = props;
 
   const {
@@ -178,7 +178,7 @@ const CategoryPage = (props: IProps) => {
       const parent = getClipParent(clip);
 
       if (parent) {
-        persistentProgress.current =
+        persistentProgressRef.current =
           clip.parentVideoOffset && clip.parentVideoOffset > 0
             ? clip.parentVideoOffset
             : 0;
@@ -198,7 +198,7 @@ const CategoryPage = (props: IProps) => {
         }));
       }
     },
-    [getClipParent, persistentProgress, setAppState],
+    [getClipParent, persistentProgressRef, setAppState],
   );
 
   const table = useVideoSelectionTable(
@@ -231,13 +231,13 @@ const CategoryPage = (props: IProps) => {
       }
 
       // 96px = 32 (top bar) + 40 (video controls) + 24 (grip)
-      if (playerHeight.current + 96 > window.innerHeight) {
+      if (playerHeightRef.current + 96 > window.innerHeight) {
         // The video is bigger than the window. Reset it
         // to the original size. Could probably check that
         // 500 is smaller than the window but who resizes
         // their window to be smaller than 500px?
         resizableRef.current.updateSize({ height: 500 });
-        playerHeight.current = 500;
+        playerHeightRef.current = 500;
       }
     };
 
@@ -246,7 +246,7 @@ const CategoryPage = (props: IProps) => {
     return () => {
       window.removeEventListener('resize', handleWindowResize);
     };
-  }, [playerHeight]);
+  }, [playerHeightRef]);
 
   const renderChat = (
     video: RendererVideo | undefined,
@@ -283,7 +283,7 @@ const CategoryPage = (props: IProps) => {
       const sameActivity = currentActivity?.uniqueHash === target.uniqueHash;
 
       if (!sameActivity || timestamp !== undefined) {
-        persistentProgress.current = timestamp ?? 0;
+        persistentProgressRef.current = timestamp ?? 0;
       }
 
       setAppState((prevState) => ({
@@ -323,7 +323,7 @@ const CategoryPage = (props: IProps) => {
         return;
       }
 
-      // Switching videos remounts VideoPlayer; persistentProgress carries the
+      // Switching videos remounts VideoPlayer; persistentProgressRef carries the
       // clicked timestamp into the new POV's initial seek.
       switchToViewpoint(target, seconds);
     };
@@ -336,7 +336,7 @@ const CategoryPage = (props: IProps) => {
       }
 
       // For @Player without a timestamp, keep the current playback position
-      // carried in persistentProgress and only change the selected POV.
+      // carried in persistentProgressRef and only change the selected POV.
       switchToViewpoint(target);
     };
 
@@ -363,7 +363,7 @@ const CategoryPage = (props: IProps) => {
     element: HTMLElement,
   ) => {
     const height = element.clientHeight;
-    playerHeight.current = height;
+    playerHeightRef.current = height;
   };
 
   const renderDrawerOpen = (
@@ -431,7 +431,7 @@ const CategoryPage = (props: IProps) => {
               video={activeParentVideo}
               appState={appState}
               setAppState={setAppState}
-              persistentProgress={persistentProgress}
+              persistentProgressRef={persistentProgressRef}
             />
           )}
         </div>
@@ -479,7 +479,7 @@ const CategoryPage = (props: IProps) => {
       <Resizable
         ref={resizableRef}
         defaultSize={{
-          height: `${playerHeight.current}px`,
+          height: `${playerHeightRef.current}px`,
           width: '100%',
         }}
         enable={{
@@ -517,7 +517,7 @@ const CategoryPage = (props: IProps) => {
             key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
             videos={videosToPlay}
             filteredState={filteredState}
-            persistentProgress={persistentProgress}
+            persistentProgressRef={persistentProgressRef}
             config={config}
             appState={appState}
             setAppState={setAppState}
@@ -825,7 +825,7 @@ const CategoryPage = (props: IProps) => {
             table={table}
             appState={appState}
             setAppState={setAppState}
-            persistentProgress={persistentProgress}
+            persistentProgressRef={persistentProgressRef}
             dialogOpen={dialog !== DialogType.NONE}
           />
         </div>

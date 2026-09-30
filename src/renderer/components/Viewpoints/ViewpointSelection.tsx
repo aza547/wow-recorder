@@ -20,11 +20,11 @@ interface IProps {
   video: RendererVideo;
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
-  persistentProgress: RefObject<number>;
+  persistentProgressRef: RefObject<number>;
 }
 
 export default function ViewpointSelection(props: IProps) {
-  const { video, appState, setAppState, persistentProgress } = props;
+  const { video, appState, setAppState, persistentProgressRef } = props;
   const { selectedVideos, multiPlayerMode } = appState;
 
   const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
@@ -108,7 +108,7 @@ export default function ViewpointSelection(props: IProps) {
         selectedVideos[0]?.uniqueHash === selection.uniqueHash;
 
       if (!sameActivity) {
-        persistentProgress.current = 0;
+        persistentProgressRef.current = 0;
       }
 
       // Clone the selected videos for manipulation.
