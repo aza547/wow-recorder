@@ -744,15 +744,34 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     );
   };
 
-  const onPlay = (primary: boolean) => {
-    if (primary) {
+  // Queued media events may describe a playback state that has already changed.
+  const onPlay = (
+    primary: boolean,
+    event: React.SyntheticEvent<HTMLVideoElement>,
+  ) => {
+    if (primary && !event.currentTarget.paused) {
       setPlaying(true);
       startProgressBarSync();
     }
   };
 
-  const onPause = (primary: boolean) => {
+  const onPause = (
+    primary: boolean,
+    event: React.SyntheticEvent<HTMLVideoElement>,
+  ) => {
+    if (primary && event.currentTarget.paused) {
+      setPlaying(false);
+      stopProgressBarSync();
+    }
+  };
+
+  const onEnded = (
+    primary: boolean,
+    event: React.SyntheticEvent<HTMLVideoElement>,
+  ) => {
     if (primary) {
+      // ReactPlayer may have restarted before this queued event is handled.
+      event.currentTarget.pause();
       setPlaying(false);
       stopProgressBarSync();
     }
@@ -791,8 +810,9 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         onDurationChange={primary ? onDurationChange : undefined}
         onClick={togglePlaying}
         onDoubleClick={toggleFullscreen}
-        onPlay={() => onPlay(primary)}
-        onPause={() => onPause(primary)}
+        onPlay={(event) => onPlay(primary, event)}
+        onPause={(event) => onPause(primary, event)}
+        onEnded={(event) => onEnded(primary, event)}
         onReady={onReady}
         onSeeked={onReady}
         onError={onError}
