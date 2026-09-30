@@ -8,8 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 910](https://github.com/aza547/wow-recorder/issues/910) - Prevent rapid playback controls from causing a repeating play/pause cycle.
+- [Issue 863](https://github.com/aza547/wow-recorder/issues/863) - Preserve the last valid overrun setting when its input is cleared.
 - Add Nymrissa "World LFR" difficulty.
 - [Issue 875](https://github.com/aza547/wow-recorder/issues/875) - Confirm recording lock, tag and delete actions before updating their state, and report failures.
+- [PR 907](https://github.com/aza547/wow-recorder/pull/907) - Better rotation of application logs.
 
 ## [7.13.2] - 2026-08-30
 ### Fixed
