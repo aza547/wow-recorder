@@ -572,6 +572,14 @@ enum Phrase {
   UnknownDevice,
   OpenLockDialog,
   OpenTagDialog,
+  InstantReplayLabel,
+  InstantReplayDisabled,
+  LatestCombatLogFileText,
+  LatestCombatLogFileNotFound,
+  LatestCombatLogFileOverAMonthOld,
+  LatestCombatLogFileDayOld,
+  LatestCombatLogFileDaysOld,
+  LatestCombatLogFileLessThanADayOld,
 }
 
 enum Language {

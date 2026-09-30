@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - Preserve recordings when storage retention cannot read their metadata.
+- [Issue 910](https://github.com/aza547/wow-recorder/issues/910) - Prevent rapid playback controls from causing a repeating play/pause cycle.
+- [Issue 863](https://github.com/aza547/wow-recorder/issues/863) - Preserve the last valid overrun setting when its input is cleared.
+- Add Nymrissa "World LFR" difficulty.
+- [PR 907](https://github.com/aza547/wow-recorder/pull/907) - Better rotation of application logs.
+
+## [7.13.2] - 2026-08-30
+### Fixed
+- Fix log path config not being applied correctly.
+
+## [7.13.1] - 2026-08-30
+### Changed
+- Always show instant replay button, but disable it when not available.
+### Added
+- Add the `2560x720` resolution option.
+- [Issue 894](https://github.com/aza547/wow-recorder/issues/894) - Displays the age of the latest combat log in settings to make it easier to spot misconfigurations.
+- There is now a "open location" button for configured log paths for ease of access.
+- Azra'tec recording support (delve boss, it will record as if it were a Mythic raid encounter).
+### Fixed
+- [Issue 879](https://github.com/aza547/wow-recorder/issues/879) - Restore clip source navigation after the React Table v9 migration.
+- Better tracking of Coiled Altar fight progress.
+- Fix localisation of the Instant Replay button.
+- [Issue 880](https://github.com/aza547/wow-recorder/issues/880), [Issue 900](https://github.com/aza547/wow-recorder/issues/900) - Take noobs `0.0.205` which has a bunch of added mutex protection around the replay buffer. 
 
 ## [7.13.0] - 2026-08-27
 ### Changed

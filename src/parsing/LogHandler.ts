@@ -12,7 +12,8 @@ import {
 } from '../main/types';
 import Activity from '../activitys/Activity';
 import RaidEncounter from '../activitys/RaidEncounter';
-
+import Beloren from '../activitys/encounters/Beloren';
+import CoiledAltar from '../activitys/encounters/CoiledAltar';
 import {
   ambiguate,
   isUnitFriendly,
@@ -30,6 +31,7 @@ import { emitErrorReport, refreshInstantReplayState } from 'main/util';
 import AsyncQueue from 'utils/AsyncQueue';
 import path from 'path';
 import { ESupportedEncoders } from 'main/obsEnums';
+import CrownOfTheCosmos from 'activitys/encounters/CrownOfTheCosmos';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -100,6 +102,39 @@ export default abstract class LogHandler {
     this.combatLogWatcher.removeAllListeners();
   }
 
+  private static createRaidEncounter(
+    start: Date,
+    encounterID: number,
+    encounterName: string,
+    difficultyID: number,
+    flavour: Flavour,
+  ) {
+    switch (encounterID) {
+      case CrownOfTheCosmos.encounterId:
+        return new CrownOfTheCosmos(
+          start,
+          encounterName,
+          difficultyID,
+          flavour,
+        );
+
+      case Beloren.encounterId:
+        return new Beloren(start, encounterName, difficultyID, flavour);
+
+      case CoiledAltar.encounterId:
+        return new CoiledAltar(start, encounterName, difficultyID, flavour);
+
+      default:
+        return new RaidEncounter(
+          start,
+          encounterID,
+          encounterName,
+          difficultyID,
+          flavour,
+        );
+    }
+  }
+
   protected async handleEncounterStartLine(line: LogLine, flavour: Flavour) {
     console.debug('[LogHandler] Handling ENCOUNTER_START line:', line);
 
@@ -130,7 +165,7 @@ export default abstract class LogHandler {
       return;
     }
 
-    const activity = new RaidEncounter(
+    const activity = LogHandler.createRaidEncounter(
       startDate,
       encounterID,
       encounterName,
@@ -145,7 +180,7 @@ export default abstract class LogHandler {
     console.debug('[LogHandler] Handling ENCOUNTER_END line:', line);
 
     if (this.isManual()) {
-      console.info('[ClassicLogHandler] Ignoring line as in manual recording');
+      console.info('[LogHandler] Ignoring line as in manual recording');
       return;
     }
 
@@ -178,6 +213,11 @@ export default abstract class LogHandler {
   protected handleUnitDiedLine(line: LogLine): void {
     if (!LogHandler.activity) {
       return;
+    }
+
+    if (this.isRaid()) {
+      const raid = LogHandler.activity as RaidEncounter;
+      raid.onUnitDied(line);
     }
 
     const unitFlags = parseInt(line.arg(7), 16);
@@ -529,12 +569,10 @@ export default abstract class LogHandler {
   }
 
   protected handleSpellDamage(line: LogLine) {
-    if (!this.isRaid()) {
-      return;
+    if (this.isRaid()) {
+      const raid = LogHandler.activity as RaidEncounter;
+      raid.onSpellDamage(line);
     }
-
-    const raid = LogHandler.activity as RaidEncounter;
-    raid.updateBossHp(line);
   }
 
   /**

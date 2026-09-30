@@ -42,12 +42,9 @@ const PVESettings = (props: IProps) => {
 
     const toSet: Record<string, boolean | string | number> = {
       recordRaids: config.recordRaids,
-      minEncounterDuration: config.minEncounterDuration,
       minRaidDifficulty: config.minRaidDifficulty,
       recordDungeons: config.recordDungeons,
       recordChallengeModes: config.recordChallengeModes,
-      raidOverrun: config.raidOverrun,
-      dungeonOverrun: config.dungeonOverrun,
       recordCurrentRaidEncountersOnly: config.recordCurrentRaidEncountersOnly,
     };
 

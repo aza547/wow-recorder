@@ -12,7 +12,7 @@ import {
   DiskStatus,
   StorageFilter,
   ActivityStatus,
-  AdvancedLoggingStatus,
+  CombatLoggingStatus,
   InstantReplayState,
   InstantReplayData,
 } from 'main/types';
@@ -51,13 +51,13 @@ const WarcraftRecorder = () => {
   const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
   const updateNotified = useRef(false);
   const { toast } = useToast();
-  const [advancedLoggingStatus, setAdvancedLoggingStatus] =
-    useState<AdvancedLoggingStatus>({
-      retail: true,
-      classic: true,
-      era: true,
-      retailPtr: true,
-      classicPtr: true,
+  const [combatLoggingStatus, setCombatLoggingStatus] =
+    useState<CombatLoggingStatus>({
+      retail: { advanced: true, latestLogAgeMs: -1 },
+      classic: { advanced: true, latestLogAgeMs: -1 },
+      era: { advanced: true, latestLogAgeMs: -1 },
+      retailPtr: { advanced: true, latestLogAgeMs: -1 },
+      classicPtr: { advanced: true, latestLogAgeMs: -1 },
     });
   const [previewEnabled, setPreviewEnabled] = useState(true);
 
@@ -172,10 +172,10 @@ const WarcraftRecorder = () => {
   }, [videoState]);
 
   // Used to allow for hot switching of video players when moving between POVs.
-  const persistentProgress = useRef(0);
+  const persistentProgressRef = useRef(0);
 
   // Used to remember the player height when switching categories.
-  const playerHeight = useRef(500);
+  const playerHeightRef = useRef(500);
 
   const updateRecStatus = (status: unknown, err: unknown) => {
     setRecorderStatus(status as RecStatus);
@@ -272,8 +272,8 @@ const WarcraftRecorder = () => {
     updateNotified.current = true;
   };
 
-  const updateAdvancedLogging = (status: unknown) => {
-    setAdvancedLoggingStatus(status as AdvancedLoggingStatus);
+  const updateCombatLoggingStatus = (status: unknown) => {
+    setCombatLoggingStatus(status as CombatLoggingStatus);
   };
 
   const setCloudVideos = (videos: unknown) => {
@@ -457,7 +457,7 @@ const WarcraftRecorder = () => {
     ipc.on('displayProtectCloudVideos', displayProtectCloudVideos);
     ipc.on('displayUnprotectCloudVideos', displayUnprotectCloudVideos);
     ipc.on('displayTagCloudVideo', displayTagCloudVideo);
-    ipc.on('updateAdvancedLoggingStatus', updateAdvancedLogging);
+    ipc.on('updateCombatLoggingStatus', updateCombatLoggingStatus);
     ipc.on('updateInstantReplayState', updateInstantReplayState);
 
     return () => {
@@ -477,7 +477,7 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('displayProtectCloudVideos');
       ipc.removeAllListeners('displayUnprotectCloudVideos');
       ipc.removeAllListeners('displayTagCloudVideo');
-      ipc.removeAllListeners('updateAdvancedLoggingStatus');
+      ipc.removeAllListeners('updateCombatLoggingStatus');
       ipc.removeAllListeners('updateInstantReplayState');
     };
   }, []);
@@ -504,7 +504,7 @@ const WarcraftRecorder = () => {
                 videoCounters={videoCounters}
                 appState={appState}
                 setAppState={setAppState}
-                persistentProgress={persistentProgress}
+                persistentProgressRef={persistentProgressRef}
                 error={error}
                 micStatus={micStatus}
                 errorReports={errorReports}
@@ -513,7 +513,7 @@ const WarcraftRecorder = () => {
                 updateAvailable={updateAvailable}
                 recorderCategory={activityStatus?.category}
                 activityStatus={activityStatus}
-                advancedLoggingStatus={advancedLoggingStatus}
+                combatLoggingStatus={combatLoggingStatus}
                 setPreviewEnabled={setPreviewEnabled}
                 instantReplayState={instantReplayState}
                 setInstantReplayState={setInstantReplayState}
@@ -524,11 +524,11 @@ const WarcraftRecorder = () => {
                 setVideoState={setVideoState}
                 appState={appState}
                 setAppState={setAppState}
-                persistentProgress={persistentProgress}
-                playerHeight={playerHeight}
+                persistentProgressRef={persistentProgressRef}
+                playerHeightRef={playerHeightRef}
                 config={config}
                 setConfig={setConfig}
-                advancedLoggingStatus={advancedLoggingStatus}
+                combatLoggingStatus={combatLoggingStatus}
                 previewEnabled={previewEnabled}
                 setPreviewEnabled={setPreviewEnabled}
                 instantReplayState={instantReplayState}
