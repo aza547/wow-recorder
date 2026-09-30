@@ -67,8 +67,8 @@ interface IProps {
   videos: RendererVideo[];
   // Instant replay takes precedence over the videos prop if present.
   instantReplay: InstantReplayData | null;
-  categoryState: RendererVideo[];
-  persistentProgress: RefObject<number>;
+  filteredState: Array<RendererVideo>;
+  persistentProgressRef: RefObject<number>;
   config: ConfigurationSchema;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
@@ -110,11 +110,11 @@ export interface VideoPlayerRef {
 export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const {
     videos,
-    persistentProgress,
+    persistentProgressRef,
     config,
     appState,
     setAppState,
-    categoryState,
+    filteredState,
     instantReplay,
   } = props;
 
@@ -143,7 +143,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   const seekAllPlayers = (seconds: number) => {
     players.forEach((p) => seekPlayer(p, seconds));
-    persistentProgress.current = seconds;
+    persistentProgressRef.current = seconds;
   };
 
   // Allows triggering seek from outside the component.
@@ -188,10 +188,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     useState<boolean>(false);
 
   // On the initial seek we will attempt to resume playback from the
-  // persistentProgress prop. The ideas is that when switching between
+  // persistentProgressRef prop. The ideas is that when switching between
   // different POVs of the same activity we want to play from the same
   // point.
-  const timestamp = useRef(`#t=${persistentProgress.current}`);
+  const timestamp = useRef(`#t=${persistentProgressRef.current}`);
 
   // Check the category state to see if we have a cloud and/or disk
   // copy of this video. These variables refer to the total state of
@@ -201,7 +201,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   if (!instantReplay) {
     const videoName = videos[0].videoName;
-    nameMatches = categoryState
+    nameMatches = filteredState
       .flatMap((v) => [v, ...v.multiPov])
       .filter((v) => v.videoName === videoName);
   }
@@ -538,7 +538,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       }
 
       setProgress(player1.current.currentTime);
-      persistentProgress.current = player1.current.currentTime;
+      persistentProgressRef.current = player1.current.currentTime;
     }, 100); // 10fps-ish smooth UI
   };
 
@@ -673,9 +673,9 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return;
     }
 
-    if (persistentProgress.current > 0) {
+    if (persistentProgressRef.current > 0) {
       // Without this the progress bar will show zero until playback starts.
-      setProgress(persistentProgress.current);
+      setProgress(persistentProgressRef.current);
     }
 
     if (!instantReplay) {
@@ -744,15 +744,34 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     );
   };
 
-  const onPlay = (primary: boolean) => {
-    if (primary) {
+  // Queued media events may describe a playback state that has already changed.
+  const onPlay = (
+    primary: boolean,
+    event: React.SyntheticEvent<HTMLVideoElement>,
+  ) => {
+    if (primary && !event.currentTarget.paused) {
       setPlaying(true);
       startProgressBarSync();
     }
   };
 
-  const onPause = (primary: boolean) => {
+  const onPause = (
+    primary: boolean,
+    event: React.SyntheticEvent<HTMLVideoElement>,
+  ) => {
+    if (primary && event.currentTarget.paused) {
+      setPlaying(false);
+      stopProgressBarSync();
+    }
+  };
+
+  const onEnded = (
+    primary: boolean,
+    event: React.SyntheticEvent<HTMLVideoElement>,
+  ) => {
     if (primary) {
+      // ReactPlayer may have restarted before this queued event is handled.
+      event.currentTarget.pause();
       setPlaying(false);
       stopProgressBarSync();
     }
@@ -791,8 +810,9 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         onDurationChange={primary ? onDurationChange : undefined}
         onClick={togglePlaying}
         onDoubleClick={toggleFullscreen}
-        onPlay={() => onPlay(primary)}
-        onPause={() => onPause(primary)}
+        onPlay={(event) => onPlay(primary, event)}
+        onPause={(event) => onPause(primary, event)}
+        onEnded={(event) => onEnded(primary, event)}
         onReady={onReady}
         onSeeked={onReady}
         onError={onError}
@@ -913,7 +933,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const renderDownloadButton = () => {
     const disabled = storageFilter !== StorageFilter.BOTH;
     const tooltip = disabled
-      ? getLocalePhrase(language, Phrase.DownloadUploadDisabledDueToFilter)
+      ? getLocalePhrase(language, Phrase.DisabledDueToFilter)
       : getLocalePhrase(language, Phrase.DownloadButtonTooltip);
 
     return (
@@ -938,7 +958,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const renderUploadButton = () => {
     const disabled = storageFilter !== StorageFilter.BOTH;
     const tooltip = disabled
-      ? getLocalePhrase(language, Phrase.DownloadUploadDisabledDueToFilter)
+      ? getLocalePhrase(language, Phrase.DisabledDueToFilter)
       : getLocalePhrase(language, Phrase.UploadButtonTooltip);
 
     return (
@@ -979,7 +999,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     const sameActivity = selectedVideos[0]?.uniqueHash === v.uniqueHash;
 
     if (!sameActivity) {
-      persistentProgress.current = 0;
+      persistentProgressRef.current = 0;
     }
 
     setAppState((prevState) => {
@@ -1010,16 +1030,27 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return renderUploadButton();
     }
 
+    const disableDueToFilter =
+      !isSelected && storageFilter !== StorageFilter.BOTH;
+
+    let tooltip = getLocalePhrase(language, Phrase.CloudButtonTooltip);
+
+    if (disableDueToFilter) {
+      tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
+    }
+
     return (
-      <Tooltip content={getLocalePhrase(language, Phrase.CloudButtonTooltip)}>
-        <Button
-          disabled={!cloudVideo}
-          onClick={() => setSelectedVideos(cloudVideo)}
-          variant="ghost"
-          size="xs"
-        >
-          <CloudIcon sx={{ height: '20px', width: '20px', color, opacity }} />
-        </Button>
+      <Tooltip content={tooltip}>
+        <div>
+          <Button
+            disabled={!cloudVideo || disableDueToFilter}
+            onClick={() => setSelectedVideos(cloudVideo)}
+            variant="ghost"
+            size="xs"
+          >
+            <CloudIcon sx={{ height: '20px', width: '20px', color, opacity }} />
+          </Button>
+        </div>
       </Tooltip>
     );
   };
@@ -1036,11 +1067,20 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return renderDownloadButton();
     }
 
+    let tooltip = getLocalePhrase(language, Phrase.DiskButtonTooltip);
+
+    const disableDueToFilter =
+      !isSelected && storageFilter !== StorageFilter.BOTH;
+
+    if (disableDueToFilter) {
+      tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
+    }
+
     return (
-      <Tooltip content={getLocalePhrase(language, Phrase.DiskButtonTooltip)}>
+      <Tooltip content={tooltip}>
         <Button
           value="disk"
-          disabled={!diskVideo}
+          disabled={!diskVideo || disableDueToFilter}
           onClick={() => setSelectedVideos(diskVideo)}
           variant="ghost"
           size="xs"
@@ -1078,16 +1118,24 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Render the open folder button.
    */
   const renderOpenFolderButton = () => {
+    let disabled = false;
+    let tooltip = getLocalePhrase(language, Phrase.OpenFolderButtonTooltip);
+
+    if (storageFilter === StorageFilter.CLOUD) {
+      disabled = true;
+      tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
+    } else if (!diskVideo) {
+      disabled = true;
+    }
+
     return (
-      <Tooltip
-        content={getLocalePhrase(language, Phrase.OpenFolderButtonTooltip)}
-      >
+      <Tooltip content={tooltip}>
         <div>
           <Button
             variant="ghost"
             size="xs"
             onClick={openLocation}
-            disabled={diskVideo === undefined}
+            disabled={disabled}
           >
             <FolderOpen size={20} color="white" />
           </Button>
@@ -1134,16 +1182,24 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Render the get link button.
    */
   const renderGetLinkButton = () => {
+    let disabled = false;
+    let tooltip = getLocalePhrase(language, Phrase.ShareLinkButtonTooltip);
+
+    if (storageFilter === StorageFilter.DISK) {
+      disabled = true;
+      tooltip = getLocalePhrase(language, Phrase.DisabledDueToFilter);
+    } else if (!cloudVideo) {
+      disabled = true;
+    }
+
     return (
-      <Tooltip
-        content={getLocalePhrase(language, Phrase.ShareLinkButtonTooltip)}
-      >
+      <Tooltip content={tooltip}>
         <div>
           <Button
             variant="ghost"
             size="xs"
             onClick={getShareableLink}
-            disabled={cloudVideo === undefined}
+            disabled={disabled}
           >
             <Link size={20} color="white" />
           </Button>
@@ -1282,7 +1338,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     setSpinner(true);
 
     player1.current.pause();
-    player1.current.src = `vod://wcr/${instantReplay.path}?${Date.now()}#t=${persistentProgress.current}`;
+    player1.current.src = `vod://wcr/${instantReplay.path}?${Date.now()}#t=${persistentProgressRef.current}`;
     player1.current.load();
   };
 

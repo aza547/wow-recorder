@@ -1,12 +1,11 @@
 import * as React from 'react';
 import {
-  AdvancedLoggingStatus,
+  CombatLoggingStatus,
   Pages,
   RecStatus,
   AppState,
   RendererVideo,
   InstantReplayState,
-  ActivityStatus,
 } from 'main/types';
 import { Dispatch, RefObject, SetStateAction } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
@@ -21,11 +20,11 @@ interface IProps {
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
-  persistentProgress: RefObject<number>;
-  playerHeight: RefObject<number>;
+  persistentProgressRef: RefObject<number>;
+  playerHeightRef: RefObject<number>;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
-  advancedLoggingStatus: AdvancedLoggingStatus;
+  combatLoggingStatus: CombatLoggingStatus;
   previewEnabled: boolean;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
   instantReplayState: InstantReplayState;
@@ -42,11 +41,11 @@ const Layout = (props: IProps) => {
     setVideoState,
     appState,
     setAppState,
-    persistentProgress,
-    playerHeight,
+    persistentProgressRef,
+    playerHeightRef,
     config,
     setConfig,
-    advancedLoggingStatus,
+    combatLoggingStatus,
     previewEnabled,
     setPreviewEnabled,
     instantReplayState,
@@ -63,8 +62,8 @@ const Layout = (props: IProps) => {
         setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}
-        persistentProgress={persistentProgress}
-        playerHeight={playerHeight}
+        persistentProgressRef={persistentProgressRef}
+        playerHeightRef={playerHeightRef}
       />
     );
   };
@@ -77,7 +76,7 @@ const Layout = (props: IProps) => {
         setConfig={setConfig}
         appState={appState}
         setAppState={setAppState}
-        advancedLoggingStatus={advancedLoggingStatus}
+        combatLoggingStatus={combatLoggingStatus}
         videoState={videoState}
       />
     );
@@ -103,7 +102,7 @@ const Layout = (props: IProps) => {
         setInstantReplayState={setInstantReplayState}
         appState={appState}
         setAppState={setAppState}
-        persistentProgress={persistentProgress}
+        persistentProgressRef={persistentProgressRef}
         config={config}
       />
     );

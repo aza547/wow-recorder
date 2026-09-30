@@ -275,5 +275,9 @@ contextBridge.exposeInMainWorld('electron', {
     setOpenInstantReplayFile(path: string | null) {
       ipcRenderer.send('setOpenInstantReplayFile', path);
     },
+
+    refreshCombatLogStatus() {
+      ipcRenderer.send('refreshCombatLogStatus');
+    },
   },
 });
