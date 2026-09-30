@@ -19,6 +19,7 @@ const getLocalDate = () => {
 const logPrefix = 'WarcraftRecorder';
 let logIndex = 0;
 let logDate = getLocalDate();
+const maxTotalLogFiles = 500;
 
 /**
  * Get the next log index on startup of the application as logIndex in memory
@@ -62,9 +63,11 @@ const getApplicationLogPath = () => {
     console.info('[Logging] Date changed, resetting log index.');
     logIndex = 0;
     logDate = date;
+    void removeExcessLogs();
   }
 
-  const fileName = `${logPrefix}-${date}.${logIndex}.log`;
+  const padded = String(logIndex).padStart(3, '0');
+  const fileName = `${logPrefix}-${date}.${padded}.log`;
   return path.join(dir, fileName);
 };
 
@@ -72,17 +75,53 @@ export const setupApplicationLogging = () => {
   getNextLogIndex();
   log.transports.file.resolvePathFn = getApplicationLogPath;
 
-  // This isn't really proper log rotation, it's just incremented the index
-  // each time we exceed the default max size (1MB). We never delete logs.
   log.transports.file.archiveLogFn = () => {
     logIndex++;
   };
 
+  log.transports.file.maxSize = 1024 * 1024; // 1MB
   Object.assign(console, log.functions);
+  void removeExcessLogs();
 };
 
 export const getApplicationLogDir = () => {
   const parent = fixPathWhenPackaged(__dirname);
   const dir = 'logs';
   return path.join(parent, dir);
+};
+
+const removeExcessLogs = async () => {
+  console.info('[Logging] Removing excess application logs');
+
+  try {
+    const dir = getApplicationLogDir();
+    const files = await fs.promises.readdir(dir);
+
+    const appLogs = files
+      .filter((file) => file.startsWith(logPrefix) && file.endsWith('.log'))
+      .map((file) => path.join(dir, file));
+
+    const appLogStats = await Promise.all(
+      appLogs.map(async (file) => {
+        const stats = await fs.promises.stat(file);
+        return { file, stats };
+      }),
+    );
+
+    const excessLogs = appLogStats
+      .sort((a, b) => b.stats.birthtimeMs - a.stats.birthtimeMs)
+      .slice(maxTotalLogFiles);
+
+    if (excessLogs.length > 0) {
+      console.info(
+        '[Logging] Removing',
+        excessLogs.length,
+        'excess application logs',
+      );
+
+      await Promise.all(excessLogs.map((log) => fs.promises.unlink(log.file)));
+    }
+  } catch (err) {
+    console.error('[Logging] Failed to remove excess logs', err);
+  }
 };
