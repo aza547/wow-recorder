@@ -154,14 +154,29 @@ export default class CombatLogWatcher extends EventEmitter {
       return;
     }
 
-    await this.parseFileChunk(fullPath, bytesToRead, startPosition);
-    this.state[fullPath] = currentInfo;
+    const consumed = await this.parseFileChunk(
+      fullPath,
+      bytesToRead,
+      startPosition,
+    );
+    this.state[fullPath] = { ...currentInfo, size: startPosition + consumed };
   }
 
   /**
-   * Parse a chunk of the file of length bytes from a specified position.
+   * Parse a chunk of the file of length bytes from a specified position to the final new line.
+   *
+   * On some platforms (eg, anything VFS based, especially ntfs-3g), the notify can be sent mid-line.
+   * We can't assume that the last data of the read is a completed log line. Instead, only parse
+   * up to the last new line char and return how much we parsed so that the next read can start from
+   * that position.
+   *
+   * @returns consumed bytes
    */
-  private async parseFileChunk(file: string, bytes: number, position: number) {
+  private async parseFileChunk(
+    file: string,
+    bytes: number,
+    position: number,
+  ): Promise<number> {
     const buffer = Buffer.alloc(bytes);
     const handle = await open(file, 'r');
     const { bytesRead } = await read(handle, buffer, 0, bytes, position);
@@ -178,15 +193,38 @@ export default class CombatLogWatcher extends EventEmitter {
 
     this.emit('WARCRAFT_RECORDER_LOG_ACTIVITY');
 
-    const lines = buffer
+    // reduce to the actual data portion of the buffer
+    const populatedSlice = buffer.subarray(0, bytesRead);
+    const newline = populatedSlice.lastIndexOf(0x0a); // \n
+
+    if (newline < 0) {
+      return 0;
+    }
+
+    const consumed = newline + 1;
+
+    const lines = populatedSlice
+      .subarray(0, consumed)
       .toString('utf-8')
-      .split('\n')
+      .split('\n') // CRLF will leave the \r, then removed by the trim()
       .map((s) => s.trim())
       .filter((s) => s);
 
     lines.forEach((line) => {
-      this.handleLogLine(line);
+      // Dropping a line can leave the activity we're tracking out of sync, but
+      // that beats one bad line killing log watching until the app restarts.
+      try {
+        this.handleLogLine(line);
+      } catch (error) {
+        console.error(
+          '[CombatLogWatcher] Failed to handle log line:',
+          line,
+          error,
+        );
+      }
     });
+
+    return consumed;
   }
 
   /**
