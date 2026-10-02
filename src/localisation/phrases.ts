@@ -580,6 +580,8 @@ enum Phrase {
   LatestCombatLogFileDayOld,
   LatestCombatLogFileDaysOld,
   LatestCombatLogFileLessThanADayOld,
+  UploadFailedTitle,
+  UploadFailedText,
 }
 
 enum Language {

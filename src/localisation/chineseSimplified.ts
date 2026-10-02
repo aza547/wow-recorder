@@ -583,6 +583,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.LatestCombatLogFileDayOld]: '1天前',
   [Phrase.LatestCombatLogFileDaysOld]: '天前',
   [Phrase.LatestCombatLogFileLessThanADayOld]: '不到一天前',
+  [Phrase.UploadFailedTitle]: '云端上传失败',
+  [Phrase.UploadFailedText]: '可以点击“上传到云端”重试。详情请查看日志。',
 };
 
 export default CHINESE_SIMPLIFIED;

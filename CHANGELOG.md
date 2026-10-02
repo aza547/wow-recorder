@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Upload failures](https://discord.com/channels/1004860808737591326/1362788447546511451/threads/1550000194530054184) - Report failed cloud uploads with the recording name and only log success after the upload completes.
 - [Issue 910](https://github.com/aza547/wow-recorder/issues/910) - Prevent rapid playback controls from causing a repeating play/pause cycle.
 - [Issue 863](https://github.com/aza547/wow-recorder/issues/863) - Preserve the last valid overrun setting when its input is cleared.
 - Add Nymrissa "World LFR" difficulty.

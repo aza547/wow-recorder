@@ -582,6 +582,8 @@ const ENGLISH: Translations = {
   [Phrase.LatestCombatLogFileDayOld]: '1 day old',
   [Phrase.LatestCombatLogFileDaysOld]: 'days old',
   [Phrase.LatestCombatLogFileLessThanADayOld]: 'less than a day old',
+  [Phrase.UploadFailedTitle]: 'Cloud upload failed',
+  [Phrase.UploadFailedText]: 'You can retry using Upload to cloud. See logs for details.',
 };
 
 export default ENGLISH;
