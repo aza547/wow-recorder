@@ -701,6 +701,18 @@ type InstantReplayState = {
   open: InstantReplayData | null;
 };
 
+/**
+ * A hotkey resolved out of config into the form we compare uiohook key
+ * press events against. An unbound hotkey has a keycode of -1.
+ */
+type ResolvedHotKey = {
+  keycode: number;
+  altKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  metaKey: boolean;
+};
+
 enum DialogType {
   NONE,
   LOCK,
@@ -781,5 +793,6 @@ export {
   CharacterFilter,
   InstantReplayData,
   InstantReplayState,
+  ResolvedHotKey,
   DialogType,
 };

@@ -27,6 +27,7 @@ import {
   KillVideoSegment,
   ActivityStatus,
   InstantReplayData,
+  ResolvedHotKey,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
@@ -485,37 +486,60 @@ const isPushToTalkHotkey = (
   return buttonMatch && modifierMatch;
 };
 
-const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
-  const { keycode, altKey, ctrlKey, shiftKey, metaKey, type } = event;
-  const cfg = ConfigService.getInstance();
+/**
+ * Resolve a hotkey from the way it is stored in config (a key code and a
+ * comma separated modifier string) into the shape we compare key press
+ * events against. We do this when the config changes rather than on every
+ * key press; see the hotkey listener in Manager.
+ */
+const resolveHotKey = (keycode: number, modifiers: string): ResolvedHotKey => {
+  const split = modifiers.split(',');
 
-  if (type !== EventType.EVENT_KEY_PRESSED) {
+  return {
+    keycode,
+    altKey: split.includes('alt'),
+    ctrlKey: split.includes('ctrl'),
+    shiftKey: split.includes('shift'),
+    metaKey: split.includes('win'),
+  };
+};
+
+/**
+ * Check if a key press event matches a resolved hotkey.
+ *
+ * This runs on every single key press the user makes so it's deliberately
+ * cheap: the key code comparison rules out virtually every press before we
+ * look at anything else, and nothing in here allocates.
+ *
+ * An unbound hotkey has a key code of -1, which can never match a real key
+ * press, so unbound hotkeys are safely inert here.
+ */
+const isHotKeyMatch = (event: UiohookKeyboardEvent, hotKey: ResolvedHotKey) => {
+  if (hotKey.keycode < 1 || event.keycode !== hotKey.keycode) {
+    return false;
+  }
+
+  if (event.type !== EventType.EVENT_KEY_PRESSED) {
     // We should never hit this but just being safe.
     return false;
   }
 
-  const manualRecordHotKey = cfg.get<number>('manualRecordHotKey');
-  const manualRecordHotKeyModifiers = cfg.get<string>(
-    'manualRecordHotKeyModifiers',
+  // Modifiers must match exactly, the same as an in-game keybind: CTRL + E
+  // and CTRL + SHIFT + E are separate hotkeys and neither triggers the other.
+  // That's what lets us treat two hotkeys as distinct as long as they don't
+  // share a combination, which the settings enforce when binding.
+  //
+  // Note push to talk is deliberately more permissive than this, see
+  // isPushToTalkHotkey. It gets held down during play, when the user may
+  // already have a modifier down for an unrelated reason, and it has to cope
+  // with a naked modifier key not reporting itself on release. Neither
+  // applies here as these hotkeys are discrete presses.
+  return (
+    hotKey.altKey === event.altKey &&
+    hotKey.ctrlKey === event.ctrlKey &&
+    hotKey.shiftKey === event.shiftKey &&
+    hotKey.metaKey === event.metaKey
   );
-
-  const buttonMatch = keycode > 0 && keycode === manualRecordHotKey;
-
-  // Deliberately permissive here, we check all the modifiers we have in
-  // config are met but we don't enforce the inverse, i.e. we'll accept
-  // an additional modifier present (so CTRL + SHIFT + E will trigger
-  // a CTRL + E hotkey).
-  const modifierMatch = manualRecordHotKeyModifiers
-    .split(',')
-    .reduce((acc, mod) => {
-      if (mod === 'alt') return acc && altKey;
-      if (mod === 'ctrl') return acc && ctrlKey;
-      if (mod === 'shift') return acc && shiftKey;
-      if (mod === 'win') return acc && metaKey;
-      return acc; // Ignore unknown modifiers
-    }, true);
-
-  return buttonMatch && modifierMatch;
 };
 
 const convertUioHookKeyPressEvent = (
@@ -1351,7 +1375,8 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
-  isManualRecordHotKey,
+  resolveHotKey,
+  isHotKeyMatch,
   delayedDeleteVideo,
   logAxiosError,
   handleSafeVodRequest,
