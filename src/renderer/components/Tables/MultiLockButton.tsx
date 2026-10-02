@@ -25,11 +25,15 @@ const MultiLockButton = (props: MultiLockButtonProps) => {
   const tooltip =
     getLocalePhrase(language, Phrase.OpenLockDialog) + ` (${locked}/${total})`;
 
-  const icon = [parent, ...parent.multiPov].some((rv) => rv.isProtected) ? (
-    <FolderLocked size={20} />
-  ) : (
-    <FolderUnlocked size={20} />
-  );
+  const icon =
+    locked > 0 ? (
+      <FolderLocked
+        size={20}
+        className={locked === total ? 'text-success' : 'text-warning'}
+      />
+    ) : (
+      <FolderUnlocked size={20} />
+    );
 
   return (
     <Tooltip content={tooltip}>

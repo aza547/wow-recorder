@@ -27,7 +27,7 @@ const MultiTagButton = (props: MultiTagButtonProps) => {
 
   const icon =
     tagged > 0 ? (
-      <FolderMessageSquareMore size={18} />
+      <FolderMessageSquareMore size={18} className="text-cyan-400" />
     ) : (
       <FolderMessageSquare size={18} />
     );
