@@ -80,7 +80,8 @@ const useVideoSelectionTable = (
   setTagDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
   setKillDialogVideoTargetId: Dispatch<SetStateAction<string | null>>,
 ) => {
-  const { category, language, cloudStatus, selectedVideos } = appState;
+  const { category, language, cloudStatus, selectedVideos, lockFilter } =
+    appState;
 
   const getInitialSelection = useCallback(() => {
     const [selected] = selectedVideos;
@@ -116,6 +117,11 @@ const useVideoSelectionTable = (
     pageIndex: 0,
     pageSize: 100,
   });
+
+  useEffect(() => {
+    setRowSelection({});
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [lockFilter]);
 
   // Tanstack table relies on stable references, so while we have the React
   // compiler enabled we still need useMemo here or weird stuff will happen.
@@ -574,7 +580,20 @@ const useVideoSelectionTable = (
     const { rows: selected } = table.getSelectedRowModel();
 
     if (selected.length > 0) {
-      // A row is already selected so nothing to do.
+      // Filtering can remove the playing viewpoint while its row remains.
+      if (
+        selectedVideos.length === 0 ||
+        selectedVideos.some((video) => !parentLookupMap.has(video.uniqueId))
+      ) {
+        const video = selected[0].original;
+        const [first] = [video, ...video.multiPov].sort(povDiskFirstNameSort);
+        setAppState((prev) => ({
+          ...prev,
+          selectedVideos: [first],
+          multiPlayerMode: false,
+          playing: false,
+        }));
+      }
       return;
     }
 
@@ -606,8 +625,14 @@ const useVideoSelectionTable = (
       return;
     }
 
-    // Possible we get here if there are genuinely no rows in the table due
-    // to overzealous filtering, but there isn't anything sensible to do.
+    if (selectedVideos.length > 0) {
+      setAppState((prev) => ({
+        ...prev,
+        selectedVideos: [],
+        multiPlayerMode: false,
+        playing: false,
+      }));
+    }
   }, [
     getInitialSelection,
     parentLookupMap,
