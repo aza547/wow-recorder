@@ -582,7 +582,9 @@ const GERMAN: Translations = {
   [Phrase.LatestCombatLogFileOverAMonthOld]: 'über einen Monat alt',
   [Phrase.LatestCombatLogFileDayOld]: '1 Tag alt',
   [Phrase.LatestCombatLogFileDaysOld]: 'Tage alt',
-  [Phrase.LatestCombatLogFileLessThanADayOld]: 'weniger als einen Tag alt'
+  [Phrase.LatestCombatLogFileLessThanADayOld]: 'weniger als einen Tag alt',
+  [Phrase.UploadFailedTitle]: 'Cloud-Upload fehlgeschlagen',
+  [Phrase.UploadFailedText]: 'Mit „In die Cloud hochladen“ kannst du es erneut versuchen. Weitere Details findest du in den Logs.',
 };
 
 export default GERMAN;

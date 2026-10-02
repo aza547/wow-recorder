@@ -582,7 +582,9 @@ const KOREAN: Translations = {
   [Phrase.LatestCombatLogFileOverAMonthOld]: '한 달 이상 지남',
   [Phrase.LatestCombatLogFileDayOld]: '1일 지남',
   [Phrase.LatestCombatLogFileDaysOld]: '일 지남',
-  [Phrase.LatestCombatLogFileLessThanADayOld]: '하루 미만 지남'
+  [Phrase.LatestCombatLogFileLessThanADayOld]: '하루 미만 지남',
+  [Phrase.UploadFailedTitle]: '클라우드 업로드 실패',
+  [Phrase.UploadFailedText]: '클라우드에 업로드를 눌러 다시 시도할 수 있습니다. 자세한 내용은 로그를 확인하세요.',
 };
 
 export default KOREAN;
