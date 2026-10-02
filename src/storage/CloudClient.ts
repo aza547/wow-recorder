@@ -164,7 +164,7 @@ export default class CloudClient implements StorageClient {
    * event of a network failure or similar and we decide to retry, we only need to go back
    * to the start of the current part.
    */
-  private multiPartSizeBytes = 100 * 1024 ** 2;
+  private multiPartSizeBytes = 16 * 1024 ** 2;
 
   /**
    * WebSocket connection for real-time updates.
@@ -1012,7 +1012,19 @@ export default class CloudClient implements StorageClient {
     let attempts = 0;
     let success = false;
 
-    while (!success && attempts < 5) {
+    while (!success && attempts < 10) {
+      if (attempts > 0) {
+        const delay = Math.min(5000, 1000 * 2 ** (attempts - 1));
+
+        console.debug(
+          '[CloudClient] Sleep for',
+          delay,
+          'before single part retry',
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+
       attempts++;
       const stream = fs.createReadStream(file);
 
@@ -1027,6 +1039,8 @@ export default class CloudClient implements StorageClient {
         } else {
           console.error('[CloudClient] Not an AxiosError', key, String(error));
         }
+      } finally {
+        stream.destroy();
       }
     }
 
@@ -1117,7 +1131,19 @@ export default class CloudClient implements StorageClient {
       let success = false;
       let rsp;
 
-      while (!success && attempts < 5) {
+      while (!success && attempts < 10) {
+        if (attempts > 0) {
+          const delay = Math.min(5000, 1000 * 2 ** (attempts - 1));
+
+          console.debug(
+            '[CloudClient] Sleep for',
+            delay,
+            'before multipart retry',
+          );
+
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+
         attempts++;
 
         const stream = fs.createReadStream(file, {
@@ -1141,6 +1167,8 @@ export default class CloudClient implements StorageClient {
               String(error),
             );
           }
+        } finally {
+          stream.destroy();
         }
       }
 
@@ -1173,8 +1201,7 @@ export default class CloudClient implements StorageClient {
       remaining -= bytes;
 
       // Update the progress bar on the frontend. It's a bit worse we only
-      // update every time we complete a part here (which are 1GB each), so
-      // UX probably a bit worse. Maybe can do better.
+      // update every time we complete a part here, so UX probably a bit worse.
       progressCallback(Math.round((100 * offset) / stats.size));
     }
 
