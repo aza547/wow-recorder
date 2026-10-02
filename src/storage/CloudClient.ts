@@ -977,7 +977,7 @@ export default class CloudClient implements StorageClient {
 
   /**
    * Upload a file to S3 in as a single part. Will fail if the file is larger
-   * than 10GB.
+   * than 4.995GB.
    */
   private async doSinglePartUpload(
     file: string,
