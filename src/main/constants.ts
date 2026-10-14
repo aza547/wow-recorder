@@ -390,6 +390,9 @@ const currentRetailEncounters = [
   // Midnight - The Tidebound Grotto
   3379, // Nymrissa Wavecaller
 
+  // Midnight - The Unbinding of Kith'ix
+  3513, // Kith'ix
+
   // Test Encounter
   9999, // Saves having to update the test button data.
 ];
