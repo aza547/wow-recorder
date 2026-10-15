@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [7.13.3] - 2026-10-15
+### Fixed
 - Include Kith'ix in the current raid tier for recording and automatic uploads.
 - [Issue 910](https://github.com/aza547/wow-recorder/issues/910) - Prevent rapid playback controls from causing a repeating play/pause cycle.
 - [Issue 863](https://github.com/aza547/wow-recorder/issues/863) - Preserve the last valid overrun setting when its input is cleared.
