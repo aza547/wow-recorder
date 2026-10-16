@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix an issue where volume was not correctly applied to app sources on launch of the program.
+- Fix an issue where PTT induced mute was not correctly applied to microphones on launch of the program.
 
 ## [7.13.3] - 2026-10-15
 ### Fixed
