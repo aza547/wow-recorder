@@ -56,33 +56,6 @@ const fixPathWhenPackaged = (p: string) => {
   return p.replace('app.asar', 'app.asar.unpacked');
 };
 
-/**
- * Setup logging.
- *
- * This works by overriding console log methods. All console log method will
- * go to both the console if it exists, and a file on disk.
- *
- * This only applies to main process console logs, not the renderer logs.
- */
-const setupApplicationLogging = () => {
-  const log = require('electron-log');
-
-  // always use local time for the file names
-  const now = new Date();
-  const date = `${now.getFullYear()}-${String(now.getMonth() + 1)
-    .padStart(2, '0')}-${String(now.getDate())
-    .padStart(2, '0')}`;
-
-  const logFileName = `WarcraftRecorder-${date}.log`;
-
-  const logPath = app.isPackaged
-    ? path.join(app.getPath('logs'), logFileName)
-    : fixPathWhenPackaged(path.join(__dirname, 'logs', logFileName));
-  log.transports.file.resolvePath = () => logPath;
-  Object.assign(console, log.functions);
-  return path.dirname(logPath);
-};
-
 const getResolvedHtmlPath = () => {
   if (process.env.NODE_ENV === 'development') {
     const port = process.env.PORT || 1212;
@@ -1353,7 +1326,6 @@ const startWatchingConfigWtf = (logPath: string, callback: () => void) => {
 };
 
 export {
-  setupApplicationLogging,
   writeMetadataFile,
   deleteVideoDisk,
   openSystemExplorer,

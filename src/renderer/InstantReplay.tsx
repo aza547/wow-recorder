@@ -14,7 +14,7 @@ interface IProps {
   setInstantReplayState: Dispatch<SetStateAction<InstantReplayState>>;
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
-  persistentProgress: RefObject<number>;
+  persistentProgressRef: RefObject<number>;
   config: ConfigurationSchema;
 }
 
@@ -24,7 +24,7 @@ const InstantReplay = (props: IProps) => {
     setInstantReplayState,
     appState,
     setAppState,
-    persistentProgress,
+    persistentProgressRef,
     config,
   } = props;
 
@@ -74,7 +74,7 @@ const InstantReplay = (props: IProps) => {
         videos={[]}
         instantReplay={open}
         categoryState={[]}
-        persistentProgress={persistentProgress}
+        persistentProgressRef={persistentProgressRef}
         config={config}
         appState={appState}
         setAppState={setAppState}

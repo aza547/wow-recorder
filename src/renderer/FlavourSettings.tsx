@@ -29,12 +29,14 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
-    // Refresh the combat log status if settings change or on mount. There is no
-    // mechanism to refresh that live, unlike the advanced combat logging status
-    // because I can't be bothered to implement that.
-    ipc.refreshCombatLogStatus();
-
     if (initialRender.current) {
+      initialRender.current = false;
+
+      // Refresh the combat log status on the initial render of this component.
+      // There is no mechanism to refresh that live, unlike the advanced combat
+      // logging status because I can't be bothered to implement that.
+      ipc.refreshCombatLogStatus();
+
       // Don't change config on the initial render.
       initialRender.current = false;
       return;
@@ -169,13 +171,20 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         appState.language,
         Phrase.LatestCombatLogFileOverAMonthOld,
       );
-    } else if (ageDays >= 1) {
+    } else if (ageDays > 1) {
       ageClassName = 'text-success opacity-80';
 
       ageHumanReadable = `${ageDays} ${getLocalePhrase(
         appState.language,
         Phrase.LatestCombatLogFileDaysOld,
       )}`;
+    } else if (ageDays === 1) {
+      ageClassName = 'text-success opacity-80';
+
+      ageHumanReadable = getLocalePhrase(
+        appState.language,
+        Phrase.LatestCombatLogFileDayOld,
+      );
     } else {
       ageClassName = 'text-success opacity-80';
       ageHumanReadable = getLocalePhrase(
@@ -259,7 +268,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </Tooltip>
             </div>
             {config.retailLogPath === '' && (
-              <span className="text-error text-sm">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.InvalidRetailLogPathText,
@@ -362,7 +371,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </Tooltip>
             </div>
             {config.classicLogPath === '' && (
-              <span className="text-error text-sm">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.InvalidClassicLogPathText,
@@ -477,7 +486,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </Tooltip>
             </div>
             {config.eraLogPath === '' && (
-              <span className="text-error text-xs font-semibold mt-1">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.InvalidClassicEraLogPathText,
@@ -591,7 +600,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </Tooltip>
             </div>
             {config.retailPtrLogPath === '' && (
-              <span className="text-error text-xs font-semibold mt-1">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.InvalidRetailPtrLogPathText,
@@ -710,7 +719,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               </Tooltip>
             </div>
             {config.classicPtrLogPath === '' && (
-              <span className="text-error text-xs font-semibold mt-1">
+              <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
                   appState.language,
                   Phrase.InvalidClassicPtrLogPathText,

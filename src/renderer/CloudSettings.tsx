@@ -113,6 +113,7 @@ const CloudSettings = (props: IProps) => {
     config.cloudAccountPassword,
     config.cloudGuildName,
     config.cloudUpload,
+    setConfig,
   ]);
 
   useEffect(() => {

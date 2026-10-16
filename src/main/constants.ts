@@ -359,24 +359,6 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * and retail at the same time. Eventually the older tiers should be removed.
  */
 const currentRetailEncounters = [
-  // Midnight - The Voidspire
-  3176, // Imperator Averzian
-  3177, // Vorsaius
-  3178, // Fallen-King Salhadar
-  3179, // Vaelgor & Ezzorak
-  3180, // Lightblinded Vanguard
-  3181, // Crown of the Cosmos
-
-  // Midnight - March on Quel'danas
-  3182, // Belo'ren, Child of Al'ar
-  3183, // Midnight Falls
-
-  // Midnight - The Dreamrift
-  3306, // Chimaerus the Undreamt God
-
-  // Midnight - Sporefall
-  3159, // Rotmire
-
   // Midnight - The Venomous Abyss
   3470, // Nek'zali the Soulcoiler
   3445, // Entombed Sentinels
@@ -389,6 +371,9 @@ const currentRetailEncounters = [
 
   // Midnight - The Tidebound Grotto
   3379, // Nymrissa Wavecaller
+
+  // Midnight - The Unbinding of Kith'ix
+  3513, // Kith'ix
 
   // Test Encounter
   9999, // Saves having to update the test button data.
@@ -751,10 +736,10 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   399: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Ruby Life Pools
   587: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Murder Row
   586: [32 * 60, 32 * 60 * 0.8, 32 * 60 * 0.6], // Den of Nalorakk
-  584: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // The Blinding Vale
+  584: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // The Blinding Vale
   585: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Voidscar Arena
   588: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Altar of Fangs
-  250: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // Temple of Sethraliss
+  250: [32 * 60, 32 * 60 * 0.8, 32 * 60 * 0.6], // Temple of Sethraliss
   249: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // Kings' Rest
 };
 
@@ -1426,6 +1411,12 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
     difficulty: '??',
     partyType: 'raid',
     phrase: Phrase.Mythic,
+  },
+  250: {
+    difficultyID: 'lfr', // World LFR (Nymrissa)
+    difficulty: 'LFR',
+    partyType: 'raid',
+    phrase: Phrase.LFR,
   },
 };
 

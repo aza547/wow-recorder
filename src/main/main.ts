@@ -17,7 +17,6 @@ import { getLocalePhrase, Language } from 'localisation/translations';
 import {
   resolveHtmlPath,
   openSystemExplorer,
-  setupApplicationLogging,
   getAvailableDisplays,
   getAssetPath,
   handleSafeVodRequest,
@@ -36,10 +35,11 @@ import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
+import { getApplicationLogDir, setupApplicationLogging } from './logging';
 import { ensureAutostartPath, isLinux } from './platform';
 import PlaybackTranscoder from './PlaybackTranscoder';
 
-const logDir = setupApplicationLogging();
+setupApplicationLogging();
 const appVersion = app.getVersion();
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const tzOffset = new Date().getTimezoneOffset() * -1; // Offset is wrong direction so flip it.
@@ -399,6 +399,7 @@ ipcMain.handle('selectImage', async () => {
  */
 ipcMain.on('logPath', (_event, args) => {
   if (args[0] === 'open') {
+    const logDir = getApplicationLogDir();
     openSystemExplorer(logDir);
   }
 });
@@ -407,6 +408,7 @@ ipcMain.on('logPath', (_event, args) => {
  * Zips a diags bundle up in the log folder and return the path.
  */
 ipcMain.handle('createDiagsBundle', async () => {
+  const logDir = getApplicationLogDir();
   return createDiagsBundle(logDir);
 });
 
