@@ -935,6 +935,7 @@ export default class Recorder extends EventEmitter {
     });
 
     this.audioSources = [];
+    this.inputDevicesMuted = false;
   }
 
   /**
