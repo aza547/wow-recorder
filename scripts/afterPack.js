@@ -24,7 +24,7 @@ NOOBS_BIN="$SCRIPT_DIR/resources/app.asar.unpacked/node_modules/noobs/dist/bin/l
 export PATH="$NOOBS_BIN:$PATH"
 
 # Electron's libffmpeg.so exports the same av_* symbols and loads first.
-export LD_PRELOAD="$NOOBS_BIN/libavutil-noobs.so.60 $NOOBS_BIN/libavcodec-noobs.so.62 $NOOBS_BIN/libavformat-noobs.so.62"
+export LD_PRELOAD="$NOOBS_BIN/libavutil-noobs.so.61 $NOOBS_BIN/libavcodec-noobs.so.63 $NOOBS_BIN/libavformat-noobs.so.63"
 
 # Force the X11 Ozone backend. Chromium 140 / Electron 42 defaults
 # --ozone-platform-hint to auto, so a Wayland wins.
