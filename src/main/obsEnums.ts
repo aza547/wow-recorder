@@ -23,6 +23,9 @@ export enum ESupportedEncoders {
   NVENC_AV1 = 'obs_nvenc_av1_tex',
   QSV_H264 = 'obs_qsv11_soft_v2',
   QSV_AV1 = 'obs_qsv11_av1',
+  // Linux (Mesa/VAAPI)
+  VAAPI_H264 = 'ffmpeg_vaapi_tex',
+  VAAPI_AV1 = 'av1_ffmpeg_vaapi_tex',
 }
 
 export enum QualityPresets {
@@ -36,5 +39,6 @@ export const enum CaptureMode {
   WINDOW,
   GAME,
   MONITOR,
+  PIPEWIRE,
   NONE,
 }

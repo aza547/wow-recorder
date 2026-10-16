@@ -3,6 +3,7 @@ import { ipcMain } from 'electron';
 import path from 'path';
 import { EventEmitter } from 'stream';
 import { configSchema, ConfigurationSchema } from './configSchema';
+import { runMigrations, MigratableStore } from './migrations';
 import _ from 'lodash';
 
 /**
@@ -76,6 +77,7 @@ export default class ConfigService
     super();
 
     this.cleanupStore();
+    runMigrations(this._store as unknown as MigratableStore);
 
     const loggable = this._store.store;
 

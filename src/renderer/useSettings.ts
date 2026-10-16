@@ -66,6 +66,7 @@ export const getSettings = (): ConfigurationSchema => {
     chatOverlayCropX: getConfigValue<number>('chatOverlayCropX'),
     chatOverlayCropY: getConfigValue<number>('chatOverlayCropY'),
     captureCursor: getConfigValue<boolean>('captureCursor'),
+    pipewireRestoreToken: getConfigValue<string | null>('pipewireRestoreToken'),
     selectedCategory: getConfigValue<number>('selectedCategory'),
     deathMarkers: getConfigValue<number>('deathMarkers'),
     encounterMarkers: getConfigValue<boolean>('encounterMarkers'),
@@ -116,6 +117,8 @@ export const getSettings = (): ConfigurationSchema => {
     firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     chatUserNameAgreed: getConfigValue<string>('chatUserNameAgreed'),
     validateLogPaths: getConfigValue<boolean>('validateLogPaths'),
+    hevcTranscodeEnabled: getConfigValue<boolean>('hevcTranscodeEnabled'),
+    hevcTranscodeCacheSizeGb: getConfigValue<number>('hevcTranscodeCacheSizeGb'),
     validateNtfs: getConfigValue<boolean>('validateNtfs'),
     characterUploadFilters: getConfigValue<CharacterFilter[]>('characterUploadFilters'),
     /* eslint-enable prettier/prettier */
