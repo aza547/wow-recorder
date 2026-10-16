@@ -925,6 +925,7 @@ export default class Recorder extends EventEmitter {
   public removeAudioSources() {
     console.info('[Recorder] Remove all audio sources');
 
+    this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.NONE;
     this.emit('state-change');
 
@@ -935,7 +936,6 @@ export default class Recorder extends EventEmitter {
     });
 
     this.audioSources = [];
-    this.inputDevicesMuted = false;
   }
 
   /**
