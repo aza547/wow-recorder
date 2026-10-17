@@ -449,7 +449,6 @@ export default abstract class LogHandler {
 
     LogHandler.activity.end(endDate, false);
     await LogHandler.endActivity();
-    LogHandler.activity = undefined;
   }
 
   public static dropActivity() {

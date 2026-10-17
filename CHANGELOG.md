@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - [Upload failures](https://discord.com/channels/1004860808737591326/1362788447546511451/threads/1550000194530054184) - Report failed cloud uploads with the recording name and only log success after the upload completes.
+- Fix an issue where volume was not correctly applied to app sources on launch of the program.
+- Fix an issue where PTT induced mute was not correctly applied to microphones on launch of the program.
+- [Issue 917](https://github.com/aza547/wow-recorder/issues/917) - Fix an issue where the audio source volume slider was not correctly draggable.
+- [Issue 918](https://github.com/aza547/wow-recorder/issues/918) - Improve the user experience slightly when binding a hotkey.
+- Handle partial line reads of the combat log, which can happen on some (typically Linux) filesystems.
+
+## [7.13.3] - 2026-10-15
+### Fixed
+- Include Kith'ix in the current raid tier for recording and automatic uploads.
 - [Issue 910](https://github.com/aza547/wow-recorder/issues/910) - Prevent rapid playback controls from causing a repeating play/pause cycle.
 - [Issue 863](https://github.com/aza547/wow-recorder/issues/863) - Preserve the last valid overrun setting when its input is cleared.
 - Add Nymrissa "World LFR" difficulty.
