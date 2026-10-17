@@ -96,6 +96,8 @@ export type ConfigurationSchema = {
   manualRecordHotKeyModifiers: string;
   manualRecordSoundAlert: boolean;
   manualRecordUpload: boolean;
+  forceStopHotKey: number;
+  forceStopHotKeyModifiers: string;
   firstTimeSetup: boolean;
   chatUserNameAgreed: string;
   validateLogPaths: boolean;
@@ -602,6 +604,16 @@ export const configSchema = {
     description: Phrase.ManualRecordUploadDescription,
     type: 'boolean',
     default: true,
+  },
+  forceStopHotKey: {
+    description: Phrase.ForceStopHotKeyDescription,
+    type: 'integer',
+    default: -1,
+  },
+  forceStopHotKeyModifiers: {
+    description: Phrase.ForceStopHotKeyDescription,
+    type: 'string',
+    default: '',
   },
   firstTimeSetup: {
     description: Phrase.FirstTimeSetupDescription,
