@@ -291,6 +291,8 @@ const GERMAN: Translations = {
   [Phrase.ShareableLinkTitle]: 'Teilbarer Link wurde generiert und befindet sich in deiner Ablage.',
   [Phrase.ShareableLinkText]: 'Dieser Link ist gültig, solange das Video in der Cloud gespeichert bleibt.',
   [Phrase.ShareableLinkFailedTitle]: 'Link Erzeugung ist fehlgeschlagen',
+  [Phrase.VideoActionFailed]: 'Einige Aufnahmen konnten nicht aktualisiert werden',
+  [Phrase.DiscardChanges]: 'Änderungen verwerfen',
   [Phrase.ShareableLinkFailedText]: 'Bitte siehe Logs für mehr Details',
   [Phrase.CloudUsageDescription]: 'Cloud Nutzung',
   [Phrase.DiskUsageDescription]: 'Speicher Nutzung',

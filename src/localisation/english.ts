@@ -297,6 +297,8 @@ const ENGLISH: Translations = {
   [Phrase.ShareableLinkTitle]: 'Link Copied to Clipboard',
   [Phrase.ShareableLinkText]: 'This link will be valid as long as the video remains stored in the cloud.',
   [Phrase.ShareableLinkFailedTitle]: 'Failed to Generate Link',
+  [Phrase.VideoActionFailed]: 'Could not update some recordings',
+  [Phrase.DiscardChanges]: 'Discard changes',
   [Phrase.ShareableLinkFailedText]: 'Please see logs for more details',
   [Phrase.CloudUsageDescription]: 'Cloud Usage',
   [Phrase.DiskUsageDescription]: 'Disk Usage',

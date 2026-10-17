@@ -38,9 +38,9 @@ import {
   populateStorageCell,
   populateTagStatusCell,
 } from './components/Tables/Cells';
-import { isEqual } from 'lodash';
 
-const ipc = window.electron.ipcRenderer;
+import useVideoActions from './useVideoActions';
+import CircularProgress from '@mui/material/CircularProgress';
 
 type DeleteDialogProps = {
   open: boolean;
@@ -64,6 +64,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     children,
     appState,
   } = props;
+  const { run, isPending } = useVideoActions(setVideoState, language);
 
   const { cloudStatus } = appState;
   const [rowSelection, setRowSelection] = useState({});
@@ -72,12 +73,13 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   const previousParentIds = useRef(targetVideoIds);
 
   useEffect(() => {
-    // Close an open dialog if any of the parent video has been deleted by
-    // another user. That should be rare enough that this isn't too annoying.
+    // Keep remaining targets after a partial deletion, but close if the
+    // selection moves to another recording.
     if (
       open &&
       previousOpen.current &&
-      !isEqual(previousParentIds.current, targetVideoIds)
+      (targetVideoIds.length === 0 ||
+        targetVideoIds.some((id) => !previousParentIds.current.includes(id)))
     ) {
       onOpenChange(false);
     }
@@ -319,22 +321,10 @@ const DeleteDialog = (props: DeleteDialogProps) => {
     return toDelete;
   };
 
-  const doDelete = () => {
+  const doDelete = async () => {
     const toDelete = getVideosToDelete();
-
-    const toDeleteDisk = toDelete.filter((rv) => !rv.cloud);
-    const toDeleteCloud = toDelete.filter((rv) => rv.cloud);
-
-    ipc.sendMessage('deleteVideosDisk', toDeleteDisk);
-    ipc.sendMessage('deleteVideosCloud', toDeleteCloud);
-
-    setVideoState((prev) => {
-      return [...prev].filter((rv) => {
-        return !toDelete.find((v) => v.uniqueId === rv.uniqueId);
-      });
-    });
-
-    onOpenChange(false);
+    const succeeded = await run({ type: 'delete' }, toDelete);
+    if (succeeded.length === toDelete.length) onOpenChange(false);
   };
 
   // Don't really expect this to happen as we don't allow the delete dialog to
@@ -342,7 +332,8 @@ const DeleteDialog = (props: DeleteDialogProps) => {
   // opens the delete dialog and then an uploaded video is added while open.
   const { del } = cloudStatus;
   const noPermission = !del && getVideosToDelete().some((v) => v.cloud);
-  const disabled = getVideosToDelete().length < 1 || noPermission;
+  const pending = isPending(getVideosToDelete());
+  const disabled = getVideosToDelete().length < 1 || noPermission || pending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -365,8 +356,14 @@ const DeleteDialog = (props: DeleteDialogProps) => {
             </Button>
           </DialogClose>
           <Button variant="destructive" onClick={doDelete} disabled={disabled}>
-            {getLocalePhrase(language, Phrase.DeleteButtonTooltip)} (
-            {getVideosToDelete().length})
+            {pending ? (
+              <CircularProgress color="inherit" size={18} />
+            ) : (
+              <>
+                {getLocalePhrase(language, Phrase.DeleteButtonTooltip)} (
+                {getVideosToDelete().length})
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

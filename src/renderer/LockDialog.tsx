@@ -17,7 +17,9 @@ import {
   useTable,
 } from '@tanstack/react-table';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
-import { getVideoGroup, lockVideos, stopPropagation } from './rendererutils';
+import { getVideoGroup, stopPropagation } from './rendererutils';
+import useVideoActions from './useVideoActions';
+import CircularProgress from '@mui/material/CircularProgress';
 import { getLocalePhrase } from 'localisation/translations';
 import LockButton from './components/Tables/LockButton';
 import {
@@ -47,6 +49,7 @@ export default function LockDialog(props: IProps) {
     language,
     cloudStatus,
   } = props;
+  const { run, isPending } = useVideoActions(setVideoState, language);
 
   const previousOpen = useRef(open);
   const previousParentId = useRef(targetVideoId);
@@ -178,13 +181,17 @@ export default function LockDialog(props: IProps) {
 
     const button = (
       <Button
-        disabled={!permission}
+        disabled={!permission || isPending(data)}
         onClick={(event) => {
           stopPropagation(event);
-          lockVideos(data, actionIsLock, setVideoState);
+          run({ type: 'protect', value: actionIsLock }, data);
         }}
       >
-        {label}
+        {isPending(data) ? (
+          <CircularProgress color="inherit" size={18} />
+        ) : (
+          label
+        )}
       </Button>
     );
 

@@ -291,6 +291,8 @@ const KOREAN: Translations = {
   [Phrase.ShareableLinkTitle]: '공유할 수 있는 링크가 클립보드에 저장됐습니다.',
   [Phrase.ShareableLinkText]: '이 링크는 동영상이 클라우드에 저장되어 있는 동안 유효합니다.',
   [Phrase.ShareableLinkFailedTitle]: '링크 생성에 실패했습니다.',
+  [Phrase.VideoActionFailed]: '일부 녹화 영상을 업데이트하지 못했습니다.',
+  [Phrase.DiscardChanges]: '변경 사항 버리기',
   [Phrase.ShareableLinkFailedText]: '다시 시도해 보세요.',
   [Phrase.CloudUsageDescription]: '클라우드 사용량',
   [Phrase.DiskUsageDescription]: '디스크 사용량',

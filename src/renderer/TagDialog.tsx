@@ -29,6 +29,7 @@ import {
 import { getVideoGroup } from './rendererutils';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import CircularProgress from '@mui/material/CircularProgress/CircularProgress';
+import useVideoActions from './useVideoActions';
 import {
   populatePlayerCell,
   populateStorageCell,
@@ -46,8 +47,6 @@ interface IProps {
   cloudStatus: CloudStatus;
 }
 
-const ipc = window.electron.ipcRenderer;
-
 export default function TagDialog(props: IProps) {
   const {
     open,
@@ -58,10 +57,13 @@ export default function TagDialog(props: IProps) {
     targetVideoId,
     cloudStatus,
   } = props;
+  const { run, isPending } = useVideoActions(setVideoState, language);
 
   const { write } = cloudStatus;
   const [rowSelection, setRowSelection] = useState({});
   const [innerTag, setInnerTag] = useState<string>('');
+  const dirty = useRef(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const debounceStartRef = useRef<number | null>(null);
   const debounceTimer = 2000;
@@ -85,19 +87,15 @@ export default function TagDialog(props: IProps) {
     previousOpen.current = open;
   }, [onOpenChange, open, parentLookupMap, targetVideoId]);
 
-  const saveTag = (video: RendererVideo, tag: string) => {
-    if (video.cloud) {
-      ipc.sendMessage('videoButtonCloud', ['tag', tag, [video]]);
-    } else {
-      ipc.sendMessage('videoButtonDisk', ['tag', tag, [video]]);
-    }
-
-    setVideoState((prev) =>
-      prev.map((rv) => (rv.uniqueId === video.uniqueId ? { ...rv, tag } : rv)),
-    );
+  const saveTag = async (video: RendererVideo, tag: string) => {
+    const succeeded = await run({ type: 'tag', value: tag }, [video]);
+    const saved = succeeded.includes(video.uniqueId);
+    setSaveFailed(!saved);
+    if (saved) dirty.current = false;
+    return saved;
   };
 
-  const clearAllTags = () => {
+  const clearAllTags = async () => {
     if (debounceRef.current) {
       clearInterval(debounceRef.current);
       debounceRef.current = null;
@@ -106,36 +104,29 @@ export default function TagDialog(props: IProps) {
     setDebounceProgress(null);
 
     const videos = table.getRowModel().rows.map((r) => r.original);
-    const ids = videos.map((v) => v.uniqueId);
-    const disk = videos.filter((v) => !v.cloud);
-    const cloud = videos.filter((v) => v.cloud);
-
-    ipc.sendMessage('videoButtonCloud', ['tag', '', cloud]);
-    ipc.sendMessage('videoButtonDisk', ['tag', '', disk]);
-
-    setInnerTag('');
-
-    setVideoState((prev) => {
-      return prev.map((rv) =>
-        ids.includes(rv.uniqueId) ? { ...rv, tag: '' } : rv,
-      );
-    });
+    const selectedId = table.getSelectedRowModel().rows[0]?.id;
+    const succeeded = await run({ type: 'tag', value: '' }, videos);
+    if (succeeded.includes(selectedId)) {
+      setInnerTag('');
+      dirty.current = false;
+      setSaveFailed(false);
+    }
   };
 
-  const handleOpenChange = (value: boolean) => {
+  const saveCurrentTag = async () => {
     if (debounceRef.current) {
       clearInterval(debounceRef.current);
       debounceRef.current = null;
-
-      const selected = table.getSelectedRowModel().rows;
-      const video = selected[0]?.original;
-
-      if (video) {
-        saveTag(video, innerTag);
-      }
     }
 
     setDebounceProgress(null);
+    const video = table.getSelectedRowModel().rows[0]?.original;
+    return !dirty.current || !video || saveTag(video, innerTag);
+  };
+
+  const handleOpenChange = async (value: boolean) => {
+    if (isPending(data)) return;
+    if (!value && !(await saveCurrentTag())) return;
     onOpenChange(value);
   };
 
@@ -181,22 +172,7 @@ export default function TagDialog(props: IProps) {
     getRowId: (row) => row.uniqueId,
     enableRowSelection: true,
     state: { rowSelection },
-    onRowSelectionChange: (newSelection) => {
-      if (debounceRef.current) {
-        clearInterval(debounceRef.current);
-        debounceRef.current = null;
-
-        const selected = table.getSelectedRowModel().rows;
-        const video = selected[0]?.original;
-
-        if (video) {
-          saveTag(video, innerTag);
-        }
-      }
-
-      setDebounceProgress(null);
-      setRowSelection(newSelection);
-    },
+    onRowSelectionChange: setRowSelection,
   });
 
   useEffect(() => {
@@ -209,13 +185,17 @@ export default function TagDialog(props: IProps) {
     if (data.length > 0) {
       setRowSelection({ [data[0].uniqueId]: true });
       setInnerTag(data[0]?.tag ?? '');
+      dirty.current = false;
+      setSaveFailed(false);
     }
   }, [data, table]);
 
-  const onRowClick = (
+  const onRowClick = async (
     event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,
     row: Row<typeof stockFeatures, RendererVideo>,
   ) => {
+    if (row.getIsSelected() || isPending(data)) return;
+    if (!(await saveCurrentTag())) return;
     const selectedRows = table.getSelectedRowModel().rows;
 
     selectedRows.forEach((r) => {
@@ -277,7 +257,8 @@ export default function TagDialog(props: IProps) {
   const renderTextArea = () => {
     const selected = table.getSelectedRowModel().rows;
     let tooltip = getLocalePhrase(language, Phrase.TagButtonTooltip);
-    let disabled = false;
+    const pending = isPending(selected.map((row) => row.original));
+    let disabled = pending;
 
     if (selected.length !== 1) {
       disabled = true;
@@ -306,6 +287,7 @@ export default function TagDialog(props: IProps) {
 
             const tag = e.target.value;
             setInnerTag(tag);
+            dirty.current = true;
             const video = table.getSelectedRowModel().rows[0]?.original;
 
             if (!video) {
@@ -344,12 +326,12 @@ export default function TagDialog(props: IProps) {
             e.stopPropagation();
           }}
         />
-        {debounceProgress !== null && (
+        {(pending || debounceProgress !== null) && (
           <div className="absolute right-2 top-2">
             <CircularProgress
-              variant="determinate"
+              variant={pending ? 'indeterminate' : 'determinate'}
               color="inherit"
-              value={Math.min(debounceProgress, 100)}
+              value={Math.min(debounceProgress ?? 0, 100)}
               size={16}
             />
           </div>
@@ -376,12 +358,34 @@ export default function TagDialog(props: IProps) {
         {renderTable()}
         {renderTextArea()}
         <DialogFooter>
+          {saveFailed && (
+            <Button
+              variant="ghost"
+              disabled={isPending(data)}
+              onClick={() => {
+                if (debounceRef.current) clearInterval(debounceRef.current);
+                debounceRef.current = null;
+                setDebounceProgress(null);
+                dirty.current = false;
+                setSaveFailed(false);
+                setInnerTag(
+                  table.getSelectedRowModel().rows[0]?.original.tag ?? '',
+                );
+                onOpenChange(false);
+              }}
+            >
+              {getLocalePhrase(language, Phrase.DiscardChanges)}
+            </Button>
+          )}
           <DialogClose asChild>
-            <Button variant="ghost">
+            <Button variant="ghost" disabled={isPending(data)}>
               {getLocalePhrase(language, Phrase.Close)}
             </Button>
           </DialogClose>
-          <Button onClick={clearAllTags} disabled={includesAnyCloud && !write}>
+          <Button
+            onClick={clearAllTags}
+            disabled={(includesAnyCloud && !write) || isPending(data)}
+          >
             {getLocalePhrase(language, Phrase.ClearAll)}
           </Button>
         </DialogFooter>

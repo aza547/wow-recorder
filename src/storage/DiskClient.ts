@@ -11,10 +11,11 @@ import {
   openSystemExplorer,
   writeMetadataFile,
 } from 'main/util';
-import { DiskStatus, RendererVideo } from 'main/types';
+import { DiskStatus, RendererVideo, VideoAction } from 'main/types';
 import DiskSizeMonitor from './DiskSizeMonitor';
 import { ipcMain } from 'electron';
 import assert from 'assert';
+import fs from 'fs';
 import { send } from 'main/main';
 
 /**
@@ -130,35 +131,51 @@ export default class DiskClient implements StorageClient {
   }
 
   public async deleteVideos(videoPaths: string[]) {
-    videoPaths.forEach((videoPath) => this.deleteVideoDisk(videoPath));
+    return this.applyToVideos('delete', videoPaths, (videoPath) =>
+      this.deleteVideoDisk(videoPath),
+    );
   }
 
   public async tagVideos(videoPaths: string[], tag: string) {
-    videoPaths.forEach((videoPath) => this.tagVideoDisk(videoPath, tag));
+    return this.applyToVideos('tag', videoPaths, (videoPath) =>
+      this.tagVideoDisk(videoPath, tag),
+    );
   }
 
   public async protectVideos(videoPaths: string[], protect: boolean) {
-    videoPaths.forEach((videoPath) =>
+    return this.applyToVideos('protect', videoPaths, (videoPath) =>
       this.protectVideoDisk(protect, videoPath),
     );
+  }
+
+  private async applyToVideos(
+    action: VideoAction['type'],
+    videoPaths: string[],
+    callback: (videoPath: string) => Promise<void>,
+  ): Promise<string[]> {
+    const results = await Promise.all(
+      videoPaths.map(async (videoPath) => {
+        try {
+          await callback(videoPath);
+          return videoPath;
+        } catch (error) {
+          console.error(`[DiskClient] Failed to ${action} video`, {
+            path: videoPath,
+            error: String(error),
+          });
+          return undefined;
+        }
+      }),
+    );
+
+    return results.filter((path): path is string => path !== undefined);
   }
 
   /**
    * Put a save marker on a video, protecting it from the file monitor.
    */
   private async protectVideoDisk(protect: boolean, videoPath: string) {
-    let metadata;
-
-    try {
-      metadata = await getMetadataForVideo(videoPath);
-    } catch (err) {
-      console.error(
-        `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
-        err,
-      );
-
-      return;
-    }
+    const metadata = await getMetadataForVideo(videoPath);
 
     if (protect) {
       console.info(`[Util] User set protected ${videoPath}`);
@@ -171,18 +188,7 @@ export default class DiskClient implements StorageClient {
   }
 
   private async tagVideoDisk(videoPath: string, tag: string) {
-    let metadata;
-
-    try {
-      metadata = await getMetadataForVideo(videoPath);
-    } catch (err) {
-      console.error(
-        `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
-        err,
-      );
-
-      return;
-    }
+    const metadata = await getMetadataForVideo(videoPath);
 
     if (!tag || !/\S/.test(tag)) {
       // empty or whitespace only
@@ -197,34 +203,60 @@ export default class DiskClient implements StorageClient {
   }
 
   private async deleteVideoDisk(videoPath: string) {
-    try {
-      // Bit weird we have to check a boolean here given all the error handling
-      // going on. That's just me taking an easy way out rather than fixing this
-      // more elegantly. TL;DR deleteVideoDisk doesn't throw anything.
-      const success = await deleteVideoDisk(videoPath);
+    const success = await deleteVideoDisk(videoPath);
 
-      if (!success) {
-        throw new Error('Failed deleting video, will mark for delete');
-      }
-    } catch (error) {
-      // If that didn't work for any reason, try to at least mark it for deletion,
-      // so that it can be picked up on refresh and we won't show videos the user
-      // intended to delete
-      console.warn(
-        '[Manager] Failed to directly delete video on disk:',
-        String(error),
-      );
-
-      markForVideoForDelete(videoPath);
+    if (success) {
+      return;
     }
+
+    try {
+      await fs.promises.stat(videoPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
+      throw error;
+    }
+
+    // If the video is open in the player, hide it on the next refresh and
+    // delete it once the player releases the file.
+    await markForVideoForDelete(videoPath);
   }
 
   private setupListeners() {
-    ipcMain.on('deleteVideosDisk', async (_event, args) => {
-      const videos = args as RendererVideo[];
-      const toDelete = videos.filter((v) => !v.cloud).map((v) => v.videoSource);
-      if (toDelete.length < 1) return;
-      this.deleteVideos(toDelete);
+    ipcMain.handle('videoActionDisk', async (_event, args) => {
+      const action = args[0] as VideoAction;
+      const videos = (args[1] as RendererVideo[]).filter((v) => !v.cloud);
+      const videoPaths = videos.map((v) => v.videoSource);
+
+      if (videos.length === 0) {
+        return [];
+      }
+
+      if (!(await this.ready())) {
+        console.error('[DiskClient] Failed to process video action', {
+          action: action.type,
+          paths: videoPaths,
+          error: 'Disk client is not ready',
+        });
+        return [];
+      }
+
+      let successfulPaths: string[];
+
+      if (action.type === 'protect') {
+        successfulPaths = await this.protectVideos(videoPaths, action.value);
+      } else if (action.type === 'tag') {
+        successfulPaths = await this.tagVideos(videoPaths, action.value);
+      } else if (action.type === 'delete') {
+        successfulPaths = await this.deleteVideos(videoPaths);
+      } else {
+        console.error('[DiskClient] Unsupported video action');
+        return [];
+      }
+
+      const successful = new Set(successfulPaths);
+      return videos
+        .filter((video) => successful.has(video.videoSource))
+        .map((video) => video.uniqueId);
     });
 
     ipcMain.on('videoButtonDisk', async (_event, args) => {
@@ -236,22 +268,6 @@ export default class DiskClient implements StorageClient {
         const cloud = args[2] as boolean;
         assert(!cloud);
         openSystemExplorer(src);
-      }
-
-      if (action === 'protect') {
-        const protect = args[1] as boolean;
-        const videos = args[2] as RendererVideo[];
-        const disk = videos.filter((v) => !v.cloud);
-        const toProtect = disk.map((v) => v.videoSource);
-        this.protectVideos(toProtect, protect);
-      }
-
-      if (action === 'tag') {
-        const tag = args[1] as string;
-        const videos = args[2] as RendererVideo[];
-        const disk = videos.filter((v) => !v.cloud);
-        const toTag = disk.map((v) => v.videoSource);
-        this.tagVideos(toTag, tag);
       }
     });
   }
