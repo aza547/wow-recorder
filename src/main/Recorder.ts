@@ -830,6 +830,7 @@ export default class Recorder extends EventEmitter {
         settings['window'] = src.device;
         settings['priority'] = 2; // Executable matching
         noobs.SetSourceSettings(name, settings);
+        noobs.SetSourceVolume(name, src.volume);
       } else if (src.type !== AudioSourceType.PROCESS) {
         const properties = noobs.GetSourceProperties(name);
         const available = properties.find((prop) => prop.name === 'device_id');
@@ -885,17 +886,7 @@ export default class Recorder extends EventEmitter {
       (src) => src.type === AudioSourceType.INPUT,
     );
 
-    if (mics.length !== 0 && config.pushToTalk) {
-      this.obsMicState = MicStatus.MUTED;
-      this.emit('state-change');
-    } else if (mics.length !== 0) {
-      this.obsMicState = MicStatus.LISTENING;
-      this.emit('state-change');
-    }
-
     if (config.pushToTalk) {
-      this.inputDevicesMuted = true;
-
       this.pushToTalkKeyListener = (e: UiohookKeyboardEvent) =>
         this.pushToTalkHandler(e, config);
 
@@ -907,6 +898,12 @@ export default class Recorder extends EventEmitter {
       uIOhook.on('mousedown', this.pushToTalkMouseListener);
       uIOhook.on('mouseup', this.pushToTalkMouseListener);
     }
+
+    if (mics.length !== 0 && config.pushToTalk) {
+      this.muteInputDevices();
+    } else if (mics.length !== 0) {
+      this.unmuteInputDevices();
+    }
   }
 
   /**
@@ -916,6 +913,7 @@ export default class Recorder extends EventEmitter {
   public removeAudioSources() {
     console.info('[Recorder] Remove all audio sources');
 
+    this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.NONE;
     this.emit('state-change');
 
@@ -926,7 +924,6 @@ export default class Recorder extends EventEmitter {
     });
 
     this.audioSources = [];
-    this.inputDevicesMuted = true;
   }
 
   /**

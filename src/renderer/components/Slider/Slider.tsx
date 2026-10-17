@@ -26,7 +26,7 @@ const Slider = React.forwardRef<
       <Tooltip
         content={value}
         side="top"
-        onClick={(e) => e.preventDefault()}
+        interactiveTrigger
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <SliderPrimitive.Thumb
