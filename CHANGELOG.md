@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Upload failures](https://discord.com/channels/1004860808737591326/1362788447546511451/threads/1550000194530054184) - Report failed cloud uploads with the recording name and only log success after the upload completes.
 - Fix an issue where volume was not correctly applied to app sources on launch of the program.
 - Fix an issue where PTT induced mute was not correctly applied to microphones on launch of the program.
 - [Issue 917](https://github.com/aza547/wow-recorder/issues/917) - Fix an issue where the audio source volume slider was not correctly draggable.

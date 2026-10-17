@@ -349,15 +349,17 @@ export default class VideoProcessQueue {
       }
 
       await client.postVideo(cloudMetadata);
+      console.info('[VideoProcessQueue] Finished uploading video', item.path);
     } catch (error) {
+      const msg = `[VideoProcessQueue] Failed to upload video ${item.path}`;
+
       if (axios.isAxiosError(error)) {
-        const msg = '[CloudClient] Axios error processing video';
         logAxiosError(msg, error);
       } else {
-        console.error('[CloudClient] Error processing video', error);
+        console.error(msg, error);
       }
 
-      progressCallback(100);
+      send('uploadFailed', path.basename(item.path));
     }
 
     done();
@@ -589,8 +591,6 @@ export default class VideoProcessQueue {
    * Called on the end of an upload.
    */
   private finishUploadingVideo(item: UploadQueueItem) {
-    console.info('[VideoProcessQueue] Finished uploading video', item.path);
-
     this.inProgressUploads = this.inProgressUploads.filter(
       (p) => p !== item.path,
     );
