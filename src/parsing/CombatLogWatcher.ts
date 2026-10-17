@@ -150,7 +150,8 @@ export default class CombatLogWatcher extends EventEmitter {
 
     if (bytesToRead < 1) {
       // The node fs watcher is known to sometimes emit multiple events for
-      // the same write. This lets us drop out early if there is nothing to read.
+      // the same write. This lets us drop out early if there is nothing to
+      // read.
       return;
     }
 
@@ -159,14 +160,20 @@ export default class CombatLogWatcher extends EventEmitter {
       bytesToRead,
       startPosition,
     );
-    // for this path, the size represents the bytes parsed in total, not
-    // necessarily the reported fs.stat of the file, which could be from
-    // a partial line chunk write.
+
     this.state[fullPath] = { ...currentInfo, size: startPosition + consumed };
   }
 
   /**
-   * Parse a chunk of the file of length bytes from a specified position.
+   * Parse a chunk of the file of length bytes from a specified position to
+   * the final new line. On some platforms (eg, anything VFS based, especially
+   * ntfs-3g), the notify can be sent mid-line.
+   *
+   * We can't assume that the last data of the read is a completed log line.
+   * Instead, only parse up to the last new line char and return how much we
+   * parsed so that the next read can start from that position.
+   *
+   * @returns consumed bytes
    */
   private async parseFileChunk(
     file: string,
@@ -189,12 +196,9 @@ export default class CombatLogWatcher extends EventEmitter {
 
     this.emit('WARCRAFT_RECORDER_LOG_ACTIVITY');
 
-    // On some platforms (eg, anything VFS based, especially ntfs-3g), the notify can be sent mid-line.
-    // We can't assume that the last data of the read is a completed log line.
-    // Instead, only parse up to the last new line char return how much we parsed
-    // so that the next read can start from that position.
-    const valid = buffer.subarray(0, bytesRead);
-    const newline = valid.lastIndexOf(0x0a); // \n
+    // Reduce to the actual data portion of the buffer.
+    const populatedSlice = buffer.subarray(0, bytesRead);
+    const newline = populatedSlice.lastIndexOf(0x0a); // \n
 
     if (newline < 0) {
       return 0;
@@ -202,20 +206,20 @@ export default class CombatLogWatcher extends EventEmitter {
 
     const consumed = newline + 1;
 
-    const lines = valid
+    const lines = populatedSlice
       .subarray(0, consumed)
       .toString('utf-8')
-      .split('\n')
+      .split('\n') // CRLF will leave the \r, then removed by the trim()
       .map((s) => s.trim())
       .filter((s) => s);
 
     lines.forEach((line) => {
-      // If parsing the line fails, at least allow the parser to continue.
-      // State could be undefined, but the alternative is that all
-      // log watching is bricked until an app restart.
       try {
         this.handleLogLine(line);
       } catch (error) {
+        // Dropping a line can leave the activity we're tracking out of sync,
+        // but that beats one bad line killing log watching until the app
+        // restarts.
         console.error(
           '[CombatLogWatcher] Failed to handle log line:',
           line,
