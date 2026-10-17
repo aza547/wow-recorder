@@ -14,7 +14,11 @@ import {
   UiohookMouseEvent,
 } from 'uiohook-napi';
 import checkDiskSpace from 'check-disk-space';
-import { PTTEventType, PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
+import {
+  PTTEventType,
+  PTTKeyPressEvent,
+  UiohookModifierKeyMap,
+} from '../types/KeyTypesUIOHook';
 import {
   Metadata,
   FileInfo,
@@ -554,7 +558,7 @@ const convertUioHookEvent = (
   if (event.type === EventType.EVENT_KEY_PRESSED) {
     return convertUioHookKeyPressEvent(
       event as UiohookKeyboardEvent,
-      PTTEventType.EVENT_MOUSE_PRESSED,
+      PTTEventType.EVENT_KEY_PRESSED,
     );
   }
 
@@ -590,11 +594,39 @@ const convertUioHookEvent = (
   };
 };
 
+const isModifierKey = (keycode: number) =>
+  Object.values(UiohookModifierKeyMap).includes(keycode);
+
 const nextKeyPressPromise = (): Promise<PTTKeyPressEvent> => {
   return new Promise((resolve) => {
-    uIOhook.once('keyup', (event) => {
-      resolve(convertUioHookEvent(event));
-    });
+    const cleanup = () => {
+      uIOhook.off('keydown', onKeyDown);
+      uIOhook.off('keyup', onKeyUp);
+    };
+
+    const onKeyDown = (event: UiohookKeyboardEvent) => {
+      // Resolve on the first non-modifier key down, it carries the state of
+      // any held modifiers. Waiting for a key up instead breaks if the user
+      // releases the modifier before the key. See #918.
+      if (isModifierKey(event.keycode)) {
+        return;
+      }
+
+      cleanup();
+      const converted = convertUioHookEvent(event);
+      resolve(converted);
+    };
+
+    // A naked modifier key is only bound once released without any other
+    // key having been pressed.
+    const onKeyUp = (event: UiohookKeyboardEvent) => {
+      cleanup();
+      const converted = convertUioHookEvent(event);
+      resolve(converted);
+    };
+
+    uIOhook.on('keydown', onKeyDown);
+    uIOhook.on('keyup', onKeyUp);
   });
 };
 
