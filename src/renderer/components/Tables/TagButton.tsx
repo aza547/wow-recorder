@@ -38,7 +38,7 @@ const TagButton = (props: TagButtonProps) => {
             }}
           >
             {foundTag ? (
-              <FolderMessageSquareMore size={18} />
+              <FolderMessageSquareMore size={18} className="text-cyan-400" />
             ) : (
               <FolderMessageSquare size={18} />
             )}
@@ -58,7 +58,7 @@ const TagButton = (props: TagButtonProps) => {
 
   if (foundTag) {
     tag = foundTag;
-    icon = <MessageSquareMore size={18} />;
+    icon = <MessageSquareMore size={18} className="text-cyan-400" />;
 
     if (tag.length > 50) {
       tooltip = `${tag.slice(0, 50)}...`;
