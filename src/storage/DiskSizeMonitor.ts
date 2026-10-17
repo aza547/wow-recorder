@@ -51,12 +51,12 @@ export default class DiskSizeMonitor {
           const metadata = await getMetadataForVideo(file.name);
           const isUnprotected = !(metadata.protected || false);
           return isUnprotected;
-        } catch {
+        } catch (error) {
           console.error(
             '[DiskSizeMonitor] Failed to get metadata for',
             file.name,
+            error,
           );
-          await deleteVideoDisk(file.name);
           return false;
         }
       },
