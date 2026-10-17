@@ -912,21 +912,6 @@ export default class Manager {
       return event;
     });
 
-    ipcMain.on(
-      'refreshCombatLogStatus',
-      async (): Promise<PTTKeyPressEvent> => {
-        this.manualHotKeyDisabled = true;
-
-        const event = await Promise.race([
-          nextKeyPressPromise(),
-          nextMousePressPromise(),
-        ]);
-
-        this.manualHotKeyDisabled = false;
-        return event;
-      },
-    );
-
     ipcMain.on('refreshCombatLogStatus', () => {
       this.refreshCombatLoggingStatus();
     });

@@ -13,6 +13,13 @@ interface TooltipProps
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   side?: 'bottom' | 'left' | 'top' | 'right';
   maxWidth?: number;
+  /**
+   * The trigger is itself an interactive control (e.g. a Slider thumb) that
+   * needs its own pointerdown/click handling to work, so skip the #853
+   * workaround below for it. See AudioSourceControls volume slider regression
+   * in #917.
+   */
+  interactiveTrigger?: boolean;
 }
 const Tooltip = ({
   children,
@@ -26,6 +33,7 @@ const Tooltip = ({
   side,
   sideOffset = 8,
   onClick,
+  interactiveTrigger = false,
   ...props
 }: TooltipProps) => {
   return (
@@ -38,9 +46,15 @@ const Tooltip = ({
       delayDuration={delayDuration}
     >
       <TooltipPrimitive.Trigger
-        onClick={onClick ? onClick : (e) => e.preventDefault()}
+        onClick={
+          interactiveTrigger
+            ? onClick
+            : (onClick ?? ((e) => e.preventDefault()))
+        }
         asChild
-        onPointerDown={(e) => e.preventDefault()}
+        onPointerDown={
+          interactiveTrigger ? undefined : (e) => e.preventDefault()
+        }
       >
         {children}
       </TooltipPrimitive.Trigger>

@@ -62,6 +62,7 @@ export default class ConfigService
     // @ts-ignore 'schema' is "wrong", but it really isn't.
     configSchema,
     name: 'config-v3',
+    cache: true,
   });
 
   /**
