@@ -359,24 +359,6 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * and retail at the same time. Eventually the older tiers should be removed.
  */
 const currentRetailEncounters = [
-  // Midnight - The Voidspire
-  3176, // Imperator Averzian
-  3177, // Vorsaius
-  3178, // Fallen-King Salhadar
-  3179, // Vaelgor & Ezzorak
-  3180, // Lightblinded Vanguard
-  3181, // Crown of the Cosmos
-
-  // Midnight - March on Quel'danas
-  3182, // Belo'ren, Child of Al'ar
-  3183, // Midnight Falls
-
-  // Midnight - The Dreamrift
-  3306, // Chimaerus the Undreamt God
-
-  // Midnight - Sporefall
-  3159, // Rotmire
-
   // Midnight - The Venomous Abyss
   3470, // Nek'zali the Soulcoiler
   3445, // Entombed Sentinels
@@ -389,6 +371,9 @@ const currentRetailEncounters = [
 
   // Midnight - The Tidebound Grotto
   3379, // Nymrissa Wavecaller
+
+  // Midnight - The Unbinding of Kith'ix
+  3513, // Kith'ix
 
   // Test Encounter
   9999, // Saves having to update the test button data.
