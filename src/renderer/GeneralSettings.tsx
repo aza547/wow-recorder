@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { configSchema } from 'config/configSchema';
 import { AppState, RecStatus } from 'main/types';
-import { useEffect, useRef } from 'react';
-import { HardDrive, Info } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { HardDrive, Info, RefreshCw } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
@@ -13,6 +13,7 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 import Progress from './components/Progress/Progress';
 import TextBanner from './components/TextBanner/TextBanner';
 import { Phrase } from 'localisation/phrases';
+import { Button } from './components/Button/Button';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -26,6 +27,8 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, appState } = props;
   const { language } = appState;
   const [config, setConfig] = useSettings();
+  const [isRunningDiskSizeMonitor, setIsRunningDiskSizeMonitor] =
+    useState(false);
   const initialRenderVideoConfig = useRef(true);
 
   useEffect(() => {
@@ -278,6 +281,16 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const runDiskSizeMonitor = async () => {
+    setIsRunningDiskSizeMonitor(true);
+
+    try {
+      await ipc.runDiskSizeMonitor();
+    } finally {
+      setIsRunningDiskSizeMonitor(false);
+    }
+  };
+
   const getDiskUsageBar = () => {
     const usage = Math.round(appState.diskStatus.usage / 1024 ** 3);
     const max = Math.round(appState.diskStatus.limit / 1024 ** 3);
@@ -285,13 +298,19 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     if (perc > 100) perc = 100;
     const text = max === 0 ? `${usage}GB / ∞` : `${usage}GB / ${max}GB`;
 
+    const shouldShowRunButton =
+      config.maxStorage > 0 &&
+      appState.diskStatus.usage > appState.diskStatus.limit;
+
     return (
       <div className="flex-col">
         <Label className="flex items-center">
           {getLocalePhrase(language, Phrase.DiskUsageDescription)}
         </Label>
 
-        <div className="flex flex-row items-center justify-start w-80 gap-x-2 py-2">
+        <div
+          className={`flex flex-row items-center justify-start ${shouldShowRunButton ? 'w-full max-w-[430px]' : 'w-80'} gap-x-2 py-2`}
+        >
           <Tooltip
             content={getLocalePhrase(language, Phrase.DiskUsageDescription)}
           >
@@ -301,6 +320,20 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
             {text}
           </span>
+          {shouldShowRunButton ? (
+            <Button
+              size="xs"
+              onClick={runDiskSizeMonitor}
+              disabled={isComponentDisabled() || isRunningDiskSizeMonitor}
+            >
+              <span
+                className={`mr-1.5 inline-flex ${isRunningDiskSizeMonitor ? 'animate-spin' : ''}`}
+              >
+                <RefreshCw size={14} />
+              </span>
+              {getLocalePhrase(language, Phrase.RunDiskSizeMonitorButtonLabel)}
+            </Button>
+          ) : null}
         </div>
       </div>
     );
@@ -311,7 +344,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       {getDisabledText()}
       {getStoragePathField()}
 
-      <div className="flex flex-row items-center gap-x-10">
+      <div className="flex flex-row flex-wrap items-center gap-x-10 gap-y-2">
         {getMaxStorageField()}
         {getDiskUsageBar()}
       </div>
