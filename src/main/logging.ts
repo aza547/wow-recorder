@@ -21,6 +21,7 @@ const logPrefix = 'WarcraftRecorder';
 let logIndex = 0;
 let logDate = getLocalDate();
 const maxTotalLogFiles = 500;
+let dateChangedTimeout: NodeJS.Timeout | undefined = undefined;
 
 /**
  * Get the next log index on startup of the application as logIndex in memory
@@ -60,16 +61,20 @@ const getApplicationLogPath = () => {
   const date = getLocalDate();
 
   if (date !== logDate) {
-    // Reset the rotation index if the date changed.
-    console.info('[Logging] Date changed, resetting log index.');
     logIndex = 0;
     logDate = date;
-    void removeExcessLogs();
+    clearTimeout(dateChangedTimeout);
+    dateChangedTimeout = setTimeout(onDateChanged, 0);
   }
 
   const padded = String(logIndex).padStart(3, '0');
   const fileName = `${logPrefix}-${date}.${padded}.log`;
   return path.join(dir, fileName);
+};
+
+const onDateChanged = () => {
+  console.info('[Logging] Date changed, resetting log index.');
+  void removeExcessLogs();
 };
 
 export const setupApplicationLogging = () => {
