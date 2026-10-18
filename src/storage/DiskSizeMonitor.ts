@@ -7,19 +7,10 @@ import {
 } from '../main/util';
 import DiskClient from './DiskClient';
 
-// Had a bug here where we used filter with an async function but that isn't
-// valid as it just returns a truthy promise. See issue 323. To get around
-// this we do some creative stuff from here:
-// https://advancedweb.hu/how-to-use-async-functions-with-array-filter-in-javascript/
-const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
-  const results = await Promise.all(fileStream.map(filter));
-  return fileStream.filter((_, index) => results[index]);
-};
-
 export default class DiskSizeMonitor {
   private cfg = ConfigService.getInstance();
 
-  async run() {
+  public async run() {
     const storageDir = this.cfg.get<string>('storagePath');
     const maxStorageGB = this.cfg.get<number>('maxStorage');
 
@@ -28,56 +19,66 @@ export default class DiskSizeMonitor {
       return;
     }
 
-    const maxStorageBytes = maxStorageGB * 1024 ** 3;
-    const usage = await this.usage();
-    const bytesToFree = usage - maxStorageBytes * 0.95; // Remain slightly under the threshold.
-    let bytesFreed = 0;
-
-    const files = await getSortedVideos(
-      storageDir,
-      FileSortDirection.OldestFirst,
-    );
-
     console.info(
       '[DiskSizeMonitor] Running, size limit is',
       maxStorageGB,
       'GB',
     );
 
-    const unprotectedFiles = await asyncFilter(
-      files,
-      async (file: FileInfo) => {
-        try {
-          const metadata = await getMetadataForVideo(file.name);
-          const isUnprotected = !(metadata.protected || false);
-          return isUnprotected;
-        } catch {
-          console.error(
-            '[DiskSizeMonitor] Failed to get metadata for',
-            file.name,
-          );
-          await deleteVideoDisk(file.name);
-          return false;
+    const files = await getSortedVideos(
+      storageDir,
+      FileSortDirection.OldestFirst,
+    );
+
+    const maxStorageBytes = maxStorageGB * 1024 ** 3;
+    const usage = this.usageFromFiles(files);
+    const bytesToFree = usage - maxStorageBytes * 0.95; // Remain slightly under the threshold.
+
+    if (bytesToFree <= 0) {
+      console.info('[DiskSizeMonitor] Under the limit, nothing to do');
+      return;
+    }
+
+    let bytesFreed = 0;
+    const toDelete: Array<FileInfo> = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      try {
+        const metadata = await getMetadataForVideo(file.name);
+        const isProtected = Boolean(metadata.protected);
+
+        if (!isProtected) {
+          toDelete.push(file);
+          bytesFreed += file.size;
         }
-      },
-    );
+      } catch (err) {
+        console.error(
+          '[DiskSizeMonitor] Failed to get metadata for',
+          file.name,
+          err,
+        );
+      }
 
-    const filesForDeletion = unprotectedFiles.filter((file) => {
-      bytesFreed += file.size;
-      return bytesFreed < bytesToFree;
-    });
+      if (bytesFreed >= bytesToFree) {
+        break;
+      }
+    }
 
-    console.info(
-      `[DiskSizeMonitor] Deleting ${filesForDeletion.length} old video(s)`,
-    );
+    console.info(`[DiskSizeMonitor] Deleting ${toDelete.length} old video(s)`);
 
-    await Promise.all(
-      filesForDeletion.map(async (file) => {
+    for (let i = 0; i < toDelete.length; i++) {
+      const file = toDelete[i];
+
+      try {
         await deleteVideoDisk(file.name);
-      }),
-    );
+      } catch (err) {
+        console.error('[DiskSizeMonitor] Failed to delete', file.name, err);
+      }
+    }
 
-    if (filesForDeletion.length > 0) {
+    if (toDelete.length > 0) {
       DiskClient.getInstance().refreshStatus();
       DiskClient.getInstance().refreshVideos();
     }
@@ -86,11 +87,10 @@ export default class DiskSizeMonitor {
   public async usage() {
     const storageDir = this.cfg.get<string>('storagePath');
     const files = await getSortedVideos(storageDir);
+    return this.usageFromFiles(files);
+  }
 
-    if (files.length < 1) {
-      return 0;
-    }
-
+  private usageFromFiles(files: Array<FileInfo>) {
     return files.map((file) => file.size).reduce((acc, num) => acc + num, 0);
   }
 }

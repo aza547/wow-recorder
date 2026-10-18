@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 917](https://github.com/aza547/wow-recorder/issues/917) - Fix an issue where the audio source volume slider was not correctly draggable.
 - [Issue 918](https://github.com/aza547/wow-recorder/issues/918) - Improve the user experience slightly when binding a hotkey.
 - Handle partial line reads of the combat log, which can happen on some (typically Linux) filesystems.
+- Improve disk size monitor open file handles, particularly for users with many videos.
 
 ## [7.13.3] - 2026-10-15
 ### Fixed
