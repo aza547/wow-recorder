@@ -95,7 +95,7 @@ export default class DiskClient implements StorageClient {
       return [];
     }
 
-    // Windows has a 16k file handle limit per process. Load in batches
+    // Node has an 8k file handle limit per process. Load in batches
     // of 1000 to be safe. The real fix here would be to have a local database
     // for managing this stuff rather than reading many thousand files here.
     const batchSize = 1000;
