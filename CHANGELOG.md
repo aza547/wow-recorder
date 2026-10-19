@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Clips now default to ±5s instead of ±15s.
+
 ### Added
 ### Fixed
 - Fix an issue where volume was not correctly applied to app sources on launch of the program.
