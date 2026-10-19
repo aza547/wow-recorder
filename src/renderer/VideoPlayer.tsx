@@ -1224,7 +1224,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
             variant="ghost"
             size="xs"
             onClick={() => {
-              setClipStartValue(Math.max(0, progress - 5));
+              setClipStartValue(Math.max(0, progress - 7));
               setClipStopValue(Math.min(duration, progress + 5));
               setClipMode(true);
             }}
