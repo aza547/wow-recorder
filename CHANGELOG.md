@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-- Clips now default to ±5s instead of ±15s.
+- Clip range now defaults to -7s and +5s instead of ±15s.
 
 ### Added
 ### Fixed
