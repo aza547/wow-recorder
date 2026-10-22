@@ -964,8 +964,15 @@ const takeOwnershipStorageDir = async (dir: string) => {
   const helptext =
     'If you are setting up Warcraft Recorder for the first time, this folder should be empty.';
 
-  const content =
-    'This folder is managed by Warcraft Recorder, files in it may be automatically created, modified or deleted.';
+  const content = `
+This folder is managed by Warcraft Recorder, files in it may be automatically 
+created, modified or deleted. You should not manually modify or delete files in
+this folder.
+
+If you want to modify files outwith the Warcraft Recorder program, copy the
+video files to another folder and operate on them there to avoid unexpected
+side effects.
+    `;
 
   const files = await fs.promises.readdir(dir);
 
