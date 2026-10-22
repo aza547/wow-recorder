@@ -36,18 +36,13 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       return;
     }
 
-    const toSet: Record<string, unknown> = {
+    setConfigValues({
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
       separateBufferPath: config.separateBufferPath,
       storageLimit: config.storageLimit,
-    };
-
-    if (config.maxStorage > 0) {
-      toSet.maxStorage = config.maxStorage;
-    }
-
-    setConfigValues(toSet);
+      maxStorage: config.maxStorage,
+    });
 
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
@@ -228,15 +223,9 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const setMaxStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.value) {
-      // Allow setting empty as midpoint.
-      setConfig((prev) => ({ ...prev, maxStorage: -1 }));
-      return;
-    }
-
     const maxStorage = parseInt(event.target.value, 10);
 
-    if (Number.isNaN(maxStorage) || maxStorage < 0) {
+    if (Number.isNaN(maxStorage) || maxStorage < 1) {
       // Block invalid config.
       return;
     }
@@ -270,11 +259,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         </Label>
         <Input
           name="maxDiskStorage"
-          value={config.maxStorage >= 0 ? config.maxStorage : ''}
+          value={config.maxStorage}
           onChange={setMaxStorage}
           required
           type="numeric"
           disabled={isComponentDisabled()}
+          min={1}
         />
       </div>
     );
@@ -339,6 +329,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         <div className="flex h-10 items-center">
           <Switch
             checked={Boolean(config.storageLimit)}
+            id="storageLimit"
             name="storageLimit"
             onCheckedChange={setStorageLimit}
           />
