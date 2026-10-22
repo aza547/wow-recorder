@@ -62,7 +62,11 @@ export default class DiskClient implements StorageClient {
 
     const usage = await new DiskSizeMonitor().usage();
     const cfg = ConfigService.getInstance();
-    const limit = cfg.get<number>('maxStorage') * 1024 ** 3;
+
+    const limit = cfg.get<boolean>('storageLimit')
+      ? cfg.get<number>('maxStorage') * 1024 ** 3
+      : 0; // Historically we used 0 to indicate no limit.
+
     const status: DiskStatus = { usage, limit };
     send('updateDiskStatus', status);
   }

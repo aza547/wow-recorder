@@ -646,9 +646,13 @@ export default class VideoProcessQueue {
     // Update the frontend with the new usage.
     const usage = await sizeMonitor.usage();
 
+    const limit = cfg.get<boolean>('storageLimit')
+      ? cfg.get<number>('maxStorage') * 1024 ** 3
+      : 0; // Historically we used 0 to indicate no limit.
+
     const status: DiskStatus = {
       usage,
-      limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
+      limit,
     };
 
     send('updateDiskStatus', status);
@@ -670,9 +674,15 @@ export default class VideoProcessQueue {
     sizeMonitor.run();
     const usage = await sizeMonitor.usage();
 
+    const cfg = ConfigService.getInstance();
+
+    const limit = cfg.get<boolean>('storageLimit')
+      ? cfg.get<number>('maxStorage') * 1024 ** 3
+      : 0; // Historically we used 0 to indicate no limit.
+
     const status: DiskStatus = {
       usage,
-      limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
+      limit,
     };
 
     send('updateDiskStatus', status);

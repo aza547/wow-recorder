@@ -419,6 +419,7 @@ type Encoder = {
 
 type BaseConfig = {
   storagePath: string;
+  storageLimit: boolean;
   maxStorage: number;
   obsPath: string;
   obsOutputResolution: string;
