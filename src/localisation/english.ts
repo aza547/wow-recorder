@@ -15,7 +15,7 @@ const ENGLISH: Translations = {
   [Phrase.EraLogPathDescription]: 'Location of the World of Warcraft logs folder for your classic era installation, e.g. "D:\\World of Warcraft\\_classic_era_\\Logs".',
   [Phrase.StorageLimitLabel]: 'Limit Disk Storage',
   [Phrase.StorageLimitDescription]: 'Apply a size limit to video storage. Enable this to automatically age out old videos when the limit is reached. If disabled, you must manage your disk space manually.',
-  [Phrase.MaxStorageDescription]: 'Maximum allowed storage that the application will consume for video files.',
+  [Phrase.MaxStorageDescription]: 'Maximum video storage that the application should consume.',
   [Phrase.MonitorIndexDescription]: 'The monitor to record. Only applicible if monitor capture is selected.',
   [Phrase.SelectedCategoryDescription]: 'Last selected video category in the UI.',
   [Phrase.AudioInputDevicesDescription]: 'Audio input devices to be included in the recording.',

@@ -229,6 +229,7 @@ const getBaseConfig = (cfg: ConfigService): BaseConfig => {
 
   return {
     storagePath: cfg.get<string>('storagePath'),
+    storageLimit: cfg.get<boolean>('storageLimit'),
     maxStorage: cfg.get<number>('maxStorage'),
     obsPath,
     obsOutputResolution: cfg.get<string>('obsOutputResolution'),
@@ -342,6 +343,7 @@ const validateLogPathFilesystem = async (
 const validateBaseConfig = async (config: BaseConfig) => {
   const {
     storagePath,
+    storageLimit,
     maxStorage,
     obsPath,
     recordRetail,
@@ -379,7 +381,9 @@ const validateBaseConfig = async (config: BaseConfig) => {
     throw new Error(error);
   }
 
-  await checkDisk(storagePath, maxStorage);
+  if (storageLimit) {
+    await checkDisk(storagePath, maxStorage);
+  }
 
   if (!obsPath) {
     console.warn('[Manager] obsPath is falsy', obsPath);
