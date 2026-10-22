@@ -40,9 +40,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
       separateBufferPath: config.separateBufferPath,
+      storageLimit: config.storageLimit,
     };
 
-    if (config.maxStorage >= 0) {
+    if (config.maxStorage > 0) {
       toSet.maxStorage = config.maxStorage;
     }
 
@@ -60,6 +61,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     config.storagePath,
     config.bufferStoragePath,
     config.maxStorage,
+    config.storageLimit,
   ]);
 
   const setSeparateBufferPath = (checked: boolean) => {
@@ -248,7 +250,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getMaxStorageField = () => {
-    if (isComponentDisabled()) {
+    if (isComponentDisabled() || !config.storageLimit) {
       return <></>;
     }
 
@@ -306,12 +308,52 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const setStorageLimit = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        storageLimit: checked,
+      };
+    });
+  };
+
+  const getStorageLimitSwitch = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col">
+        <Label htmlFor="storageLimit" className="flex items-center">
+          {getLocalePhrase(language, Phrase.StorageLimitLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              language,
+              configSchema.storageLimit.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          <Switch
+            checked={Boolean(config.storageLimit)}
+            name="storageLimit"
+            onCheckedChange={setStorageLimit}
+          />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-y-6">
       {getDisabledText()}
       {getStoragePathField()}
 
       <div className="flex flex-row items-center gap-x-10">
+        {getStorageLimitSwitch()}
         {getMaxStorageField()}
         {getDiskUsageBar()}
       </div>

@@ -11,6 +11,7 @@ export type ConfigurationSchema = {
   classicLogPath: string;
   classicPtrLogPath: string;
   eraLogPath: string;
+  storageLimit: boolean;
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
@@ -148,6 +149,11 @@ export const configSchema = {
     description: Phrase.RetailPtrLogPathDescription,
     type: 'string',
     default: '',
+  },
+  storageLimit: {
+    description: Phrase.StorageLimitDescription,
+    type: 'boolean',
+    default: true,
   },
   maxStorage: {
     description: Phrase.MaxStorageDescription,

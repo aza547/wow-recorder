@@ -28,6 +28,7 @@ export const getSettings = (): ConfigurationSchema => {
     classicPtrLogPath: getConfigValue<string>('classicPtrLogPath'),
     eraLogPath: getConfigValue<string>('eraLogPath'),
     retailPtrLogPath: getConfigValue<string>('retailPtrLogPath'),
+    storageLimit: getConfigValue<boolean>('storageLimit'),
     maxStorage: getConfigValue<number>('maxStorage'),
     minEncounterDuration: getConfigValue<number>('minEncounterDuration'),
     monitorIndex: getConfigValue<number>('monitorIndex'),
@@ -83,7 +84,9 @@ export const getSettings = (): ConfigurationSchema => {
     cloudUploadRetail: getConfigValue<boolean>('cloudUploadRetail'),
     cloudUploadClassic: getConfigValue<boolean>('cloudUploadClassic'),
     cloudUploadRateLimit: getConfigValue<boolean>('cloudUploadRateLimit'),
-    cloudUploadRateLimitMbps: getConfigValue<number>('cloudUploadRateLimitMbps'),
+    cloudUploadRateLimitMbps: getConfigValue<number>(
+      'cloudUploadRateLimitMbps',
+    ),
     cloudAccountName: getConfigValue<string>('cloudAccountName'),
     cloudAccountPassword: getConfigValue<string>('cloudAccountPassword'),
     cloudGuildName: getConfigValue<string>('cloudGuildName'),
@@ -94,15 +97,25 @@ export const getSettings = (): ConfigurationSchema => {
     cloudUploadSoloShuffle: getConfigValue<boolean>('cloudUploadSoloShuffle'),
     cloudUploadDungeons: getConfigValue<boolean>('cloudUploadDungeons'),
     cloudUploadRaids: getConfigValue<boolean>('cloudUploadRaids'),
-    cloudUploadBattlegrounds: getConfigValue<boolean>('cloudUploadBattlegrounds'),
-    cloudUploadRaidMinDifficulty: getConfigValue<string>('cloudUploadRaidMinDifficulty'),
-    cloudUploadDungeonMinLevel: getConfigValue<number>('cloudUploadDungeonMinLevel'),
+    cloudUploadBattlegrounds: getConfigValue<boolean>(
+      'cloudUploadBattlegrounds',
+    ),
+    cloudUploadRaidMinDifficulty: getConfigValue<string>(
+      'cloudUploadRaidMinDifficulty',
+    ),
+    cloudUploadDungeonMinLevel: getConfigValue<number>(
+      'cloudUploadDungeonMinLevel',
+    ),
     cloudUploadClips: getConfigValue<boolean>('cloudUploadClips'),
     language: getConfigValue<string>('language'),
     hideEmptyCategories: getConfigValue<boolean>('hideEmptyCategories'),
     hardwareAcceleration: getConfigValue<boolean>('hardwareAcceleration'),
-    recordCurrentRaidEncountersOnly: getConfigValue<boolean>('recordCurrentRaidEncountersOnly'),
-    uploadCurrentRaidEncountersOnly: getConfigValue<boolean>('uploadCurrentRaidEncountersOnly'),
+    recordCurrentRaidEncountersOnly: getConfigValue<boolean>(
+      'recordCurrentRaidEncountersOnly',
+    ),
+    uploadCurrentRaidEncountersOnly: getConfigValue<boolean>(
+      'uploadCurrentRaidEncountersOnly',
+    ),
     recordChallengeModes: getConfigValue<boolean>('recordChallengeModes'),
     forceSdr: getConfigValue<boolean>('forceSdr'),
     videoSourceScale: getConfigValue<number>('videoSourceScale'),
@@ -110,14 +123,18 @@ export const getSettings = (): ConfigurationSchema => {
     videoSourceYPosition: getConfigValue<number>('videoSourceYPosition'),
     manualRecord: getConfigValue<boolean>('manualRecord'),
     manualRecordHotKey: getConfigValue<number>('manualRecordHotKey'),
-    manualRecordHotKeyModifiers: getConfigValue<string>('manualRecordHotKeyModifiers'),
+    manualRecordHotKeyModifiers: getConfigValue<string>(
+      'manualRecordHotKeyModifiers',
+    ),
     manualRecordSoundAlert: getConfigValue<boolean>('manualRecordSoundAlert'),
     manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
     firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     chatUserNameAgreed: getConfigValue<string>('chatUserNameAgreed'),
     validateLogPaths: getConfigValue<boolean>('validateLogPaths'),
     validateNtfs: getConfigValue<boolean>('validateNtfs'),
-    characterUploadFilters: getConfigValue<CharacterFilter[]>('characterUploadFilters'),
+    characterUploadFilters: getConfigValue<CharacterFilter[]>(
+      'characterUploadFilters',
+    ),
     /* eslint-enable prettier/prettier */
   };
 
