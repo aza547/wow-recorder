@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   AppState,
   DialogType,
+  Pages,
   RendererClip,
   RendererVideo,
   StorageFilter,
@@ -165,6 +166,11 @@ const CategoryPage = (props: IProps) => {
 
   // Tanstack table relies on stable references, so while we have the React
   // compiler enabled we still need useCallback here or weird stuff will happen.
+  const openSettings = useCallback(
+    () => setAppState((prev) => ({ ...prev, page: Pages.Settings })),
+    [setAppState],
+  );
+
   const getClipParent = useCallback(
     (clip: RendererClip) => {
       return findClipParent(clip, videoState);
@@ -748,6 +754,9 @@ const CategoryPage = (props: IProps) => {
             targetVideoId={killDialogVideoTargetId}
             parentLookupMap={parentLookupMap}
             language={language}
+            isLinux={appState.isLinux}
+            hevcTranscodeEnabled={config.hevcTranscodeEnabled}
+            onOpenSettings={openSettings}
           />
           <VideoSelectionTable
             table={table}
