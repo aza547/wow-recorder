@@ -11,6 +11,7 @@ You can find the source in the `design.excalidraw` file in this directory.
 Development mode benefits from the infrastructure offered by [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate). You can read more about it on their [docs](https://electron-react-boilerplate.js.org/). It allows for a very quick development cycle, access to chrome dev tools, and hot reloading of the app on saving new changes. 
 
 1. Install the latest version of Node.js version (latest at time of writing is 20.4.0) from [here](https://nodejs.org/en/).
+1. Install [VS Studio and the C++ SDK](https://learn.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-170), required as installing dependencies recompiles [noobs](https://github.com/aza547/noobs).
 1. Clone a copy of the [wow-recorder](https://github.com/aza547/wow-recorder) codebase.
 1. Change into the checkout directory. 
 1. Run `npm install` on the command line to install required node packages.
