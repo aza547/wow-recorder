@@ -13,9 +13,10 @@ export default class DiskSizeMonitor {
   public async run() {
     const storageDir = this.cfg.get<string>('storagePath');
     const maxStorageGB = this.cfg.get<number>('maxStorage');
+    const storageLimit = this.cfg.get<boolean>('storageLimit');
 
-    if (maxStorageGB === 0) {
-      console.info('[DiskSizeMonitor] Limitless storage, doing nothing');
+    if (!storageLimit || maxStorageGB === 0) {
+      console.info('[DiskSizeMonitor] No storage limit set, doing nothing');
       return;
     }
 

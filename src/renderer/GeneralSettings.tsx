@@ -36,17 +36,13 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       return;
     }
 
-    const toSet: Record<string, unknown> = {
+    setConfigValues({
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
       separateBufferPath: config.separateBufferPath,
-    };
-
-    if (config.maxStorage >= 0) {
-      toSet.maxStorage = config.maxStorage;
-    }
-
-    setConfigValues(toSet);
+      storageLimit: config.storageLimit,
+      maxStorage: config.maxStorage,
+    });
 
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
@@ -60,6 +56,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     config.storagePath,
     config.bufferStoragePath,
     config.maxStorage,
+    config.storageLimit,
   ]);
 
   const setSeparateBufferPath = (checked: boolean) => {
@@ -226,15 +223,9 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const setMaxStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.value) {
-      // Allow setting empty as midpoint.
-      setConfig((prev) => ({ ...prev, maxStorage: -1 }));
-      return;
-    }
-
     const maxStorage = parseInt(event.target.value, 10);
 
-    if (Number.isNaN(maxStorage) || maxStorage < 0) {
+    if (Number.isNaN(maxStorage) || maxStorage < 1) {
       // Block invalid config.
       return;
     }
@@ -248,7 +239,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getMaxStorageField = () => {
-    if (isComponentDisabled()) {
+    if (isComponentDisabled() || !config.storageLimit) {
       return <></>;
     }
 
@@ -268,11 +259,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         </Label>
         <Input
           name="maxDiskStorage"
-          value={config.maxStorage >= 0 ? config.maxStorage : ''}
+          value={config.maxStorage}
           onChange={setMaxStorage}
           required
           type="numeric"
           disabled={isComponentDisabled()}
+          min={1}
         />
       </div>
     );
@@ -306,12 +298,53 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const setStorageLimit = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        storageLimit: checked,
+      };
+    });
+  };
+
+  const getStorageLimitSwitch = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col">
+        <Label htmlFor="storageLimit" className="flex items-center">
+          {getLocalePhrase(language, Phrase.StorageLimitLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              language,
+              configSchema.storageLimit.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          <Switch
+            checked={Boolean(config.storageLimit)}
+            id="storageLimit"
+            name="storageLimit"
+            onCheckedChange={setStorageLimit}
+          />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-y-6">
       {getDisabledText()}
       {getStoragePathField()}
 
       <div className="flex flex-row items-center gap-x-10">
+        {getStorageLimitSwitch()}
         {getMaxStorageField()}
         {getDiskUsageBar()}
       </div>

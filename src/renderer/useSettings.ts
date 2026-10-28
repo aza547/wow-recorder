@@ -28,6 +28,7 @@ export const getSettings = (): ConfigurationSchema => {
     classicPtrLogPath: getConfigValue<string>('classicPtrLogPath'),
     eraLogPath: getConfigValue<string>('eraLogPath'),
     retailPtrLogPath: getConfigValue<string>('retailPtrLogPath'),
+    storageLimit: getConfigValue<boolean>('storageLimit'),
     maxStorage: getConfigValue<number>('maxStorage'),
     minEncounterDuration: getConfigValue<number>('minEncounterDuration'),
     monitorIndex: getConfigValue<number>('monitorIndex'),
