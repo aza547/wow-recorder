@@ -583,6 +583,17 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.LatestCombatLogFileDayOld]: '1天前',
   [Phrase.LatestCombatLogFileDaysOld]: '天前',
   [Phrase.LatestCombatLogFileLessThanADayOld]: '不到一天前',
+  [Phrase.RecordForeverDescription]: '是否让应用程序持续记录。',
+  [Phrase.RecordForeverLabel]: '持续记录',
+  [Phrase.ForeverLogPathDescription]: '零售版《魔兽世界》安装目录中日志文件夹的位置，例如："D:\\World of Warcraft\\_forever_\\Logs"。',
+  [Phrase.ForeverLogPathLabel]: 'Forever 日志路径',
+  [Phrase.InvalidForeverLogPath]: 'Forever 日志路径无效。',
+  [Phrase.ShowAllGamesLogPathSettingsLabel]: '显示全部',
+  [Phrase.ShowAllGamesLogPathSettingsDescription]: '默认隐藏不太常见的游戏模式。',
+  [Phrase.HiddenFlavourSettingsWarning]: '部分已启用的游戏设置处于隐藏状态。启用“显示全部”选项即可查看。',
+  [Phrase.Forever]: 'Forever',
+  [Phrase.CloudUploadForeverDescription]: '是否将 Forever 录制内容上传到云端。',
+  [Phrase.CloudUploadForeverLabel]: '上传 Forever',
 };
 
 export default CHINESE_SIMPLIFIED;

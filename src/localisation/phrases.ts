@@ -588,6 +588,9 @@ enum Phrase {
   ShowAllGamesLogPathSettingsLabel,
   ShowAllGamesLogPathSettingsDescription,
   HiddenFlavourSettingsWarning,
+  Forever,
+  CloudUploadForeverDescription,
+  CloudUploadForeverLabel,
 }
 
 enum Language {

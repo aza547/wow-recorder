@@ -73,6 +73,11 @@ const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
     return false;
   }
 
+  if (flavour === Flavour.Forever && !cfg.get<boolean>('cloudUploadForever')) {
+    console.info('[configUtils] Forever upload is disabled');
+    return false;
+  }
+
   if (category === VideoCategory.Clips) {
     const uploadClips = cfg.get<boolean>('cloudUploadClips');
     console.info('[configUtils] Upload clip?', uploadClips);

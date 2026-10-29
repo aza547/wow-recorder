@@ -118,6 +118,10 @@ export const getSettings = (): ConfigurationSchema => {
     validateLogPaths: getConfigValue<boolean>('validateLogPaths'),
     validateNtfs: getConfigValue<boolean>('validateNtfs'),
     characterUploadFilters: getConfigValue<CharacterFilter[]>('characterUploadFilters'),
+    recordForever: getConfigValue<boolean>('recordForever'),
+    foreverLogPath: getConfigValue<string>('foreverLogPath'),
+    showAllGamesLogPathSettings: getConfigValue<boolean>('showAllGamesLogPathSettings'),
+    cloudUploadForever: getConfigValue<boolean>('cloudUploadForever'),
     /* eslint-enable prettier/prettier */
   };
 

@@ -58,6 +58,7 @@ const WarcraftRecorder = () => {
       era: { advanced: true, latestLogAgeMs: -1 },
       retailPtr: { advanced: true, latestLogAgeMs: -1 },
       classicPtr: { advanced: true, latestLogAgeMs: -1 },
+      forever: { advanced: true, latestLogAgeMs: -1 },
     });
   const [previewEnabled, setPreviewEnabled] = useState(true);
 

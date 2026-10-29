@@ -68,6 +68,7 @@ export type ConfigurationSchema = {
   cloudUpload: boolean;
   cloudUploadRetail: boolean;
   cloudUploadClassic: boolean;
+  cloudUploadForever: boolean;
   cloudUploadRateLimit: boolean;
   cloudUploadRateLimitMbps: number;
   cloudAccountName: string;
@@ -463,6 +464,11 @@ export const configSchema = {
   },
   cloudUploadClassic: {
     description: Phrase.CloudUploadClassicDescription,
+    type: 'boolean',
+    default: true,
+  },
+  cloudUploadForever: {
+    description: Phrase.CloudUploadForeverDescription,
     type: 'boolean',
     default: true,
   },

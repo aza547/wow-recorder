@@ -588,8 +588,11 @@ const ENGLISH: Translations = {
   [Phrase.ForeverLogPathLabel]: 'Forever Log Path',
   [Phrase.InvalidForeverLogPath]: 'Invalid forever log path.',
   [Phrase.ShowAllGamesLogPathSettingsLabel]: 'Show All',
-  [Phrase.ShowAllGamesLogPathSettingsDescription]: 'Less common game modes are hidden by default.',
+  [Phrase.ShowAllGamesLogPathSettingsDescription]: 'Less popular game modes are hidden by default.',
   [Phrase.HiddenFlavourSettingsWarning]: 'Some active game settings are hidden, enable the "Show All" option to view them.',
+  [Phrase.Forever]: 'Forever',
+  [Phrase.CloudUploadForeverDescription]: 'If Forever recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadForeverLabel]: 'Upload Forever',
 };
 
 export default ENGLISH;

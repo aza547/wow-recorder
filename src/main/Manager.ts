@@ -470,6 +470,19 @@ export default class Manager {
         this.combatLoggingStatus.classicPtr.advanced = enabled;
         this.pushCombatLoggingStatus();
       }
+    } else if (key === 'forever') {
+      const recordForever = this.cfg.get<boolean>('recordForever');
+      const foreverLogPath = this.cfg.get<string>('foreverLogPath');
+
+      const enabled = recordForever
+        ? await checkAdvancedCombatLogging(foreverLogPath)
+        : false;
+
+      if (this.combatLoggingStatus.forever.advanced !== enabled) {
+        console.info('[Manager] Advanced logging status changed', key, enabled);
+        this.combatLoggingStatus.forever.advanced = enabled;
+        this.pushCombatLoggingStatus();
+      }
     } else {
       console.error('[Manager] Invalid combat logging status key', key);
       throw new Error('Invalid combat logging status key');
@@ -497,6 +510,7 @@ export default class Manager {
     const recordEra = this.cfg.get<boolean>('recordEra');
     const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
     const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
+    const recordForever = this.cfg.get<boolean>('recordForever');
 
     if (recordRetail) {
       const logPath = this.cfg.get<string>('retailLogPath');
@@ -557,6 +571,20 @@ export default class Manager {
     if (recordClassicPtr) {
       const logPath = this.cfg.get<string>('classicPtrLogPath');
       const key: keyof CombatLoggingStatus = 'classicPtr';
+
+      const watcher = startWatchingConfigWtf(logPath, () => {
+        this.checkAdvancedCombatLoggingForGameType(key);
+      });
+
+      if (watcher) {
+        console.info('[Manager] Watching Config.wtf for', key, logPath);
+        this.configWtfWatchers.push(watcher);
+      }
+    }
+
+    if (recordForever) {
+      const logPath = this.cfg.get<string>('foreverLogPath');
+      const key: keyof CombatLoggingStatus = 'forever';
 
       const watcher = startWatchingConfigWtf(logPath, () => {
         this.checkAdvancedCombatLoggingForGameType(key);
