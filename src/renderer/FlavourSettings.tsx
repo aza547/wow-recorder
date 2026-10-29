@@ -959,9 +959,9 @@ const FlavourSettings: FC<IProps> = (props: IProps) => {
 
       {config.showAllGamesLogPathSettings && (
         <>
+          {getEraSettings()}
           {getRetailPtrSettings()}
           {getClassicPtrSettings()}
-          {getEraSettings()}
         </>
       )}
 
