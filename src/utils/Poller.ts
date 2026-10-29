@@ -79,15 +79,18 @@ export default class Poller extends EventEmitter {
    * same account), which is why it's OK this is in order of preference.
    */
   public getFlavor(): Flavour | null {
-    if (this.state.Retail && this.cfg.get<boolean>('recordRetail')) {
+    const { recordRetail, recordClassic, recordForever } =
+      this.coalesceRecordingConfig();
+
+    if (this.state.Retail && recordRetail) {
       return Flavour.Retail;
     }
 
-    if (this.state.Classic && this.cfg.get<boolean>('recordClassic')) {
+    if (this.state.Classic && recordClassic) {
       return Flavour.Classic;
     }
 
-    if (this.state.Forever && this.cfg.get<boolean>('recordForever')) {
+    if (this.state.Forever && recordForever) {
       return Flavour.Forever;
     }
 
@@ -139,18 +142,34 @@ export default class Poller extends EventEmitter {
       return;
     }
 
+    const { recordRetail, recordClassic, recordForever } =
+      this.coalesceRecordingConfig();
+
     const { Retail, Classic, Forever } = parsed;
 
-    const recordRetail = this.cfg.get<boolean>('recordRetail');
-    const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
-    const recordClassic = this.cfg.get<boolean>('recordClassic');
-    const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
-    const recordEra = this.cfg.get<boolean>('recordEra');
-    const recordForever = this.cfg.get<boolean>('recordForever');
+    if (
+      this.state.Retail !== Retail ||
+      this.state.Classic !== Classic ||
+      this.state.Forever !== Forever
+    ) {
+      this.state = { Retail, Classic, Forever };
+      console.info('[Poller] State changed', this.state);
+
+      const count = [
+        this.state.Retail && recordRetail,
+        this.state.Classic && recordClassic,
+        this.state.Forever && recordForever,
+      ].filter(Boolean).length;
+
+      if (count > 1) {
+        // Not a disaster, but not a state we claim to support.
+        console.warn('[Poller] Multiple WoW processes detected', this.state);
+      }
+    }
 
     const running =
-      ((recordRetail || recordRetailPtr) && Retail) ||
-      ((recordClassic || recordClassicPtr || recordEra) && Classic) ||
+      (recordRetail && Retail) ||
+      (recordClassic && Classic) ||
       (recordForever && Forever);
 
     if (this.wowRunning === running) {
@@ -165,13 +184,6 @@ export default class Poller extends EventEmitter {
     }
 
     this.wowRunning = running;
-    this.state = { Retail, Classic, Forever };
-    const count = Object.values(this.state).filter(Boolean).length;
-
-    if (count > 1) {
-      // Not a disaster, but not a state we claim to support.
-      console.warn('[Poller] Multiple WoW processes detected', this.state);
-    }
   };
 
   /**
@@ -181,5 +193,23 @@ export default class Poller extends EventEmitter {
   private handleStderr = (data: string) => {
     console.warn('[Poller] stderr returned from child process');
     console.error(data);
+  };
+
+  /**
+   * Coalesce the recording configuration from the various flags in the config.
+   */
+  private coalesceRecordingConfig = () => {
+    const recordRetail = this.cfg.get<boolean>('recordRetail');
+    const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
+    const recordClassic = this.cfg.get<boolean>('recordClassic');
+    const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
+    const recordEra = this.cfg.get<boolean>('recordEra');
+    const recordForever = this.cfg.get<boolean>('recordForever');
+
+    return {
+      recordRetail: recordRetail || recordRetailPtr,
+      recordClassic: recordClassic || recordClassicPtr || recordEra,
+      recordForever: recordForever,
+    };
   };
 }
