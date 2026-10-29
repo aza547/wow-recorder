@@ -960,7 +960,9 @@ export default class Manager {
         return;
       }
 
-      if (!this.poller.isWowRunning()) {
+      const flavour = this.poller.getFlavor();
+
+      if (!flavour) {
         console.warn('[Manager] WoW not running when manual hotkey pressed');
         return;
       }
@@ -970,7 +972,7 @@ export default class Manager {
         return;
       }
 
-      LogHandler.handleManualRecordingHotKey();
+      LogHandler.handleManualRecordingHotKey(flavour);
     });
 
     // If Windows is going to sleep, we don't want to confuse OBS. It would be
