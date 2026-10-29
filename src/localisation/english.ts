@@ -163,7 +163,7 @@ const ENGLISH: Translations = {
   [Phrase.SettingsDisabledText]: 'These settings cannot be modified while a recording is active.',
   [Phrase.SomeSettingsDisabledText]: 'Some settings in this category are currently hidden as they cannot be modified while a recording is active.',
   [Phrase.CloudSettingsDisabledText]: 'These settings cannot be modified while uploads or downloads are in progress.',
-  [Phrase.InvalidRetailLogPathText]: 'Invalid retail log path',
+  [Phrase.InvalidRetailLogPathText]: 'Invalid retail log path.',
   [Phrase.InvalidClassicLogPathText]: 'Invalid classic log path.',
   [Phrase.InvalidClassicPtrLogPathText]: 'Invalid classic PTR log path.',
   [Phrase.InvalidClassicEraLogPathText]: 'Invalid classic era log path.',
@@ -582,6 +582,17 @@ const ENGLISH: Translations = {
   [Phrase.LatestCombatLogFileDayOld]: '1 day old',
   [Phrase.LatestCombatLogFileDaysOld]: 'days old',
   [Phrase.LatestCombatLogFileLessThanADayOld]: 'less than a day old',
+  [Phrase.RecordForeverDescription]: 'Whether the application should record Forever.',
+  [Phrase.RecordForeverLabel]: 'Record Forever',
+  [Phrase.ForeverLogPathDescription]: 'Location of the World of Warcraft logs folder for your retail installation, e.g. "D:\\World of Warcraft\\_forever_\\Logs".',
+  [Phrase.ForeverLogPathLabel]: 'Forever Log Path',
+  [Phrase.InvalidForeverLogPath]: 'Invalid forever log path.',
+  [Phrase.ShowAllGamesLogPathSettingsLabel]: 'Show All',
+  [Phrase.ShowAllGamesLogPathSettingsDescription]: 'Less popular game modes are hidden by default.',
+  [Phrase.HiddenFlavourSettingsWarning]: 'Some active game settings are hidden, enable the "Show All" option to view them.',
+  [Phrase.Forever]: 'Forever',
+  [Phrase.CloudUploadForeverDescription]: 'If Forever recordings should be uploaded to the cloud.',
+  [Phrase.CloudUploadForeverLabel]: 'Upload Forever',
 };
 
 export default ENGLISH;

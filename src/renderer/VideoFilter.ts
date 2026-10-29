@@ -182,6 +182,10 @@ export default class VideoFilter {
       const localised = getLocalePhrase(language, Phrase.Classic);
       const tag = new VideoTag(103, localised, '<Shield>', '#bb4420');
       suggestions.push(tag);
+    } else if (video.flavour === Flavour.Forever) {
+      const localised = getLocalePhrase(language, Phrase.Forever);
+      const tag = new VideoTag(103, localised, '<Infinity>', '#bb4420');
+      suggestions.push(tag);
     }
 
     if (playerName) {

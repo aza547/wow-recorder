@@ -1,5 +1,5 @@
 import { ConfigurationSchema, configSchema } from 'config/configSchema';
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { Dispatch, FC, SetStateAction, useEffect, useRef } from 'react';
 import { AppState, CombatLoggingStatus, RecStatus } from 'main/types';
 import { FolderOpen, Info } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
@@ -23,37 +23,40 @@ interface IProps {
 
 const ipc = window.electron.ipcRenderer;
 
-const FlavourSettings: React.FC<IProps> = (props: IProps) => {
+const FlavourSettings: FC<IProps> = (props: IProps) => {
   const { recorderStatus, config, setConfig, appState, combatLoggingStatus } =
     props;
-  const initialRender = React.useRef(true);
+  const { language } = appState;
 
-  React.useEffect(() => {
-    if (initialRender.current) {
-      initialRender.current = false;
+  const initialRender1 = useRef(true);
+  const initialRender2 = useRef(true);
 
+  useEffect(() => {
+    if (initialRender1.current) {
       // Refresh the combat log status on the initial render of this component.
       // There is no mechanism to refresh that live, unlike the advanced combat
       // logging status because I can't be bothered to implement that.
       ipc.refreshCombatLogStatus();
 
       // Don't change config on the initial render.
-      initialRender.current = false;
+      initialRender1.current = false;
       return;
     }
 
     setConfigValues({
+      validateLogPaths: config.validateLogPaths,
       recordRetail: config.recordRetail,
       retailLogPath: config.retailLogPath,
-      recordRetailPtr: config.recordRetailPtr,
-      retailPtrLogPath: config.retailPtrLogPath,
       recordClassic: config.recordClassic,
       classicLogPath: config.classicLogPath,
+      recordForever: config.recordForever,
+      foreverLogPath: config.foreverLogPath,
+      recordRetailPtr: config.recordRetailPtr,
+      retailPtrLogPath: config.retailPtrLogPath,
       recordClassicPtr: config.recordClassicPtr,
       classicPtrLogPath: config.classicPtrLogPath,
       recordEra: config.recordEra,
       eraLogPath: config.eraLogPath,
-      validateLogPaths: config.validateLogPaths,
     });
 
     ipc.reconfigureBase();
@@ -69,7 +72,20 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     config.recordRetailPtr,
     config.retailPtrLogPath,
     config.validateLogPaths,
+    config.recordForever,
+    config.foreverLogPath,
   ]);
+
+  useEffect(() => {
+    if (initialRender2.current) {
+      initialRender2.current = false;
+      return;
+    }
+
+    setConfigValues({
+      showAllGamesLogPathSettings: config.showAllGamesLogPathSettings,
+    });
+  }, [config.showAllGamesLogPathSettings]);
 
   const isComponentDisabled = () => {
     const isRecording = recorderStatus === RecStatus.Recording;
@@ -84,7 +100,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <TextBanner>
-        {getLocalePhrase(appState.language, Phrase.SettingsDisabledText)}
+        {getLocalePhrase(language, Phrase.SettingsDisabledText)}
       </TextBanner>
     );
   };
@@ -162,33 +178,33 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     if (ageDays === -1) {
       ageClassName = 'text-warning opacity-80';
       ageHumanReadable = getLocalePhrase(
-        appState.language,
+        language,
         Phrase.LatestCombatLogFileNotFound,
       );
     } else if (ageDays > 31) {
       ageClassName = 'text-warning opacity-80';
       ageHumanReadable = getLocalePhrase(
-        appState.language,
+        language,
         Phrase.LatestCombatLogFileOverAMonthOld,
       );
     } else if (ageDays > 1) {
       ageClassName = 'text-success opacity-80';
 
       ageHumanReadable = `${ageDays} ${getLocalePhrase(
-        appState.language,
+        language,
         Phrase.LatestCombatLogFileDaysOld,
       )}`;
     } else if (ageDays === 1) {
       ageClassName = 'text-success opacity-80';
 
       ageHumanReadable = getLocalePhrase(
-        appState.language,
+        language,
         Phrase.LatestCombatLogFileDayOld,
       );
     } else {
       ageClassName = 'text-success opacity-80';
       ageHumanReadable = getLocalePhrase(
-        appState.language,
+        language,
         Phrase.LatestCombatLogFileLessThanADayOld,
       );
     }
@@ -197,7 +213,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <>
         {path && (
           <div className="inline-flex ml-2 text-xs font-normal gap-1 text-foreground">
-            {getLocalePhrase(appState.language, Phrase.LatestCombatLogFileText)}
+            {getLocalePhrase(language, Phrase.LatestCombatLogFileText)}
             <div className={ageClassName}>{ageHumanReadable}</div>
           </div>
         )}
@@ -214,10 +230,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordRetail" className="flex items-center">
-            {getLocalePhrase(appState.language, Phrase.RecordRetailLabel)}
+            {getLocalePhrase(language, Phrase.RecordRetailLabel)}
             <Tooltip
               content={getLocalePhrase(
-                appState.language,
+                language,
                 configSchema.recordRetail.description,
               )}
               side="top"
@@ -232,10 +248,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         {config.recordRetail && (
           <div className="flex flex-col w-1/2">
             <Label htmlFor="retailLogPath" className="flex items-center">
-              {getLocalePhrase(appState.language, Phrase.RetailLogPathLabel)}
+              {getLocalePhrase(language, Phrase.RetailLogPathLabel)}
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   configSchema.retailLogPath.description,
                 )}
                 side="top"
@@ -253,7 +269,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               />
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.OpenFolderButtonTooltip,
                 )}
                 side="top"
@@ -269,16 +285,13 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             </div>
             {config.retailLogPath === '' && (
               <span className="text-error text-xs mt-2">
-                {getLocalePhrase(
-                  appState.language,
-                  Phrase.InvalidRetailLogPathText,
-                )}
+                {getLocalePhrase(language, Phrase.InvalidRetailLogPathText)}
               </span>
             )}
             {!combatLoggingStatus.retail.advanced && (
               <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
                 )}
               </span>
@@ -317,10 +330,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordClassic" className="flex items-center">
-            {getLocalePhrase(appState.language, Phrase.RecordClassicLabel)}
+            {getLocalePhrase(language, Phrase.RecordClassicLabel)}
             <Tooltip
               content={getLocalePhrase(
-                appState.language,
+                language,
                 configSchema.recordClassic.description,
               )}
               side="top"
@@ -335,10 +348,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         {config.recordClassic && (
           <div className="flex flex-col w-1/2">
             <Label htmlFor="classicLogPath" className="flex items-center">
-              {getLocalePhrase(appState.language, Phrase.ClassicLogPathLabel)}
+              {getLocalePhrase(language, Phrase.ClassicLogPathLabel)}
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   configSchema.classicLogPath.description,
                 )}
                 side="top"
@@ -356,7 +369,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               />
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.OpenFolderButtonTooltip,
                 )}
                 side="top"
@@ -372,16 +385,13 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             </div>
             {config.classicLogPath === '' && (
               <span className="text-error text-xs mt-2">
-                {getLocalePhrase(
-                  appState.language,
-                  Phrase.InvalidClassicLogPathText,
-                )}
+                {getLocalePhrase(language, Phrase.InvalidClassicLogPathText)}
               </span>
             )}
             {!combatLoggingStatus.classic.advanced && (
               <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
                 )}
               </span>
@@ -429,10 +439,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordEra" className="flex items-center">
-            {getLocalePhrase(appState.language, Phrase.RecordClassicEraLabel)}
+            {getLocalePhrase(language, Phrase.RecordClassicEraLabel)}
             <Tooltip
               content={getLocalePhrase(
-                appState.language,
+                language,
                 configSchema.recordEra.description,
               )}
               side="top"
@@ -447,13 +457,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         {config.recordEra && (
           <div className="flex flex-col w-1/2">
             <Label htmlFor="eraLogPath" className="flex items-center">
-              {getLocalePhrase(
-                appState.language,
-                Phrase.ClassicEraLogPathLabel,
-              )}
+              {getLocalePhrase(language, Phrase.ClassicEraLogPathLabel)}
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   configSchema.eraLogPath.description,
                 )}
                 side="top"
@@ -471,7 +478,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               />
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.OpenFolderButtonTooltip,
                 )}
                 side="top"
@@ -487,16 +494,13 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             </div>
             {config.eraLogPath === '' && (
               <span className="text-error text-xs mt-2">
-                {getLocalePhrase(
-                  appState.language,
-                  Phrase.InvalidClassicEraLogPathText,
-                )}
+                {getLocalePhrase(language, Phrase.InvalidClassicEraLogPathText)}
               </span>
             )}
             {!combatLoggingStatus.era.advanced && (
               <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
                 )}
               </span>
@@ -544,10 +548,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordRetailPtr" className="flex items-center">
-            {getLocalePhrase(appState.language, Phrase.RecordRetailPtrLabel)}
+            {getLocalePhrase(language, Phrase.RecordRetailPtrLabel)}
             <Tooltip
               content={getLocalePhrase(
-                appState.language,
+                language,
                 configSchema.recordRetailPtr.description,
               )}
               side="top"
@@ -562,10 +566,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         {config.recordRetailPtr && (
           <div className="flex flex-col w-1/2">
             <Label htmlFor="retailPtrLogPath" className="flex items-center">
-              {getLocalePhrase(appState.language, Phrase.RetailPtrLogPathLabel)}
+              {getLocalePhrase(language, Phrase.RetailPtrLogPathLabel)}
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   configSchema.retailPtrLogPath.description,
                 )}
                 side="top"
@@ -583,7 +587,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               />
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.OpenFolderButtonTooltip,
                 )}
                 side="top"
@@ -601,16 +605,13 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             </div>
             {config.retailPtrLogPath === '' && (
               <span className="text-error text-xs mt-2">
-                {getLocalePhrase(
-                  appState.language,
-                  Phrase.InvalidRetailPtrLogPathText,
-                )}
+                {getLocalePhrase(language, Phrase.InvalidRetailPtrLogPathText)}
               </span>
             )}
             {!combatLoggingStatus.retailPtr.advanced && (
               <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
                 )}
               </span>
@@ -660,10 +661,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordClassicPtr" className="flex items-center">
-            {getLocalePhrase(appState.language, Phrase.RecordClassicPtrLabel)}
+            {getLocalePhrase(language, Phrase.RecordClassicPtrLabel)}
             <Tooltip
               content={getLocalePhrase(
-                appState.language,
+                language,
                 configSchema.recordClassicPtr.description,
               )}
               side="top"
@@ -678,13 +679,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         {config.recordClassicPtr && (
           <div className="flex flex-col w-1/2">
             <Label htmlFor="classicPtrLogPath" className="flex items-center">
-              {getLocalePhrase(
-                appState.language,
-                Phrase.ClassicPtrLogPathLabel,
-              )}
+              {getLocalePhrase(language, Phrase.ClassicPtrLogPathLabel)}
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   configSchema.classicPtrLogPath.description,
                 )}
                 side="top"
@@ -702,7 +700,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               />
               <Tooltip
                 content={getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.OpenFolderButtonTooltip,
                 )}
                 side="top"
@@ -720,16 +718,13 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             </div>
             {config.classicPtrLogPath === '' && (
               <span className="text-error text-xs mt-2">
-                {getLocalePhrase(
-                  appState.language,
-                  Phrase.InvalidClassicPtrLogPathText,
-                )}
+                {getLocalePhrase(language, Phrase.InvalidClassicPtrLogPathText)}
               </span>
             )}
             {!combatLoggingStatus.classicPtr.advanced && (
               <span className="text-error text-xs mt-2">
                 {getLocalePhrase(
-                  appState.language,
+                  language,
                   Phrase.AdvancedCombatLoggingDisabledWarning,
                 )}
               </span>
@@ -758,10 +753,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[160px]">
           <Label htmlFor="validateLogPath" className="flex items-center">
-            {getLocalePhrase(appState.language, Phrase.ValidateLogPathLabel)}
+            {getLocalePhrase(language, Phrase.ValidateLogPathLabel)}
             <Tooltip
               content={getLocalePhrase(
-                appState.language,
+                language,
                 configSchema.validateLogPaths.description,
               )}
               side="top"
@@ -777,15 +772,200 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const setShowAllGamesLogPathSettings = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        showAllGamesLogPathSettings: checked,
+      };
+    });
+  };
+
+  const getShowAllGamesLogPathSettingsSwitch = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-row gap-x-6">
+        <div className="flex flex-col w-[160px]">
+          <Label
+            htmlFor="showAllGamesLogPathSettings"
+            className="flex items-center"
+          >
+            {getLocalePhrase(language, Phrase.ShowAllGamesLogPathSettingsLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                language,
+                configSchema.showAllGamesLogPathSettings.description,
+              )}
+              side="top"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex h-10 items-center">
+            {getSwitch(
+              'showAllGamesLogPathSettings',
+              setShowAllGamesLogPathSettings,
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const setRecordForever = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        recordForever: checked,
+      };
+    });
+  };
+
+  const setForeverLogPath = async () => {
+    if (isComponentDisabled()) {
+      return;
+    }
+
+    const newPath = await pathSelect();
+
+    if (newPath === '') {
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        foreverLogPath: newPath,
+      };
+    });
+  };
+
+  const getForeverSettings = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-row gap-x-6">
+        <div className="flex flex-col w-[160px]">
+          <Label htmlFor="recordForever" className="flex items-center">
+            {getLocalePhrase(language, Phrase.RecordForeverLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                language,
+                configSchema.foreverLogPath.description,
+              )}
+              side="top"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex h-10 items-center">
+            {getSwitch('recordForever', setRecordForever)}
+          </div>
+        </div>
+        {config.recordForever && (
+          <div className="flex flex-col w-1/2">
+            <Label htmlFor="foreverLogPath" className="flex items-center">
+              {getLocalePhrase(language, Phrase.ForeverLogPathLabel)}
+              <Tooltip
+                content={getLocalePhrase(
+                  language,
+                  configSchema.foreverLogPath.description,
+                )}
+                side="top"
+              >
+                <Info size={20} className="inline-flex ml-2" />
+              </Tooltip>
+              {getLastLogAgeDisplay(config.foreverLogPath, 'forever')}
+            </Label>
+            <div className="flex">
+              <Input
+                value={config.foreverLogPath}
+                onClick={setForeverLogPath}
+                readOnly
+                required
+              />
+              <Tooltip
+                content={getLocalePhrase(
+                  language,
+                  Phrase.OpenFolderButtonTooltip,
+                )}
+                side="top"
+              >
+                <Button
+                  variant="ghost"
+                  disabled={!config.foreverLogPath}
+                  onClick={() => ipc.openSystemExplorer(config.foreverLogPath)}
+                >
+                  <FolderOpen size={20} />
+                </Button>
+              </Tooltip>
+            </div>
+            {config.foreverLogPath === '' && (
+              <span className="text-error text-xs mt-2">
+                {getLocalePhrase(language, Phrase.InvalidForeverLogPath)}
+              </span>
+            )}
+            {!combatLoggingStatus.forever.advanced && (
+              <span className="text-error text-xs mt-2">
+                {getLocalePhrase(
+                  language,
+                  Phrase.AdvancedCombatLoggingDisabledWarning,
+                )}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const getHiddenSettingsWarning = () => {
+    const {
+      showAllGamesLogPathSettings,
+      recordEra,
+      recordClassicPtr,
+      recordRetailPtr,
+    } = config;
+
+    const showWarning =
+      !showAllGamesLogPathSettings &&
+      (recordEra || recordClassicPtr || recordRetailPtr);
+
+    if (showWarning) {
+      return (
+        <span className="text-warning opacity-80 text-xs mt-2">
+          {getLocalePhrase(language, Phrase.HiddenFlavourSettingsWarning)}
+        </span>
+      );
+    }
+  };
+
   return (
     <div className="flex flex-col gap-y-2">
+      <div className="flex flex-row gap-x-6">
+        {getShowAllGamesLogPathSettingsSwitch()}
+        {getValidateLogPathSwitch()}
+      </div>
+
       {getDisabledText()}
       {getRetailSettings()}
       {getClassicSettings()}
-      {getEraSettings()}
-      {getRetailPtrSettings()}
-      {getClassicPtrSettings()}
-      {getValidateLogPathSwitch()}
+      {getForeverSettings()}
+
+      {config.showAllGamesLogPathSettings && (
+        <>
+          {getEraSettings()}
+          {getRetailPtrSettings()}
+          {getClassicPtrSettings()}
+        </>
+      )}
+
+      {getHiddenSettingsWarning()}
     </div>
   );
 };

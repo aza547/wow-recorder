@@ -580,6 +580,17 @@ enum Phrase {
   LatestCombatLogFileDayOld,
   LatestCombatLogFileDaysOld,
   LatestCombatLogFileLessThanADayOld,
+  RecordForeverDescription,
+  RecordForeverLabel,
+  ForeverLogPathDescription,
+  ForeverLogPathLabel,
+  InvalidForeverLogPath,
+  ShowAllGamesLogPathSettingsLabel,
+  ShowAllGamesLogPathSettingsDescription,
+  HiddenFlavourSettingsWarning,
+  Forever,
+  CloudUploadForeverDescription,
+  CloudUploadForeverLabel,
 }
 
 enum Language {

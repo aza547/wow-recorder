@@ -582,7 +582,18 @@ const KOREAN: Translations = {
   [Phrase.LatestCombatLogFileOverAMonthOld]: '한 달 이상 지남',
   [Phrase.LatestCombatLogFileDayOld]: '1일 지남',
   [Phrase.LatestCombatLogFileDaysOld]: '일 지남',
-  [Phrase.LatestCombatLogFileLessThanADayOld]: '하루 미만 지남'
+  [Phrase.LatestCombatLogFileLessThanADayOld]: '하루 미만 지남',
+  [Phrase.RecordForeverDescription]: '애플리케이션에서 Forever를 기록할지 여부입니다.',
+  [Phrase.RecordForeverLabel]: 'Forever 기록',
+  [Phrase.ForeverLogPathDescription]: 'Retail 버전 설치 경로의 WoW 로그 폴더 위치입니다. 예: "D:\\World of Warcraft\\_forever_\\Logs".',
+  [Phrase.ForeverLogPathLabel]: 'Forever 로그 경로',
+  [Phrase.InvalidForeverLogPath]: '잘못된 Forever 로그 경로입니다.',
+  [Phrase.ShowAllGamesLogPathSettingsLabel]: '모두 표시',
+  [Phrase.ShowAllGamesLogPathSettingsDescription]: '인기가 낮은 게임 모드는 기본적으로 숨겨져 있습니다.',
+  [Phrase.HiddenFlavourSettingsWarning]: '일부 활성 게임 설정이 숨겨져 있습니다. 해당 설정을 보려면 "모두 표시" 옵션을 활성화하세요.',
+  [Phrase.Forever]: 'Forever',
+  [Phrase.CloudUploadForeverDescription]: 'Forever 기록을 클라우드에 업로드할지 여부입니다.',
+  [Phrase.CloudUploadForeverLabel]: 'Forever 업로드',
 };
 
 export default KOREAN;

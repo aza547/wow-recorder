@@ -340,6 +340,17 @@ const CloudSettings = (props: IProps) => {
     });
   };
 
+  const setCloudUploadForever = (checked: boolean) => {
+    setConfigValue('cloudUploadForever', checked);
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        cloudUploadForever: checked,
+      };
+    });
+  };
+
   const getCloudSwitch = () => {
     return (
       <div className="flex flex-col w-[140px]">
@@ -435,6 +446,32 @@ const CloudSettings = (props: IProps) => {
         </Label>
         <div className="flex h-10 items-center">
           {getSwitch('cloudUploadClassic', setCloudUploadClassic)}
+        </div>
+      </div>
+    );
+  };
+
+  const getForeverUploadSwitch = () => {
+    if (!config.cloudUpload) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="cloudUploadForever" className="flex items-center">
+          {getLocalePhrase(language, Phrase.CloudUploadForeverLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              language,
+              configSchema.cloudUploadForever.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('cloudUploadForever', setCloudUploadForever)}
         </div>
       </div>
     );
@@ -1022,6 +1059,7 @@ const CloudSettings = (props: IProps) => {
             <div className="flex flex-row gap-x-6">
               {getCloudUploadSwitch()}
               {getRetailUploadSwitch()}
+              {getForeverUploadSwitch()}
               {getClassicUploadSwitch()}
               {getCloudUploadRateLimitSwitch()}
               {getRateLimitField()}

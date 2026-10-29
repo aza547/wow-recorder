@@ -582,7 +582,18 @@ const GERMAN: Translations = {
   [Phrase.LatestCombatLogFileOverAMonthOld]: 'über einen Monat alt',
   [Phrase.LatestCombatLogFileDayOld]: '1 Tag alt',
   [Phrase.LatestCombatLogFileDaysOld]: 'Tage alt',
-  [Phrase.LatestCombatLogFileLessThanADayOld]: 'weniger als einen Tag alt'
+  [Phrase.LatestCombatLogFileLessThanADayOld]: 'weniger als einen Tag alt',
+  [Phrase.RecordForeverDescription]: 'Ob die Anwendung Forever aufzeichnen soll.',
+  [Phrase.RecordForeverLabel]: 'Forever aufzeichnen',
+  [Phrase.ForeverLogPathDescription]: 'Speicherort des WoW-Protokollordners für deine Retail-Installation, z. B. "D:\\World of Warcraft\\_forever_\\Logs".',
+  [Phrase.ForeverLogPathLabel]: 'Forever-Protokollpfad',
+  [Phrase.InvalidForeverLogPath]: 'Ungültiger Forever-Protokollpfad.',
+  [Phrase.ShowAllGamesLogPathSettingsLabel]: 'Alle anzeigen',
+  [Phrase.ShowAllGamesLogPathSettingsDescription]: 'Weniger beliebte Spielmodi sind standardmäßig ausgeblendet.',
+  [Phrase.HiddenFlavourSettingsWarning]: 'Einige aktive Spieleinstellungen sind ausgeblendet. Aktiviere die Option "Alle anzeigen", um sie anzuzeigen.',
+  [Phrase.Forever]: 'Forever',
+  [Phrase.CloudUploadForeverDescription]: 'Ob Aufzeichnungen von Forever in die Cloud hochgeladen werden sollen.',
+  [Phrase.CloudUploadForeverLabel]: 'Forever hochladen',
 };
 
 export default GERMAN;
