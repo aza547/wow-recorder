@@ -6,6 +6,9 @@ pids
 *.pid
 *.seed
 
+# debugging symbols for gdb
+debug/
+
 # Coverage directory used by tools like istanbul
 coverage
 .eslintcache
