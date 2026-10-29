@@ -577,13 +577,13 @@ export default abstract class LogHandler {
   /**
    * Handle the pressing of the manual recording hotkey.
    */
-  public static async handleManualRecordingHotKey() {
+  public static async handleManualRecordingHotKey(flavour: Flavour) {
     const sounds = ConfigService.getInstance().get('manualRecordSoundAlert');
 
     if (!LogHandler.activity) {
       console.info('[LogHandler] Starting manual recording');
       const startDate = new Date();
-      const activity = new Manual(startDate, Flavour.Retail);
+      const activity = new Manual(startDate, flavour);
       await LogHandler.startActivity(activity);
       if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_START);
       return;

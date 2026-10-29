@@ -3,7 +3,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import path from 'path';
 import { app } from 'electron';
 import ConfigService from 'config/ConfigService';
-import { WowProcessEvent } from 'main/types';
+import { Flavour, WowProcessEvent } from 'main/types';
 
 /**
  * The Poller singleton periodically checks the list of WoW active
@@ -25,6 +25,15 @@ export default class Poller extends EventEmitter {
    * enabled. Includes various flavours of retail, classic and era.
    */
   private wowRunning = false;
+
+  /**
+   * Tracks what is currently running for each flavour of WoW.
+   */
+  private state = {
+    Retail: false,
+    Classic: false,
+    Forever: false,
+  };
 
   /**
    * Spawned child process.
@@ -59,6 +68,30 @@ export default class Poller extends EventEmitter {
    */
   public isWowRunning() {
     return this.wowRunning;
+  }
+
+  /**
+   * Added for convenience when determining which flavour of WoW is currently
+   * active when starting a manual recording. Most of the app doesn't care
+   * about which flavour is currently active.
+   *
+   * A reminder we don't support multiboxing games (nor does Blizzard on the
+   * same account), which is why it's OK this is in order of preference.
+   */
+  public getFlavor(): Flavour | null {
+    if (this.state.Retail) {
+      return Flavour.Retail;
+    }
+
+    if (this.state.Classic) {
+      return Flavour.Classic;
+    }
+
+    if (this.state.Forever) {
+      return Flavour.Forever;
+    }
+
+    return null;
   }
 
   /**
@@ -132,6 +165,13 @@ export default class Poller extends EventEmitter {
     }
 
     this.wowRunning = running;
+    this.state = { Retail, Classic, Forever };
+    const count = Object.values(this.state).filter(Boolean).length;
+
+    if (count > 1) {
+      // Not a disaster, but not a state we claim to support.
+      console.warn('[Poller] Multiple WoW processes detected', this.state);
+    }
   };
 
   /**
