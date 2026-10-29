@@ -88,7 +88,7 @@ export default class Poller extends EventEmitter {
 
   /**
    * Handle stdout data from the child process, this is a tiny blob of JSON
-   * in the format {"Retail":true, "Classic":false}.
+   * in the format {"Retail":true, "Classic":false, "Forever":false}.
    *
    * We don't care to do anything better in the scenario of multiple processes
    * running. We don't support users multi-boxing.
@@ -106,17 +106,19 @@ export default class Poller extends EventEmitter {
       return;
     }
 
-    const { Retail, Classic } = parsed;
+    const { Retail, Classic, Forever } = parsed;
 
     const recordRetail = this.cfg.get<boolean>('recordRetail');
     const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
     const recordClassic = this.cfg.get<boolean>('recordClassic');
     const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
     const recordEra = this.cfg.get<boolean>('recordEra');
+    const recordForever = this.cfg.get<boolean>('recordForever');
 
     const running =
       ((recordRetail || recordRetailPtr) && Retail) ||
-      ((recordClassic || recordClassicPtr || recordEra) && Classic);
+      ((recordClassic || recordClassicPtr || recordEra) && Classic) ||
+      (recordForever && Forever);
 
     if (this.wowRunning === running) {
       // Nothing to emit.

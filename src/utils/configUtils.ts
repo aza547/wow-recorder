@@ -245,6 +245,8 @@ const getBaseConfig = (cfg: ConfigService): BaseConfig => {
     recordEra: cfg.get<boolean>('recordEra'),
     eraLogPath: cfg.get<string>('eraLogPath'),
     retailPtrLogPath: cfg.get<string>('retailPtrLogPath'),
+    recordForever: cfg.get<boolean>('recordForever'),
+    foreverLogPath: cfg.get<string>('foreverLogPath'),
     validateLogPaths: cfg.get<boolean>('validateLogPaths'),
   };
 };
@@ -354,6 +356,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
     classicPtrLogPath,
     recordEra,
     eraLogPath,
+    recordForever,
+    foreverLogPath,
     validateLogPaths,
   } = config;
 
@@ -520,6 +524,25 @@ const validateBaseConfig = async (config: BaseConfig) => {
     }
 
     await validateLogPathFilesystem(eraLogPath, Phrase.ClassicEraLogPathLabel);
+  }
+
+  if (recordForever) {
+    const validRetailFlavours = ['wowf'];
+
+    const validFlavor = validateLogPaths
+      ? validRetailFlavours.includes(getWowFlavour(foreverLogPath))
+      : true;
+
+    const validPath = path.basename(foreverLogPath) === 'Logs';
+    const valid = validFlavor && validPath;
+
+    if (!valid) {
+      console.error('[Util] Invalid forever log path', foreverLogPath);
+      const error = getLocaleError(Phrase.InvalidForeverLogPath);
+      throw new Error(error);
+    }
+
+    await validateLogPathFilesystem(foreverLogPath, Phrase.ForeverLogPathLabel);
   }
 };
 

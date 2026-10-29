@@ -13,6 +13,7 @@ import { ReactNode } from 'react';
 enum Flavour {
   Retail = 'Retail',
   Classic = 'Classic',
+  Forever = 'Forever',
 }
 
 /**
@@ -384,6 +385,7 @@ type CombatLoggingStatus = {
   era: CombatLogPathStatus;
   retailPtr: CombatLogPathStatus;
   classicPtr: CombatLogPathStatus;
+  forever: CombatLogPathStatus;
 };
 
 type CloudState = {
@@ -435,6 +437,8 @@ type BaseConfig = {
   eraLogPath: string;
   recordRetailPtr: boolean;
   retailPtrLogPath: string;
+  recordForever: boolean;
+  foreverLogPath: string;
   validateLogPaths: boolean;
 };
 

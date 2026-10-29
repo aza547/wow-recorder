@@ -11,6 +11,7 @@ export type ConfigurationSchema = {
   classicLogPath: string;
   classicPtrLogPath: string;
   eraLogPath: string;
+  foreverLogPath: string;
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
@@ -29,6 +30,7 @@ export type ConfigurationSchema = {
   recordClassic: boolean;
   recordClassicPtr: boolean;
   recordEra: boolean;
+  recordForever: boolean;
   recordRaids: boolean;
   recordDungeons: boolean;
   recordTwoVTwo: boolean;
@@ -101,6 +103,7 @@ export type ConfigurationSchema = {
   validateLogPaths: boolean;
   validateNtfs: boolean;
   characterUploadFilters: CharacterFilter[];
+  showAllGamesLogPathSettings: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -146,6 +149,11 @@ export const configSchema = {
   },
   retailPtrLogPath: {
     description: Phrase.RetailPtrLogPathDescription,
+    type: 'string',
+    default: '',
+  },
+  foreverLogPath: {
+    description: Phrase.ForeverLogPathDescription,
     type: 'string',
     default: '',
   },
@@ -254,6 +262,11 @@ export const configSchema = {
   },
   recordEra: {
     description: Phrase.RecordEraDescription,
+    type: 'boolean',
+    default: false,
+  },
+  recordForever: {
+    description: Phrase.RecordForeverDescription,
     type: 'boolean',
     default: false,
   },
@@ -627,5 +640,10 @@ export const configSchema = {
     description: Phrase.Unknown, // Not actually exposed.
     type: 'array',
     default: [],
+  },
+  showAllGamesLogPathSettings: {
+    description: Phrase.ShowAllGamesLogPathSettingsDescription,
+    type: 'boolean',
+    default: false,
   },
 };

@@ -52,6 +52,7 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
+import ForeverLogHandler from 'parsing/ForeverLogHandler';
 
 /**
  * Manager class.
@@ -72,6 +73,7 @@ export default class Manager {
   private classicLogHandler: ClassicLogHandler | undefined;
   private classicPtrLogHandler: ClassicLogHandler | undefined;
   private eraLogHandler: EraLogHandler | undefined;
+  private foreverLogHandler: ForeverLogHandler | undefined;
 
   /**
    * If the config is valid or not.
@@ -118,6 +120,7 @@ export default class Manager {
     era: { advanced: true, latestLogAgeMs: -1 },
     retailPtr: { advanced: true, latestLogAgeMs: -1 },
     classicPtr: { advanced: true, latestLogAgeMs: -1 },
+    forever: { advanced: true, latestLogAgeMs: -1 },
   };
 
   /**
@@ -330,6 +333,9 @@ export default class Manager {
     const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
     const classicPtrLogPath = this.cfg.get<string>('classicPtrLogPath');
 
+    const recordForever = this.cfg.get<boolean>('recordForever');
+    const foreverLogPath = this.cfg.get<string>('foreverLogPath');
+
     const retail: CombatLogPathStatus = {
       latestLogAgeMs: recordRetail
         ? await getMostRecentCombatLogModifiedTime(retailLogPath)
@@ -371,12 +377,21 @@ export default class Manager {
         (await checkAdvancedCombatLogging(classicPtrLogPath)),
     };
 
+    const forever: CombatLogPathStatus = {
+      latestLogAgeMs: recordForever
+        ? await getMostRecentCombatLogModifiedTime(foreverLogPath)
+        : -1,
+      advanced:
+        !recordForever || (await checkAdvancedCombatLogging(foreverLogPath)),
+    };
+
     this.combatLoggingStatus = {
       retail,
       classic,
       era,
       retailPtr,
       classicPtr,
+      forever,
     };
 
     console.info(
@@ -648,6 +663,7 @@ export default class Manager {
         this.classicLogHandler,
         this.classicPtrLogHandler,
         this.eraLogHandler,
+        this.foreverLogHandler,
       ];
 
       logHandlers
@@ -659,29 +675,40 @@ export default class Manager {
       this.classicLogHandler = undefined;
       this.classicPtrLogHandler = undefined;
       this.eraLogHandler = undefined;
+      this.foreverLogHandler = undefined;
     }
 
     if (config.recordRetail) {
+      console.info('[Manager] Creating retail log handler');
       this.retailLogHandler = new RetailLogHandler(config.retailLogPath);
     }
 
     if (config.recordClassic) {
+      console.info('[Manager] Creating classic log handler');
       this.classicLogHandler = new ClassicLogHandler(config.classicLogPath);
     }
 
     if (config.recordClassicPtr) {
+      console.info('[Manager] Creating classic ptr log handler');
       this.classicPtrLogHandler = new ClassicLogHandler(
         config.classicPtrLogPath,
       );
     }
 
     if (config.recordEra) {
+      console.info('[Manager] Creating era log handler');
       this.eraLogHandler = new EraLogHandler(config.eraLogPath);
     }
 
     if (config.recordRetailPtr) {
+      console.info('[Manager] Creating retail ptr log handler');
       this.retailPtrLogHandler = new RetailLogHandler(config.retailPtrLogPath);
       this.retailPtrLogHandler.setIsPtr();
+    }
+
+    if (config.recordForever) {
+      console.info('[Manager] Creating forever log handler');
+      this.foreverLogHandler = new ForeverLogHandler(config.foreverLogPath);
     }
   }
 

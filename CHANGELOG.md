@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clip range now defaults to -7s and +5s instead of ±15s.
 
 ### Added
+- Add basic forever support for raids and manual recordings.
+
 ### Fixed
 
 ## [7.13.4] - 2026-10-22
