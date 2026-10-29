@@ -57,6 +57,4 @@ If you're interested in getting involved please drop me a message on discord and
 
 The recording done by Warcraft Recorder is made possible by packaging up [OBS](https://obsproject.com/). We wouldn't stand a chance at providing something useful without it. Big thanks to the OBS developers.
 
-The app is built with [Electron](https://www.electronjs.org/) and [React](https://react.dev/), using the boilerplate provided by the [ERB](https://electron-react-boilerplate.js.org/) project. 
-
-Drawing overlay created using [Excalidraw](https://github.com/excalidraw/excalidraw).
+The app is built with [Electron](https://www.electronjs.org/) and [React](https://react.dev/), using the boilerplate provided by the [ERB](https://electron-react-boilerplate.js.org/) project. Drawing overlay created using [Excalidraw](https://github.com/excalidraw/excalidraw).
