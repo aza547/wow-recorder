@@ -79,15 +79,15 @@ export default class Poller extends EventEmitter {
    * same account), which is why it's OK this is in order of preference.
    */
   public getFlavor(): Flavour | null {
-    if (this.state.Retail) {
+    if (this.state.Retail && this.cfg.get<boolean>('recordRetail')) {
       return Flavour.Retail;
     }
 
-    if (this.state.Classic) {
+    if (this.state.Classic && this.cfg.get<boolean>('recordClassic')) {
       return Flavour.Classic;
     }
 
-    if (this.state.Forever) {
+    if (this.state.Forever && this.cfg.get<boolean>('recordForever')) {
       return Flavour.Forever;
     }
 
