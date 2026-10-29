@@ -199,17 +199,15 @@ export default class Poller extends EventEmitter {
    * Coalesce the recording configuration from the various flags in the config.
    */
   private coalesceRecordingConfig = () => {
-    const recordRetail = this.cfg.get<boolean>('recordRetail');
-    const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
-    const recordClassic = this.cfg.get<boolean>('recordClassic');
-    const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
-    const recordEra = this.cfg.get<boolean>('recordEra');
-    const recordForever = this.cfg.get<boolean>('recordForever');
-
     return {
-      recordRetail: recordRetail || recordRetailPtr,
-      recordClassic: recordClassic || recordClassicPtr || recordEra,
-      recordForever: recordForever,
+      recordRetail:
+        this.cfg.get<boolean>('recordRetail') ||
+        this.cfg.get<boolean>('recordRetailPtr'),
+      recordClassic:
+        this.cfg.get<boolean>('recordClassic') ||
+        this.cfg.get<boolean>('recordClassicPtr') ||
+        this.cfg.get<boolean>('recordEra'),
+      recordForever: this.cfg.get<boolean>('recordForever'),
     };
   };
 }
