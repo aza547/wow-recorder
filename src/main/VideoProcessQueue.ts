@@ -127,13 +127,17 @@ export default class VideoProcessQueue {
     const queue = atomicQueue(worker, settings);
 
     /* eslint-disable prettier/prettier */
-    queue
-      .on('error', VideoProcessQueue.errorProcessingVideo)
-      .on('idle', () => {this.videoQueueEmpty()});
-         
+    queue.on('error', VideoProcessQueue.errorProcessingVideo).on('idle', () => {
+      this.videoQueueEmpty();
+    });
+
     queue.pool
-      .on('start', (data: VideoQueueItem) => { this.startedProcessingVideo(data) })
-      .on('finish', (_: unknown, data: VideoQueueItem) => { this.finishProcessingVideo(data) });
+      .on('start', (data: VideoQueueItem) => {
+        this.startedProcessingVideo(data);
+      })
+      .on('finish', (_: unknown, data: VideoQueueItem) => {
+        this.finishProcessingVideo(data);
+      });
     /* eslint-enable prettier/prettier */
 
     return queue;
@@ -145,13 +149,17 @@ export default class VideoProcessQueue {
     const queue = atomicQueue(worker, settings);
 
     /* eslint-disable prettier/prettier */
-    queue
-      .on('error', VideoProcessQueue.errorUploadingVideo)
-      .on('idle', () => { this.uploadQueueEmpty() });
+    queue.on('error', VideoProcessQueue.errorUploadingVideo).on('idle', () => {
+      this.uploadQueueEmpty();
+    });
 
     queue.pool
-      .on('start', (item: UploadQueueItem) => { this.startedUploadingVideo(item) })
-      .on('finish', async (_: unknown, item: UploadQueueItem) => { await this.finishUploadingVideo(item) });
+      .on('start', (item: UploadQueueItem) => {
+        this.startedUploadingVideo(item);
+      })
+      .on('finish', async (_: unknown, item: UploadQueueItem) => {
+        await this.finishUploadingVideo(item);
+      });
     /* eslint-enable prettier/prettier */
 
     return queue;
@@ -165,11 +173,17 @@ export default class VideoProcessQueue {
     /* eslint-disable prettier/prettier */
     queue
       .on('error', VideoProcessQueue.errorDownloadingVideo)
-      .on('idle', () => { this.downloadQueueEmpty() });
+      .on('idle', () => {
+        this.downloadQueueEmpty();
+      });
 
     queue.pool
-      .on('start', (video: RendererVideo) => { this.startedDownloadingVideo(video) })
-      .on('finish', async (_: unknown, video: RendererVideo) => { await this.finishDownloadingVideo(video) });
+      .on('start', (video: RendererVideo) => {
+        this.startedDownloadingVideo(video);
+      })
+      .on('finish', async (_: unknown, video: RendererVideo) => {
+        await this.finishDownloadingVideo(video);
+      });
     /* eslint-enable prettier/prettier */
 
     return queue;
@@ -181,13 +195,17 @@ export default class VideoProcessQueue {
     const queue = atomicQueue(worker, settings);
 
     /* eslint-disable prettier/prettier */
-    queue
-      .on('error', VideoProcessQueue.errorKillVideo)
-      .on('idle', () => { this.videoQueueEmpty() });
+    queue.on('error', VideoProcessQueue.errorKillVideo).on('idle', () => {
+      this.videoQueueEmpty();
+    });
 
     queue.pool
-      .on('start', (item: KillVideoQueueItem) => { this.startedProcessingKillVideo(item) })
-      .on('finish', (_: unknown, item: KillVideoQueueItem) => { this.finishProcessingKillVideo(item) });
+      .on('start', (item: KillVideoQueueItem) => {
+        this.startedProcessingKillVideo(item);
+      })
+      .on('finish', (_: unknown, item: KillVideoQueueItem) => {
+        this.finishProcessingKillVideo(item);
+      });
     /* eslint-enable prettier/prettier */
 
     return queue;
@@ -646,11 +664,11 @@ export default class VideoProcessQueue {
     // Update the frontend with the new usage.
     const usage = await sizeMonitor.usage();
 
-    const status: DiskStatus = {
-      usage,
-      limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
-    };
+    const limit = cfg.get<boolean>('storageLimit')
+      ? cfg.get<number>('maxStorage') * 1024 ** 3
+      : 0; // Historically we used 0 to indicate no limit.
 
+    const status: DiskStatus = { usage, limit };
     send('updateDiskStatus', status);
   }
 
@@ -669,12 +687,13 @@ export default class VideoProcessQueue {
     const sizeMonitor = new DiskSizeMonitor();
     sizeMonitor.run();
     const usage = await sizeMonitor.usage();
+    const cfg = ConfigService.getInstance();
 
-    const status: DiskStatus = {
-      usage,
-      limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
-    };
+    const limit = cfg.get<boolean>('storageLimit')
+      ? cfg.get<number>('maxStorage') * 1024 ** 3
+      : 0; // Historically we used 0 to indicate no limit.
 
+    const status: DiskStatus = { usage, limit };
     send('updateDiskStatus', status);
   }
 
