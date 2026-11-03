@@ -11,6 +11,8 @@ enum Phrase {
   ClassicLogPathDescription,
   ClassicPtrLogPathDescription,
   EraLogPathDescription,
+  StorageLimitDescription,
+  StorageLimitLabel,
   MaxStorageDescription,
   MonitorIndexDescription,
   SelectedCategoryDescription,

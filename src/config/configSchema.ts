@@ -12,6 +12,7 @@ export type ConfigurationSchema = {
   classicPtrLogPath: string;
   eraLogPath: string;
   foreverLogPath: string;
+  storageLimit: boolean;
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
@@ -157,6 +158,11 @@ export const configSchema = {
     description: Phrase.ForeverLogPathDescription,
     type: 'string',
     default: '',
+  },
+  storageLimit: {
+    description: Phrase.StorageLimitDescription,
+    type: 'boolean',
+    default: true,
   },
   maxStorage: {
     description: Phrase.MaxStorageDescription,

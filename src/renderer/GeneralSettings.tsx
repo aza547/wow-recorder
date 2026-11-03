@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { configSchema } from 'config/configSchema';
 import { AppState, RecStatus } from 'main/types';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { HardDrive, Info } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
@@ -26,27 +26,30 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, appState } = props;
   const { language } = appState;
   const [config, setConfig] = useSettings();
-  const initialRenderVideoConfig = useRef(true);
+
+  const initialRender = useRef(true);
+
+  // Local string state so the user can freely edit the field (e.g. clear it
+  // to retype), only committed to the config on blur.
+  const [innerMaxStorage, setInnerMaxStorage] = useState<string>(
+    String(config.maxStorage),
+  );
 
   useEffect(() => {
-    if (initialRenderVideoConfig.current) {
+    if (initialRender.current) {
       // Drop out if initial render, we don't care about settings
       // changes until the user has had a chance to make some.
-      initialRenderVideoConfig.current = false;
+      initialRender.current = false;
       return;
     }
 
-    const toSet: Record<string, unknown> = {
+    setConfigValues({
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
       separateBufferPath: config.separateBufferPath,
-    };
-
-    if (config.maxStorage >= 0) {
-      toSet.maxStorage = config.maxStorage;
-    }
-
-    setConfigValues(toSet);
+      maxStorage: config.maxStorage,
+      storageLimit: config.storageLimit,
+    });
 
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
@@ -60,6 +63,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     config.storagePath,
     config.bufferStoragePath,
     config.maxStorage,
+    config.storageLimit,
   ]);
 
   const setSeparateBufferPath = (checked: boolean) => {
@@ -225,30 +229,41 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const parseMaxStorage = (value: string) => {
+    const trimmed = value.trim();
+    if (!/^\d+$/.test(trimmed)) return null;
+    const parsed = parseInt(trimmed, 10);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+  };
+
   const setMaxStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.value) {
-      // Allow setting empty as midpoint.
-      setConfig((prev) => ({ ...prev, maxStorage: -1 }));
-      return;
-    }
+    setInnerMaxStorage(event.target.value);
+  };
 
-    const maxStorage = parseInt(event.target.value, 10);
+  const onBlurMaxStorage = () => {
+    const maxStorage = parseMaxStorage(innerMaxStorage);
 
-    if (Number.isNaN(maxStorage) || maxStorage < 0) {
-      // Block invalid config.
+    if (maxStorage === null) {
+      // Invalid input, revert to the last committed value.
+      setInnerMaxStorage(String(config.maxStorage));
       return;
     }
 
     setConfig((prevState) => {
-      return {
-        ...prevState,
-        maxStorage,
-      };
+      return { ...prevState, maxStorage };
     });
   };
 
+  const onKeyDownMaxStorage = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (event.key === 'Enter') {
+      event.currentTarget.blur();
+    }
+  };
+
   const getMaxStorageField = () => {
-    if (isComponentDisabled()) {
+    if (isComponentDisabled() || !config.storageLimit) {
       return <></>;
     }
 
@@ -268,10 +283,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         </Label>
         <Input
           name="maxDiskStorage"
-          value={config.maxStorage >= 0 ? config.maxStorage : ''}
+          value={innerMaxStorage}
           onChange={setMaxStorage}
+          onBlur={onBlurMaxStorage}
+          onKeyDown={onKeyDownMaxStorage}
+          inputMode="numeric"
           required
-          type="numeric"
           disabled={isComponentDisabled()}
         />
       </div>
@@ -306,12 +323,53 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const setStorageLimit = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        storageLimit: checked,
+      };
+    });
+  };
+
+  const getStorageLimitSwitch = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col">
+        <Label htmlFor="storageLimit" className="flex items-center">
+          {getLocalePhrase(language, Phrase.StorageLimitLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              language,
+              configSchema.storageLimit.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          <Switch
+            checked={Boolean(config.storageLimit)}
+            id="storageLimit"
+            name="storageLimit"
+            onCheckedChange={setStorageLimit}
+          />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-y-6">
       {getDisabledText()}
       {getStoragePathField()}
 
       <div className="flex flex-row items-center gap-x-10">
+        {getStorageLimitSwitch()}
         {getMaxStorageField()}
         {getDiskUsageBar()}
       </div>
