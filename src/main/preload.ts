@@ -274,5 +274,9 @@ contextBridge.exposeInMainWorld('electron', {
     refreshCombatLogStatus() {
       ipcRenderer.send('refreshCombatLogStatus');
     },
+
+    refreshDiskStatus() {
+      ipcRenderer.send('refreshDiskStatus');
+    },
   },
 });

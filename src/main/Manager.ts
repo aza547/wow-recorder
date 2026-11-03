@@ -940,6 +940,10 @@ export default class Manager {
       this.refreshCombatLoggingStatus();
     });
 
+    ipcMain.on('refreshDiskStatus', async () => {
+      await DiskClient.getInstance().refreshStatus();
+    });
+
     /**
      * Manually start/stop recording. Being careful with the logs here as
      * some of this is very spammy as it fires on every key press.
