@@ -23,6 +23,7 @@ import RendererTitleBar from './RendererTitleBar';
 import './App.css';
 import { useSettings } from './useSettings';
 import {
+  getAvailableReplay,
   getCategoryFromConfig,
   videoMatch,
   videoMatchName,
@@ -134,6 +135,7 @@ const WarcraftRecorder = () => {
 
   // The video state contains most of the frontend state.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
+  const [lastDungeonName, setLastDungeonName] = useState<string>();
 
   // Fragmented MP4 path.
   const [instantReplayState, setInstantReplayState] =
@@ -426,9 +428,9 @@ const WarcraftRecorder = () => {
   };
 
   const updateInstantReplayState = (value: unknown) => {
+    const incoming = value as InstantReplayData | null;
+    if (incoming?.savedVideoName) setLastDungeonName(incoming.savedVideoName);
     setInstantReplayState((prev) => {
-      const incoming = value as InstantReplayData | null;
-
       if (!incoming) {
         return { ...prev, current: null };
       }
@@ -516,7 +518,11 @@ const WarcraftRecorder = () => {
                 activityStatus={activityStatus}
                 combatLoggingStatus={combatLoggingStatus}
                 setPreviewEnabled={setPreviewEnabled}
-                instantReplayState={instantReplayState}
+                availableReplay={getAvailableReplay(
+                  instantReplayState.current,
+                  lastDungeonName,
+                  videoState,
+                )}
                 setInstantReplayState={setInstantReplayState}
               />
               <Layout

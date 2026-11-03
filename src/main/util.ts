@@ -1288,7 +1288,7 @@ const pushActivityStatus = (activity: Activity) => {
 };
 
 const resetInstantReplayState = () => {
-  send('updateInstantReplayState', null);
+  send('updateInstantReplayState', Recorder.getInstance().savingDungeonReplay);
 };
 
 const refreshInstantReplayState = (activity: Activity) => {

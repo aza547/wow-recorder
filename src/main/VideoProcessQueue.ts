@@ -29,6 +29,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
 import DiskClient from 'storage/DiskClient';
 import Recorder from './Recorder';
+import { VideoCategory } from '../types/VideoCategory';
 import { promises as fspromise } from 'fs';
 
 const atomicQueue = require('atomic-queue');
@@ -199,6 +200,18 @@ export default class VideoProcessQueue {
    */
   public queueVideo = async (item: VideoQueueItem) => {
     console.info('[VideoProcessQueue] Queuing video for processing', item);
+    const { metadata } = item;
+    if (!item.clip && metadata.category === VideoCategory.MythicPlus) {
+      const recorder = Recorder.getInstance();
+      recorder.savingDungeonReplay = {
+        path: item.source,
+        category: metadata.category,
+        deaths: metadata.deaths ?? [],
+        challengeModeTimeline: metadata.challengeModeTimeline,
+        savedVideoName: VideoProcessQueue.getOutputVideoName(item),
+      };
+      recorder.emit('state-change');
+    }
     this.videoQueue.write(item);
   };
 
@@ -287,6 +300,20 @@ export default class VideoProcessQueue {
       );
     }
 
+    try {
+      await DiskClient.getInstance().refreshVideos();
+    } catch (error) {
+      console.error(
+        '[VideoProcessQueue] Could not refresh the video library',
+        error,
+      );
+    }
+
+    const recorder = Recorder.getInstance();
+    if (!data.clip && recorder.savingDungeonReplay?.path === data.source) {
+      recorder.savingDungeonReplay = null;
+      recorder.emit('state-change');
+    }
     done();
   }
 
@@ -538,7 +565,6 @@ export default class VideoProcessQueue {
     console.info('[VideoProcessQueue] Finished processing video', item.source);
     send('updateSaveStatus', SaveStatus.NotSaving);
     DiskClient.getInstance().refreshStatus();
-    DiskClient.getInstance().refreshVideos();
   }
 
   /**
@@ -690,10 +716,7 @@ export default class VideoProcessQueue {
       .replace(/ +/g, ' '); // Replace multiple spaces with a single space
   }
 
-  /**
-   * Returns the full path for a video cut operation's output file.
-   */
-  private static getOutputVideoPath(data: VideoQueueItem, outputDir: string) {
+  private static getOutputVideoName(data: VideoQueueItem) {
     let videoName = data.name;
 
     if (data.suffix) {
@@ -701,10 +724,7 @@ export default class VideoProcessQueue {
       videoName += data.suffix;
     }
 
-    videoName = VideoProcessQueue.sanitizeFilename(videoName);
-
-    // Always output MP4. MKV is just an intermediate format.
-    return path.join(outputDir, `${videoName}.mp4`);
+    return VideoProcessQueue.sanitizeFilename(videoName);
   }
 
   /**
@@ -733,7 +753,10 @@ export default class VideoProcessQueue {
       start = 0; // Sanity check.
     }
 
-    const outputPath = VideoProcessQueue.getOutputVideoPath(data, outputDir);
+    const outputPath = path.join(
+      outputDir,
+      `${VideoProcessQueue.getOutputVideoName(data)}.mp4`,
+    );
 
     const fn = ffmpeg(data.source)
       .setStartTime(start)

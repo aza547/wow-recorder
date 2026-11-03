@@ -696,6 +696,7 @@ type InstantReplayData = {
   path: string;
   category: VideoCategory;
   deaths: PlayerDeathType[];
+  savedVideoName?: string;
   challengeModeTimeline?: RawChallengeModeTimelineSegment[];
   soloShuffleTimeline?: SoloShuffleTimelineSegment[];
 };
