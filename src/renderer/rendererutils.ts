@@ -37,7 +37,6 @@ import {
   AudioSource,
   AppState,
   RendererClip,
-  InstantReplayData,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
@@ -54,25 +53,6 @@ import { Dispatch, SetStateAction } from 'react';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
-};
-
-export const getAvailableReplay = (
-  current: InstantReplayData | null,
-  savedVideoName: string | undefined,
-  videos: RendererVideo[],
-): InstantReplayData | null => {
-  if (current && !current.savedVideoName) return current;
-
-  const name = current?.savedVideoName ?? savedVideoName;
-  const saved = name && videos.find((v) => !v.cloud && v.videoName === name);
-  if (!saved) return current;
-
-  return {
-    path: saved.videoSource,
-    category: saved.category,
-    deaths: saved.deaths ?? [],
-    challengeModeTimeline: saved.challengeModeTimeline,
-  };
 };
 
 /**

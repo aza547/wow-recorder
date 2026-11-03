@@ -25,7 +25,6 @@ import {
   MicStatus,
   Pages,
   RecStatus,
-  InstantReplayData,
   SaveStatus,
 } from 'main/types';
 import {
@@ -76,7 +75,7 @@ interface IProps {
   activityStatus: ActivityStatus | null;
   combatLoggingStatus: CombatLoggingStatus;
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
-  availableReplay: InstantReplayData | null;
+  instantReplayState: InstantReplayState;
   setInstantReplayState: Dispatch<SetStateAction<InstantReplayState>>;
 }
 
@@ -97,7 +96,7 @@ const SideMenu = (props: IProps) => {
     activityStatus,
     combatLoggingStatus,
     setPreviewEnabled,
-    availableReplay,
+    instantReplayState,
     setInstantReplayState,
   } = props;
 
@@ -230,9 +229,7 @@ const SideMenu = (props: IProps) => {
   };
 
   const renderInstantReplayTab = () => {
-    const disabled = !(
-      availableReplay || appState.page === Pages.InstantReplay
-    );
+    const disabled = !instantReplayState.current;
 
     let spanClassName = 'inline-flex items-center w-full';
     let radioClassName = '';
@@ -298,7 +295,7 @@ const SideMenu = (props: IProps) => {
       setInstantReplayState((prev) => {
         return {
           ...prev,
-          open: availableReplay,
+          open: prev.current,
         };
       });
     }

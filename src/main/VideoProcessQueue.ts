@@ -208,7 +208,6 @@ export default class VideoProcessQueue {
         category: metadata.category,
         deaths: metadata.deaths ?? [],
         challengeModeTimeline: metadata.challengeModeTimeline,
-        savedVideoName: VideoProcessQueue.getOutputVideoName(item),
       };
       recorder.emit('state-change');
     }
@@ -716,7 +715,10 @@ export default class VideoProcessQueue {
       .replace(/ +/g, ' '); // Replace multiple spaces with a single space
   }
 
-  private static getOutputVideoName(data: VideoQueueItem) {
+  /**
+   * Returns the full path for a video cut operation's output file.
+   */
+  private static getOutputVideoPath(data: VideoQueueItem, outputDir: string) {
     let videoName = data.name;
 
     if (data.suffix) {
@@ -724,7 +726,10 @@ export default class VideoProcessQueue {
       videoName += data.suffix;
     }
 
-    return VideoProcessQueue.sanitizeFilename(videoName);
+    videoName = VideoProcessQueue.sanitizeFilename(videoName);
+
+    // Always output MP4. MKV is just an intermediate format.
+    return path.join(outputDir, `${videoName}.mp4`);
   }
 
   /**
@@ -753,10 +758,7 @@ export default class VideoProcessQueue {
       start = 0; // Sanity check.
     }
 
-    const outputPath = path.join(
-      outputDir,
-      `${VideoProcessQueue.getOutputVideoName(data)}.mp4`,
-    );
+    const outputPath = VideoProcessQueue.getOutputVideoPath(data, outputDir);
 
     const fn = ffmpeg(data.source)
       .setStartTime(start)
