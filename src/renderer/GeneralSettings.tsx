@@ -27,8 +27,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const { language } = appState;
   const [config, setConfig] = useSettings();
 
-  const initialRenderBase = useRef(true);
-  const initialRenderStorageLimit = useRef(true);
+  const initialRender = useRef(true);
 
   // Local string state so the user can freely edit the field (e.g. clear it
   // to retype), only committed to the config on blur.
@@ -37,10 +36,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   );
 
   useEffect(() => {
-    if (initialRenderBase.current) {
+    if (initialRender.current) {
       // Drop out if initial render, we don't care about settings
       // changes until the user has had a chance to make some.
-      initialRenderBase.current = false;
+      initialRender.current = false;
       return;
     }
 
@@ -48,6 +47,8 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
       separateBufferPath: config.separateBufferPath,
+      maxStorage: config.maxStorage,
+      storageLimit: config.storageLimit,
     });
 
     if (debounceTimeout) {
@@ -57,21 +58,13 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     debounceTimeout = setTimeout(() => {
       ipc.reconfigureBase();
     }, 500);
-  }, [config.separateBufferPath, config.storagePath, config.bufferStoragePath]);
-
-  useEffect(() => {
-    if (initialRenderStorageLimit.current) {
-      initialRenderStorageLimit.current = false;
-      return;
-    }
-
-    setConfigValues({
-      maxStorage: config.maxStorage,
-      storageLimit: config.storageLimit,
-    });
-
-    ipc.refreshDiskStatus();
-  }, [config.maxStorage, config.storageLimit]);
+  }, [
+    config.separateBufferPath,
+    config.storagePath,
+    config.bufferStoragePath,
+    config.maxStorage,
+    config.storageLimit,
+  ]);
 
   const setSeparateBufferPath = (checked: boolean) => {
     setConfig((prevState) => {
