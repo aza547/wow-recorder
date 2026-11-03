@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add basic forever support for raids and manual recordings.
 
 ### Fixed
+- [Issue 923](https://github.com/aza547/wow-recorder/issues/923) - Respect combat log timezone offsets so daylight saving changes do not break recordings or their timelines.
 - Fix a bug where manual recordings were always classified as retail, they will be categorized by the running WoW client.
 
 ## [7.13.4] - 2026-10-22
