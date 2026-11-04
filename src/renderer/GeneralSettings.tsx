@@ -413,7 +413,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getReplayBufferUsageBar = () => {
-    const max = config.customReplayBufferLength;
+    const max = config.customReplayBuffer
+      ? config.customReplayBufferLength
+      : configSchema.customReplayBufferLength.default;
+
     const usage = Math.min(replayBufferSeconds, max);
     const perc = max > 0 ? (100 * usage) / max : 0;
     const text = `${usage}s / ${max}s`;

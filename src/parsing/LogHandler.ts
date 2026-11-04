@@ -265,7 +265,7 @@ export default abstract class LogHandler {
 
   protected static async startActivity(
     activity: Activity,
-    checkCategory = false,
+    checkCategory = true,
   ) {
     const { category } = activity;
 

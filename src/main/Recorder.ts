@@ -244,10 +244,7 @@ export default class Recorder extends EventEmitter {
    */
   private replayBufferTimer = setInterval(() => {
     const secs = this.getActiveReplayBufferLength();
-
-    if (secs) {
-      send('updateReplayBufferSeconds', secs);
-    }
+    send('updateReplayBufferSeconds', secs ?? 0);
   }, 1000);
 
   /**
