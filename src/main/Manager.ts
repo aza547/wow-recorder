@@ -904,6 +904,30 @@ export default class Manager {
       LogHandler.handleManualRecordingHotKey(flavour);
     });
 
+    ipcMain.on('saveReplayBuffer', async () => {
+      const manualRecordEnabled = this.cfg.get('manualRecord');
+
+      if (!manualRecordEnabled) {
+        // Shouldn't really be possible as the UI hides the button.
+        console.warn('[Manager] Manual recording is not enabled');
+        return;
+      }
+
+      const flavour = this.poller.getFlavor();
+
+      if (!flavour) {
+        console.warn('[Manager] WoW not running when save replay pressed');
+        return;
+      }
+
+      if (this.recorder.obsState !== ERecordingState.Recording) {
+        console.warn('[Manager] Recorder not ready when save replay pressed');
+        return;
+      }
+
+      LogHandler.saveReplayBuffer(flavour);
+    });
+
     // Handles a click of the force stop button.
     ipcMain.on('forceStopRecording', async () => {
       LogHandler.forceEndActivity();

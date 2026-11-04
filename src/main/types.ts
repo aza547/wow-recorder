@@ -441,6 +441,8 @@ type BaseConfig = {
   recordForever: boolean;
   foreverLogPath: string;
   validateLogPaths: boolean;
+  customReplayBuffer: boolean;
+  customReplayBufferLength: number;
 };
 
 type ObsVideoConfig = {

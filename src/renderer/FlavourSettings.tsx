@@ -925,6 +925,10 @@ const FlavourSettings: FC<IProps> = (props: IProps) => {
   };
 
   const getHiddenSettingsWarning = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     const {
       showAllGamesLogPathSettings,
       recordEra,

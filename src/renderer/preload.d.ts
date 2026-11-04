@@ -84,6 +84,7 @@ declare global {
         postChatMessage(correlator: string, message: string): void;
         deleteChatMessage(id: number): void;
         toggleManualRecording(): void;
+        saveReplayBuffer(): void;
         forceStopRecording(): void;
 
         createKillVideo(

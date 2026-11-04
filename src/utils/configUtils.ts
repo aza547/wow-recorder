@@ -254,6 +254,8 @@ const getBaseConfig = (cfg: ConfigService): BaseConfig => {
     recordForever: cfg.get<boolean>('recordForever'),
     foreverLogPath: cfg.get<string>('foreverLogPath'),
     validateLogPaths: cfg.get<boolean>('validateLogPaths'),
+    customReplayBuffer: cfg.get<boolean>('customReplayBuffer'),
+    customReplayBufferLength: cfg.get<number>('customReplayBufferLength'),
   };
 };
 
