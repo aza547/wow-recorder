@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Add basic forever support for raids and manual recordings.
+- Add the "Save Buffer" function. Enabling Shadowplay-like function.
+- Add the ability to set a custom replay buffer duration up to 20 mins (default is 60s).
 
 ### Fixed
 - Fix a bug where manual recordings were always classified as retail, they will be categorized by the running WoW client.

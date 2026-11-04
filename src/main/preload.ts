@@ -230,6 +230,10 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('toggleManualRecording');
     },
 
+    saveReplayBuffer() {
+      ipcRenderer.send('saveReplayBuffer');
+    },
+
     forceStopRecording() {
       ipcRenderer.send('forceStopRecording');
     },

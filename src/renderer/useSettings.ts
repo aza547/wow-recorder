@@ -114,6 +114,8 @@ export const getSettings = (): ConfigurationSchema => {
     manualRecordHotKeyModifiers: getConfigValue<string>('manualRecordHotKeyModifiers'),
     manualRecordSoundAlert: getConfigValue<boolean>('manualRecordSoundAlert'),
     manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
+    customReplayBuffer: getConfigValue<boolean>('customReplayBuffer'),
+    customReplayBufferLength: getConfigValue<number>('customReplayBufferLength'),
     firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     chatUserNameAgreed: getConfigValue<string>('chatUserNameAgreed'),
     validateLogPaths: getConfigValue<boolean>('validateLogPaths'),

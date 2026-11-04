@@ -100,6 +100,8 @@ export type ConfigurationSchema = {
   manualRecordHotKeyModifiers: string;
   manualRecordSoundAlert: boolean;
   manualRecordUpload: boolean;
+  customReplayBuffer: boolean;
+  customReplayBufferLength: number;
   firstTimeSetup: boolean;
   chatUserNameAgreed: string;
   validateLogPaths: boolean;
@@ -606,7 +608,7 @@ export const configSchema = {
   manualRecord: {
     description: Phrase.ManualRecordDescription,
     type: 'boolean',
-    default: false,
+    default: true,
   },
   manualRecordHotKey: {
     description: Phrase.ManualRecordHotKeyDescription,
@@ -622,6 +624,18 @@ export const configSchema = {
     description: Phrase.ManualRecordSoundAlertDescription,
     type: 'boolean',
     default: true,
+  },
+  customReplayBuffer: {
+    description: Phrase.CustomReplayBufferDescription,
+    type: 'boolean',
+    default: false,
+  },
+  customReplayBufferLength: {
+    description: Phrase.ReplayBufferSecondsDescription,
+    type: 'integer',
+    default: 60,
+    minimum: 60,
+    maximum: 1200,
   },
   manualRecordUpload: {
     description: Phrase.ManualRecordUploadDescription,
