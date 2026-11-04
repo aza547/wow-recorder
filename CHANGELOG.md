@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Clip range now defaults to -7s and +5s instead of ±15s.
 - Add a "Limit Disk Storage" switch to avoid the unintutive behaviour of setting 0.
+- Log path settings are now neater and hide less common game modes.
 
 ### Added
 - Add basic forever support for raids and manual recordings.
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix a bug where manual recordings were always classified as retail, they will be categorized by the running WoW client.
+- Made the behaviour of the max storage number field more user friendly.
 
 ## [7.13.4] - 2026-10-22
 ### Fixed
