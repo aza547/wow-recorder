@@ -263,15 +263,9 @@ export default abstract class LogHandler {
     refreshInstantReplayState(LogHandler.activity);
   }
 
-  protected static async startActivity(
-    activity: Activity,
-    checkCategory = true,
-  ) {
+  protected static async startActivity(activity: Activity) {
     const { category } = activity;
-
-    const allowed =
-      !checkCategory ||
-      allowRecordCategory(ConfigService.getInstance(), category);
+    const allowed = allowRecordCategory(ConfigService.getInstance(), category);
 
     if (!allowed) {
       console.info('[LogHandler] Not configured to record', category);
