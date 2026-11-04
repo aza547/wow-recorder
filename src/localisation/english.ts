@@ -456,7 +456,7 @@ const ENGLISH: Translations = {
   [Phrase.ManualRecordSoundAlertLabel]: 'Sound Alert',
   [Phrase.ManualRecordSoundAlertDescription]: 'Play a sound alert when manual recording starts or stops.',
   [Phrase.ReplayBufferSecondsDescription]: 'Length of the replay buffer in seconds, between 60 and 1200. A longer buffer uses more memory but allows you to capture further back in time when saving.',
-  [Phrase.ReplayBufferLabel]: 'Buffer Length (secs)',
+  [Phrase.ReplayBufferLabel]: 'Buffer Length (s)',
   [Phrase.CustomReplayBufferLabel]: 'Custom Replay Buffer',
   [Phrase.CustomReplayBufferDescription]: 'Use a custom replay buffer length. If disabled, the default of 60 seconds is used.',
   [Phrase.ActiveReplayBufferLabel]: 'Active Replay Buffer',
