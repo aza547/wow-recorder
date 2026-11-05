@@ -3,7 +3,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import path from 'path';
 import { app } from 'electron';
 import ConfigService from 'config/ConfigService';
-import { WowProcessEvent } from 'main/types';
+import { Flavour, WowProcessEvent } from 'main/types';
 
 /**
  * The Poller singleton periodically checks the list of WoW active
@@ -25,6 +25,15 @@ export default class Poller extends EventEmitter {
    * enabled. Includes various flavours of retail, classic and era.
    */
   private wowRunning = false;
+
+  /**
+   * Tracks what is currently running for each flavour of WoW.
+   */
+  private state = {
+    Retail: false,
+    Classic: false,
+    Forever: false,
+  };
 
   /**
    * Spawned child process.
@@ -62,6 +71,33 @@ export default class Poller extends EventEmitter {
   }
 
   /**
+   * Added for convenience when determining which flavour of WoW is currently
+   * active when starting a manual recording. Most of the app doesn't care
+   * about which flavour is currently active.
+   *
+   * A reminder we don't support multiboxing games (nor does Blizzard on the
+   * same account), which is why it's OK this is in order of preference.
+   */
+  public getFlavor(): Flavour | null {
+    const { recordRetail, recordClassic, recordForever } =
+      this.coalesceRecordingConfig();
+
+    if (this.state.Retail && recordRetail) {
+      return Flavour.Retail;
+    }
+
+    if (this.state.Classic && recordClassic) {
+      return Flavour.Classic;
+    }
+
+    if (this.state.Forever && recordForever) {
+      return Flavour.Forever;
+    }
+
+    return null;
+  }
+
+  /**
    * Stop the poller and reset the state.
    */
   public stop() {
@@ -88,7 +124,7 @@ export default class Poller extends EventEmitter {
 
   /**
    * Handle stdout data from the child process, this is a tiny blob of JSON
-   * in the format {"Retail":true, "Classic":false}.
+   * in the format {"Retail":true, "Classic":false, "Forever":false}.
    *
    * We don't care to do anything better in the scenario of multiple processes
    * running. We don't support users multi-boxing.
@@ -106,17 +142,35 @@ export default class Poller extends EventEmitter {
       return;
     }
 
-    const { Retail, Classic } = parsed;
+    const { recordRetail, recordClassic, recordForever } =
+      this.coalesceRecordingConfig();
 
-    const recordRetail = this.cfg.get<boolean>('recordRetail');
-    const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
-    const recordClassic = this.cfg.get<boolean>('recordClassic');
-    const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
-    const recordEra = this.cfg.get<boolean>('recordEra');
+    const { Retail, Classic, Forever } = parsed;
+
+    if (
+      this.state.Retail !== Retail ||
+      this.state.Classic !== Classic ||
+      this.state.Forever !== Forever
+    ) {
+      this.state = { Retail, Classic, Forever };
+      console.info('[Poller] State changed', this.state);
+
+      const count = [
+        this.state.Retail && recordRetail,
+        this.state.Classic && recordClassic,
+        this.state.Forever && recordForever,
+      ].filter(Boolean).length;
+
+      if (count > 1) {
+        // Not a disaster, but not a state we claim to support.
+        console.warn('[Poller] Multiple WoW processes detected', this.state);
+      }
+    }
 
     const running =
-      ((recordRetail || recordRetailPtr) && Retail) ||
-      ((recordClassic || recordClassicPtr || recordEra) && Classic);
+      (recordRetail && Retail) ||
+      (recordClassic && Classic) ||
+      (recordForever && Forever);
 
     if (this.wowRunning === running) {
       // Nothing to emit.
@@ -139,5 +193,21 @@ export default class Poller extends EventEmitter {
   private handleStderr = (data: string) => {
     console.warn('[Poller] stderr returned from child process');
     console.error(data);
+  };
+
+  /**
+   * Coalesce the recording configuration from the various flags in the config.
+   */
+  private coalesceRecordingConfig = () => {
+    return {
+      recordRetail:
+        this.cfg.get<boolean>('recordRetail') ||
+        this.cfg.get<boolean>('recordRetailPtr'),
+      recordClassic:
+        this.cfg.get<boolean>('recordClassic') ||
+        this.cfg.get<boolean>('recordClassicPtr') ||
+        this.cfg.get<boolean>('recordEra'),
+      recordForever: this.cfg.get<boolean>('recordForever'),
+    };
   };
 }

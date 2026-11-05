@@ -269,7 +269,7 @@ export default abstract class LogHandler {
 
     if (!allowed) {
       console.info('[LogHandler] Not configured to record', category);
-      return;
+      return undefined;
     }
 
     console.info(`[LogHandler] Start an activity for category: ${category}`);
@@ -289,6 +289,8 @@ export default abstract class LogHandler {
       console.error('[LogHandler] Error starting activity', String(error));
       LogHandler.activity = undefined;
     }
+
+    return LogHandler.activity;
   }
 
   /**
@@ -580,13 +582,13 @@ export default abstract class LogHandler {
   /**
    * Handle the pressing of the manual recording hotkey.
    */
-  public static async handleManualRecordingHotKey() {
+  public static async handleManualRecordingHotKey(flavour: Flavour) {
     const sounds = ConfigService.getInstance().get('manualRecordSoundAlert');
 
     if (!LogHandler.activity) {
       console.info('[LogHandler] Starting manual recording');
       const startDate = new Date();
-      const activity = new Manual(startDate, Flavour.Retail);
+      const activity = new Manual(startDate, flavour);
       await LogHandler.startActivity(activity);
       if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_START);
       return;
@@ -603,6 +605,38 @@ export default abstract class LogHandler {
 
     console.warn('[LogHandler] Unable to start manual recording');
     if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR);
+  }
+
+  public static async saveReplayBuffer(flavour: Flavour) {
+    if (LogHandler.activity || LogHandler.overrunning) {
+      console.warn('[LogHandler] Unable to save replay buffer, in activity');
+      return;
+    }
+
+    const replayBufferLengthSec =
+      await Recorder.getInstance().getActiveReplayBufferLength();
+
+    if (!replayBufferLengthSec) {
+      console.warn('[LogHandler] Replay buffer is empty');
+      return;
+    }
+
+    console.info(
+      '[LogHandler] Saving replay buffer with length',
+      replayBufferLengthSec,
+    );
+
+    const startDate = new Date(Date.now() - replayBufferLengthSec * 1000);
+    const activity = new Manual(startDate, flavour);
+    const started = await LogHandler.startActivity(activity);
+    const sounds = ConfigService.getInstance().get('manualRecordSoundAlert');
+
+    if (!started) {
+      console.warn('[LogHandler] Failed to start manual recording');
+      if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR);
+    } else {
+      if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_START);
+    }
   }
 
   /**

@@ -20,6 +20,7 @@ import {
   ThumbsDown,
   ThumbsUp,
   X,
+  Infinity as InfinityIcon,
 } from 'lucide-react';
 import React from 'react';
 import ShieldIcon from '@mui/icons-material/Shield';
@@ -129,6 +130,10 @@ const SearchBar = (props: IProps) => {
 
     if (icon === '<LockOpenIcon>') {
       return <LockOpen height="15px" width="25px" color="white" />;
+    }
+
+    if (icon === '<Infinity>') {
+      return <InfinityIcon height="15px" width="25px" color="white" />;
     }
 
     if (icon === '<TagIcon>') {

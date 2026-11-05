@@ -28,6 +28,7 @@ export const getSettings = (): ConfigurationSchema => {
     classicPtrLogPath: getConfigValue<string>('classicPtrLogPath'),
     eraLogPath: getConfigValue<string>('eraLogPath'),
     retailPtrLogPath: getConfigValue<string>('retailPtrLogPath'),
+    storageLimit: getConfigValue<boolean>('storageLimit'),
     maxStorage: getConfigValue<number>('maxStorage'),
     minEncounterDuration: getConfigValue<number>('minEncounterDuration'),
     monitorIndex: getConfigValue<number>('monitorIndex'),
@@ -113,11 +114,17 @@ export const getSettings = (): ConfigurationSchema => {
     manualRecordHotKeyModifiers: getConfigValue<string>('manualRecordHotKeyModifiers'),
     manualRecordSoundAlert: getConfigValue<boolean>('manualRecordSoundAlert'),
     manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
+    customReplayBuffer: getConfigValue<boolean>('customReplayBuffer'),
+    customReplayBufferLength: getConfigValue<number>('customReplayBufferLength'),
     firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     chatUserNameAgreed: getConfigValue<string>('chatUserNameAgreed'),
     validateLogPaths: getConfigValue<boolean>('validateLogPaths'),
     validateNtfs: getConfigValue<boolean>('validateNtfs'),
     characterUploadFilters: getConfigValue<CharacterFilter[]>('characterUploadFilters'),
+    recordForever: getConfigValue<boolean>('recordForever'),
+    foreverLogPath: getConfigValue<string>('foreverLogPath'),
+    showAllGamesLogPathSettings: getConfigValue<boolean>('showAllGamesLogPathSettings'),
+    cloudUploadForever: getConfigValue<boolean>('cloudUploadForever'),
     /* eslint-enable prettier/prettier */
   };
 

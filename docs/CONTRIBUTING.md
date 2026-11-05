@@ -11,6 +11,7 @@ You can find the source in the `design.excalidraw` file in this directory.
 Development mode benefits from the infrastructure offered by [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate). You can read more about it on their [docs](https://electron-react-boilerplate.js.org/). It allows for a very quick development cycle, access to chrome dev tools, and hot reloading of the app on saving new changes. 
 
 1. Install the latest version of Node.js version (latest at time of writing is 20.4.0) from [here](https://nodejs.org/en/).
+1. Install [VS Studio and the C++ SDK](https://learn.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-170), required as installing dependencies recompiles [noobs](https://github.com/aza547/noobs).
 1. Clone a copy of the [wow-recorder](https://github.com/aza547/wow-recorder) codebase.
 1. Change into the checkout directory. 
 1. Run `npm install` on the command line to install required node packages.
@@ -60,31 +61,3 @@ From [here](https://electron-react-boilerplate.js.org/docs/packaging).
 
 `npx cross-env DEBUG_PROD=true npm run package`
 
-## Building OSN
-> Advice is not to build this and just get it from the folks at Streamlabs. I built it once, it was a total faff.
-> If you really need to build it, you can probably find some useful notes in the history of this doc. 
-> This is hosted by streamlabs here (note version number): 
-> - https://s3-us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/osn-0.23.59-release-win64.tar.gz
-
-The above is no longer true, I'm now rebuilding OSN to add force stop functionality. Follow the OSN build instructions and then do:
-`tar -czvf osn-0.25.34wcr-release-win64.tar.gz -C build/distribute/ obs-studio-node` to get an archive ready for use.
-
-Below are various additional OSN resources:
-- [Example](https://github.com/Envek/obs-studio-node-example)
-- [Community Docs](https://github.com/hrueger/obs-studio-node-docs)
-- [Streamlabs Desktop](https://github.com/stream-labs/desktop)
-- [AdvancedRecordingFactory API](https://github.com/stream-labs/obs-studio-node/pull/1128)
-- [OSN Tests](https://github.com/stream-labs/obs-studio-node/tree/staging/tests/osn-tests/src)
-
-## Microsoft Stamp of Approval
-If we just build a .exe and release it Windows will warn it may be dangerous. Could resolve this buy purchasing a certificate from a CA, but it costs a fortune. Read more about it in this [issue](https://github.com/aza547/wow-recorder/issues/11).
-1. Submit it for analysis [here](https://www.microsoft.com/en-us/wdsi/filesubmission) after releasing it to make that warning go away.
-    1. Select "Microsoft Defender Smartscreen" as the security product. 
-    1. "Company name" - just put your own name. 
-    1. "Do you have a Microsoft support case number?" - No.
-    1. Leave next few fields blank/unchanged. 
-    1. Select & upload the .exe. 
-    1. "What do you believe this file is?" - Incorrectly detected as malware/malicious
-    1. Detection name - "WarcraftRecorder.Setup.2.0.1.exe"
-    1. "Additional information" - whatever, I'm sure no one will read it. 
-1. This isn't instant but seems to get resolved within 24 hours, that seems good enough. 

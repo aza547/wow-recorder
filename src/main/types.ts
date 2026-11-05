@@ -13,6 +13,7 @@ import { ReactNode } from 'react';
 enum Flavour {
   Retail = 'Retail',
   Classic = 'Classic',
+  Forever = 'Forever',
 }
 
 /**
@@ -385,6 +386,7 @@ type CombatLoggingStatus = {
   era: CombatLogPathStatus;
   retailPtr: CombatLogPathStatus;
   classicPtr: CombatLogPathStatus;
+  forever: CombatLogPathStatus;
 };
 
 type CloudState = {
@@ -420,6 +422,7 @@ type Encoder = {
 
 type BaseConfig = {
   storagePath: string;
+  storageLimit: boolean;
   maxStorage: number;
   obsPath: string;
   obsOutputResolution: string;
@@ -436,7 +439,11 @@ type BaseConfig = {
   eraLogPath: string;
   recordRetailPtr: boolean;
   retailPtrLogPath: string;
+  recordForever: boolean;
+  foreverLogPath: string;
   validateLogPaths: boolean;
+  customReplayBuffer: boolean;
+  customReplayBufferLength: number;
 };
 
 type ObsVideoConfig = {
