@@ -103,6 +103,11 @@ const Status = ({
       flavours.push(s);
     }
 
+    if (config.recordForever) {
+      const s = getLocalePhrase(language, Phrase.Forever);
+      flavours.push(s);
+    }
+
     if (flavours.length > 0) {
       return `${flavours.join(', ')}.`;
     }
@@ -323,6 +328,29 @@ const Status = ({
                 </Tooltip>
               )}
               <code>{config.classicPtrLogPath}</code>
+            </li>
+          )}
+          {config.recordForever && (
+            <li>
+              <span className="font-bold">
+                {getLocalePhrase(language, Phrase.Forever)}
+                {': '}
+              </span>
+              {!combatLoggingStatus.forever.advanced && (
+                <Tooltip
+                  content={getLocalePhrase(
+                    language,
+                    Phrase.AdvancedCombatLoggingDisabledWarning,
+                  )}
+                >
+                  <TriangleAlert
+                    size={12}
+                    fill="#facc15"
+                    className="text-yellow-900 mr-1 inline align-middle -mt-0.5"
+                  />
+                </Tooltip>
+              )}
+              <code>{config.foreverLogPath}</code>
             </li>
           )}
         </ul>

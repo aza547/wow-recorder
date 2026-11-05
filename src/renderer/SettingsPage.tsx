@@ -27,6 +27,7 @@ import ManualSettings from './ManualSettings';
 
 interface IProps {
   recorderStatus: RecStatus;
+  replayBufferSeconds: number;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   appState: AppState;
@@ -42,6 +43,7 @@ const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
   const {
     recorderStatus,
+    replayBufferSeconds,
     config,
     setConfig,
     appState,
@@ -83,6 +85,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <Separator className="mt-2 mb-4" />
                 <GeneralSettings
                   recorderStatus={recorderStatus}
+                  replayBufferSeconds={replayBufferSeconds}
                   appState={appState}
                 />
               </div>
