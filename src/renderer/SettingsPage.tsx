@@ -8,6 +8,7 @@ import {
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase } from 'localisation/translations';
 import GeneralSettings from './GeneralSettings';
+import ReplayBufferSettings from './ReplayBufferSettings';
 import FlavourSettings from './FlavourSettings';
 import PVESettings from './PVESettings';
 import PVPSettings from './PVPSettings';
@@ -84,6 +85,19 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <GeneralSettings
+                  recorderStatus={recorderStatus}
+                  appState={appState}
+                />
+              </div>
+              <div>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.ReplayBufferSettingsLabel,
+                  )}
+                </CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <ReplayBufferSettings
                   recorderStatus={recorderStatus}
                   replayBufferSeconds={replayBufferSeconds}
                   appState={appState}

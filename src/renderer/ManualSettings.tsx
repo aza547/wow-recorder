@@ -1,11 +1,5 @@
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react';
 import { AppState } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
@@ -14,7 +8,6 @@ import Label from './components/Label/Label';
 import { Phrase } from 'localisation/phrases';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Info } from 'lucide-react';
-import { Input } from './components/Input/Input';
 import HotKeyInput from './HotKeyInput';
 
 interface IProps {

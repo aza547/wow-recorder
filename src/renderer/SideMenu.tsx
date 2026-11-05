@@ -10,11 +10,11 @@ import {
   HardHat,
   CircleFadingPlay,
   MonitorCog,
-  Play,
   Radio,
-  Square,
+  CircleStop,
   Sword,
   Swords,
+  CirclePlay,
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDungeon, faDragon } from '@fortawesome/free-solid-svg-icons';
@@ -140,11 +140,11 @@ const SideMenu = (props: IProps) => {
       return <></>;
     }
 
-    let icon = <Play size={20} fill="currentColor" />;
+    let icon = <CirclePlay size={20} />;
     let tooltip = getLocalePhrase(language, Phrase.StartManualRecordingTooltip);
 
     if (recorderStatus === RecStatus.Recording) {
-      icon = <Square size={20} fill="currentColor" />;
+      icon = <CircleStop size={20} />;
       tooltip = getLocalePhrase(language, Phrase.StopManualRecordingTooltip);
     }
 
@@ -216,13 +216,20 @@ const SideMenu = (props: IProps) => {
   };
 
   const renderSaveReplayButton = () => {
+    const recording =
+      recorderStatus === RecStatus.Recording ||
+      recorderStatus === RecStatus.Overrunning;
+
     const disabled =
       recorderStatus !== RecStatus.ReadyToRecord || replayBufferSeconds < 1;
 
     let tooltip: string;
 
-    if (disabled) {
+    if (recording) {
       tooltip = getLocalePhrase(language, Phrase.SaveReplayBufferDisabled);
+    } else if (disabled) {
+      // Not recording, but the buffer isn't running, e.g. WoW is closed.
+      tooltip = getLocalePhrase(language, Phrase.SaveReplayBufferInactive);
     } else {
       tooltip = getLocalePhrase(
         language,

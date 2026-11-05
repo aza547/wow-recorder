@@ -265,7 +265,12 @@ export default abstract class LogHandler {
 
   protected static async startActivity(activity: Activity) {
     const { category } = activity;
-    const allowed = allowRecordCategory(ConfigService.getInstance(), category);
+
+    // Can't invoke manual without it being enabled, other than save replay
+    // buffer, which we explicitly want to allow.
+    const allowed =
+      category === VideoCategory.Manual ||
+      allowRecordCategory(ConfigService.getInstance(), category);
 
     if (!allowed) {
       console.info('[LogHandler] Not configured to record', category);
@@ -628,7 +633,6 @@ export default abstract class LogHandler {
 
     console.info('[LogHandler] Saving replay buffer to disk');
     const activity = new Manual(startDate, flavour);
-
     const started = await LogHandler.startActivity(activity);
 
     if (!started) {

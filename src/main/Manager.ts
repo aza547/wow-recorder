@@ -320,11 +320,11 @@ export default class Manager {
 
   /**
    * Check we can act on a manual recording or replay buffer request. That
-   * is manual recording is enabled, WoW is running and the recorder is
-   * buffering. Returns the flavour to record if so.
+   * is manual recording is enabled (if required), WoW is running and the
+   * recorder is buffering. Returns the flavour to record if so.
    */
-  private getManualRecordFlavour(): Flavour | undefined {
-    if (!this.cfg.get<boolean>('manualRecord')) {
+  private getManualRecordFlavour(requireManual = true): Flavour | undefined {
+    if (requireManual && !this.cfg.get<boolean>('manualRecord')) {
       console.warn('[Manager] Manual recording is not enabled');
       return undefined;
     }
@@ -916,8 +916,9 @@ export default class Manager {
     });
 
     // Listens for the save buffer button. Saves the replay buffer to disk.
+    // This doesn't require manual recording to be enabled.
     ipcMain.on('saveReplayBuffer', async () => {
-      const flavour = this.getManualRecordFlavour();
+      const flavour = this.getManualRecordFlavour(false);
       if (flavour) LogHandler.saveReplayBuffer(flavour);
     });
 
@@ -977,14 +978,13 @@ export default class Manager {
         return;
       }
 
-      if (!this.cfg.get('manualRecord')) {
-        // Manual recording is not enabled.
-        return;
-      }
-
+      // The save buffer hotkey works without manual recording enabled, the
+      // others don't. Manual hotkeys win if the same key is bound twice.
+      const manualEnabled = this.cfg.get<boolean>('manualRecord');
       let action: ((flavour: Flavour) => Promise<void>) | undefined;
 
       if (
+        manualEnabled &&
         isConfiguredHotKey(
           event,
           'manualRecordHotKey',
@@ -993,14 +993,7 @@ export default class Manager {
       ) {
         action = (f) => LogHandler.handleManualRecordingHotKey(f);
       } else if (
-        isConfiguredHotKey(
-          event,
-          'saveReplayBufferHotKey',
-          'saveReplayBufferHotKeyModifiers',
-        )
-      ) {
-        action = (f) => LogHandler.saveReplayBuffer(f);
-      } else if (
+        manualEnabled &&
         isConfiguredHotKey(
           event,
           'startFromReplayBufferHotKey',
@@ -1008,6 +1001,14 @@ export default class Manager {
         )
       ) {
         action = (f) => LogHandler.startManualFromReplayBuffer(f);
+      } else if (
+        isConfiguredHotKey(
+          event,
+          'saveReplayBufferHotKey',
+          'saveReplayBufferHotKeyModifiers',
+        )
+      ) {
+        action = (f) => LogHandler.saveReplayBuffer(f);
       }
 
       if (!action) {
@@ -1015,7 +1016,8 @@ export default class Manager {
         return;
       }
 
-      const flavour = this.getManualRecordFlavour();
+      // Manual recording was already checked above where it's required.
+      const flavour = this.getManualRecordFlavour(false);
       if (flavour) action(flavour);
     });
 
