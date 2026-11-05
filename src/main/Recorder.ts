@@ -151,6 +151,13 @@ export default class Recorder extends EventEmitter {
   private stopQueue = new WaitQueue<Signal>();
 
   /**
+   * WaitQueue object for storing signalling from OBS. We only care about
+   * converted signals here which indicate the buffer has been converted
+   * to a real recording on disk.
+   */
+  private convertQueue = new WaitQueue<Signal>();
+
+  /**
    * The state of the recorder, typically used to tell if OBS is recording
    * or not.
    */
@@ -1112,6 +1119,9 @@ export default class Recorder extends EventEmitter {
 
     // The native code expects an integer.
     const rounded = Math.round(offset);
+
+    // Clear any stale converted signals so waitForConvert only sees ours.
+    this.convertQueue.empty();
     noobs.StartRecording(rounded);
   }
 
@@ -1296,6 +1306,7 @@ export default class Recorder extends EventEmitter {
       case EOBSOutputSignal.Converted:
         console.info('[Recorder] Converted buffer to disk:', signal.path);
         this.currentFile = signal.path ?? null;
+        this.convertQueue.push(signal);
         break;
 
       default:
@@ -1964,6 +1975,23 @@ export default class Recorder extends EventEmitter {
     const last = this.lastFile;
     this.lastFile = null;
     return last;
+  }
+
+  /**
+   * Wait for OBS to signal that the buffer has been converted to a real
+   * recording. Resolves immediately if it already has been. Stopping before
+   * the conversion completes loses the recording, so call this before
+   * stopping if a stop may follow a start very quickly.
+   */
+  public async waitForConvert() {
+    if (this.currentFile) {
+      return;
+    }
+
+    await Promise.race([
+      this.convertQueue.shift(),
+      getPromiseBomb(30, 'Timed out waiting for convert'),
+    ]);
   }
 
   public getActiveReplayBufferLength() {

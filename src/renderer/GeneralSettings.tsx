@@ -13,6 +13,7 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 import Progress from './components/Progress/Progress';
 import TextBanner from './components/TextBanner/TextBanner';
 import { Phrase } from 'localisation/phrases';
+import HotKeyInput from './HotKeyInput';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -518,6 +519,18 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         {getCustomReplayBufferSwitch()}
         {getReplayBufferField()}
         {getReplayBufferUsageBar()}
+      </div>
+
+      <div className="flex flex-row items-center gap-x-10">
+        <HotKeyInput
+          appState={appState}
+          config={config}
+          setConfig={setConfig}
+          keyField="saveReplayBufferHotKey"
+          modifiersField="saveReplayBufferHotKeyModifiers"
+          label={Phrase.SaveReplayBufferHotKeyLabel}
+          description={Phrase.SaveReplayBufferHotKeyDescription}
+        />
       </div>
 
       <div className="flex flex-row items-center gap-x-10">

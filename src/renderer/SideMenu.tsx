@@ -8,6 +8,7 @@ import {
   FileText,
   Goal,
   HardHat,
+  CircleFadingPlay,
   MonitorCog,
   Play,
   Radio,
@@ -170,6 +171,43 @@ const SideMenu = (props: IProps) => {
     );
   };
 
+  const renderStartFromBufferButton = () => {
+    // Only shown while buffering with nothing being recorded, as otherwise
+    // the buffer has already been converted to a recording.
+    const hidden =
+      !config.manualRecord ||
+      recorderStatus !== RecStatus.ReadyToRecord ||
+      replayBufferSeconds < 1;
+
+    if (hidden) {
+      return <></>;
+    }
+
+    return (
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.StartFromBufferTooltip)}
+      >
+        <Button
+          size="sm"
+          variant="ghost"
+          className="mr-1 p-1 h-6 w-6 hover:bg-secondary"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Shares the debounce with the start/stop button, so a quick
+            // double click can't start from the buffer and then stop.
+            const now = Date.now();
+            if (now - lastManualStartStopClickRef.current < 1000) return;
+            lastManualStartStopClickRef.current = now;
+            ipc.startManualFromReplayBuffer();
+          }}
+        >
+          <CircleFadingPlay size={20} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
   // Always MM:SS, e.g. "00:45" or "01:30".
   const formatBufferDuration = (secs: number) => {
     const mins = String(Math.floor(secs / 60)).padStart(2, '0');
@@ -179,18 +217,11 @@ const SideMenu = (props: IProps) => {
 
   const renderSaveReplayButton = () => {
     const disabled =
-      !config.manualRecord ||
-      recorderStatus !== RecStatus.ReadyToRecord ||
-      replayBufferSeconds < 1;
+      recorderStatus !== RecStatus.ReadyToRecord || replayBufferSeconds < 1;
 
     let tooltip: string;
 
-    if (!config.manualRecord) {
-      tooltip = getLocalePhrase(
-        language,
-        Phrase.SaveReplayBufferManualDisabled,
-      );
-    } else if (disabled) {
+    if (disabled) {
       tooltip = getLocalePhrase(language, Phrase.SaveReplayBufferDisabled);
     } else {
       tooltip = getLocalePhrase(
@@ -284,6 +315,7 @@ const SideMenu = (props: IProps) => {
         </Menu.Item.Icon>
         {getLocaleCategoryLabel(language, tabCategory)}
         {tabCategory === VideoCategory.Manual && renderManualStopStartButton()}
+        {tabCategory === VideoCategory.Manual && renderStartFromBufferButton()}
         <Menu.Item.Badge value={numCategoryVideos} />
       </Menu.Item>
     );
