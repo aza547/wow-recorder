@@ -60,6 +60,7 @@ import Poller from 'utils/Poller';
 import AsyncQueue from 'utils/AsyncQueue';
 import assert from 'assert';
 import { isHighRes } from 'renderer/rendererutils';
+import { configSchema } from 'config/configSchema';
 
 const devMode = process.env.NODE_ENV === 'development';
 const moov = Buffer.from('moov');
@@ -223,6 +224,15 @@ export default class Recorder extends EventEmitter {
       this.instantReplayFile = this.currentFile;
       this.emit('state-change');
     }
+  }, 1000);
+
+  /**
+   * Poll the replay buffer length from OBS and send it to the frontend so the
+   * save replay button can show how many seconds will be saved.
+   */
+  private replayBufferTimer = setInterval(() => {
+    const secs = this.getActiveReplayBufferLength();
+    send('updateReplayBufferSeconds', secs ?? 0);
   }, 1000);
 
   /**
@@ -582,8 +592,15 @@ export default class Recorder extends EventEmitter {
    * user to have setup their config for, which is why it's split out.
    */
   public async configureBase(config: BaseConfig, startup: boolean) {
-    const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
-      config;
+    const {
+      obsFPS,
+      obsRecEncoder,
+      obsQuality,
+      obsOutputResolution,
+      obsPath,
+      customReplayBuffer,
+      customReplayBufferLength,
+    } = config;
 
     if (this.obsState !== ERecordingState.None) {
       console.error('[Recorder] OBS must be offline to reconfigure base');
@@ -596,6 +613,17 @@ export default class Recorder extends EventEmitter {
 
     const canvas = noobs.GetPreviewInfo();
     noobs.ResetVideoContext(obsFPS, width, height);
+    noobs.SetFragmentation(true);
+
+    const replayBufferSeconds = customReplayBuffer
+      ? customReplayBufferLength
+      : configSchema.customReplayBufferLength.default;
+
+    // This is just stupidly large if the replay buffer is longer than the
+    // default as we always want the duration to be the limiting factor. But
+    // also it's been 1024MB for years so keep that if defaults not changed.
+    const replayBufferMaxSizeMb = replayBufferSeconds > 60 ? 1024 * 10 : 1024;
+    noobs.SetBuffering(true, replayBufferSeconds, replayBufferMaxSizeMb);
 
     const { canvasHeight, canvasWidth } = canvas;
     const changedResolution = canvasHeight !== height || canvasWidth !== width;
@@ -943,6 +971,7 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] OBS shutting down');
     this.clearFindWindowInterval();
     clearInterval(this.instantReplayTimer);
+    clearInterval(this.replayBufferTimer);
 
     if (!this.obsInitialized) {
       console.info('[Recorder] OBS not initialized so not attempting shutdown');
@@ -1194,8 +1223,6 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Noobs path:', noobsPath);
     console.info('[Recorder] Log path:', logPath);
     noobs.Init(noobsPath, logPath, cb);
-    noobs.SetBuffering(true);
-    noobs.SetFragmentation(true);
 
     const hwnd = getNativeWindowHandle();
     noobs.InitPreview(hwnd);
@@ -1930,5 +1957,23 @@ export default class Recorder extends EventEmitter {
     const last = this.lastFile;
     this.lastFile = null;
     return last;
+  }
+
+  public getActiveReplayBufferLength() {
+    if (!this.obsInitialized) {
+      return null;
+    }
+
+    if (this.obsState !== ERecordingState.Recording) {
+      return null;
+    }
+
+    const secs = noobs.GetReplayBufferLengthSec();
+
+    if (secs < 1) {
+      return null;
+    }
+
+    return secs;
   }
 }

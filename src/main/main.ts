@@ -72,6 +72,16 @@ if (firstTimeSetup) {
   cfg.set('firstTimeSetup', false); // This gets done again when we default the encoder.
 }
 
+// Max storage of 0 is the old way of indicating unlimited storage. Migrate
+// to the new representation of unlimited storage.
+const migrateMaxStorage = cfg.get<number>('maxStorage') < 1;
+
+if (migrateMaxStorage) {
+  console.info('[Main] Migrating legacy max storage setting');
+  cfg.set('storageLimit', false);
+  cfg.set('maxStorage', 50); // This just matches the new default.
+}
+
 // It's a common problem that hardware acceleration causes rendering issues.
 // Unclear why this happens and surely not an application bug but we can
 // make it easy for users to disable it if they want to. This is applied on launch

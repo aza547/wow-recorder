@@ -52,6 +52,7 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
+import ForeverLogHandler from 'parsing/ForeverLogHandler';
 
 /**
  * Manager class.
@@ -72,6 +73,7 @@ export default class Manager {
   private classicLogHandler: ClassicLogHandler | undefined;
   private classicPtrLogHandler: ClassicLogHandler | undefined;
   private eraLogHandler: EraLogHandler | undefined;
+  private foreverLogHandler: ForeverLogHandler | undefined;
 
   /**
    * If the config is valid or not.
@@ -118,6 +120,7 @@ export default class Manager {
     era: { advanced: true, latestLogAgeMs: -1 },
     retailPtr: { advanced: true, latestLogAgeMs: -1 },
     classicPtr: { advanced: true, latestLogAgeMs: -1 },
+    forever: { advanced: true, latestLogAgeMs: -1 },
   };
 
   /**
@@ -330,6 +333,9 @@ export default class Manager {
     const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
     const classicPtrLogPath = this.cfg.get<string>('classicPtrLogPath');
 
+    const recordForever = this.cfg.get<boolean>('recordForever');
+    const foreverLogPath = this.cfg.get<string>('foreverLogPath');
+
     const retail: CombatLogPathStatus = {
       latestLogAgeMs: recordRetail
         ? await getMostRecentCombatLogModifiedTime(retailLogPath)
@@ -371,12 +377,21 @@ export default class Manager {
         (await checkAdvancedCombatLogging(classicPtrLogPath)),
     };
 
+    const forever: CombatLogPathStatus = {
+      latestLogAgeMs: recordForever
+        ? await getMostRecentCombatLogModifiedTime(foreverLogPath)
+        : -1,
+      advanced:
+        !recordForever || (await checkAdvancedCombatLogging(foreverLogPath)),
+    };
+
     this.combatLoggingStatus = {
       retail,
       classic,
       era,
       retailPtr,
       classicPtr,
+      forever,
     };
 
     console.info(
@@ -455,6 +470,19 @@ export default class Manager {
         this.combatLoggingStatus.classicPtr.advanced = enabled;
         this.pushCombatLoggingStatus();
       }
+    } else if (key === 'forever') {
+      const recordForever = this.cfg.get<boolean>('recordForever');
+      const foreverLogPath = this.cfg.get<string>('foreverLogPath');
+
+      const enabled = recordForever
+        ? await checkAdvancedCombatLogging(foreverLogPath)
+        : false;
+
+      if (this.combatLoggingStatus.forever.advanced !== enabled) {
+        console.info('[Manager] Advanced logging status changed', key, enabled);
+        this.combatLoggingStatus.forever.advanced = enabled;
+        this.pushCombatLoggingStatus();
+      }
     } else {
       console.error('[Manager] Invalid combat logging status key', key);
       throw new Error('Invalid combat logging status key');
@@ -482,6 +510,7 @@ export default class Manager {
     const recordEra = this.cfg.get<boolean>('recordEra');
     const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
     const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
+    const recordForever = this.cfg.get<boolean>('recordForever');
 
     if (recordRetail) {
       const logPath = this.cfg.get<string>('retailLogPath');
@@ -542,6 +571,20 @@ export default class Manager {
     if (recordClassicPtr) {
       const logPath = this.cfg.get<string>('classicPtrLogPath');
       const key: keyof CombatLoggingStatus = 'classicPtr';
+
+      const watcher = startWatchingConfigWtf(logPath, () => {
+        this.checkAdvancedCombatLoggingForGameType(key);
+      });
+
+      if (watcher) {
+        console.info('[Manager] Watching Config.wtf for', key, logPath);
+        this.configWtfWatchers.push(watcher);
+      }
+    }
+
+    if (recordForever) {
+      const logPath = this.cfg.get<string>('foreverLogPath');
+      const key: keyof CombatLoggingStatus = 'forever';
 
       const watcher = startWatchingConfigWtf(logPath, () => {
         this.checkAdvancedCombatLoggingForGameType(key);
@@ -648,6 +691,7 @@ export default class Manager {
         this.classicLogHandler,
         this.classicPtrLogHandler,
         this.eraLogHandler,
+        this.foreverLogHandler,
       ];
 
       logHandlers
@@ -659,29 +703,40 @@ export default class Manager {
       this.classicLogHandler = undefined;
       this.classicPtrLogHandler = undefined;
       this.eraLogHandler = undefined;
+      this.foreverLogHandler = undefined;
     }
 
     if (config.recordRetail) {
+      console.info('[Manager] Creating retail log handler');
       this.retailLogHandler = new RetailLogHandler(config.retailLogPath);
     }
 
     if (config.recordClassic) {
+      console.info('[Manager] Creating classic log handler');
       this.classicLogHandler = new ClassicLogHandler(config.classicLogPath);
     }
 
     if (config.recordClassicPtr) {
+      console.info('[Manager] Creating classic ptr log handler');
       this.classicPtrLogHandler = new ClassicLogHandler(
         config.classicPtrLogPath,
       );
     }
 
     if (config.recordEra) {
+      console.info('[Manager] Creating era log handler');
       this.eraLogHandler = new EraLogHandler(config.eraLogPath);
     }
 
     if (config.recordRetailPtr) {
+      console.info('[Manager] Creating retail ptr log handler');
       this.retailPtrLogHandler = new RetailLogHandler(config.retailPtrLogPath);
       this.retailPtrLogHandler.setIsPtr();
+    }
+
+    if (config.recordForever) {
+      console.info('[Manager] Creating forever log handler');
+      this.foreverLogHandler = new ForeverLogHandler(config.foreverLogPath);
     }
   }
 
@@ -834,7 +889,9 @@ export default class Manager {
         return;
       }
 
-      if (!this.poller.isWowRunning()) {
+      const flavour = this.poller.getFlavor();
+
+      if (!flavour) {
         console.warn('[Manager] WoW not running when manual hotkey pressed');
         return;
       }
@@ -844,7 +901,31 @@ export default class Manager {
         return;
       }
 
-      LogHandler.handleManualRecordingHotKey();
+      LogHandler.handleManualRecordingHotKey(flavour);
+    });
+
+    ipcMain.on('saveReplayBuffer', async () => {
+      const manualRecordEnabled = this.cfg.get('manualRecord');
+
+      if (!manualRecordEnabled) {
+        // Shouldn't really be possible as the UI hides the button.
+        console.warn('[Manager] Manual recording is not enabled');
+        return;
+      }
+
+      const flavour = this.poller.getFlavor();
+
+      if (!flavour) {
+        console.warn('[Manager] WoW not running when save replay pressed');
+        return;
+      }
+
+      if (this.recorder.obsState !== ERecordingState.Recording) {
+        console.warn('[Manager] Recorder not ready when save replay pressed');
+        return;
+      }
+
+      LogHandler.saveReplayBuffer(flavour);
     });
 
     // Handles a click of the force stop button.
@@ -883,6 +964,10 @@ export default class Manager {
       this.refreshCombatLoggingStatus();
     });
 
+    ipcMain.on('refreshDiskStatus', async () => {
+      await DiskClient.getInstance().refreshStatus();
+    });
+
     /**
      * Manually start/stop recording. Being careful with the logs here as
      * some of this is very spammy as it fires on every key press.
@@ -903,7 +988,9 @@ export default class Manager {
         return;
       }
 
-      if (!this.poller.isWowRunning()) {
+      const flavour = this.poller.getFlavor();
+
+      if (!flavour) {
         console.warn('[Manager] WoW not running when manual hotkey pressed');
         return;
       }
@@ -913,7 +1000,7 @@ export default class Manager {
         return;
       }
 
-      LogHandler.handleManualRecordingHotKey();
+      LogHandler.handleManualRecordingHotKey(flavour);
     });
 
     // If Windows is going to sleep, we don't want to confuse OBS. It would be

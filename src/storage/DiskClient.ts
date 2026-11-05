@@ -62,7 +62,11 @@ export default class DiskClient implements StorageClient {
 
     const usage = await new DiskSizeMonitor().usage();
     const cfg = ConfigService.getInstance();
-    const limit = cfg.get<number>('maxStorage') * 1024 ** 3;
+
+    const limit = cfg.get<boolean>('storageLimit')
+      ? cfg.get<number>('maxStorage') * 1024 ** 3
+      : 0; // Historically we used 0 to indicate no limit.
+
     const status: DiskStatus = { usage, limit };
     send('updateDiskStatus', status);
   }
@@ -95,7 +99,7 @@ export default class DiskClient implements StorageClient {
       return [];
     }
 
-    // Windows has a 16k file handle limit per process. Load in batches
+    // Node has an 8k file handle limit per process. Load in batches
     // of 1000 to be safe. The real fix here would be to have a local database
     // for managing this stuff rather than reading many thousand files here.
     const batchSize = 1000;
