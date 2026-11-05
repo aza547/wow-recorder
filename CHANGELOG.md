@@ -8,12 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 875](https://github.com/aza547/wow-recorder/issues/875) - Confirm recording lock, tag and delete actions before updating their state, and report failures.
+
+## [7.14.0] - 2026-11-04
+### Changed
+- Clip range now defaults to -7s and +5s instead of ±15s.
+- Add a "Limit Disk Storage" switch to avoid the unintutive behaviour of setting 0.
+- Log path settings are now neater and hide less common game modes.
+
+### Added
+- Add basic forever support for raids and manual recordings.
+- Add the "Save Buffer" function. Enabling Shadowplay-like function.
+- Add the ability to set a custom replay buffer duration up to 20 mins (default is 60s).
+
+### Fixed
+- Fix a bug where manual recordings were always classified as retail, they will be categorized by the running WoW client.
+- Made the behaviour of the max storage number field more user friendly.
+
+## [7.13.4] - 2026-10-22
+### Fixed
 - Fix an issue where volume was not correctly applied to app sources on launch of the program.
 - Fix an issue where PTT induced mute was not correctly applied to microphones on launch of the program.
 - [Issue 917](https://github.com/aza547/wow-recorder/issues/917) - Fix an issue where the audio source volume slider was not correctly draggable.
 - [Issue 918](https://github.com/aza547/wow-recorder/issues/918) - Improve the user experience slightly when binding a hotkey.
 - Handle partial line reads of the combat log, which can happen on some (typically Linux) filesystems.
-- [Issue 875](https://github.com/aza547/wow-recorder/issues/875) - Confirm recording lock, tag and delete actions before updating their state, and report failures.
+- Improve disk size monitor open file handles, particularly for users with many videos.
 
 ## [7.13.3] - 2026-10-15
 ### Fixed

@@ -16,6 +16,7 @@ import InstantReplay from './InstantReplay';
 
 interface IProps {
   recorderStatus: RecStatus;
+  replayBufferSeconds: number;
   videoState: RendererVideo[];
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   appState: AppState;
@@ -37,6 +38,7 @@ interface IProps {
 const Layout = (props: IProps) => {
   const {
     recorderStatus,
+    replayBufferSeconds,
     videoState,
     setVideoState,
     appState,
@@ -72,6 +74,7 @@ const Layout = (props: IProps) => {
     return (
       <SettingsPage
         recorderStatus={recorderStatus}
+        replayBufferSeconds={replayBufferSeconds}
         config={config}
         setConfig={setConfig}
         appState={appState}

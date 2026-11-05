@@ -11,6 +11,8 @@ export type ConfigurationSchema = {
   classicLogPath: string;
   classicPtrLogPath: string;
   eraLogPath: string;
+  foreverLogPath: string;
+  storageLimit: boolean;
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
@@ -29,6 +31,7 @@ export type ConfigurationSchema = {
   recordClassic: boolean;
   recordClassicPtr: boolean;
   recordEra: boolean;
+  recordForever: boolean;
   recordRaids: boolean;
   recordDungeons: boolean;
   recordTwoVTwo: boolean;
@@ -66,6 +69,7 @@ export type ConfigurationSchema = {
   cloudUpload: boolean;
   cloudUploadRetail: boolean;
   cloudUploadClassic: boolean;
+  cloudUploadForever: boolean;
   cloudUploadRateLimit: boolean;
   cloudUploadRateLimitMbps: number;
   cloudAccountName: string;
@@ -96,11 +100,14 @@ export type ConfigurationSchema = {
   manualRecordHotKeyModifiers: string;
   manualRecordSoundAlert: boolean;
   manualRecordUpload: boolean;
+  customReplayBuffer: boolean;
+  customReplayBufferLength: number;
   firstTimeSetup: boolean;
   chatUserNameAgreed: string;
   validateLogPaths: boolean;
   validateNtfs: boolean;
   characterUploadFilters: CharacterFilter[];
+  showAllGamesLogPathSettings: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -148,6 +155,16 @@ export const configSchema = {
     description: Phrase.RetailPtrLogPathDescription,
     type: 'string',
     default: '',
+  },
+  foreverLogPath: {
+    description: Phrase.ForeverLogPathDescription,
+    type: 'string',
+    default: '',
+  },
+  storageLimit: {
+    description: Phrase.StorageLimitDescription,
+    type: 'boolean',
+    default: true,
   },
   maxStorage: {
     description: Phrase.MaxStorageDescription,
@@ -254,6 +271,11 @@ export const configSchema = {
   },
   recordEra: {
     description: Phrase.RecordEraDescription,
+    type: 'boolean',
+    default: false,
+  },
+  recordForever: {
+    description: Phrase.RecordForeverDescription,
     type: 'boolean',
     default: false,
   },
@@ -453,6 +475,11 @@ export const configSchema = {
     type: 'boolean',
     default: true,
   },
+  cloudUploadForever: {
+    description: Phrase.CloudUploadForeverDescription,
+    type: 'boolean',
+    default: true,
+  },
   cloudUploadRateLimit: {
     description: Phrase.CloudUploadRateLimitDescription,
     type: 'boolean',
@@ -581,7 +608,7 @@ export const configSchema = {
   manualRecord: {
     description: Phrase.ManualRecordDescription,
     type: 'boolean',
-    default: false,
+    default: true,
   },
   manualRecordHotKey: {
     description: Phrase.ManualRecordHotKeyDescription,
@@ -597,6 +624,18 @@ export const configSchema = {
     description: Phrase.ManualRecordSoundAlertDescription,
     type: 'boolean',
     default: true,
+  },
+  customReplayBuffer: {
+    description: Phrase.CustomReplayBufferDescription,
+    type: 'boolean',
+    default: false,
+  },
+  customReplayBufferLength: {
+    description: Phrase.ReplayBufferSecondsDescription,
+    type: 'integer',
+    default: 60,
+    minimum: 60,
+    maximum: 1200,
   },
   manualRecordUpload: {
     description: Phrase.ManualRecordUploadDescription,
@@ -627,5 +666,10 @@ export const configSchema = {
     description: Phrase.Unknown, // Not actually exposed.
     type: 'array',
     default: [],
+  },
+  showAllGamesLogPathSettings: {
+    description: Phrase.ShowAllGamesLogPathSettingsDescription,
+    type: 'boolean',
+    default: false,
   },
 };
