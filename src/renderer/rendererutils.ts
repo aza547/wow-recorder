@@ -59,11 +59,11 @@ const getVideoResult = (video: RendererVideo): boolean => {
  * Returns a string of the form MM:SS.
  */
 const getFormattedDuration = (video: RendererVideo) => {
-  const { duration } = video;
+  const duration = Math.round(video.duration);
 
   const hours = Math.floor(duration / 3600);
   const minutes = Math.floor((duration % 3600) / 60);
-  const seconds = Math.round(duration % 60);
+  const seconds = duration % 60;
 
   const formattedHours = hours < 10 ? `0${hours}` : hours;
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;

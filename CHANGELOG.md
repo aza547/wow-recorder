@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 934](https://github.com/aza547/wow-recorder/issues/934) - Fix recording durations displaying 60 seconds instead of rolling over to the next minute.
 
 ## [7.14.0] - 2026-11-04
 ### Changed
