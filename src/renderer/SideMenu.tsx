@@ -250,7 +250,7 @@ const SideMenu = (props: IProps) => {
               !disabled &&
                 cn(
                   // Same glow and pulse as the active instant replay tab.
-                  'hover:bg-card/60 cursor-pointer animate-pulse',
+                  'hover:bg-card/60 cursor-pointer',
                   'text-[#bb4420] hover:text-[#bb4420]',
                   'drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]',
                 ),
@@ -352,12 +352,11 @@ const SideMenu = (props: IProps) => {
       instantReplayState.current || appState.page === Pages.InstantReplay
     );
 
-    let spanClassName = 'inline-flex items-center w-full min-w-0';
+    const spanClassName = 'inline-flex items-center w-full min-w-0';
     let radioClassName = '';
     let textClassName = 'font-semibold min-w-0 leading-tight break-words';
 
     if (!disabled) {
-      spanClassName += ' animate-pulse';
       radioClassName = 'text-[#bb4420]';
       textClassName += ' text-[#bb4420]';
       textClassName += ' drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]';
