@@ -1,6 +1,7 @@
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react';
-import { AppState } from 'main/types';
+import { ActivityStatus, AppState } from 'main/types';
+import { VideoCategory } from 'types/VideoCategory';
 import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
 import Switch from './components/Switch/Switch';
@@ -9,15 +10,17 @@ import { Phrase } from 'localisation/phrases';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Info } from 'lucide-react';
 import HotKeyInput from './HotKeyInput';
+import TextBanner from './components/TextBanner/TextBanner';
 
 interface IProps {
+  activityStatus: ActivityStatus | null;
   appState: AppState;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 const ManualSettings = (props: IProps) => {
-  const { appState, config, setConfig } = props;
+  const { activityStatus, appState, config, setConfig } = props;
   const initialRender = useRef(true);
 
   useEffect(() => {
@@ -39,6 +42,10 @@ const ManualSettings = (props: IProps) => {
     config.manualRecordHotKeyModifiers,
     config.manualRecordSoundAlert,
   ]);
+
+  const isComponentDisabled = () => {
+    return activityStatus?.category === VideoCategory.Manual;
+  };
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
@@ -94,6 +101,14 @@ const ManualSettings = (props: IProps) => {
       };
     });
   };
+
+  if (isComponentDisabled()) {
+    return (
+      <TextBanner>
+        {getLocalePhrase(appState.language, Phrase.SettingsDisabledText)}
+      </TextBanner>
+    );
+  }
 
   return (
     <div className="flex flex-row flex-wrap gap-x-4 gap-y-2">

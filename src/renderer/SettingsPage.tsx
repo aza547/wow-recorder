@@ -4,6 +4,7 @@ import {
   AppState,
   RecStatus,
   RendererVideo,
+  ActivityStatus,
 } from 'main/types';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase } from 'localisation/translations';
@@ -35,6 +36,7 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   combatLoggingStatus: CombatLoggingStatus;
   videoState: RendererVideo[];
+  activityStatus: ActivityStatus | null;
 }
 
 const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
@@ -51,6 +53,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
     setAppState,
     combatLoggingStatus,
     videoState,
+    activityStatus,
   } = props;
 
   return (
@@ -173,6 +176,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <ManualSettings
+                  activityStatus={activityStatus}
                   appState={appState}
                   config={config}
                   setConfig={setConfig}
