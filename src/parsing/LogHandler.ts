@@ -631,7 +631,15 @@ export default abstract class LogHandler {
       return;
     }
 
-    await Recorder.getInstance().waitForConvert();
+    try {
+      await Recorder.getInstance().waitForConvert();
+    } catch (error) {
+      console.error('[LogHandler] Save replay buffer convert failed', error);
+      LogHandler.dropActivity();
+      await Recorder.getInstance().forceStop(true);
+      return;
+    }
+
     started.end(new Date(), true); // Result is meaningless but required.
     await LogHandler.endActivity();
     if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_STOP);
