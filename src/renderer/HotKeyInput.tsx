@@ -53,40 +53,56 @@ const HotKeyInput = (props: HotKeyInputProps) => {
   const hotKey = getHotKeyFromConfig(config[keyField], config[modifiersField]);
 
   useEffect(() => {
+    if (!focused) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
     const listenNextKeyPress = async () => {
-      if (focused) {
-        let keyPressEvent = await getNextKeyOrMouseEvent();
+      let keyPressEvent = await getNextKeyOrMouseEvent();
 
-        while (
-          keyPressEvent.type === PTTEventType.EVENT_MOUSE_PRESSED ||
-          keyPressEvent.type === PTTEventType.EVENT_MOUSE_RELEASED
-        ) {
-          // Don't accept mouse events. PTT hotkey allows mouse events but
-          // doesn't use this component.
-          keyPressEvent = await getNextKeyOrMouseEvent();
+      if (cancelled) {
+        return;
+      }
+
+      while (
+        keyPressEvent.type === PTTEventType.EVENT_MOUSE_PRESSED ||
+        keyPressEvent.type === PTTEventType.EVENT_MOUSE_RELEASED
+      ) {
+        // Don't accept mouse events. PTT hotkey allows mouse events but
+        // doesn't use this component.
+        keyPressEvent = await getNextKeyOrMouseEvent();
+
+        if (cancelled) {
+          return;
         }
+      }
 
-        setFocused(false);
-        const modifiers = getKeyModifiersString(keyPressEvent);
+      setFocused(false);
+      const modifiers = getKeyModifiersString(keyPressEvent);
 
-        setConfig((prevState) => {
-          return {
-            ...prevState,
-            [keyField]: keyPressEvent.keyCode,
-            [modifiersField]: modifiers,
-          };
-        });
-
-        setConfigValues({
+      setConfig((prevState) => {
+        return {
+          ...prevState,
           [keyField]: keyPressEvent.keyCode,
           [modifiersField]: modifiers,
-        });
+        };
+      });
 
-        inputRef.current?.blur();
-      }
+      setConfigValues({
+        [keyField]: keyPressEvent.keyCode,
+        [modifiersField]: modifiers,
+      });
+
+      inputRef.current?.blur();
     };
 
     listenNextKeyPress();
+
+    return () => {
+      cancelled = true;
+    };
   }, [focused, setConfig, keyField, modifiersField]);
 
   const getHotkeyString = () => {
@@ -118,6 +134,7 @@ const HotKeyInput = (props: HotKeyInputProps) => {
       <Input
         ref={inputRef}
         name={keyField}
+        id={keyField}
         value={getHotkeyString()}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
