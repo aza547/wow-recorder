@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [Issue 931](https://github.com/aza547/wow-recorder/issues/931) - Support both "Save Buffer Immediately" and "Save Buffer and Continue Recording" modes.
 - [Issue 930](https://github.com/aza547/wow-recorder/issues/930) - Add hotkeys for save buffer feature.
+- [Issue 927](https://github.com/aza547/wow-recorder/issues/927) - Expose replay buffer MB in the settings.
 
 ### Fixed
 - [Issue 934](https://github.com/aza547/wow-recorder/issues/934) - Fix recording durations displaying 60 seconds instead of rolling over to the next minute.

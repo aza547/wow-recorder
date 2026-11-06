@@ -30,6 +30,7 @@ import ManualSettings from './ManualSettings';
 interface IProps {
   recorderStatus: RecStatus;
   replayBufferSeconds: number;
+  replayBufferSizeMb: number;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   appState: AppState;
@@ -47,6 +48,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
   const {
     recorderStatus,
     replayBufferSeconds,
+    replayBufferSizeMb,
     config,
     setConfig,
     appState,
@@ -103,6 +105,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <ReplayBufferSettings
                   recorderStatus={recorderStatus}
                   replayBufferSeconds={replayBufferSeconds}
+                  replayBufferSizeMb={replayBufferSizeMb}
                   appState={appState}
                 />
               </div>

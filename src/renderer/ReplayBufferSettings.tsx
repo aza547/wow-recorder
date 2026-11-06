@@ -16,6 +16,7 @@ import HotKeyInput from './HotKeyInput';
 interface IProps {
   recorderStatus: RecStatus;
   replayBufferSeconds: number;
+  replayBufferSizeMb: number;
   appState: AppState;
 }
 
@@ -26,7 +27,8 @@ const minReplayBufferSecs = configSchema.customReplayBufferLength.minimum;
 const maxReplayBufferSecs = configSchema.customReplayBufferLength.maximum;
 
 const ReplayBufferSettings: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, replayBufferSeconds, appState } = props;
+  const { recorderStatus, replayBufferSeconds, replayBufferSizeMb, appState } =
+    props;
   const { language } = appState;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
@@ -174,7 +176,7 @@ const ReplayBufferSettings: React.FC<IProps> = (props: IProps) => {
 
     const usage = Math.min(replayBufferSeconds, max);
     const perc = max > 0 ? (100 * usage) / max : 0;
-    const text = `${usage}s / ${max}s`;
+    const text = `${usage}s / ${max}s (${Math.round(replayBufferSizeMb)} MB)`;
 
     return (
       <div className="flex-col">

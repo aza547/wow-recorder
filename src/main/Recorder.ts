@@ -246,12 +246,14 @@ export default class Recorder extends EventEmitter {
   }, 1000);
 
   /**
-   * Poll the replay buffer length from OBS and send it to the frontend so the
-   * save replay button can show how many seconds will be saved.
+   * Poll the replay buffer length and size from OBS and send them to the
+   * frontend so the UI can show how much will be saved.
    */
   private replayBufferTimer = setInterval(() => {
     const secs = this.getActiveReplayBufferLength();
     send('updateReplayBufferSeconds', secs ?? 0);
+    const sizeMb = this.getActiveReplayBufferSizeMb();
+    send('updateReplayBufferSizeMb', sizeMb ?? 0);
   }, 1000);
 
   /**
@@ -1308,6 +1310,7 @@ export default class Recorder extends EventEmitter {
         this.currentFile = signal.path ?? null;
         this.convertQueue.push(signal);
         send('updateReplayBufferSeconds', 0);
+        send('updateReplayBufferSizeMb', 0);
         break;
 
       default:
@@ -2011,5 +2014,23 @@ export default class Recorder extends EventEmitter {
     }
 
     return secs;
+  }
+
+  public getActiveReplayBufferSizeMb() {
+    if (!this.obsInitialized) {
+      return null;
+    }
+
+    if (this.obsState !== ERecordingState.Recording) {
+      return null;
+    }
+
+    const sizeMb = noobs.GetReplayBufferSizeMb();
+
+    if (sizeMb <= 0) {
+      return null;
+    }
+
+    return sizeMb;
   }
 }
