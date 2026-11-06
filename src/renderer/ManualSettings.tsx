@@ -1,12 +1,7 @@
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import { AppState } from 'main/types';
+import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react';
+import { ActivityStatus, AppState } from 'main/types';
+import { VideoCategory } from 'types/VideoCategory';
 import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
 import Switch from './components/Switch/Switch';
@@ -14,65 +9,19 @@ import Label from './components/Label/Label';
 import { Phrase } from 'localisation/phrases';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Info } from 'lucide-react';
-import { Input } from './components/Input/Input';
-import {
-  getKeyModifiersString,
-  getKeyPressEventString,
-  getManualRecordHotKeyFromConfig,
-  getNextKeyOrMouseEvent,
-} from './rendererutils';
-import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
+import HotKeyInput from './HotKeyInput';
+import TextBanner from './components/TextBanner/TextBanner';
 
 interface IProps {
+  activityStatus: ActivityStatus | null;
   appState: AppState;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 const ManualSettings = (props: IProps) => {
-  const { appState, config, setConfig } = props;
+  const { activityStatus, appState, config, setConfig } = props;
   const initialRender = useRef(true);
-  const manualHotKeyInputRef = useRef<HTMLInputElement>(null);
-
-  const [manualHotKeyFieldFocused, setManualHotKeyFieldFocused] =
-    useState(false);
-
-  const [manualHotKey, setManualHotKey] = useState<PTTKeyPressEvent>(
-    getManualRecordHotKeyFromConfig(config),
-  );
-
-  useEffect(() => {
-    const setManualKeyConfig = (event: PTTKeyPressEvent) => {
-      setConfig((prevState) => {
-        return {
-          ...prevState,
-          manualRecordHotKey: event.keyCode,
-          manualRecordHotKeyModifiers: getKeyModifiersString(event),
-        };
-      });
-    };
-
-    const listenNextKeyPress = async () => {
-      if (manualHotKeyFieldFocused) {
-        let keyPressEvent = await getNextKeyOrMouseEvent();
-
-        while (
-          keyPressEvent.type === PTTEventType.EVENT_MOUSE_PRESSED ||
-          keyPressEvent.type === PTTEventType.EVENT_MOUSE_RELEASED
-        ) {
-          // Don't accept mouse events
-          keyPressEvent = await getNextKeyOrMouseEvent();
-        }
-
-        setManualHotKeyFieldFocused(false);
-        setManualHotKey(keyPressEvent);
-        setManualKeyConfig(keyPressEvent);
-        manualHotKeyInputRef.current?.blur();
-      }
-    };
-
-    listenNextKeyPress();
-  }, [manualHotKeyFieldFocused, setConfig]);
 
   useEffect(() => {
     // Don't fire on the initial render.
@@ -93,6 +42,10 @@ const ManualSettings = (props: IProps) => {
     config.manualRecordHotKeyModifiers,
     config.manualRecordSoundAlert,
   ]);
+
+  const isComponentDisabled = () => {
+    return activityStatus?.category === VideoCategory.Manual;
+  };
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
@@ -149,50 +102,16 @@ const ManualSettings = (props: IProps) => {
     });
   };
 
-  const getHotkeyString = () => {
-    if (manualHotKeyFieldFocused) {
-      return getLocalePhrase(appState.language, Phrase.PressAnyKeyCombination);
-    }
-
-    if (manualHotKey !== null) {
-      return `${getKeyPressEventString(manualHotKey, appState)} (${getLocalePhrase(
-        appState.language,
-        Phrase.ClickToRebind,
-      )})`;
-    }
-
-    return getLocalePhrase(appState.language, Phrase.ClickToBind);
-  };
-
-  const getManualHotKeySelect = () => {
+  if (isComponentDisabled()) {
     return (
-      <div className="flex flex-col">
-        <Label htmlFor="pttKey" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.ManualRecordHotKeyLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              Phrase.ManualRecordHotKeyDescription,
-            )}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <Input
-          ref={manualHotKeyInputRef}
-          name="manualHotKeyInput"
-          value={getHotkeyString()}
-          onFocus={() => setManualHotKeyFieldFocused(true)}
-          onBlur={() => setManualHotKeyFieldFocused(false)}
-          readOnly
-        />
-      </div>
+      <TextBanner>
+        {getLocalePhrase(appState.language, Phrase.SettingsDisabledText)}
+      </TextBanner>
     );
-  };
+  }
 
   return (
-    <div className="flex flex-row flex-wrap gap-x-4">
+    <div className="flex flex-row flex-wrap gap-x-4 gap-y-2">
       {getSwitchForm(
         'manualRecord',
         Phrase.ManualRecordSwitchLabel,
@@ -206,7 +125,28 @@ const ManualSettings = (props: IProps) => {
           setSoundAlert,
         )}
 
-      {config.manualRecord && getManualHotKeySelect()}
+      {config.manualRecord && (
+        <div className="flex flex-row gap-x-6">
+          <HotKeyInput
+            appState={appState}
+            config={config}
+            setConfig={setConfig}
+            keyField="manualRecordHotKey"
+            modifiersField="manualRecordHotKeyModifiers"
+            label={Phrase.ManualRecordHotKeyLabel}
+            description={Phrase.ManualRecordHotKeyDescription}
+          />
+          <HotKeyInput
+            appState={appState}
+            config={config}
+            setConfig={setConfig}
+            keyField="startFromReplayBufferHotKey"
+            modifiersField="startFromReplayBufferHotKeyModifiers"
+            label={Phrase.StartFromReplayBufferHotKeyLabel}
+            description={Phrase.StartFromReplayBufferHotKeyDescription}
+          />
+        </div>
+      )}
     </div>
   );
 };

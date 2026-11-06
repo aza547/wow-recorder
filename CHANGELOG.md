@@ -6,9 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Add a "Replay Buffer" settings category to reduce settings clutter.
+- [Issue 933](https://github.com/aza547/wow-recorder/issues/933) - Remove pulsing animation from side menu buttons.
+
 ### Added
+- [Issue 931](https://github.com/aza547/wow-recorder/issues/931) - Support both "Save Buffer Immediately" and "Save Buffer and Continue Recording" modes.
+- [Issue 930](https://github.com/aza547/wow-recorder/issues/930) - Add hotkeys for save buffer feature.
+
 ### Fixed
 - [Issue 934](https://github.com/aza547/wow-recorder/issues/934) - Fix recording durations displaying 60 seconds instead of rolling over to the next minute.
+- [Issue 929](https://github.com/aza547/wow-recorder/issues/929) - Fix a broken tooltip on the "Save Buffer" button.
+
 
 ## [7.14.0] - 2026-11-04
 ### Changed

@@ -8,12 +8,13 @@ import {
   FileText,
   Goal,
   HardHat,
+  CircleFadingPlay,
   MonitorCog,
-  Play,
   Radio,
-  Square,
+  CircleStop,
   Sword,
   Swords,
+  CirclePlay,
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDungeon, faDragon } from '@fortawesome/free-solid-svg-icons';
@@ -139,11 +140,11 @@ const SideMenu = (props: IProps) => {
       return <></>;
     }
 
-    let icon = <Play size={20} fill="currentColor" />;
+    let icon = <CirclePlay size={20} />;
     let tooltip = getLocalePhrase(language, Phrase.StartManualRecordingTooltip);
 
     if (recorderStatus === RecStatus.Recording) {
-      icon = <Square size={20} fill="currentColor" />;
+      icon = <CircleStop size={20} />;
       tooltip = getLocalePhrase(language, Phrase.StopManualRecordingTooltip);
     }
 
@@ -170,6 +171,41 @@ const SideMenu = (props: IProps) => {
     );
   };
 
+  const renderStartFromBufferButton = () => {
+    // Only shown while buffering with nothing being recorded, as otherwise
+    // the buffer has already been converted to a recording.
+    const hidden =
+      !config.manualRecord || recorderStatus !== RecStatus.ReadyToRecord;
+
+    if (hidden) {
+      return <></>;
+    }
+
+    return (
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.StartFromBufferTooltip)}
+      >
+        <Button
+          size="sm"
+          variant="ghost"
+          className="mr-1 p-1 h-6 w-6 hover:bg-secondary"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Shares the debounce with the start/stop button, so a quick
+            // double click can't start from the buffer and then stop.
+            const now = Date.now();
+            if (now - lastManualStartStopClickRef.current < 1000) return;
+            lastManualStartStopClickRef.current = now;
+            ipc.startManualFromReplayBuffer();
+          }}
+        >
+          <CircleFadingPlay size={20} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
   // Always MM:SS, e.g. "00:45" or "01:30".
   const formatBufferDuration = (secs: number) => {
     const mins = String(Math.floor(secs / 60)).padStart(2, '0');
@@ -178,20 +214,19 @@ const SideMenu = (props: IProps) => {
   };
 
   const renderSaveReplayButton = () => {
-    const disabled =
-      !config.manualRecord ||
-      recorderStatus !== RecStatus.ReadyToRecord ||
-      replayBufferSeconds < 1;
+    const recording =
+      recorderStatus === RecStatus.Recording ||
+      recorderStatus === RecStatus.Overrunning;
+
+    const disabled = recorderStatus !== RecStatus.ReadyToRecord;
 
     let tooltip: string;
 
-    if (!config.manualRecord) {
-      tooltip = getLocalePhrase(
-        language,
-        Phrase.SaveReplayBufferManualDisabled,
-      );
-    } else if (disabled) {
+    if (recording) {
       tooltip = getLocalePhrase(language, Phrase.SaveReplayBufferDisabled);
+    } else if (disabled) {
+      // Not recording, but the buffer isn't running, e.g. WoW is closed.
+      tooltip = getLocalePhrase(language, Phrase.SaveReplayBufferInactive);
     } else {
       tooltip = getLocalePhrase(
         language,
@@ -215,7 +250,7 @@ const SideMenu = (props: IProps) => {
               !disabled &&
                 cn(
                   // Same glow and pulse as the active instant replay tab.
-                  'hover:bg-card/60 cursor-pointer animate-pulse',
+                  'hover:bg-card/60 cursor-pointer',
                   'text-[#bb4420] hover:text-[#bb4420]',
                   'drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]',
                 ),
@@ -284,6 +319,7 @@ const SideMenu = (props: IProps) => {
         </Menu.Item.Icon>
         {getLocaleCategoryLabel(language, tabCategory)}
         {tabCategory === VideoCategory.Manual && renderManualStopStartButton()}
+        {tabCategory === VideoCategory.Manual && renderStartFromBufferButton()}
         <Menu.Item.Badge value={numCategoryVideos} />
       </Menu.Item>
     );
@@ -316,12 +352,11 @@ const SideMenu = (props: IProps) => {
       instantReplayState.current || appState.page === Pages.InstantReplay
     );
 
-    let spanClassName = 'inline-flex items-center w-full min-w-0';
+    const spanClassName = 'inline-flex items-center w-full min-w-0';
     let radioClassName = '';
     let textClassName = 'font-semibold min-w-0 leading-tight break-words';
 
     if (!disabled) {
-      spanClassName += ' animate-pulse';
       radioClassName = 'text-[#bb4420]';
       textClassName += ' text-[#bb4420]';
       textClassName += ' drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]';

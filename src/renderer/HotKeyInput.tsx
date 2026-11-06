@@ -1,0 +1,147 @@
+import { ConfigurationSchema } from 'config/configSchema';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { AppState } from 'main/types';
+import { getLocalePhrase } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
+import { Info } from 'lucide-react';
+import { PTTEventType } from 'types/KeyTypesUIOHook';
+import { setConfigValues } from './useSettings';
+import Label from './components/Label/Label';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import { Input } from './components/Input/Input';
+import {
+  getKeyModifiersString,
+  getKeyPressEventString,
+  getHotKeyFromConfig,
+  getNextKeyOrMouseEvent,
+} from './rendererutils';
+
+type HotKeyField =
+  | 'manualRecordHotKey'
+  | 'saveReplayBufferHotKey'
+  | 'startFromReplayBufferHotKey';
+
+type HotKeyModifiersField =
+  | 'manualRecordHotKeyModifiers'
+  | 'saveReplayBufferHotKeyModifiers'
+  | 'startFromReplayBufferHotKeyModifiers';
+
+interface HotKeyInputProps {
+  appState: AppState;
+  config: ConfigurationSchema;
+  setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
+  keyField: HotKeyField;
+  modifiersField: HotKeyModifiersField;
+  label: Phrase;
+  description: Phrase;
+}
+
+const HotKeyInput = (props: HotKeyInputProps) => {
+  const {
+    appState,
+    config,
+    setConfig,
+    keyField,
+    modifiersField,
+    label,
+    description,
+  } = props;
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [focused, setFocused] = useState(false);
+
+  const hotKey = getHotKeyFromConfig(config[keyField], config[modifiersField]);
+
+  useEffect(() => {
+    if (!focused) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const listenNextKeyPress = async () => {
+      let keyPressEvent = await getNextKeyOrMouseEvent();
+
+      if (cancelled) {
+        return;
+      }
+
+      while (
+        keyPressEvent.type === PTTEventType.EVENT_MOUSE_PRESSED ||
+        keyPressEvent.type === PTTEventType.EVENT_MOUSE_RELEASED
+      ) {
+        // Don't accept mouse events. PTT hotkey allows mouse events but
+        // doesn't use this component.
+        keyPressEvent = await getNextKeyOrMouseEvent();
+
+        if (cancelled) {
+          return;
+        }
+      }
+
+      setFocused(false);
+      const modifiers = getKeyModifiersString(keyPressEvent);
+
+      setConfig((prevState) => {
+        return {
+          ...prevState,
+          [keyField]: keyPressEvent.keyCode,
+          [modifiersField]: modifiers,
+        };
+      });
+
+      setConfigValues({
+        [keyField]: keyPressEvent.keyCode,
+        [modifiersField]: modifiers,
+      });
+
+      inputRef.current?.blur();
+    };
+
+    listenNextKeyPress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [focused, setConfig, keyField, modifiersField]);
+
+  const getHotkeyString = () => {
+    if (focused) {
+      return getLocalePhrase(appState.language, Phrase.PressAnyKeyCombination);
+    }
+
+    if (hotKey.keyCode > 0) {
+      return `${getKeyPressEventString(hotKey, appState)} (${getLocalePhrase(
+        appState.language,
+        Phrase.ClickToRebind,
+      )})`;
+    }
+
+    return getLocalePhrase(appState.language, Phrase.ClickToBind);
+  };
+
+  return (
+    <div className="flex flex-col">
+      <Label htmlFor={keyField} className="flex items-center">
+        {getLocalePhrase(appState.language, label)}
+        <Tooltip
+          content={getLocalePhrase(appState.language, description)}
+          side="right"
+        >
+          <Info size={20} className="inline-flex ml-2" />
+        </Tooltip>
+      </Label>
+      <Input
+        ref={inputRef}
+        name={keyField}
+        id={keyField}
+        value={getHotkeyString()}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        readOnly
+      />
+    </div>
+  );
+};
+
+export default HotKeyInput;
