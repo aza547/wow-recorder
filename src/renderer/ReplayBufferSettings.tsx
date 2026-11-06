@@ -29,19 +29,14 @@ const ReplayBufferSettings: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, replayBufferSeconds, appState } = props;
   const { language } = appState;
   const [config, setConfig] = useSettings();
-
   const initialRender = useRef(true);
 
-  // Local string state so the user can freely edit the field (e.g. clear it
-  // to retype), only committed to the config on blur.
   const [innerBufferSecs, setInnerBufferSecs] = useState<string>(
     String(config.customReplayBufferLength),
   );
 
   useEffect(() => {
     if (initialRender.current) {
-      // Drop out if initial render, we don't care about settings
-      // changes until the user has had a chance to make some.
       initialRender.current = false;
       return;
     }

@@ -277,15 +277,6 @@ export default abstract class LogHandler {
       return undefined;
     }
 
-    return LogHandler.startRecordingActivity(activity);
-  }
-
-  /**
-   * Start recording an activity, without checking if we're configured to
-   * record its category. Most callers want startActivity instead.
-   */
-  private static async startRecordingActivity(activity: Activity) {
-    const { category } = activity;
     console.info(`[LogHandler] Start an activity for category: ${category}`);
 
     // Offset is the number of seconds to cut back into the buffer. That way
@@ -627,7 +618,7 @@ export default abstract class LogHandler {
     const startDate = LogHandler.getReplayBufferStartDate();
 
     if (!startDate) {
-      if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR);
+      console.warn('[LogHandler] Failed to save replay buffer, no start date');
       return;
     }
 
@@ -636,33 +627,14 @@ export default abstract class LogHandler {
     const started = await LogHandler.startActivity(activity);
 
     if (!started) {
-      console.warn('[LogHandler] Failed to save replay buffer');
-      if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR);
+      console.warn('[LogHandler] Failed to save replay buffer, no activity');
       return;
     }
 
-    let converted = true;
-
-    try {
-      // Stopping before OBS has converted the buffer loses the recording.
-      await Recorder.getInstance().waitForConvert();
-    } catch (error) {
-      // Still end the activity below, so OBS is stopped and the buffer
-      // restarted rather than being left recording.
-      console.error('[LogHandler] Replay buffer not converted', String(error));
-      converted = false;
-    }
-
+    await Recorder.getInstance().waitForConvert();
     started.end(new Date(), true); // Result is meaningless but required.
     await LogHandler.endActivity();
-
-    if (sounds) {
-      const sound = converted
-        ? SoundAlerts.MANUAL_RECORDING_STOP
-        : SoundAlerts.MANUAL_RECORDING_ERROR;
-
-      playSoundAlert(sound);
-    }
+    if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_STOP);
   }
 
   /**

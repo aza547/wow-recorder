@@ -1307,6 +1307,7 @@ export default class Recorder extends EventEmitter {
         console.info('[Recorder] Converted buffer to disk:', signal.path);
         this.currentFile = signal.path ?? null;
         this.convertQueue.push(signal);
+        send('updateReplayBufferSeconds', 0);
         break;
 
       default:

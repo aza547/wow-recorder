@@ -111,7 +111,7 @@ const ManualSettings = (props: IProps) => {
         )}
 
       {config.manualRecord && (
-        <>
+        <div className="flex flex-row gap-x-6">
           <HotKeyInput
             appState={appState}
             config={config}
@@ -130,7 +130,7 @@ const ManualSettings = (props: IProps) => {
             label={Phrase.StartFromReplayBufferHotKeyLabel}
             description={Phrase.StartFromReplayBufferHotKeyDescription}
           />
-        </>
+        </div>
       )}
     </div>
   );

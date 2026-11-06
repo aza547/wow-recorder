@@ -36,10 +36,6 @@ interface HotKeyInputProps {
   description: Phrase;
 }
 
-/**
- * An input that, when focused, binds the next key press as a hotkey and
- * stores it in config.
- */
 const HotKeyInput = (props: HotKeyInputProps) => {
   const {
     appState,
@@ -65,12 +61,12 @@ const HotKeyInput = (props: HotKeyInputProps) => {
           keyPressEvent.type === PTTEventType.EVENT_MOUSE_PRESSED ||
           keyPressEvent.type === PTTEventType.EVENT_MOUSE_RELEASED
         ) {
-          // Don't accept mouse events
+          // Don't accept mouse events. PTT hotkey allows mouse events but
+          // doesn't use this component.
           keyPressEvent = await getNextKeyOrMouseEvent();
         }
 
         setFocused(false);
-
         const modifiers = getKeyModifiersString(keyPressEvent);
 
         setConfig((prevState) => {

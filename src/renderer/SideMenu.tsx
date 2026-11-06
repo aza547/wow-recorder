@@ -175,9 +175,7 @@ const SideMenu = (props: IProps) => {
     // Only shown while buffering with nothing being recorded, as otherwise
     // the buffer has already been converted to a recording.
     const hidden =
-      !config.manualRecord ||
-      recorderStatus !== RecStatus.ReadyToRecord ||
-      replayBufferSeconds < 1;
+      !config.manualRecord || recorderStatus !== RecStatus.ReadyToRecord;
 
     if (hidden) {
       return <></>;
@@ -220,8 +218,7 @@ const SideMenu = (props: IProps) => {
       recorderStatus === RecStatus.Recording ||
       recorderStatus === RecStatus.Overrunning;
 
-    const disabled =
-      recorderStatus !== RecStatus.ReadyToRecord || replayBufferSeconds < 1;
+    const disabled = recorderStatus !== RecStatus.ReadyToRecord;
 
     let tooltip: string;
 

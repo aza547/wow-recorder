@@ -54,6 +54,7 @@ import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
 import ForeverLogHandler from 'parsing/ForeverLogHandler';
+import { log } from 'console';
 
 /**
  * Manager class.
@@ -104,7 +105,7 @@ export default class Manager {
    * It's confusing if you try to change the hotkey to something similar and
    * it starts a recording mid changing it, so set this to true while doing so.
    */
-  private manualHotKeyDisabled = false;
+  private hotKeysDisabled = false;
 
   /**
    * File watchers for Config.wtf files, used to detect changes to
@@ -318,27 +319,17 @@ export default class Manager {
     }
   }
 
-  /**
-   * Check we can act on a manual recording or replay buffer request. That
-   * is manual recording is enabled (if required), WoW is running and the
-   * recorder is buffering. Returns the flavour to record if so.
-   */
-  private getManualRecordFlavour(requireManual = true): Flavour | undefined {
-    if (requireManual && !this.cfg.get<boolean>('manualRecord')) {
-      console.warn('[Manager] Manual recording is not enabled');
-      return undefined;
-    }
-
+  private getManualRecordFlavour(): Flavour | null {
     const flavour = this.poller.getFlavor();
 
     if (!flavour) {
       console.warn('[Manager] WoW not running for manual recording');
-      return undefined;
+      return null;
     }
 
     if (this.recorder.obsState !== ERecordingState.Recording) {
       console.warn('[Manager] Recorder not ready for manual recording');
-      return undefined;
+      return null;
     }
 
     return flavour;
@@ -911,21 +902,44 @@ export default class Manager {
     // Listens for a manual recording being started via the button. The
     // hotkey listener is handled separately.
     ipcMain.on('toggleManualRecording', async () => {
+      const manualRecordEnabled = this.cfg.get('manualRecord');
+
+      if (!manualRecordEnabled) {
+        console.info('[Manager] Manual recording is not enabled');
+        return;
+      }
+
       const flavour = this.getManualRecordFlavour();
-      if (flavour) LogHandler.handleManualRecordingHotKey(flavour);
+
+      if (flavour) {
+        LogHandler.handleManualRecordingHotKey(flavour);
+      }
     });
 
     // Listens for the save buffer button. Saves the replay buffer to disk.
     // This doesn't require manual recording to be enabled.
     ipcMain.on('saveReplayBuffer', async () => {
-      const flavour = this.getManualRecordFlavour(false);
-      if (flavour) LogHandler.saveReplayBuffer(flavour);
+      const flavour = this.getManualRecordFlavour();
+
+      if (flavour) {
+        LogHandler.saveReplayBuffer(flavour);
+      }
     });
 
     // Listens for the start manual recording from the replay buffer button.
     ipcMain.on('startManualFromReplayBuffer', async () => {
+      const manualRecordEnabled = this.cfg.get('manualRecord');
+
+      if (!manualRecordEnabled) {
+        console.info('[Manager] Manual recording is not enabled');
+        return;
+      }
+
       const flavour = this.getManualRecordFlavour();
-      if (flavour) LogHandler.startManualFromReplayBuffer(flavour);
+
+      if (flavour) {
+        LogHandler.startManualFromReplayBuffer(flavour);
+      }
     });
 
     // Handles a click of the force stop button.
@@ -949,14 +963,14 @@ export default class Manager {
      * specific to Push to Talk, it's just like that for historical reasons.
      */
     ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
-      this.manualHotKeyDisabled = true;
+      this.hotKeysDisabled = true;
 
       const event = await Promise.race([
         nextKeyPressPromise(),
         nextMousePressPromise(),
       ]);
 
-      this.manualHotKeyDisabled = false;
+      this.hotKeysDisabled = false;
       return event;
     });
 
@@ -968,57 +982,85 @@ export default class Manager {
       await DiskClient.getInstance().refreshStatus();
     });
 
-    /**
-     * Manual recording and replay buffer hotkeys. Being careful with the
-     * logs here as some of this is very spammy as it fires on every key press.
-     */
     uIOhook.on('keydown', (event: UiohookKeyboardEvent) => {
-      if (this.manualHotKeyDisabled) {
-        // This user is updating their settings. Don't do anything.
+      if (this.hotKeysDisabled) {
+        console.info(
+          '[Manager] Hotkey suppressed as user is editing their settings',
+          { event },
+        );
+
         return;
       }
 
-      // The save buffer hotkey works without manual recording enabled, the
-      // others don't. Manual hotkeys win if the same key is bound twice.
-      const manualEnabled = this.cfg.get<boolean>('manualRecord');
-      let action: ((flavour: Flavour) => Promise<void>) | undefined;
+      const isManualRecordHotKey = isConfiguredHotKey(
+        event,
+        'manualRecordHotKey',
+        'manualRecordHotKeyModifiers',
+      );
 
-      if (
-        manualEnabled &&
-        isConfiguredHotKey(
-          event,
-          'manualRecordHotKey',
-          'manualRecordHotKeyModifiers',
-        )
-      ) {
-        action = (f) => LogHandler.handleManualRecordingHotKey(f);
-      } else if (
-        manualEnabled &&
-        isConfiguredHotKey(
-          event,
-          'startFromReplayBufferHotKey',
-          'startFromReplayBufferHotKeyModifiers',
-        )
-      ) {
-        action = (f) => LogHandler.startManualFromReplayBuffer(f);
-      } else if (
-        isConfiguredHotKey(
-          event,
-          'saveReplayBufferHotKey',
-          'saveReplayBufferHotKeyModifiers',
-        )
-      ) {
-        action = (f) => LogHandler.saveReplayBuffer(f);
-      }
+      if (isManualRecordHotKey) {
+        const manualEnabled = this.cfg.get<boolean>('manualRecord');
+        const flavour = this.getManualRecordFlavour();
 
-      if (!action) {
-        // It's not one of our hotkeys.
+        if (!manualEnabled || !flavour) {
+          console.info(
+            '[Manager] Manual record hotkey pressed but conditions not met.',
+            { manualEnabled, flavour },
+          );
+
+          return;
+        }
+
+        console.info('[Manager] Manual record hotkey pressed');
+        LogHandler.handleManualRecordingHotKey(flavour);
         return;
       }
 
-      // Manual recording was already checked above where it's required.
-      const flavour = this.getManualRecordFlavour(false);
-      if (flavour) action(flavour);
+      const isStartFromReplayBufferHotKey = isConfiguredHotKey(
+        event,
+        'startFromReplayBufferHotKey',
+        'startFromReplayBufferHotKeyModifiers',
+      );
+
+      if (isStartFromReplayBufferHotKey) {
+        const manualEnabled = this.cfg.get<boolean>('manualRecord');
+        const flavour = this.getManualRecordFlavour();
+
+        if (!manualEnabled || !flavour) {
+          console.info(
+            '[Manager] Start from replay buffer hotkey pressed but conditions not met.',
+            { manualEnabled, flavour },
+          );
+
+          return;
+        }
+
+        console.info('[Manager] Start from replay buffer hotkey pressed');
+        LogHandler.startManualFromReplayBuffer(flavour);
+        return;
+      }
+
+      const isSaveReplayBufferHotKey = isConfiguredHotKey(
+        event,
+        'saveReplayBufferHotKey',
+        'saveReplayBufferHotKeyModifiers',
+      );
+
+      if (isSaveReplayBufferHotKey) {
+        const flavour = this.getManualRecordFlavour();
+
+        if (!flavour) {
+          console.info(
+            '[Manager] Save replay buffer hotkey pressed but but conditions not met',
+            { flavour },
+          );
+          return;
+        }
+
+        console.info('[Manager] Save replay buffer hotkey pressed');
+        LogHandler.saveReplayBuffer(flavour);
+        return;
+      }
     });
 
     // If Windows is going to sleep, we don't want to confuse OBS. It would be
