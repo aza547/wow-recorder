@@ -610,6 +610,8 @@ const ENGLISH: Translations = {
   [Phrase.Forever]: 'Forever',
   [Phrase.CloudUploadForeverDescription]: 'If Forever recordings should be uploaded to the cloud.',
   [Phrase.CloudUploadForeverLabel]: 'Upload Forever',
+  [Phrase.UploadFailedTitle]: 'Cloud upload failed',
+  [Phrase.UploadFailedText]: 'You can retry using Upload to cloud. See logs for details.',
 };
 
 export default ENGLISH;

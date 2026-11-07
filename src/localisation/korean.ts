@@ -611,6 +611,8 @@ const KOREAN: Translations = {
   [Phrase.Forever]: 'Forever',
   [Phrase.CloudUploadForeverDescription]: 'Forever 기록을 클라우드에 업로드할지 여부입니다.',
   [Phrase.CloudUploadForeverLabel]: 'Forever 업로드',
+  [Phrase.UploadFailedTitle]: '클라우드 업로드 실패',
+  [Phrase.UploadFailedText]: '클라우드에 업로드를 눌러 다시 시도할 수 있습니다. 자세한 내용은 로그를 확인하세요.',
 };
 
 export default KOREAN;

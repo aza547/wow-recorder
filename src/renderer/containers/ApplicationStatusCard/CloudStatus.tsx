@@ -9,6 +9,7 @@ import {
   HoverCardTrigger,
 } from 'renderer/components/HoverCard/HoverCard';
 import Separator from 'renderer/components/Separator/Separator';
+import { toast } from 'renderer/components/Toast/useToast';
 import StatusLight, {
   StatusLightVariant,
 } from 'renderer/components/StatusLight/StatusLight';
@@ -66,6 +67,22 @@ const CloudStatus = ({ appState, setPreviewEnabled }: StatusProps) => {
       ipc.removeAllListeners('updateUploadQueueLength');
     };
   }, []);
+
+  useEffect(() => {
+    return ipc.on('uploadFailed', (videoName) => {
+      toast({
+        variant: 'destructive',
+        title: getLocalePhrase(language, Phrase.UploadFailedTitle),
+        description: (
+          <>
+            <p className="break-all">{videoName as string}</p>
+            <p>{getLocalePhrase(language, Phrase.UploadFailedText)}</p>
+          </>
+        ),
+        duration: Infinity,
+      });
+    });
+  }, [language]);
 
   const statusLightsClasses = 'w-1.5 h-full rounded-l-md rounded-r-none';
 
