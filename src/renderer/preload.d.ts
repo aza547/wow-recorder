@@ -86,6 +86,8 @@ declare global {
         postChatMessage(correlator: string, message: string): void;
         deleteChatMessage(id: number): void;
         toggleManualRecording(): void;
+        saveReplayBuffer(): void;
+        startManualFromReplayBuffer(): void;
         forceStopRecording(): void;
 
         createKillVideo(
@@ -102,6 +104,7 @@ declare global {
         openSystemExplorer(path: string): void;
         setOpenInstantReplayFile(path: string | null): void;
         refreshCombatLogStatus(): void;
+        refreshDiskStatus(): void;
       };
     };
   }

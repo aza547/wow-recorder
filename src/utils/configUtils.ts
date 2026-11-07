@@ -74,6 +74,11 @@ const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
     return false;
   }
 
+  if (flavour === Flavour.Forever && !cfg.get<boolean>('cloudUploadForever')) {
+    console.info('[configUtils] Forever upload is disabled');
+    return false;
+  }
+
   if (category === VideoCategory.Clips) {
     const uploadClips = cfg.get<boolean>('cloudUploadClips');
     console.info('[configUtils] Upload clip?', uploadClips);
@@ -230,6 +235,7 @@ const getBaseConfig = (cfg: ConfigService): BaseConfig => {
 
   return {
     storagePath: cfg.get<string>('storagePath'),
+    storageLimit: cfg.get<boolean>('storageLimit'),
     maxStorage: cfg.get<number>('maxStorage'),
     obsPath,
     obsOutputResolution: cfg.get<string>('obsOutputResolution'),
@@ -246,7 +252,11 @@ const getBaseConfig = (cfg: ConfigService): BaseConfig => {
     recordEra: cfg.get<boolean>('recordEra'),
     eraLogPath: cfg.get<string>('eraLogPath'),
     retailPtrLogPath: cfg.get<string>('retailPtrLogPath'),
+    recordForever: cfg.get<boolean>('recordForever'),
+    foreverLogPath: cfg.get<string>('foreverLogPath'),
     validateLogPaths: cfg.get<boolean>('validateLogPaths'),
+    customReplayBuffer: cfg.get<boolean>('customReplayBuffer'),
+    customReplayBufferLength: cfg.get<number>('customReplayBufferLength'),
   };
 };
 
@@ -350,6 +360,7 @@ const validateLogPathFilesystem = async (
 const validateBaseConfig = async (config: BaseConfig) => {
   const {
     storagePath,
+    storageLimit,
     maxStorage,
     obsPath,
     recordRetail,
@@ -362,6 +373,8 @@ const validateBaseConfig = async (config: BaseConfig) => {
     classicPtrLogPath,
     recordEra,
     eraLogPath,
+    recordForever,
+    foreverLogPath,
     validateLogPaths,
   } = config;
 
@@ -387,7 +400,9 @@ const validateBaseConfig = async (config: BaseConfig) => {
     throw new Error(error);
   }
 
-  await checkDisk(storagePath, maxStorage);
+  if (storageLimit) {
+    await checkDisk(storagePath, maxStorage);
+  }
 
   if (!obsPath) {
     console.warn('[Manager] obsPath is falsy', obsPath);
@@ -528,6 +543,25 @@ const validateBaseConfig = async (config: BaseConfig) => {
     }
 
     await validateLogPathFilesystem(eraLogPath, Phrase.ClassicEraLogPathLabel);
+  }
+
+  if (recordForever) {
+    const validRetailFlavours = ['wowf'];
+
+    const validFlavor = validateLogPaths
+      ? validRetailFlavours.includes(getWowFlavour(foreverLogPath))
+      : true;
+
+    const validPath = path.basename(foreverLogPath) === 'Logs';
+    const valid = validFlavor && validPath;
+
+    if (!valid) {
+      console.error('[Util] Invalid forever log path', foreverLogPath);
+      const error = getLocaleError(Phrase.InvalidForeverLogPath);
+      throw new Error(error);
+    }
+
+    await validateLogPathFilesystem(foreverLogPath, Phrase.ForeverLogPathLabel);
   }
 };
 

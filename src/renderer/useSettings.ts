@@ -28,6 +28,7 @@ export const getSettings = (): ConfigurationSchema => {
     classicPtrLogPath: getConfigValue<string>('classicPtrLogPath'),
     eraLogPath: getConfigValue<string>('eraLogPath'),
     retailPtrLogPath: getConfigValue<string>('retailPtrLogPath'),
+    storageLimit: getConfigValue<boolean>('storageLimit'),
     maxStorage: getConfigValue<number>('maxStorage'),
     minEncounterDuration: getConfigValue<number>('minEncounterDuration'),
     monitorIndex: getConfigValue<number>('monitorIndex'),
@@ -113,7 +114,13 @@ export const getSettings = (): ConfigurationSchema => {
     manualRecordHotKey: getConfigValue<number>('manualRecordHotKey'),
     manualRecordHotKeyModifiers: getConfigValue<string>('manualRecordHotKeyModifiers'),
     manualRecordSoundAlert: getConfigValue<boolean>('manualRecordSoundAlert'),
+    saveReplayBufferHotKey: getConfigValue<number>('saveReplayBufferHotKey'),
+    saveReplayBufferHotKeyModifiers: getConfigValue<string>('saveReplayBufferHotKeyModifiers'),
+    startFromReplayBufferHotKey: getConfigValue<number>('startFromReplayBufferHotKey'),
+    startFromReplayBufferHotKeyModifiers: getConfigValue<string>('startFromReplayBufferHotKeyModifiers'),
     manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
+    customReplayBuffer: getConfigValue<boolean>('customReplayBuffer'),
+    customReplayBufferLength: getConfigValue<number>('customReplayBufferLength'),
     firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     chatUserNameAgreed: getConfigValue<string>('chatUserNameAgreed'),
     validateLogPaths: getConfigValue<boolean>('validateLogPaths'),
@@ -121,6 +128,10 @@ export const getSettings = (): ConfigurationSchema => {
     hevcTranscodeCacheSizeGb: getConfigValue<number>('hevcTranscodeCacheSizeGb'),
     validateNtfs: getConfigValue<boolean>('validateNtfs'),
     characterUploadFilters: getConfigValue<CharacterFilter[]>('characterUploadFilters'),
+    recordForever: getConfigValue<boolean>('recordForever'),
+    foreverLogPath: getConfigValue<string>('foreverLogPath'),
+    showAllGamesLogPathSettings: getConfigValue<boolean>('showAllGamesLogPathSettings'),
+    cloudUploadForever: getConfigValue<boolean>('cloudUploadForever'),
     /* eslint-enable prettier/prettier */
   };
 

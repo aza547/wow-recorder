@@ -1,5 +1,6 @@
 import {
   Clapperboard,
+  ClockArrowDown,
   Cog,
   Dice2,
   Dice3,
@@ -7,12 +8,13 @@ import {
   FileText,
   Goal,
   HardHat,
+  CircleFadingPlay,
   MonitorCog,
-  Play,
   Radio,
-  Square,
+  CircleStop,
   Sword,
   Swords,
+  CirclePlay,
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDungeon, faDragon } from '@fortawesome/free-solid-svg-icons';
@@ -56,11 +58,13 @@ import PatreonButton from './PatreonButton';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import DiagnosticsDialog from './DiagnosticsDialog';
+import { cn } from './components/utils';
 
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   recorderStatus: RecStatus;
+  replayBufferSeconds: number;
   videoCounters: Record<VideoCategory, number>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
@@ -82,6 +86,7 @@ interface IProps {
 const SideMenu = (props: IProps) => {
   const {
     recorderStatus,
+    replayBufferSeconds,
     recorderCategory,
     videoCounters,
     appState,
@@ -103,6 +108,7 @@ const SideMenu = (props: IProps) => {
   const [appVersion, setAppVersion] = useState<string>();
   const { category, language } = appState;
   const lastManualStartStopClickRef = useRef(0);
+  const lastSaveReplayClickRef = useRef(0);
 
   useEffect(() => {
     window.electron.ipcRenderer.on('updateVersionDisplay', (t: unknown) => {
@@ -134,11 +140,11 @@ const SideMenu = (props: IProps) => {
       return <></>;
     }
 
-    let icon = <Play size={14} fill="currentColor" />;
+    let icon = <CirclePlay size={20} />;
     let tooltip = getLocalePhrase(language, Phrase.StartManualRecordingTooltip);
 
     if (recorderStatus === RecStatus.Recording) {
-      icon = <Square size={14} fill="currentColor" />;
+      icon = <CircleStop size={20} />;
       tooltip = getLocalePhrase(language, Phrase.StopManualRecordingTooltip);
     }
 
@@ -147,7 +153,7 @@ const SideMenu = (props: IProps) => {
         <Button
           size="sm"
           variant="ghost"
-          className="mx-2 p-1 h-6 w-6 hover:bg-secondary"
+          className="ml-2 mr-1 p-1 h-6 w-6 hover:bg-secondary"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -161,6 +167,118 @@ const SideMenu = (props: IProps) => {
         >
           {icon}
         </Button>
+      </Tooltip>
+    );
+  };
+
+  const renderStartFromBufferButton = () => {
+    // Only shown while buffering with nothing being recorded, as otherwise
+    // the buffer has already been converted to a recording.
+    const hidden =
+      !config.manualRecord || recorderStatus !== RecStatus.ReadyToRecord;
+
+    if (hidden) {
+      return <></>;
+    }
+
+    return (
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.StartFromBufferTooltip)}
+      >
+        <Button
+          size="sm"
+          variant="ghost"
+          className="mr-1 p-1 h-6 w-6 hover:bg-secondary"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Shares the debounce with the start/stop button, so a quick
+            // double click can't start from the buffer and then stop.
+            const now = Date.now();
+            if (now - lastManualStartStopClickRef.current < 1000) return;
+            lastManualStartStopClickRef.current = now;
+            ipc.startManualFromReplayBuffer();
+          }}
+        >
+          <CircleFadingPlay size={20} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  // Always MM:SS, e.g. "00:45" or "01:30".
+  const formatBufferDuration = (secs: number) => {
+    const mins = String(Math.floor(secs / 60)).padStart(2, '0');
+    const rem = String(secs % 60).padStart(2, '0');
+    return `${mins}:${rem}`;
+  };
+
+  const renderSaveReplayButton = () => {
+    const recording =
+      recorderStatus === RecStatus.Recording ||
+      recorderStatus === RecStatus.Overrunning;
+
+    const disabled = recorderStatus !== RecStatus.ReadyToRecord;
+
+    let tooltip: string;
+
+    if (recording) {
+      tooltip = getLocalePhrase(language, Phrase.SaveReplayBufferDisabled);
+    } else if (disabled) {
+      // Not recording, but the buffer isn't running, e.g. WoW is closed.
+      tooltip = getLocalePhrase(language, Phrase.SaveReplayBufferInactive);
+    } else {
+      tooltip = getLocalePhrase(
+        language,
+        Phrase.SaveReplayBufferTooltip,
+      ).replace('{seconds}', String(replayBufferSeconds));
+    }
+
+    return (
+      <Tooltip content={tooltip}>
+        <div className="w-full h-full min-w-0">
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={disabled}
+            className={cn(
+              // Override the Button defaults to match the menu items, and allow
+              // the label to wrap as we only have half the row width.
+              'justify-start gap-x-2 w-full h-full min-w-0 px-3 py-2 whitespace-normal transition-all',
+              'text-foreground font-semibold font-sans',
+              '[text-shadow:_0px_1px_1px_rgba(0,0,0,66)]',
+              !disabled &&
+                cn(
+                  // Same glow and pulse as the active instant replay tab.
+                  'hover:bg-card/60 cursor-pointer',
+                  'text-[#bb4420] hover:text-[#bb4420]',
+                  'drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]',
+                ),
+            )}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // Drops spam clicks, only let one click per second.
+              const now = Date.now();
+              if (now - lastSaveReplayClickRef.current < 1000) return;
+              lastSaveReplayClickRef.current = now;
+              ipc.saveReplayBuffer();
+            }}
+          >
+            {/* Duration sits under the icon to leave the width for the label. */}
+            <span className="flex flex-col items-center shrink-0">
+              <ClockArrowDown size={20} />
+              {!disabled && (
+                <span className="text-[10px] leading-none opacity-75 font-mono tabular-nums mt-0.5">
+                  {formatBufferDuration(replayBufferSeconds)}
+                </span>
+              )}
+            </span>
+            <span className="min-w-0 text-left leading-tight break-words">
+              {getLocalePhrase(language, Phrase.SaveBufferLabel)}
+            </span>
+          </Button>
+        </div>
       </Tooltip>
     );
   };
@@ -201,6 +319,7 @@ const SideMenu = (props: IProps) => {
         </Menu.Item.Icon>
         {getLocaleCategoryLabel(language, tabCategory)}
         {tabCategory === VideoCategory.Manual && renderManualStopStartButton()}
+        {tabCategory === VideoCategory.Manual && renderStartFromBufferButton()}
         <Menu.Item.Badge value={numCategoryVideos} />
       </Menu.Item>
     );
@@ -233,12 +352,11 @@ const SideMenu = (props: IProps) => {
       instantReplayState.current || appState.page === Pages.InstantReplay
     );
 
-    let spanClassName = 'inline-flex items-center w-full';
+    const spanClassName = 'inline-flex items-center w-full min-w-0';
     let radioClassName = '';
-    let textClassName = 'font-semibold';
+    let textClassName = 'font-semibold min-w-0 leading-tight break-words';
 
     if (!disabled) {
-      spanClassName += ' animate-pulse';
       radioClassName = 'text-[#bb4420]';
       textClassName += ' text-[#bb4420]';
       textClassName += ' drop-shadow-[0_0_6px_rgba(187,68,32,0.35)]';
@@ -251,14 +369,12 @@ const SideMenu = (props: IProps) => {
     return (
       <Menu.Item
         value={Pages.InstantReplay}
-        className="py-[4px] my-2"
+        className="h-full px-3 py-2"
         disabled={disabled}
       >
         <Tooltip content={tooltip}>
           <span className={spanClassName}>
-            <Menu.Item.Icon>
-              <Radio className={radioClassName} />
-            </Menu.Item.Icon>
+            <Radio className={cn('shrink-0 mr-2', radioClassName)} />
 
             <span className={textClassName}>
               {getLocalePhrase(language, Phrase.InstantReplayLabel)}
@@ -338,14 +454,22 @@ const SideMenu = (props: IProps) => {
       >
         <>
           <Separator />
-          <Menu
-            initialValue={
-              appState.page === Pages.InstantReplay ? appState.page : false
-            }
-            onChange={handleChangePage}
-          >
-            {renderInstantReplayTab()}
-          </Menu>
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-x-1 w-full my-1">
+            <Menu
+              className="min-w-0"
+              initialValue={
+                appState.page === Pages.InstantReplay ? appState.page : false
+              }
+              onChange={handleChangePage}
+            >
+              {renderInstantReplayTab()}
+            </Menu>
+            <Separator
+              orientation="vertical"
+              className="h-auto self-stretch my-1.5"
+            />
+            {renderSaveReplayButton()}
+          </div>
         </>
 
         <Menu

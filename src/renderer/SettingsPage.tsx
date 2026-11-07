@@ -4,10 +4,12 @@ import {
   AppState,
   RecStatus,
   RendererVideo,
+  ActivityStatus,
 } from 'main/types';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase } from 'localisation/translations';
 import GeneralSettings from './GeneralSettings';
+import ReplayBufferSettings from './ReplayBufferSettings';
 import FlavourSettings from './FlavourSettings';
 import PVESettings from './PVESettings';
 import PVPSettings from './PVPSettings';
@@ -27,12 +29,15 @@ import ManualSettings from './ManualSettings';
 
 interface IProps {
   recorderStatus: RecStatus;
+  replayBufferSeconds: number;
+  replayBufferSizeMb: number;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   combatLoggingStatus: CombatLoggingStatus;
   videoState: RendererVideo[];
+  activityStatus: ActivityStatus | null;
 }
 
 const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
@@ -42,12 +47,15 @@ const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
   const {
     recorderStatus,
+    replayBufferSeconds,
+    replayBufferSizeMb,
     config,
     setConfig,
     appState,
     setAppState,
     combatLoggingStatus,
     videoState,
+    activityStatus,
   } = props;
 
   return (
@@ -83,6 +91,21 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <Separator className="mt-2 mb-4" />
                 <GeneralSettings
                   recorderStatus={recorderStatus}
+                  appState={appState}
+                />
+              </div>
+              <div>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.ReplayBufferSettingsLabel,
+                  )}
+                </CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <ReplayBufferSettings
+                  recorderStatus={recorderStatus}
+                  replayBufferSeconds={replayBufferSeconds}
+                  replayBufferSizeMb={replayBufferSizeMb}
                   appState={appState}
                 />
               </div>
@@ -156,6 +179,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <ManualSettings
+                  activityStatus={activityStatus}
                   appState={appState}
                   config={config}
                   setConfig={setConfig}

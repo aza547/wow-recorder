@@ -34,6 +34,7 @@ import {
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
+import { ConfigurationSchema } from 'config/configSchema';
 import { AxiosError } from 'axios';
 import { send } from './main';
 import { Readable } from 'stream';
@@ -488,7 +489,14 @@ const isPushToTalkHotkey = (
   return buttonMatch && modifierMatch;
 };
 
-const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
+/**
+ * Check if a key event matches a hotkey stored in config.
+ */
+const isConfiguredHotKey = (
+  event: UiohookKeyboardEvent,
+  keyField: keyof ConfigurationSchema,
+  modifiersField: keyof ConfigurationSchema,
+) => {
   const { keycode, altKey, ctrlKey, shiftKey, metaKey, type } = event;
   const cfg = ConfigService.getInstance();
 
@@ -497,26 +505,22 @@ const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
     return false;
   }
 
-  const manualRecordHotKey = cfg.get<number>('manualRecordHotKey');
-  const manualRecordHotKeyModifiers = cfg.get<string>(
-    'manualRecordHotKeyModifiers',
-  );
+  const hotKey = cfg.get<number>(keyField);
+  const hotKeyModifiers = cfg.get<string>(modifiersField);
 
-  const buttonMatch = keycode > 0 && keycode === manualRecordHotKey;
+  const buttonMatch = keycode > 0 && keycode === hotKey;
 
   // Deliberately permissive here, we check all the modifiers we have in
   // config are met but we don't enforce the inverse, i.e. we'll accept
   // an additional modifier present (so CTRL + SHIFT + E will trigger
   // a CTRL + E hotkey).
-  const modifierMatch = manualRecordHotKeyModifiers
-    .split(',')
-    .reduce((acc, mod) => {
-      if (mod === 'alt') return acc && altKey;
-      if (mod === 'ctrl') return acc && ctrlKey;
-      if (mod === 'shift') return acc && shiftKey;
-      if (mod === 'win') return acc && metaKey;
-      return acc; // Ignore unknown modifiers
-    }, true);
+  const modifierMatch = hotKeyModifiers.split(',').reduce((acc, mod) => {
+    if (mod === 'alt') return acc && altKey;
+    if (mod === 'ctrl') return acc && ctrlKey;
+    if (mod === 'shift') return acc && shiftKey;
+    if (mod === 'win') return acc && metaKey;
+    return acc; // Ignore unknown modifiers
+  }, true);
 
   return buttonMatch && modifierMatch;
 };
@@ -972,8 +976,15 @@ const takeOwnershipStorageDir = async (dir: string) => {
   const helptext =
     'If you are setting up Warcraft Recorder for the first time, this folder should be empty.';
 
-  const content =
-    'This folder is managed by Warcraft Recorder, files in it may be automatically created, modified or deleted.';
+  const content = `
+This folder is managed by Warcraft Recorder, files in it may be automatically 
+created, modified or deleted. You should not manually modify or delete files in
+this folder.
+
+If you want to modify files outwith the Warcraft Recorder program, copy the
+video files to another folder and operate on them there to avoid unexpected
+side effects.
+    `;
 
   const files = await fs.promises.readdir(dir);
 
@@ -1392,7 +1403,7 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
-  isManualRecordHotKey,
+  isConfiguredHotKey,
   delayedDeleteVideo,
   logAxiosError,
   handleSafeVodRequest,

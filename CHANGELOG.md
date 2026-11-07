@@ -6,10 +6,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-- Clip range now defaults to -7s and +5s instead of ±15s.
-
 ### Added
 ### Fixed
+
+## [7.15.0] - 2026-11-06
+### Changed
+- Add a "Replay Buffer" settings category to reduce settings clutter.
+- [Issue 933](https://github.com/aza547/wow-recorder/issues/933) - Remove pulsing animation from side menu buttons.
+
+### Added
+- [Issue 931](https://github.com/aza547/wow-recorder/issues/931) - Support both "Save Buffer Immediately" and "Save Buffer and Continue Recording" modes.
+- [Issue 930](https://github.com/aza547/wow-recorder/issues/930) - Add hotkeys for save buffer feature.
+- [Issue 927](https://github.com/aza547/wow-recorder/issues/927) - Expose replay buffer MB in the settings.
+
+### Fixed
+- [Issue 934](https://github.com/aza547/wow-recorder/issues/934) - Fix recording durations displaying 60 seconds instead of rolling over to the next minute.
+- [Issue 929](https://github.com/aza547/wow-recorder/issues/929) - Fix a broken tooltip on the "Save Buffer" button.
+
+
+## [7.14.0] - 2026-11-04
+### Changed
+- Clip range now defaults to -7s and +5s instead of ±15s.
+- Add a "Limit Disk Storage" switch to avoid the unintutive behaviour of setting 0.
+- Log path settings are now neater and hide less common game modes.
+
+### Added
+- Add basic forever support for raids and manual recordings.
+- Add the "Save Buffer" function. Enabling Shadowplay-like function.
+- Add the ability to set a custom replay buffer duration up to 20 mins (default is 60s).
+
+### Fixed
+- Fix a bug where manual recordings were always classified as retail, they will be categorized by the running WoW client.
+- Made the behaviour of the max storage number field more user friendly.
 
 ## [7.13.4] - 2026-10-22
 ### Fixed
