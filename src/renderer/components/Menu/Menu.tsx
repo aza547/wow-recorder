@@ -45,9 +45,7 @@ export const Menu = ({
     onChange(newValue);
   };
 
-  // This is a bit of a janky way to handle it I guess, but it accounts for
-  // the fact that the two sections of content and settings are two different menus
-  // so when one gets selected, the other needs to be cleared
+  // Sync highlight to initialValue so external state changes are reflected.
   React.useEffect(() => {
     setCurrentValue(initialValue || undefined);
   }, [initialValue]);
