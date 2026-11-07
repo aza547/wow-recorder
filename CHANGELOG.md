@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Bump the Electron version to `45.2.3`, and related packages.
 
 ## [7.15.0] - 2026-11-06
 ### Changed
