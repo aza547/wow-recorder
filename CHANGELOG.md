@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Preserve recoverable partial recordings after an unexpected OBS output failure.
 
 ## [7.15.0] - 2026-11-06
 ### Changed
