@@ -430,7 +430,7 @@ const SideMenu = (props: IProps) => {
   const raidsIcon = <FontAwesomeIcon icon={faDragon} size="lg" />;
 
   return (
-    <div className="flex flex-col h-full bg-background w-80 px-4 items-center pt-4 pb-2">
+    <div className="flex flex-col h-full bg-background w-[250px] shrink-0 px-4 items-center pt-4 pb-2">
       <ApplicationStatusCard
         recorderStatus={recorderStatus}
         activityStatus={activityStatus}
