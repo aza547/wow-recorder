@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - Bump the Electron version to `45.2.3`, and related packages.
+- Fix side menu width so that it doesn't shrink when the window is small.
 
 ## [7.15.0] - 2026-11-06
 ### Changed
