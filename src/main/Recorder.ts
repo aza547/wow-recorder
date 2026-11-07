@@ -61,7 +61,6 @@ import assert from 'assert';
 import { isHighRes } from 'renderer/rendererutils';
 import { configSchema } from 'config/configSchema';
 
-const devMode = process.env.NODE_ENV === 'development';
 const moov = Buffer.from('moov');
 const moof = Buffer.from('moof');
 const mdat = Buffer.from('mdat');
@@ -1234,13 +1233,9 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Initializing OBS');
     const cb = this.handleSignal.bind(this);
 
-    let logPath = devMode
-      ? path.resolve(__dirname, './logs')
-      : path.resolve(__dirname, '../../dist/main/logs');
-
-    let noobsPath = devMode
-      ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
-      : path.resolve(__dirname, '../../node_modules/noobs/dist');
+    // The main bundle is in release/app/dist/main in both dev and prod.
+    let logPath = path.resolve(__dirname, './logs');
+    let noobsPath = path.resolve(__dirname, '../../node_modules/noobs/dist');
 
     logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);
