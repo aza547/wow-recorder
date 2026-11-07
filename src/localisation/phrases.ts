@@ -303,6 +303,8 @@ enum Phrase {
   ShareableLinkTitle,
   ShareableLinkText,
   ShareableLinkFailedTitle,
+  VideoActionFailed,
+  DiscardChanges,
   ShareableLinkFailedText,
   CloudUsageDescription,
   DiskUsageDescription,

@@ -281,6 +281,11 @@ type RendererVideo = Metadata & {
   uniqueId: string;
 };
 
+type VideoAction =
+  | { type: 'protect'; value: boolean }
+  | { type: 'tag'; value: string }
+  | { type: 'delete' };
+
 type RendererClip = RendererVideo & { category: VideoCategory.Clips };
 
 type SoloShuffleTimelineSegment = {
@@ -732,6 +737,7 @@ export {
   VideoQueueItem,
   Metadata,
   RendererVideo,
+  VideoAction,
   RendererClip,
   Flavour,
   SoloShuffleTimelineSegment,
