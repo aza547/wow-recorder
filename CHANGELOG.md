@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Migrate the build tooling from webpack to electron-vite.
+
 ### Added
 ### Fixed
 - Bump the Electron version to `45.2.3`, and related packages.

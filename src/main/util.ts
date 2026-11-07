@@ -1,4 +1,4 @@
-import { URL } from 'url';
+import { URL, pathToFileURL } from 'url';
 import path from 'path';
 import fs, {
   createReadStream,
@@ -60,23 +60,17 @@ const fixPathWhenPackaged = (p: string) => {
   return p.replace('app.asar', 'app.asar.unpacked');
 };
 
-const getResolvedHtmlPath = () => {
-  if (process.env.NODE_ENV === 'development') {
-    const port = process.env.PORT || 1212;
-
-    return (htmlFileName: string) => {
-      const url = new URL(`http://localhost:${port}`);
-      url.pathname = htmlFileName;
-      return url.href;
-    };
+/**
+ * Resolve a renderer HTML file. In development, electron-vite serves the
+ * renderer and provides its URL via ELECTRON_RENDERER_URL.
+ */
+export const resolveHtmlPath = (htmlFileName: string) => {
+  if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
+    return new URL(htmlFileName, `${process.env.ELECTRON_RENDERER_URL}/`).href;
   }
 
-  return (htmlFileName: string) => {
-    return `file://${path.resolve(__dirname, '../renderer/', htmlFileName)}`;
-  };
+  return pathToFileURL(path.join(__dirname, '../renderer', htmlFileName)).href;
 };
-
-export const resolveHtmlPath = getResolvedHtmlPath();
 
 /**
  * Return information about a file needed for various parts of the application
@@ -387,7 +381,7 @@ const deferredPromiseHelper = <T>() => {
 const getAssetPath = (...paths: string[]): string => {
   const RESOURCES_PATH = app.isPackaged
     ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
+    : path.join(app.getAppPath(), 'assets');
 
   return path.join(RESOURCES_PATH, ...paths);
 };
