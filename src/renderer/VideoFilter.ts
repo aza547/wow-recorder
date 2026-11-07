@@ -158,16 +158,6 @@ export default class VideoFilter {
     const classIcon = classImages[playerClass];
     const specIcon = specImages[playerSpecID as keyof typeof specImages];
 
-    if (video.isProtected) {
-      const localised = getLocalePhrase(language, Phrase.Starred);
-      const tag = new VideoTag(101, localised, '<LockIcon>', '#bb4420');
-      suggestions.push(tag);
-    } else {
-      const localised = getLocalePhrase(language, Phrase.NotStarred);
-      const tag = new VideoTag(101, localised, '<LockOpenIcon>', '#bb4420');
-      suggestions.push(tag);
-    }
-
     if (video.tag) {
       const localised = getLocalePhrase(language, Phrase.Tagged);
       const tag = new VideoTag(102, localised, '<TagIcon>', '#bb4420');

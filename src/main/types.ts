@@ -354,6 +354,15 @@ enum StorageFilter {
 }
 
 /**
+ * Lock filtering options.
+ */
+enum LockFilter {
+  ALL = 'all',
+  LOCKED = 'locked',
+  UNLOCKED = 'unlocked',
+}
+
+/**
  * The state of the frontend.
  */
 type AppState = {
@@ -365,6 +374,7 @@ type AppState = {
   videoFilterTags: Tag[];
   dateRangeFilter: DateValueType;
   storageFilter: StorageFilter;
+  lockFilter: LockFilter;
   videoFullScreen: boolean;
   playing: boolean;
   language: Language;
@@ -767,6 +777,7 @@ export {
   CreateMultiPartUploadResponseBody,
   CompleteMultiPartUploadRequestBody,
   StorageFilter,
+  LockFilter,
   ObsSourceCallbackInfo,
   ObsVolmeterCallbackInfo,
   VideoSourceName,
