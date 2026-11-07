@@ -29,6 +29,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
 import DiskClient from 'storage/DiskClient';
 import Recorder from './Recorder';
+import { VideoCategory } from '../types/VideoCategory';
 import { promises as fspromise } from 'fs';
 
 const atomicQueue = require('atomic-queue');
@@ -199,6 +200,17 @@ export default class VideoProcessQueue {
    */
   public queueVideo = async (item: VideoQueueItem) => {
     console.info('[VideoProcessQueue] Queuing video for processing', item);
+    const { metadata } = item;
+    if (!item.clip && metadata.category === VideoCategory.MythicPlus) {
+      const recorder = Recorder.getInstance();
+      recorder.savingDungeonReplay = {
+        path: item.source,
+        category: metadata.category,
+        deaths: metadata.deaths ?? [],
+        challengeModeTimeline: metadata.challengeModeTimeline,
+      };
+      recorder.emit('state-change');
+    }
     this.videoQueue.write(item);
   };
 
@@ -287,6 +299,20 @@ export default class VideoProcessQueue {
       );
     }
 
+    try {
+      await DiskClient.getInstance().refreshVideos();
+    } catch (error) {
+      console.error(
+        '[VideoProcessQueue] Could not refresh the video library',
+        error,
+      );
+    }
+
+    const recorder = Recorder.getInstance();
+    if (!data.clip && recorder.savingDungeonReplay?.path === data.source) {
+      recorder.savingDungeonReplay = null;
+      recorder.emit('state-change');
+    }
     done();
   }
 
@@ -538,7 +564,6 @@ export default class VideoProcessQueue {
     console.info('[VideoProcessQueue] Finished processing video', item.source);
     send('updateSaveStatus', SaveStatus.NotSaving);
     DiskClient.getInstance().refreshStatus();
-    DiskClient.getInstance().refreshVideos();
   }
 
   /**
