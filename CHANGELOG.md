@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrate the build tooling from webpack to electron-vite.
 
 ### Added
+- [Issue 808](https://github.com/aza547/wow-recorder/issues/808) - Add clickable viewpoint and timestamp links to video chat messages.
 ### Fixed
 - Bump the Electron version to `45.2.3`, and related packages.
 - Fix side menu width so that it doesn't shrink when the window is small.
