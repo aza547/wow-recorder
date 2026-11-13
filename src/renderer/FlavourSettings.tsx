@@ -856,7 +856,7 @@ const FlavourSettings: FC<IProps> = (props: IProps) => {
             <Tooltip
               content={getLocalePhrase(
                 language,
-                configSchema.foreverLogPath.description,
+                configSchema.recordForever.description,
               )}
               side="top"
             >
