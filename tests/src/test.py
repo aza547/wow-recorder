@@ -286,6 +286,8 @@ def find_test_by_name(flavour, test_name):
         test = list(filter(lambda test: test.NAME == test_name, ERA_TESTS))[0]
     elif flavour == "ptr":
         test = list(filter(lambda test: test.NAME == test_name, PTR_TESTS))[0]
+    elif flavour == "forever":
+        test = list(filter(lambda test: test.NAME == test_name, FOREVER_TESTS))[0]
     else:
         raise ValueError(f"Unknown flavour: {flavour}")
 

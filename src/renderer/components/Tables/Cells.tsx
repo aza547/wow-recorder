@@ -315,7 +315,7 @@ export const populateViewpointCell = (
   if (video.flavour === Flavour.Forever) {
     specIcon = classImages[playerClass];
   } else {
-    const playerSpecID = getPlayerSpecID(video);
+    const playerSpecID = getPlayerSpecID(first);
     specIcon = specImages[playerSpecID as keyof typeof specImages];
   }
 

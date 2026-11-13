@@ -154,7 +154,9 @@ export default abstract class LogHandler {
       difficultyID,
     );
 
-    let isRaidEncounter;
+    let isRaidEncounter =
+      isRecognisedDifficulty &&
+      instanceDifficulty[difficultyID].partyType === 'raid';
 
     if (!isRecognisedDifficulty && groupSize > 5) {
       // Accept unknown raid difficulties by defaulting to normal. Mostly this

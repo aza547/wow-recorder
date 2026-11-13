@@ -144,7 +144,7 @@ export default class ForeverLogHandler extends LogHandler {
       foreverClassId,
     );
 
-    const newCombatant = new Combatant(GUID);
+    const newCombatant = new Combatant(GUID, teamID, foreverClassId);
     LogHandler.activity.addCombatant(newCombatant);
   }
 
