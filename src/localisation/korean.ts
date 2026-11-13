@@ -611,6 +611,8 @@ const KOREAN: Translations = {
   [Phrase.Forever]: 'Forever',
   [Phrase.CloudUploadForeverDescription]: 'Forever 기록을 클라우드에 업로드할지 여부입니다.',
   [Phrase.CloudUploadForeverLabel]: 'Forever 업로드',
+  [Phrase.Character]: '캐릭터',
+  [Phrase.Realm]: '영역',
 };
 
 export default KOREAN;

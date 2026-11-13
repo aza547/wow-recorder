@@ -10,6 +10,7 @@
 import {
   dungeonEncounters,
   dungeonsByMapId,
+  foreverClassIds,
   instanceDifficulty,
   instanceEncountersById,
   months,
@@ -526,11 +527,15 @@ const getSpecClass = (specId: number | undefined): WoWCharacterClassType => {
     return 'UNKNOWN';
   }
 
-  if (specializationById[specId] === undefined) {
-    return 'UNKNOWN';
+  if (Object.prototype.hasOwnProperty.call(specializationById, specId)) {
+    return specializationById[specId].class;
   }
 
-  return specializationById[specId].class;
+  if (Object.prototype.hasOwnProperty.call(foreverClassIds, specId)) {
+    return foreverClassIds[specId];
+  }
+
+  return 'UNKNOWN';
 };
 
 const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {

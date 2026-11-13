@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import { AppState, RawCombatant, RendererVideo } from 'main/types';
 import { Ban, X } from 'lucide-react';
-import { specializationById, WoWCharacterClassType } from 'main/constants';
+import { foreverClassIds, specializationById, WoWCharacterClassType } from 'main/constants';
 import { Dispatch, RefObject, SetStateAction } from 'react';
 import {
   getWoWClassColor,
@@ -11,8 +11,9 @@ import {
   isArenaUtil,
   isSoloShuffleUtil,
   povDiskFirstNameSort,
+  getSpecClass,
 } from '../../rendererutils';
-import { specImages } from '../../images';
+import { classImages, specImages } from '../../images';
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
 
@@ -79,6 +80,10 @@ export default function ViewpointSelection(props: IProps) {
 
       if (knownSpec) {
         specIcon = specImages[combatant._specID as keyof typeof specImages];
+      } else {
+        // Forever hits this branch.
+        const specClass = getSpecClass(combatant._specID);
+        specIcon = classImages[specClass];
       }
     }
 

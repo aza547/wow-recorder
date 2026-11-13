@@ -115,7 +115,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <div className="flex flex-col w-[500px]">
+      <div className="flex flex-col w-[700px]">
         <Label htmlFor="storagePath" className="flex items-center">
           {getLocalePhrase(language, Phrase.DiskStorageFolderLabel)}
           <Tooltip

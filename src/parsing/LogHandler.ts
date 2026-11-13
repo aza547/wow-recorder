@@ -145,20 +145,24 @@ export default abstract class LogHandler {
 
     const startDate = line.date();
     const encounterID = parseInt(line.arg(1), 10);
-    const difficultyID = parseInt(line.arg(3), 10);
     const encounterName = line.arg(2);
+    let difficultyID = parseInt(line.arg(3), 10);
+    const groupSize = parseInt(line.arg(4), 10);
 
     const isRecognisedDifficulty = Object.prototype.hasOwnProperty.call(
       instanceDifficulty,
       difficultyID,
     );
 
-    if (!isRecognisedDifficulty) {
-      throw new Error(`[LogHandler] Unknown difficulty ID: ${difficultyID}`);
-    }
+    let isRaidEncounter;
 
-    const isRaidEncounter =
-      instanceDifficulty[difficultyID].partyType === 'raid';
+    if (!isRecognisedDifficulty && groupSize > 5) {
+      // Accept unknown raid difficulties by defaulting to normal. Mostly this
+      // is because at Forever launch we don't know them and there is no public
+      // testing. We should still update this once the difficulties are known.
+      difficultyID = 3;
+      isRaidEncounter = true;
+    }
 
     if (!isRaidEncounter) {
       console.debug('[LogHandler] Not a raid encounter, do nothing');
@@ -185,14 +189,21 @@ export default abstract class LogHandler {
     }
 
     if (!LogHandler.activity) {
-      console.info('[LogHandler] Encounter stop with no active encounter');
+      console.info('[LogHandler] Encounter stop with no activity');
       return;
     }
 
     const difficultyID = parseInt(line.arg(3), 10);
+    const groupSize = parseInt(line.arg(4), 10);
 
-    const isRaidEncounter =
-      instanceDifficulty[difficultyID].partyType === 'raid';
+    const isRecognisedDifficulty = Object.prototype.hasOwnProperty.call(
+      instanceDifficulty,
+      difficultyID,
+    );
+
+    const isRaidEncounter = isRecognisedDifficulty
+      ? instanceDifficulty[difficultyID].partyType === 'raid'
+      : groupSize > 5;
 
     if (!isRaidEncounter) {
       console.debug('[LogHandler] Not a raid encounter, do nothing');
