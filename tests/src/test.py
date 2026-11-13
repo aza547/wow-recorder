@@ -42,11 +42,15 @@ import classic.mop_challenge_mode
 # Import the era tests
 import era.raid
 
+# Import the forever tests
+import forever.raid
+
 # These variables are environment dependent, you may need to adjust them.
 RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs"
 CLASSIC_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_/Logs"
 ERA_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_era_/Logs"
 PTR_LOG_PATH = "C:/Program Files/World of Warcraft/_ptr_/Logs"
+FOREVER_LOG_PATH = "C:/Program Files (x86)/World of Warcraft/_forever_/Logs"
 STORAGE_PATH = "D:/wr-test"
 
 CWD = os.path.dirname(__file__)
@@ -96,15 +100,20 @@ PTR_TESTS = [
     retail.rated_2v2, 
 ]
 
+FOREVER_TESTS = [
+    forever.raid,
+]
+
 RETAIL_TEST_NAMES = list(map(lambda t: t.NAME, RETAIL_TESTS))
 CLASSIC_TEST_NAMES = list(map(lambda t: t.NAME, CLASSIC_TESTS))
 ERA_TEST_NAMES = list(map(lambda t: t.NAME, ERA_TESTS))
+FOREVER_TEST_NAMES = list(map(lambda t: t.NAME, FOREVER_TESTS))
 PTR_TEST_NAMES = list(map(lambda t: t.NAME, PTR_TESTS))
 
 # Define the CLI arguments.
 parser = argparse.ArgumentParser(prog="Warcraft Recorder Tests")
-parser.add_argument("-f", help="flavour", choices=["classic", "retail", "era", "ptr"])
-parser.add_argument("-t", help="test", choices=RETAIL_TEST_NAMES + CLASSIC_TEST_NAMES + ERA_TEST_NAMES + PTR_TEST_NAMES)
+parser.add_argument("-f", help="flavour", choices=["classic", "retail", "era", "ptr", "forever"])
+parser.add_argument("-t", help="test", choices=RETAIL_TEST_NAMES + CLASSIC_TEST_NAMES + ERA_TEST_NAMES + PTR_TEST_NAMES + FOREVER_TEST_NAMES)
 args = parser.parse_args()
 
 
@@ -238,6 +247,9 @@ def get_test_log(flavour):
     if flavour == "ptr":
         return f"{PTR_LOG_PATH}/{logName}"
 
+    if flavour == "forever":
+        return f"{FOREVER_LOG_PATH}/{logName}"
+
 
 def get_sample_log_lines(file):
     """Read a file into a list of lines."""
@@ -274,6 +286,8 @@ def find_test_by_name(flavour, test_name):
         test = list(filter(lambda test: test.NAME == test_name, ERA_TESTS))[0]
     elif flavour == "ptr":
         test = list(filter(lambda test: test.NAME == test_name, PTR_TESTS))[0]
+    elif flavour == "forever":
+        test = list(filter(lambda test: test.NAME == test_name, FOREVER_TESTS))[0]
     else:
         raise ValueError(f"Unknown flavour: {flavour}")
 
@@ -342,12 +356,18 @@ def run_ptr():
     for test in PTR_TESTS:
         run_test("ptr", test)
 
+def run_forever():
+    """Run all the Forever tests."""
+    for test in FOREVER_TESTS:
+        run_test("forever", test)
+
 def run_all():
     """Run all the tests."""
     run_retail()
     run_classic()
     run_era()
     run_ptr()
+    run_forever()
 
 
 def run_single(flavour, test_name):
@@ -369,5 +389,7 @@ elif not args.t and args.f == "era":
     run_era()
 elif not args.t and args.f == "ptr":
     run_ptr()
+elif not args.t and args.f == "forever":
+    run_forever()
 else:
     run_all()

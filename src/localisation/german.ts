@@ -611,6 +611,8 @@ const GERMAN: Translations = {
   [Phrase.Forever]: 'Forever',
   [Phrase.CloudUploadForeverDescription]: 'Ob Aufzeichnungen von Forever in die Cloud hochgeladen werden sollen.',
   [Phrase.CloudUploadForeverLabel]: 'Forever hochladen',
+  [Phrase.Character]: 'Charakter',
+  [Phrase.Realm]: 'Reich',
 };
 
 export default GERMAN;
