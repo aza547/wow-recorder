@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import { AppState, RawCombatant, RendererVideo } from 'main/types';
 import { Ban, X } from 'lucide-react';
-import { foreverClassIds, specializationById, WoWCharacterClassType } from 'main/constants';
+import { specializationById, WoWCharacterClassType } from 'main/constants';
 import { Dispatch, RefObject, SetStateAction } from 'react';
 import {
   getWoWClassColor,
