@@ -611,6 +611,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Forever]: 'Forever',
   [Phrase.CloudUploadForeverDescription]: '是否将 Forever 的录制内容上传到云端。',
   [Phrase.CloudUploadForeverLabel]: '上传 Forever',
+  [Phrase.Character]: '角色',
+  [Phrase.Realm]: '领域',
 };
 
 export default CHINESE_SIMPLIFIED;

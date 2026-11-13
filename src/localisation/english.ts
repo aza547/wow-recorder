@@ -610,6 +610,8 @@ const ENGLISH: Translations = {
   [Phrase.Forever]: 'Forever',
   [Phrase.CloudUploadForeverDescription]: 'If Forever recordings should be uploaded to the cloud.',
   [Phrase.CloudUploadForeverLabel]: 'Upload Forever',
+  [Phrase.Character]: 'Character',
+  [Phrase.Realm]: 'Realm',
 };
 
 export default ENGLISH;

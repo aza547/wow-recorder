@@ -1510,6 +1510,19 @@ type SpecializationObjectType = {
   name: string;
 };
 
+// Thankfully these do not overlap with retail spec IDs.
+const foreverClassIds: Record<number, WoWCharacterClassType> = {
+  1482: 'MAGE',
+  1484: 'DRUID',
+  1485: 'HUNTER',
+  1486: 'PALADIN',
+  1487: 'PRIEST',
+  1488: 'ROGUE',
+  1489: 'SHAMAN',
+  1490: 'WARLOCK',
+  1491: 'WARRIOR',
+};
+
 const specializationById: { [id: number]: SpecializationObjectType } = {
   250: {
     type: 'melee',
@@ -1969,6 +1982,7 @@ export {
   dungeonAffixesById,
   dungeonEncounters,
   specializationById,
+  foreverClassIds,
   instanceDifficulty,
   instanceEncountersById,
   InstanceDifficultyType,

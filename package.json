@@ -230,5 +230,9 @@
         }
       }
     ]
+  },
+  "allowScripts": {
+    "electron@45.2.3": true,
+    "electron-winstaller@5.4.0": true
   }
 }
