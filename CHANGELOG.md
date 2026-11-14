@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add the ability to set a custom replay buffer duration up to 20 mins (default is 60s).
 
 ### Fixed
+- [Issue 923](https://github.com/aza547/wow-recorder/issues/923) - Respect combat log timezone offsets so daylight saving changes do not break recordings or their timelines.
 - Fix a bug where manual recordings were always classified as retail, they will be categorized by the running WoW client.
 - Made the behaviour of the max storage number field more user friendly.
 
