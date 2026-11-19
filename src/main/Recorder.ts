@@ -39,6 +39,7 @@ import {
   VideoSourceName,
   SceneItem,
   FileSortDirection,
+  InstantReplayData,
 } from './types';
 import ConfigService from '../config/ConfigService';
 import { defaultAudioTrack, obsResolutions } from './constants';
@@ -198,6 +199,8 @@ export default class Recorder extends EventEmitter {
    * only set once we've seen that. This is exposed publicly.
    */
   public instantReplayFile: string | null = null;
+
+  public savingDungeonReplay: InstantReplayData | null = null;
 
   /**
    * If conditions are right, look for the appropriate boxes in the fragmented
@@ -1065,11 +1068,11 @@ export default class Recorder extends EventEmitter {
       FileSortDirection.NewestFirst, // This sorting is redundant in this context.
     );
 
-    // Don't delete an open instant replay. The open instant replay path, if
-    // relevant, has already been normalized when set.
+    const savingFile =
+      this.savingDungeonReplay && path.normalize(this.savingDungeonReplay.path);
     const files = videos
       .map((f) => path.normalize(f.name))
-      .filter((n) => n !== this.openInstantReplayFile);
+      .filter((n) => n !== this.openInstantReplayFile && n !== savingFile);
 
     const promises = files.map(tryUnlink);
     await Promise.all(promises);

@@ -348,9 +348,7 @@ const SideMenu = (props: IProps) => {
   };
 
   const renderInstantReplayTab = () => {
-    const disabled = !(
-      instantReplayState.current || appState.page === Pages.InstantReplay
-    );
+    const disabled = !instantReplayState.current;
 
     const spanClassName = 'inline-flex items-center w-full min-w-0';
     let radioClassName = '';
