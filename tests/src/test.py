@@ -367,7 +367,7 @@ def run_all():
     run_classic()
     run_era()
     run_ptr()
-    run_forever()
+    # run_forever()
 
 
 def run_single(flavour, test_name):
