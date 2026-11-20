@@ -45,7 +45,9 @@ const tzOffsetStr = `UTC${tzOffset >= 0 ? '+' : ''}${tzOffset / 60}`;
 
 console.info('[Main] App starting, version:', appVersion);
 console.info('[Main] Node version', process.versions.node);
+console.info('[Main] Electron version:', process.versions.electron);
 console.info('[Main] ICU version', process.versions.icu);
+console.info('[Main] Timezone version:', process.versions.tz);
 console.info('[Main] On OS:', os.platform(), os.release());
 console.info('[Main] In timezone:', tz, tzOffsetStr);
 
