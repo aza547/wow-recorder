@@ -1292,16 +1292,18 @@ const pushActivityStatus = (activity: Activity) => {
   send('updateActivityStatus', activityStatus);
 };
 
-const resetInstantReplayState = () => {
-  send('updateInstantReplayState', null);
-};
-
-const refreshInstantReplayState = (activity: Activity) => {
+const refreshInstantReplayState = (activity: Activity | undefined) => {
   const recorder = Recorder.getInstance();
-  const instantReplayFile = recorder.instantReplayFile;
+  const instantReplayFile = recorder.getInstantReplayFile();
 
   if (!instantReplayFile) {
-    resetInstantReplayState();
+    send('updateInstantReplayState', null);
+    return;
+  }
+
+  if (!activity) {
+    // Even if an activity is over we may still be tracking the instant replay,
+    // which we don't release until the remux of the actual video completes.
     return;
   }
 
@@ -1400,7 +1402,6 @@ export {
   createDiagsBundle,
   resetActivityStatus,
   pushActivityStatus,
-  resetInstantReplayState,
   refreshInstantReplayState,
   getAudioTrackCount,
   getMostRecentCombatLogModifiedTime,
