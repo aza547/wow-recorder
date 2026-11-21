@@ -66,7 +66,6 @@ import { isHighRes } from 'renderer/rendererutils';
 import { configSchema } from 'config/configSchema';
 import { isLinux } from './platform';
 
-const devMode = process.env.NODE_ENV === 'development';
 const moov = Buffer.from('moov');
 const moof = Buffer.from('moof');
 const mdat = Buffer.from('mdat');
@@ -1323,12 +1322,11 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Initializing OBS');
     const cb = this.handleSignal.bind(this);
 
+    // The main bundle is in release/app/dist/main in both dev and prod.
     // writable log path inside of the package
-    let logPath = devMode
-      ? path.resolve(__dirname, './logs')
-      : app.isPackaged
-        ? path.join(app.getPath('userData'), 'logs')
-        : path.resolve(__dirname, '../../dist/main/logs');
+    let logPath = app.isPackaged
+      ? path.join(app.getPath('userData'), 'logs')
+      : path.resolve(__dirname, './logs');
 
     console.info('LOG_PATH', logPath);
 
@@ -1337,9 +1335,7 @@ export default class Recorder extends EventEmitter {
       fs.mkdirSync(logPath, { recursive: true });
     }
 
-    let noobsPath = devMode
-      ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
-      : path.resolve(__dirname, '../../node_modules/noobs/dist');
+    let noobsPath = path.resolve(__dirname, '../../node_modules/noobs/dist');
 
     logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);

@@ -17,7 +17,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { specImages } from './images';
+import { classImages, specImages } from './images';
 import { Trash2, Volume2, VolumeX } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { Language, Phrase } from 'localisation/phrases';
@@ -514,6 +514,15 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
                 ? 'gray'
                 : getWoWClassColor(playerClass);
 
+            const specId = getPlayerSpecID(seg.video);
+            let specIcon;
+
+            if (specId > 0) {
+              specIcon = specImages[specId as keyof typeof specImages];
+            } else {
+              specIcon = classImages[playerClass];
+            }
+
             return (
               <React.Fragment key={seg.video.videoName}>
                 <div
@@ -533,11 +542,7 @@ const KillVideoSourceTimeline = (props: SourceTimelineProps) => {
                   onDragEnd={handleDragEnd}
                 >
                   <img
-                    src={
-                      specImages[
-                        getPlayerSpecID(seg.video) as keyof typeof specImages
-                      ]
-                    }
+                    src={specIcon}
                     alt="spec"
                     className="absolute top-1 left-1 w-4 h-4 rounded-[15%] pointer-events-none"
                     style={{

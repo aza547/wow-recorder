@@ -621,6 +621,8 @@ enum Phrase {
   Forever,
   CloudUploadForeverDescription,
   CloudUploadForeverLabel,
+  Character,
+  Realm,
 }
 
 enum Language {

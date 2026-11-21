@@ -41,16 +41,13 @@ const LRU_CACHE_JSON = 'lru.json';
 // Fallback if hevcTranscodeCacheSizeGb is missing/invalid. 10 GiB.
 const FALLBACK_MAX_CACHE_BYTES = 10 * (1 << 30);
 
-const devMode = process.env.NODE_ENV === 'development';
-
 const ffmpegRel = isLinux
   ? 'node_modules/noobs/dist/bin/linux/ffmpeg'
   : 'node_modules/noobs/dist/bin/win64/ffmpeg.exe';
 
+// The main bundle is in release/app/dist/main in both dev and prod.
 const resolveBin = (rel: string) => {
-  const abs = devMode
-    ? path.resolve(__dirname, '../../release/app/', rel)
-    : path.resolve(__dirname, '../../', rel);
+  const abs = path.resolve(__dirname, '../../', rel);
   return fixPathWhenPackaged(abs);
 };
 

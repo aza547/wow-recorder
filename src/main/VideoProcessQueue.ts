@@ -42,9 +42,8 @@ const ffmpegPathRel = isLinux
   ? 'node_modules/noobs/dist/bin/linux/ffmpeg'
   : 'node_modules/noobs/dist/bin/win64/ffmpeg.exe';
 
-let ffmpegPathAbs = devMode
-  ? path.resolve(__dirname, '../../release/app/', ffmpegPathRel)
-  : path.resolve(__dirname, '../../', ffmpegPathRel);
+// The main bundle is in release/app/dist/main in both dev and prod.
+let ffmpegPathAbs = path.resolve(__dirname, '../../', ffmpegPathRel);
 
 ffmpegPathAbs = fixPathWhenPackaged(ffmpegPathAbs);
 ffmpeg.setFfmpegPath(ffmpegPathAbs);

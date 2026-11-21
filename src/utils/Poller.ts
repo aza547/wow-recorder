@@ -63,7 +63,7 @@ export default class Poller extends EventEmitter {
    */
   private binary = app.isPackaged
     ? path.join(process.resourcesPath, 'binaries', this.getBinaryName())
-    : path.join(__dirname, '../../binaries', this.getBinaryName());
+    : path.join(app.getAppPath(), 'binaries', this.getBinaryName());
 
   /**
    * Create or get the singleton.
