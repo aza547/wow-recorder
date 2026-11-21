@@ -1093,6 +1093,12 @@ export default class Recorder extends EventEmitter {
       console.info('[Recorder] Clear instant replay for', file);
       this.instantReplayFile = null;
       this.emit('state-change');
+    } else {
+      console.info(
+        '[Recorder] Not clearing instant replay',
+        file,
+        this.instantReplayFile,
+      );
     }
   }
 
