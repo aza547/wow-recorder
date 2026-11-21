@@ -77,7 +77,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       const allEncoders = await ipc.invoke('getEncoders', []);
 
       const availableEncoders = allEncoders
-        .filter((s: string) => encoderFilter(s, highRes))
+        .filter((s: string) => encoderFilter(s, highRes, appState.isLinux))
         .map(mapStringToEncoder)
         .sort((a: Encoder, b: Encoder) => a.type < b.type);
 
@@ -113,6 +113,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     config.obsQuality,
     config.obsRecEncoder,
     highRes,
+    appState.isLinux,
   ]);
 
   const isComponentDisabled = () => {
@@ -345,7 +346,8 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     if (
       values.includes(ESupportedEncoders.AMD_AV1) ||
       values.includes(ESupportedEncoders.NVENC_AV1) ||
-      values.includes(ESupportedEncoders.QSV_AV1)
+      values.includes(ESupportedEncoders.QSV_AV1) ||
+      values.includes(ESupportedEncoders.VAAPI_AV1)
     ) {
       // Include AV1 description if it's available.
       tooltip += '\n\n';
@@ -408,7 +410,8 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
         config.obsRecEncoder === ESupportedEncoders.AMD_AV1 ||
         config.obsRecEncoder === ESupportedEncoders.NVENC_H265 ||
         config.obsRecEncoder === ESupportedEncoders.NVENC_AV1 ||
-        config.obsRecEncoder === ESupportedEncoders.QSV_AV1);
+        config.obsRecEncoder === ESupportedEncoders.QSV_AV1 ||
+        config.obsRecEncoder === ESupportedEncoders.VAAPI_AV1);
 
     if (!showCodecWarning) {
       return <></>;

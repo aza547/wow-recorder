@@ -739,7 +739,7 @@ const AudioSourceControls = (props: IProps) => {
       volume: 1,
       tracks: defaultAudioTrack,
     };
-
+    
     const choices = await getAudioSourceChoices(src);
 
     setConfig((prev) => ({

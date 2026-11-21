@@ -33,7 +33,7 @@ const RecorderPreview = (props: {
   snapEnabled: boolean;
 }) => {
   const { appState, previewEnabled, config, snapEnabled } = props;
-  const { language } = appState;
+  const { language, isLinux } = appState;
 
   const initialRender = useRef(true);
   const previewDivRef = useRef<HTMLDivElement>(null);
@@ -57,28 +57,43 @@ const RecorderPreview = (props: {
   const snapOverlay = { x: Snap.NONE, y: Snap.NONE };
   const snapGame = { x: Snap.NONE, y: Snap.NONE };
 
-  const [overlayBoxDimensions, setOverlayBoxDimensions] =
-    useState<BoxDimensions>({
-      x: 0,
-      y: 0,
-      width: 200,
-      height: 100,
-      cropLeft: 0,
-      cropRight: 0,
-      cropTop: 0,
-      cropBottom: 0,
-    });
+  // Dimensions can be undefined when the corresponding OBS source does not
+  // yet exist on Linux. This is because you cannot have a pipewire capture
+  // source without first triggering the portal, which we don't necessarily want
+  // On Windows the sourc is always created at startup.
+  const [overlayBoxDimensions, setOverlayBoxDimensions] = useState<
+    BoxDimensions | undefined
+  >(
+    isLinux
+      ? undefined
+      : {
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          cropLeft: 0,
+          cropRight: 0,
+          cropTop: 0,
+          cropBottom: 0,
+        },
+  );
 
-  const [gameBoxDimensions, setGameBoxDimensions] = useState<BoxDimensions>({
-    x: 0,
-    y: 0,
-    width: 1000,
-    height: 500,
-    cropLeft: 0,
-    cropRight: 0,
-    cropTop: 0,
-    cropBottom: 0,
-  });
+  const [gameBoxDimensions, setGameBoxDimensions] = useState<
+    BoxDimensions | undefined
+  >(
+    isLinux
+      ? undefined
+      : {
+          x: 0,
+          y: 0,
+          width: 1000,
+          height: 500,
+          cropLeft: 0,
+          cropRight: 0,
+          cropTop: 0,
+          cropBottom: 0,
+        },
+  );
 
   useEffect(() => {
     // On component mount, get the source dimensions from the backend
@@ -134,61 +149,65 @@ const RecorderPreview = (props: {
 
   if (snapEnabled) {
     // Decide if we should snap the chat overlay.
-    if (Math.abs(overlayBoxDimensions.y) < snapDistance) {
-      snapOverlay.y = Snap.TOP;
-    } else if (
-      Math.abs(
-        overlayBoxDimensions.y +
-          overlayBoxDimensions.height -
-          overlayBoxDimensions.cropTop -
-          overlayBoxDimensions.cropBottom -
-          previewInfo.previewHeight +
-          2 * yCorr,
-      ) < snapDistance
-    ) {
-      snapOverlay.y = Snap.BOTTOM;
-    }
+    if (overlayBoxDimensions) {
+      if (Math.abs(overlayBoxDimensions.y) < snapDistance) {
+        snapOverlay.y = Snap.TOP;
+      } else if (
+        Math.abs(
+          overlayBoxDimensions.y +
+            overlayBoxDimensions.height -
+            overlayBoxDimensions.cropTop -
+            overlayBoxDimensions.cropBottom -
+            previewInfo.previewHeight +
+            2 * yCorr,
+        ) < snapDistance
+      ) {
+        snapOverlay.y = Snap.BOTTOM;
+      }
 
-    if (Math.abs(overlayBoxDimensions.x) < snapDistance) {
-      snapOverlay.x = Snap.LEFT;
-    } else if (
-      Math.abs(
-        overlayBoxDimensions.x +
-          overlayBoxDimensions.width -
-          overlayBoxDimensions.cropLeft -
-          overlayBoxDimensions.cropRight -
-          previewInfo.previewWidth +
-          2 * xCorr,
-      ) < snapDistance
-    ) {
-      snapOverlay.x = Snap.RIGHT;
+      if (Math.abs(overlayBoxDimensions.x) < snapDistance) {
+        snapOverlay.x = Snap.LEFT;
+      } else if (
+        Math.abs(
+          overlayBoxDimensions.x +
+            overlayBoxDimensions.width -
+            overlayBoxDimensions.cropLeft -
+            overlayBoxDimensions.cropRight -
+            previewInfo.previewWidth +
+            2 * xCorr,
+        ) < snapDistance
+      ) {
+        snapOverlay.x = Snap.RIGHT;
+      }
     }
 
     // Decide if we should snap the game overlay.
-    if (Math.abs(gameBoxDimensions.y) < snapDistance) {
-      snapGame.y = Snap.TOP;
-    } else if (
-      Math.abs(
-        gameBoxDimensions.y +
-          gameBoxDimensions.height -
-          previewInfo.previewHeight +
-          2 * yCorr,
-      ) < snapDistance
-    ) {
-      snapGame.y = Snap.BOTTOM;
-    }
+    if (gameBoxDimensions) {
+      if (Math.abs(gameBoxDimensions.y) < snapDistance) {
+        snapGame.y = Snap.TOP;
+      } else if (
+        Math.abs(
+          gameBoxDimensions.y +
+            gameBoxDimensions.height -
+            previewInfo.previewHeight +
+            2 * yCorr,
+        ) < snapDistance
+      ) {
+        snapGame.y = Snap.BOTTOM;
+      }
 
-    if (Math.abs(gameBoxDimensions.x) < snapDistance) {
-      snapGame.x = Snap.LEFT;
-    } else if (
-      Math.abs(
-        gameBoxDimensions.x +
-          gameBoxDimensions.width -
-          previewInfo.previewWidth +
-          2 * xCorr,
-      ) < snapDistance
-    ) {
-      snapGame.x = Snap.RIGHT;
+      if (Math.abs(gameBoxDimensions.x) < snapDistance) {
+        snapGame.x = Snap.LEFT;
+      } else if (
+        Math.abs(
+          gameBoxDimensions.x +
+            gameBoxDimensions.width -
+            previewInfo.previewWidth +
+            2 * xCorr,
+        ) < snapDistance
+      ) {
+        snapGame.x = Snap.RIGHT;
+      }
     }
   }
 
@@ -198,11 +217,23 @@ const RecorderPreview = (props: {
 
     if (config.chatOverlayEnabled) {
       const pos = await ipc.getSourcePosition(SceneItem.OVERLAY);
-      setOverlayBoxDimensions(pos);
+      if (pos) {
+        setOverlayBoxDimensions(pos);
+      } else if (isLinux) {
+        // Source does not exist (WoW not running on Linux).
+        // Windows always has a source so we never reach this branch there.
+        setOverlayBoxDimensions(undefined);
+      }
+    } else if (isLinux) {
+      setOverlayBoxDimensions(undefined);
     }
 
     const pos = await ipc.getSourcePosition(SceneItem.GAME);
-    setGameBoxDimensions(pos);
+    if (pos) {
+      setGameBoxDimensions(pos);
+    } else if (isLinux) {
+      setGameBoxDimensions(undefined);
+    }
   };
 
   const configurePreview = async () => {
@@ -250,6 +281,10 @@ const RecorderPreview = (props: {
     const snap = src === SceneItem.OVERLAY ? snapOverlay : snapGame;
 
     fn((prev) => {
+      // Drag is only possible when the box is rendered, which requires
+      // dimensions to exist. This guard satisfies the type system.
+      if (!prev) return prev;
+
       const updated = {
         ...prev,
         x: prev.x + event.movementX * zoomFactor,
@@ -294,6 +329,8 @@ const RecorderPreview = (props: {
         : setGameBoxDimensions;
 
     fn((prev) => {
+      if (!prev) return prev;
+
       const aspectRatio = prev.width / prev.height;
       let newWidth = prev.width + event.movementX * zoomFactor;
       newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
@@ -383,8 +420,18 @@ const RecorderPreview = (props: {
       return <></>;
     }
 
-    const { x, y, width, height, cropLeft, cropRight, cropTop, cropBottom } =
+    const dims =
       src === SceneItem.OVERLAY ? overlayBoxDimensions : gameBoxDimensions;
+
+    // No OBS source exists yet (Linux + WoW not running at startup).
+    // Skip rendering this box; the hint in the preview area explains the
+    // empty state.
+    if (!dims) {
+      return <></>;
+    }
+
+    const { x, y, width, height, cropLeft, cropRight, cropTop, cropBottom } =
+      dims;
 
     const snap = src === SceneItem.OVERLAY ? snapOverlay : snapGame;
 
@@ -471,6 +518,11 @@ const RecorderPreview = (props: {
       >
         {renderDraggableSceneBox(SceneItem.GAME)}
         {renderDraggableSceneBox(SceneItem.OVERLAY)}
+        {isLinux && !gameBoxDimensions && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-foreground-lighter text-lg">
+            {getLocalePhrase(language, Phrase.ScenePreviewWowNotRunning)}
+          </div>
+        )}
       </div>
     </div>
   );

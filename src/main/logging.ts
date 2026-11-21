@@ -1,4 +1,5 @@
 import path from 'path';
+import { app } from 'electron';
 import { fixPathWhenPackaged } from './util';
 import log from 'electron-log/main';
 import fs from 'fs';
@@ -90,6 +91,11 @@ export const setupApplicationLogging = () => {
 };
 
 export const getApplicationLogDir = () => {
+  // The packaged app directory can be read-only (e.g. a mounted AppImage).
+  if (app.isPackaged) {
+    return app.getPath('logs');
+  }
+
   const parent = fixPathWhenPackaged(__dirname);
   const dir = 'logs';
   return path.join(parent, dir);
