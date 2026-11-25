@@ -346,7 +346,7 @@ export default abstract class LogHandler {
     const poller = Poller.getInstance();
     const cfg = ConfigService.getInstance();
 
-    let videoFile;
+    let recording;
 
     const stopPromise = recorder.stop(); // Queue the stop.
     const wowRunning = poller.isWowRunning();
@@ -361,7 +361,7 @@ export default abstract class LogHandler {
       // Now await the stop so we get the file from the recorder. Clear it
       // when we do to prevent it being reused.
       await stopPromise;
-      videoFile = recorder.getAndClearLastFile();
+      recording = recorder.getAndClearLastFile();
     } catch (error) {
       console.error(
         '[LogHandler] Failed to stop recording, discarding video',
@@ -375,7 +375,7 @@ export default abstract class LogHandler {
       return;
     }
 
-    if (!videoFile) {
+    if (!recording) {
       console.error('[LogHandler] No video file available');
 
       const report =
@@ -384,6 +384,8 @@ export default abstract class LogHandler {
 
       return;
     }
+
+    const videoFile = recording.path;
 
     try {
       const metadata = lastActivity.getMetadata();
@@ -416,6 +418,7 @@ export default abstract class LogHandler {
         duration,
         metadata,
         clip: false,
+        interrupted: recording.interrupted,
       };
 
       VideoProcessQueue.getInstance().queueVideo(queueItem);
