@@ -124,12 +124,6 @@ export default function TagDialog(props: IProps) {
     return !dirty.current || !video || saveTag(video, innerTag);
   };
 
-  const handleOpenChange = async (value: boolean) => {
-    if (isPending(data)) return;
-    if (!value && !(await saveCurrentTag())) return;
-    onOpenChange(value);
-  };
-
   const columns: ColumnDef<typeof stockFeatures, RendererVideo, unknown>[] = [
     {
       id: 'Tag',
@@ -164,6 +158,12 @@ export default function TagDialog(props: IProps) {
 
     return group;
   }, [parentLookupMap, targetVideoId]);
+
+  const handleOpenChange = async (value: boolean) => {
+    if (isPending(data)) return;
+    if (!value && !(await saveCurrentTag())) return;
+    onOpenChange(value);
+  };
 
   const table = useTable({
     columns,

@@ -2,6 +2,7 @@ import { CellContext, stockFeatures } from '@tanstack/react-table';
 import {
   CloudStatus,
   DialogType,
+  Flavour,
   RendererClip,
   RendererVideo,
 } from 'main/types';
@@ -22,7 +23,7 @@ import {
   getDungeonName,
 } from 'renderer/rendererutils';
 import { Box } from '@mui/material';
-import { affixImages, specImages } from 'renderer/images';
+import { affixImages, classImages, specImages } from 'renderer/images';
 import { Language, Phrase } from 'localisation/phrases';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
@@ -306,10 +307,17 @@ export const populateViewpointCell = (
   }
 
   const playerClass = getPlayerClass(first);
-  const playerSpecID = getPlayerSpecID(first);
   let playerName = getPlayerName(first);
   let playerClassColor = getWoWClassColor(playerClass);
-  let specIcon = specImages[playerSpecID as keyof typeof specImages];
+
+  let specIcon;
+
+  if (video.flavour === Flavour.Forever) {
+    specIcon = classImages[playerClass];
+  } else {
+    const playerSpecID = getPlayerSpecID(first);
+    specIcon = specImages[playerSpecID as keyof typeof specImages];
+  }
 
   if (playerName === 'WCR Multipov Name') {
     playerName = 'Multiview';
@@ -416,10 +424,17 @@ export const populatePlayerCell = (
   }
 
   const playerClass = getPlayerClass(video);
-  const playerSpecID = getPlayerSpecID(video);
   const playerName = getPlayerName(video);
   const playerClassColor = getWoWClassColor(playerClass);
-  const specIcon = specImages[playerSpecID as keyof typeof specImages];
+
+  let specIcon;
+
+  if (video.flavour === Flavour.Forever) {
+    specIcon = classImages[playerClass];
+  } else {
+    const playerSpecID = getPlayerSpecID(video);
+    specIcon = specImages[playerSpecID as keyof typeof specImages];
+  }
 
   const renderSpecAndName = () => {
     return (

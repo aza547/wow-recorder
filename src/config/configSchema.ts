@@ -99,6 +99,10 @@ export type ConfigurationSchema = {
   manualRecordHotKey: number;
   manualRecordHotKeyModifiers: string;
   manualRecordSoundAlert: boolean;
+  saveReplayBufferHotKey: number;
+  saveReplayBufferHotKeyModifiers: string;
+  startFromReplayBufferHotKey: number;
+  startFromReplayBufferHotKeyModifiers: string;
   manualRecordUpload: boolean;
   customReplayBuffer: boolean;
   customReplayBufferLength: number;
@@ -624,6 +628,26 @@ export const configSchema = {
     description: Phrase.ManualRecordSoundAlertDescription,
     type: 'boolean',
     default: true,
+  },
+  saveReplayBufferHotKey: {
+    description: Phrase.SaveReplayBufferHotKeyDescription,
+    type: 'integer',
+    default: -1,
+  },
+  saveReplayBufferHotKeyModifiers: {
+    description: Phrase.SaveReplayBufferHotKeyDescription,
+    type: 'string',
+    default: '',
+  },
+  startFromReplayBufferHotKey: {
+    description: Phrase.StartFromReplayBufferHotKeyDescription,
+    type: 'integer',
+    default: -1,
+  },
+  startFromReplayBufferHotKeyModifiers: {
+    description: Phrase.StartFromReplayBufferHotKeyDescription,
+    type: 'string',
+    default: '',
   },
   customReplayBuffer: {
     description: Phrase.CustomReplayBufferDescription,

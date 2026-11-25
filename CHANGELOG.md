@@ -7,8 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 780](https://github.com/aza547/wow-recorder/issues/780) - Added more hotkeys to the video player. 
+- [Issue 780](https://github.com/aza547/wow-recorder/issues/780) - Added a shortcut legend for the video player that can be opened with "?".
+
 ### Fixed
 - [Issue 875](https://github.com/aza547/wow-recorder/issues/875) - Confirm recording lock, tag and delete actions before updating their state, and report failures.
+- [Issue 923](https://github.com/aza547/wow-recorder/issues/923) - Respect combat log timezone offsets so daylight saving changes do not break recordings or their timelines.
+
+## [7.16.0] - 2026-11-20
+### Changed
+- Migrate the build tooling from webpack to electron-vite.
+
+### Added
+- Forever raid support.
+
+### Fixed
+- Bump the Electron version to `45.2.3`, and related packages.
+- Fix side menu width so that it doesn't shrink when the window is small.
+
+## [7.15.0] - 2026-11-06
+### Changed
+- Add a "Replay Buffer" settings category to reduce settings clutter.
+- [Issue 933](https://github.com/aza547/wow-recorder/issues/933) - Remove pulsing animation from side menu buttons.
+
+### Added
+- [Issue 931](https://github.com/aza547/wow-recorder/issues/931) - Support both "Save Buffer Immediately" and "Save Buffer and Continue Recording" modes.
+- [Issue 930](https://github.com/aza547/wow-recorder/issues/930) - Add hotkeys for save buffer feature.
+- [Issue 927](https://github.com/aza547/wow-recorder/issues/927) - Expose replay buffer MB in the settings.
+
+### Fixed
+- [Issue 934](https://github.com/aza547/wow-recorder/issues/934) - Fix recording durations displaying 60 seconds instead of rolling over to the next minute.
+- [Issue 929](https://github.com/aza547/wow-recorder/issues/929) - Fix a broken tooltip on the "Save Buffer" button.
+
 
 ## [7.14.0] - 2026-11-04
 ### Changed
