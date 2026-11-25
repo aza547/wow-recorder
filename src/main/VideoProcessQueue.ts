@@ -215,6 +215,7 @@ export default class VideoProcessQueue {
 
     console.info('[VideoProcessQueue] Queuing video for upload', item.path);
     this.inProgressUploads.push(item.path);
+    DiskSizeMonitor.markVideoInUse(item.path);
     this.uploadQueue.write(item);
 
     const queued = Math.max(0, this.inProgressUploads.length);
@@ -610,6 +611,7 @@ export default class VideoProcessQueue {
    */
   private finishUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Finished uploading video', item.path);
+    DiskSizeMonitor.unmarkVideoInUse(item.path);
 
     this.inProgressUploads = this.inProgressUploads.filter(
       (p) => p !== item.path,
