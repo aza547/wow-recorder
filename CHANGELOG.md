@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 780](https://github.com/aza547/wow-recorder/issues/780) - Added a shortcut legend for the video player that can be opened with "?".
 
 ### Fixed
+- [Issue 875](https://github.com/aza547/wow-recorder/issues/875) - Confirm recording lock, tag and delete actions before updating their state, and report failures.
 - [Issue 923](https://github.com/aza547/wow-recorder/issues/923) - Respect combat log timezone offsets so daylight saving changes do not break recordings or their timelines.
 
 ## [7.16.0] - 2026-11-20

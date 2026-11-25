@@ -50,7 +50,6 @@ import {
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Language } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
-import { Dispatch, SetStateAction } from 'react';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -1210,27 +1209,6 @@ const getVideoGroupIds = (
   );
 };
 
-const lockVideos = (
-  targets: Array<RendererVideo>,
-  lock: boolean,
-  setVideoState: Dispatch<SetStateAction<Array<RendererVideo>>>,
-) => {
-  const disk = targets.filter((v) => !v.cloud);
-  const cloud = targets.filter((v) => v.cloud);
-
-  const ipc = window.electron.ipcRenderer;
-  ipc.sendMessage('videoButtonDisk', ['protect', lock, disk]);
-  ipc.sendMessage('videoButtonCloud', ['protect', lock, cloud]);
-
-  setVideoState((prev) => {
-    return prev.map((rv) => {
-      return targets.some((target) => rv.uniqueId === target.uniqueId)
-        ? { ...rv, isProtected: lock }
-        : rv;
-    });
-  });
-};
-
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1301,5 +1279,4 @@ export {
   getVideoParent,
   getVideoGroup,
   getVideoGroupIds,
-  lockVideos,
 };
