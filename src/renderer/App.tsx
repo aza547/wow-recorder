@@ -11,6 +11,7 @@ import {
   CloudStatus,
   DiskStatus,
   StorageFilter,
+  LockFilter,
   ActivityStatus,
   CombatLoggingStatus,
   InstantReplayState,
@@ -98,6 +99,9 @@ const WarcraftRecorder = () => {
 
     // The storage filter.
     storageFilter: StorageFilter.BOTH,
+
+    // The lock filter.
+    lockFilter: LockFilter.ALL,
 
     // We use this to conditionally hide the recording preview.
     videoFullScreen: false,

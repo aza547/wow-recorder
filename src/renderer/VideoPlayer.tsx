@@ -2,6 +2,7 @@ import {
   AppState,
   DeathMarkers,
   InstantReplayData,
+  LockFilter,
   RendererVideo,
   SliderMark,
   StorageFilter,
@@ -120,8 +121,16 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     instantReplay,
   } = props;
 
-  const { playing, multiPlayerMode, language, selectedVideos, storageFilter } =
-    appState;
+  const {
+    playing,
+    multiPlayerMode,
+    language,
+    selectedVideos,
+    storageFilter,
+    lockFilter,
+  } = appState;
+  const hasActiveFilter =
+    storageFilter !== StorageFilter.BOTH || lockFilter !== LockFilter.ALL;
 
   if (!instantReplay && (videos.length < 1 || videos.length > 4)) {
     // Protect against stupid programmer errors.
@@ -943,7 +952,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Render the download button.
    */
   const renderDownloadButton = () => {
-    const disabled = storageFilter !== StorageFilter.BOTH;
+    const disabled = hasActiveFilter;
     const tooltip = disabled
       ? getLocalePhrase(language, Phrase.DisabledDueToFilter)
       : getLocalePhrase(language, Phrase.DownloadButtonTooltip);
@@ -968,7 +977,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Render the upload button.
    */
   const renderUploadButton = () => {
-    const disabled = storageFilter !== StorageFilter.BOTH;
+    const disabled = hasActiveFilter;
     const tooltip = disabled
       ? getLocalePhrase(language, Phrase.DisabledDueToFilter)
       : getLocalePhrase(language, Phrase.UploadButtonTooltip);
