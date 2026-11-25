@@ -69,6 +69,6 @@ test('Date Parsing', async () => {
   // Year and TZ.
   const twwTz = '7/28/2025 14:37:54.790-4  ARENA_MATCH_START,2547,33,5v5,1';
   const parsedTwwTz = new LogLine(twwTz);
-  const expectedTwwTz = new Date('2025-07-28T14:37:54');
+  const expectedTwwTz = new Date('2025-07-28T14:37:54-04:00');
   expect(parsedTwwTz.date()).toStrictEqual(expectedTwwTz);
 });

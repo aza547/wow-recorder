@@ -14,7 +14,7 @@ export default class ForeverLogHandler extends LogHandler {
 
     /* eslint-disable prettier/prettier */
     this.combatLogWatcher
-      .on('ENCOUNTER_START',      (line: LogLine) => { this.logProcessQueue.add(async () =>  this.handleEncounterStartLine(line));})
+      .on('ENCOUNTER_START',      (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterStartLine(line));})
       .on('ENCOUNTER_END',        (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterEndLine(line)); })
       .on('ZONE_CHANGE',          (line: LogLine) => { this.logProcessQueue.add(async () => this.handleZoneChange(line)); })
       .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellAuraAppliedLine(line)); })
@@ -35,11 +35,7 @@ export default class ForeverLogHandler extends LogHandler {
       return;
     }
 
-    if (LogHandler.activity) {
-      console.error('[ForeverLogHandler] Encounter is already in progress');
-    } else {
-      await super.handleEncounterStartLine(line, Flavour.Forever);
-    }
+    await super.handleEncounterStartLine(line, Flavour.Forever);
   }
 
   protected async handleEncounterEndLine(line: LogLine) {
@@ -50,12 +46,7 @@ export default class ForeverLogHandler extends LogHandler {
       return;
     }
 
-    if (LogHandler.activity) {
-      console.debug('[ForeverLogHandler] Must be raid encounter');
-      await super.handleEncounterEndLine(line);
-    } else {
-      console.error('[ForeverLogHandler] Encounter end event but no activity');
-    }
+    await super.handleEncounterEndLine(line);
   }
 
   private async handleZoneChange(line: LogLine) {
@@ -141,16 +132,19 @@ export default class ForeverLogHandler extends LogHandler {
     }
 
     const teamID = parseInt(line.arg(2), 10);
-    const specID = parseInt(line.arg(25), 10);
+
+    // We use this as if it were a spec ID even though it's a class ID
+    // technically. WCR doesn't separate Forever characters by spec.
+    const foreverClassId = parseInt(line.arg(25), 10);
 
     console.info(
       '[ForeverLogHandler] Adding combatant from COMBATANT_INFO',
       GUID,
       teamID,
-      specID,
+      foreverClassId,
     );
 
-    const newCombatant = new Combatant(GUID, teamID, specID);
+    const newCombatant = new Combatant(GUID, teamID, foreverClassId);
     LogHandler.activity.addCombatant(newCombatant);
   }
 

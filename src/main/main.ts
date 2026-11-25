@@ -45,7 +45,9 @@ const tzOffsetStr = `UTC${tzOffset >= 0 ? '+' : ''}${tzOffset / 60}`;
 
 console.info('[Main] App starting, version:', appVersion);
 console.info('[Main] Node version', process.versions.node);
+console.info('[Main] Electron version:', process.versions.electron);
 console.info('[Main] ICU version', process.versions.icu);
+console.info('[Main] Timezone version:', process.versions.tz);
 console.info('[Main] On OS:', os.platform(), os.release());
 console.info('[Main] In timezone:', tz, tzOffsetStr);
 
@@ -121,28 +123,26 @@ const videoPlayerSettings: VideoPlayerSettings = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  const sourceMapSupport = require('source-map-support');
-  sourceMapSupport.install();
+  process.setSourceMapsEnabled(true);
 }
 
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 if (isDebug) {
-  require('electron-debug').default();
+  void import('electron-debug')
+    .then(({ default: debug }) => debug())
+    .catch(console.error);
 }
 
 const installExtensions = async () => {
-  const installer = require('electron-devtools-installer');
-  const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-  const extensions = ['REACT_DEVELOPER_TOOLS'];
+  const { installExtension, REACT_DEVELOPER_TOOLS } = await import(
+    'electron-devtools-installer'
+  );
 
-  return installer
-    .default(
-      extensions.map((name) => installer[name]),
-      forceDownload,
-    )
-    .catch(console.info);
+  return installExtension(REACT_DEVELOPER_TOOLS, {
+    forceDownload: !!process.env.UPGRADE_EXTENSIONS,
+  }).catch(console.info);
 };
 
 /**
@@ -203,9 +203,7 @@ const createWindow = async () => {
     title: `Warcraft Recorder v${appVersion}`,
     webPreferences: {
       sandbox: true, // Good security practice.
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
+      preload: path.join(__dirname, '../preload/preload.js'),
     },
   });
 
