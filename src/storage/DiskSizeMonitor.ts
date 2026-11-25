@@ -10,15 +10,6 @@ import {
 import AsyncQueue from '../utils/AsyncQueue';
 import DiskClient from './DiskClient';
 
-// Had a bug here where we used filter with an async function but that isn't
-// valid as it just returns a truthy promise. See issue 323. To get around
-// this we do some creative stuff from here:
-// https://advancedweb.hu/how-to-use-async-functions-with-array-filter-in-javascript/
-const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
-  const results = await Promise.all(fileStream.map(filter));
-  return fileStream.filter((_, index) => results[index]);
-};
-
 // All monitor instances share the queue, retaining at most one rerun while cleanup is active.
 const diskSizeMonitorQueue = new AsyncQueue(1);
 let pendingDiskSizeMonitorCompletion: Promise<void> | undefined;
@@ -87,9 +78,10 @@ export default class DiskSizeMonitor {
   private async runOnce() {
     const storageDir = this.cfg.get<string>('storagePath');
     const maxStorageGB = this.cfg.get<number>('maxStorage');
+    const storageLimit = this.cfg.get<boolean>('storageLimit');
 
-    if (maxStorageGB === 0) {
-      console.info('[DiskSizeMonitor] Limitless storage, doing nothing');
+    if (!storageLimit || maxStorageGB === 0) {
+      console.info('[DiskSizeMonitor] No storage limit set, doing nothing');
       return;
     }
 
@@ -101,74 +93,67 @@ export default class DiskSizeMonitor {
       return;
     }
 
-    const maxStorageBytes = maxStorageGB * 1024 ** 3;
-    const usage = await this.usage(storageDir);
-    const bytesToFree = usage - maxStorageBytes * 0.95; // Remain slightly under the threshold.
-    let bytesFreed = 0;
-    let storageChanged = false;
-
-    const files = await getSortedVideos(
-      storageDir,
-      FileSortDirection.OldestFirst,
-    );
-
     console.info(
       '[DiskSizeMonitor] Running, size limit is',
       maxStorageGB,
       'GB',
     );
 
-    const unprotectedFiles = await asyncFilter(
-      files,
-      async (file: FileInfo) => {
-        if (DiskSizeMonitor.isVideoInUse(file.name)) {
-          console.info('[DiskSizeMonitor] Skipping video in use', file.name);
-          return false;
-        }
-
-        try {
-          const metadata = await getMetadataForVideo(file.name);
-          const isUnprotected = !(metadata.protected || false);
-          return isUnprotected;
-        } catch (error) {
-          if (DiskSizeMonitor.isVideoInUse(file.name)) {
-            console.info('[DiskSizeMonitor] Skipping video in use', file.name);
-            return false;
-          }
-
-          console.error(
-            '[DiskSizeMonitor] Failed to get metadata, deleting video',
-            file.name,
-            error,
-          );
-          storageChanged = true;
-          await deleteVideoDisk(file.name);
-          return false;
-        }
-      },
+    const files = await getSortedVideos(
+      storageDir,
+      FileSortDirection.OldestFirst,
     );
 
-    const filesForDeletion = unprotectedFiles.filter((file) => {
+    const maxStorageBytes = maxStorageGB * 1024 ** 3;
+    const usage = this.usageFromFiles(files);
+    const bytesToFree = usage - maxStorageBytes * 0.95; // Remain slightly under the threshold.
+
+    if (bytesToFree <= 0) {
+      console.info('[DiskSizeMonitor] Under the limit, nothing to do');
+      return;
+    }
+
+    let bytesSelected = 0;
+    let deleteCount = 0;
+
+    for (const file of files) {
+      if (DiskSizeMonitor.isVideoInUse(file.name)) {
+        console.info('[DiskSizeMonitor] Skipping video in use', file.name);
+        continue;
+      }
+
+      try {
+        const metadata = await getMetadataForVideo(file.name);
+        if (metadata.protected) continue;
+      } catch (err) {
+        console.error(
+          '[DiskSizeMonitor] Failed to get metadata for',
+          file.name,
+          err,
+        );
+        continue;
+      }
+
       // A job may have been queued while the metadata was being read.
-      if (DiskSizeMonitor.isVideoInUse(file.name)) return false;
+      if (DiskSizeMonitor.isVideoInUse(file.name)) {
+        console.info('[DiskSizeMonitor] Skipping video in use', file.name);
+        continue;
+      }
 
-      bytesFreed += file.size;
-      return bytesFreed < bytesToFree;
-    });
-
-    console.info(
-      `[DiskSizeMonitor] Deleting ${filesForDeletion.length} old video(s)`,
-    );
-
-    await Promise.all(
-      filesForDeletion.map(async (file) => {
+      try {
         await deleteVideoDisk(file.name);
-      }),
-    );
+      } catch (err) {
+        console.error('[DiskSizeMonitor] Failed to delete', file.name, err);
+      }
+      deleteCount += 1;
+      bytesSelected += file.size;
+      if (bytesSelected >= bytesToFree) break;
+    }
 
-    storageChanged ||= filesForDeletion.length > 0;
-
-    if (storageChanged) {
+    if (deleteCount > 0) {
+      console.info(
+        `[DiskSizeMonitor] Attempted to delete ${deleteCount} old video(s)`,
+      );
       await Promise.all([
         DiskClient.getInstance().refreshStatus(),
         DiskClient.getInstance().refreshVideos(),
@@ -180,11 +165,10 @@ export default class DiskSizeMonitor {
     storageDir = this.cfg.get<string>('storagePath'),
   ): Promise<number> {
     const files = await getSortedVideos(storageDir);
+    return this.usageFromFiles(files);
+  }
 
-    if (files.length < 1) {
-      return 0;
-    }
-
+  private usageFromFiles(files: Array<FileInfo>) {
     return files.map((file) => file.size).reduce((acc, num) => acc + num, 0);
   }
 }

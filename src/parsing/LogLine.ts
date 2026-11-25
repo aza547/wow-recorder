@@ -64,6 +64,14 @@ export default class LogLine {
         parseInt(v, 10),
       );
 
+      const timezone = this.timestamp.match(/([+-]\d+(?:\.\d+)?)$/);
+
+      if (timezone) {
+        // The logged offset disambiguates the repeated hour when clocks go back.
+        const utc = Date.UTC(year, month - 1, day, hours, mins, secs);
+        return new Date(utc - Number(timezone[1]) * 60 * 60 * 1000);
+      }
+
       dateObj.setMonth(month - 1);
       dateObj.setDate(day);
       dateObj.setFullYear(year);

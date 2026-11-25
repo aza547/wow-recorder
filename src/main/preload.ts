@@ -235,6 +235,14 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('toggleManualRecording');
     },
 
+    saveReplayBuffer() {
+      ipcRenderer.send('saveReplayBuffer');
+    },
+
+    startManualFromReplayBuffer() {
+      ipcRenderer.send('startManualFromReplayBuffer');
+    },
+
     forceStopRecording() {
       ipcRenderer.send('forceStopRecording');
     },
@@ -278,6 +286,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     refreshCombatLogStatus() {
       ipcRenderer.send('refreshCombatLogStatus');
+    },
+
+    refreshDiskStatus() {
+      ipcRenderer.send('refreshDiskStatus');
     },
   },
 });

@@ -42,7 +42,7 @@ import {
   useRef,
 } from 'react';
 import { Button } from './components/Button/Button';
-import { specImages } from './images';
+import { classImages, specImages } from './images';
 import {
   formatRealmNameForDisplay,
   getSpecClass,
@@ -340,6 +340,17 @@ const CloudSettings = (props: IProps) => {
     });
   };
 
+  const setCloudUploadForever = (checked: boolean) => {
+    setConfigValue('cloudUploadForever', checked);
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        cloudUploadForever: checked,
+      };
+    });
+  };
+
   const getCloudSwitch = () => {
     return (
       <div className="flex flex-col w-[140px]">
@@ -435,6 +446,32 @@ const CloudSettings = (props: IProps) => {
         </Label>
         <div className="flex h-10 items-center">
           {getSwitch('cloudUploadClassic', setCloudUploadClassic)}
+        </div>
+      </div>
+    );
+  };
+
+  const getForeverUploadSwitch = () => {
+    if (!config.cloudUpload) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="cloudUploadForever" className="flex items-center">
+          {getLocalePhrase(language, Phrase.CloudUploadForeverLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              language,
+              configSchema.cloudUploadForever.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('cloudUploadForever', setCloudUploadForever)}
         </div>
       </div>
     );
@@ -863,9 +900,13 @@ const CloudSettings = (props: IProps) => {
         character.specID as keyof typeof specImages,
       );
 
+      const playerClass = getSpecClass(character.specID);
+
       if (knownSpec) {
         specIcon = specImages[character.specID as keyof typeof specImages];
-        const playerClass = getSpecClass(character.specID);
+        playerClassColor = getWoWClassColor(playerClass);
+      } else {
+        specIcon = classImages[getSpecClass(character.specID)];
         playerClassColor = getWoWClassColor(playerClass);
       }
     }
@@ -970,8 +1011,12 @@ const CloudSettings = (props: IProps) => {
           <table className="m-2 w-fit">
             <thead className="border-b border-t border-video-border">
               <tr>
-                <th className="text-left w-[200px]">Character</th>
-                <th className="text-left w-[200px]">Realm</th>
+                <th className="text-left w-[250px]">
+                  {getLocalePhrase(language, Phrase.Character)}
+                </th>
+                <th className="text-left w-[250px]">
+                  {getLocalePhrase(language, Phrase.Realm)}
+                </th>
                 <th></th>
               </tr>
             </thead>
@@ -1022,6 +1067,7 @@ const CloudSettings = (props: IProps) => {
             <div className="flex flex-row gap-x-6">
               {getCloudUploadSwitch()}
               {getRetailUploadSwitch()}
+              {getForeverUploadSwitch()}
               {getClassicUploadSwitch()}
               {getCloudUploadRateLimitSwitch()}
               {getRateLimitField()}
