@@ -19,7 +19,7 @@ import {
   getSpecClass,
   getWoWClassColor,
 } from './rendererutils';
-import { specImages } from './images';
+import { classImages, specImages } from './images';
 import { Input } from './components/Input/Input';
 import { Button } from './components/Button/Button';
 import { Info, Plus } from 'lucide-react';
@@ -27,6 +27,7 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 import { ConfigurationSchema } from 'config/configSchema';
 import { Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
+import { specializationById } from 'main/constants';
 
 type IProps = {
   children: ReactNode;
@@ -73,7 +74,18 @@ const CharacterFilterDialog = (props: IProps) => {
 
     const playerClass = getSpecClass(character.specID);
     const classColor = getWoWClassColor(playerClass);
-    const specIcon = specImages[character.specID as keyof typeof specImages];
+    let specIcon;
+
+    const knownSpec = Object.prototype.hasOwnProperty.call(
+      specializationById,
+      character.specID,
+    );
+
+    if (knownSpec) {
+      specIcon = specImages[character.specID as keyof typeof specImages];
+    } else {
+      specIcon = classImages[playerClass];
+    }
 
     return (
       <div

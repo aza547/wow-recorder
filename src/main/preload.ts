@@ -234,6 +234,10 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('saveReplayBuffer');
     },
 
+    startManualFromReplayBuffer() {
+      ipcRenderer.send('startManualFromReplayBuffer');
+    },
+
     forceStopRecording() {
       ipcRenderer.send('forceStopRecording');
     },

@@ -6,6 +6,7 @@ import {
   AppState,
   RendererVideo,
   InstantReplayState,
+  ActivityStatus,
 } from 'main/types';
 import { Dispatch, RefObject, SetStateAction } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
@@ -17,6 +18,7 @@ import InstantReplay from './InstantReplay';
 interface IProps {
   recorderStatus: RecStatus;
   replayBufferSeconds: number;
+  replayBufferSizeMb: number;
   videoState: RendererVideo[];
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   appState: AppState;
@@ -30,6 +32,7 @@ interface IProps {
   setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
   instantReplayState: InstantReplayState;
   setInstantReplayState: Dispatch<SetStateAction<InstantReplayState>>;
+  activityStatus: ActivityStatus | null;
 }
 
 /**
@@ -39,6 +42,7 @@ const Layout = (props: IProps) => {
   const {
     recorderStatus,
     replayBufferSeconds,
+    replayBufferSizeMb,
     videoState,
     setVideoState,
     appState,
@@ -52,6 +56,7 @@ const Layout = (props: IProps) => {
     setPreviewEnabled,
     instantReplayState,
     setInstantReplayState,
+    activityStatus,
   } = props;
   const { page, category } = appState;
 
@@ -75,12 +80,14 @@ const Layout = (props: IProps) => {
       <SettingsPage
         recorderStatus={recorderStatus}
         replayBufferSeconds={replayBufferSeconds}
+        replayBufferSizeMb={replayBufferSizeMb}
         config={config}
         setConfig={setConfig}
         appState={appState}
         setAppState={setAppState}
         combatLoggingStatus={combatLoggingStatus}
         videoState={videoState}
+        activityStatus={activityStatus}
       />
     );
   };

@@ -15,5 +15,11 @@
     "outDir": ".erb/dll",
     "baseUrl": "./src",
   },
-  "exclude": ["test", "release/build", "release/app/dist", ".erb/dll"]
+  "exclude": [
+    "test",
+    "release/build",
+    "release/app/dist",
+    ".erb/dll",
+    "electron.vite.config.ts"
+  ]
 }

@@ -61,7 +61,6 @@ import assert from 'assert';
 import { isHighRes } from 'renderer/rendererutils';
 import { configSchema } from 'config/configSchema';
 
-const devMode = process.env.NODE_ENV === 'development';
 const moov = Buffer.from('moov');
 const moof = Buffer.from('moof');
 const mdat = Buffer.from('mdat');
@@ -149,6 +148,13 @@ export default class Recorder extends EventEmitter {
    * deactivate signals here which indicate the OBS output has deactivated.
    */
   private stopQueue = new WaitQueue<Signal>();
+
+  /**
+   * WaitQueue object for storing signalling from OBS. We only care about
+   * converted signals here which indicate the buffer has been converted
+   * to a real recording on disk.
+   */
+  private convertQueue = new WaitQueue<Signal>();
 
   /**
    * The state of the recorder, typically used to tell if OBS is recording
@@ -252,12 +258,14 @@ export default class Recorder extends EventEmitter {
   }, 1000);
 
   /**
-   * Poll the replay buffer length from OBS and send it to the frontend so the
-   * save replay button can show how many seconds will be saved.
+   * Poll the replay buffer length and size from OBS and send them to the
+   * frontend so the UI can show how much will be saved.
    */
   private replayBufferTimer = setInterval(() => {
     const secs = this.getActiveReplayBufferLength();
     send('updateReplayBufferSeconds', secs ?? 0);
+    const sizeMb = this.getActiveReplayBufferSizeMb();
+    send('updateReplayBufferSizeMb', sizeMb ?? 0);
   }, 1000);
 
   /**
@@ -1130,6 +1138,9 @@ export default class Recorder extends EventEmitter {
 
     // The native code expects an integer.
     const rounded = Math.round(offset);
+
+    // Clear any stale converted signals so waitForConvert only sees ours.
+    this.convertQueue.empty();
     noobs.StartRecording(rounded);
   }
 
@@ -1288,13 +1299,9 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Initializing OBS');
     const cb = this.handleSignal.bind(this);
 
-    let logPath = devMode
-      ? path.resolve(__dirname, './logs')
-      : path.resolve(__dirname, '../../dist/main/logs');
-
-    let noobsPath = devMode
-      ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
-      : path.resolve(__dirname, '../../node_modules/noobs/dist');
+    // The main bundle is in release/app/dist/main in both dev and prod.
+    let logPath = path.resolve(__dirname, './logs');
+    let noobsPath = path.resolve(__dirname, '../../node_modules/noobs/dist');
 
     logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);
@@ -1382,6 +1389,9 @@ export default class Recorder extends EventEmitter {
       case EOBSOutputSignal.Converted:
         console.info('[Recorder] Converted buffer to disk:', signal.path);
         this.currentFile = signal.path ?? null;
+        this.convertQueue.push(signal);
+        send('updateReplayBufferSeconds', 0);
+        send('updateReplayBufferSizeMb', 0);
         break;
 
       default:
@@ -2073,6 +2083,23 @@ export default class Recorder extends EventEmitter {
     return last ? { path: last, interrupted } : null;
   }
 
+  /**
+   * Wait for OBS to signal that the buffer has been converted to a real
+   * recording. Resolves immediately if it already has been. Stopping before
+   * the conversion completes loses the recording, so call this before
+   * stopping if a stop may follow a start very quickly.
+   */
+  public async waitForConvert() {
+    if (this.currentFile) {
+      return;
+    }
+
+    await Promise.race([
+      this.convertQueue.shift(),
+      getPromiseBomb(30, 'Timed out waiting for convert'),
+    ]);
+  }
+
   public getActiveReplayBufferLength() {
     if (!this.obsInitialized) {
       return null;
@@ -2089,5 +2116,23 @@ export default class Recorder extends EventEmitter {
     }
 
     return secs;
+  }
+
+  public getActiveReplayBufferSizeMb() {
+    if (!this.obsInitialized) {
+      return null;
+    }
+
+    if (this.obsState !== ERecordingState.Recording) {
+      return null;
+    }
+
+    const sizeMb = noobs.GetReplayBufferSizeMb();
+
+    if (sizeMb <= 0) {
+      return null;
+    }
+
+    return sizeMb;
   }
 }

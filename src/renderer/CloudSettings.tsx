@@ -42,7 +42,7 @@ import {
   useRef,
 } from 'react';
 import { Button } from './components/Button/Button';
-import { specImages } from './images';
+import { classImages, specImages } from './images';
 import {
   formatRealmNameForDisplay,
   getSpecClass,
@@ -900,9 +900,13 @@ const CloudSettings = (props: IProps) => {
         character.specID as keyof typeof specImages,
       );
 
+      const playerClass = getSpecClass(character.specID);
+
       if (knownSpec) {
         specIcon = specImages[character.specID as keyof typeof specImages];
-        const playerClass = getSpecClass(character.specID);
+        playerClassColor = getWoWClassColor(playerClass);
+      } else {
+        specIcon = classImages[getSpecClass(character.specID)];
         playerClassColor = getWoWClassColor(playerClass);
       }
     }
@@ -1007,8 +1011,12 @@ const CloudSettings = (props: IProps) => {
           <table className="m-2 w-fit">
             <thead className="border-b border-t border-video-border">
               <tr>
-                <th className="text-left w-[200px]">Character</th>
-                <th className="text-left w-[200px]">Realm</th>
+                <th className="text-left w-[250px]">
+                  {getLocalePhrase(language, Phrase.Character)}
+                </th>
+                <th className="text-left w-[250px]">
+                  {getLocalePhrase(language, Phrase.Realm)}
+                </th>
                 <th></th>
               </tr>
             </thead>
