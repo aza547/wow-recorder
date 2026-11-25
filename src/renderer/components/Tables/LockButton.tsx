@@ -23,7 +23,11 @@ const LockButton = (props: LockButtonProps) => {
   const noPermission =
     (!write && video.cloud) || (!del && video.cloud && isProtected);
 
-  const icon = isProtected ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
+  const icon = isProtected ? (
+    <LockKeyhole size={18} className="text-success" />
+  ) : (
+    <LockOpen size={18} />
+  );
 
   let tooltip = '';
 

@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- [Issue 911](https://github.com/aza547/wow-recorder/issues/911) - Colour recording lock and tag icons, distinguishing partially and fully locked groups.
 ### Added
 - [Issue 780](https://github.com/aza547/wow-recorder/issues/780) - Added more hotkeys to the video player. 
 - [Issue 780](https://github.com/aza547/wow-recorder/issues/780) - Added a shortcut legend for the video player that can be opened with "?".
