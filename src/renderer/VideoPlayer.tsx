@@ -60,6 +60,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import Separator from './components/Separator/Separator';
+import ShortcutLegendDialog from './ShortcutLegendDialog';
 import { toast } from './components/Toast/useToast';
 import { Phrase } from 'localisation/phrases';
 import { VideoCategory } from 'types/VideoCategory';
@@ -228,6 +229,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
 
   const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
+  const [shortcutDialogOpen, setShortcutDialogOpen] = useState(false);
   const [, setDrawingElements] = useState<readonly ExcalidrawElement[]>([]);
 
   /**
@@ -1423,7 +1425,31 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * such events, so instead we do this.
    */
   const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
-    if (e.key === 'k' || e.key === ' ') {
+    if (e.key === '?') {
+      const target = e.target as HTMLElement | null;
+
+      const typing =
+        target?.isContentEditable ||
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement;
+
+      // The dialog portals to document.body, which isn't visible while the
+      // player is fullscreen, so don't open it then.
+      if (!typing && !screenfull.isFullscreen) {
+        e.preventDefault();
+        setShortcutDialogOpen((prev) => !prev);
+      }
+
+      return;
+    }
+
+    // Don't drive the player from behind the shortcut legend. The dialog
+    // handles Escape itself to close.
+    if (shortcutDialogOpen) {
+      return;
+    }
+
+    if (e.code === 'KeyK' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
 
@@ -1438,13 +1464,13 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return;
     }
 
-    if (e.key === 'j' || e.key === 'ArrowLeft') {
+    if (e.code === 'KeyJ' || e.key === 'ArrowLeft') {
       const current = player1.current.currentTime;
       seekAllPlayers(current - 5);
       setProgress(current - 5);
     }
 
-    if (e.key === 'l' || e.key === 'ArrowRight') {
+    if (e.code === 'KeyL' || e.key === 'ArrowRight') {
       const current = player1.current.currentTime;
       seekAllPlayers(current + 5);
       setProgress(current + 5);
@@ -1464,11 +1490,11 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       setProgress(current - frame);
     }
 
-    if (e.key === 'f') {
+    if (e.code === 'KeyF') {
       toggleFullscreen();
     }
 
-    if (e.key === 'm') {
+    if (e.code === 'KeyM') {
       setMuted((prev) => !prev);
     }
 
@@ -1617,6 +1643,11 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       </div>
 
       {renderControls()}
+      <ShortcutLegendDialog
+        open={shortcutDialogOpen}
+        onOpenChange={setShortcutDialogOpen}
+        language={language}
+      />
     </div>
   );
 });
