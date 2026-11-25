@@ -227,7 +227,7 @@ const ENGLISH: Translations = {
   [Phrase.FullScreenTooltip]: 'Fullscreen',
   [Phrase.PlaybackSpeedTooltip]: 'Playback Speed',
   [Phrase.ClipTooltip]: 'Clip',
-  [Phrase.ClipUnavailableTooltip]: 'You can only clip locally saved videos, while in single player mode',
+  [Phrase.ClipUnavailableTooltip]: 'You can only clip while in single player mode.',
   [Phrase.ClipSourceTooltip]: 'Go to source',
   [Phrase.ClipSourceUnavailableTooltip]: 'Source unavailable',
   [Phrase.ConfirmTooltip]: 'Confirm',

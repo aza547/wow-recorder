@@ -25,7 +25,7 @@
   "main": "./release/app/dist/main/main.js",
   "scripts": {
     "build": "electron-vite build",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "install-electron && electron-builder install-app-deps",
     "lint": "cross-env NODE_ENV=development eslint ./src",
     "lint:fix": "cross-env NODE_ENV=development eslint ./src --fix",
     "package": "ts-node ./.erb/scripts/clean.js && npm run build && electron-builder build --publish never",
@@ -145,8 +145,8 @@
     "node-abi": "^4.37.0",
     "path": "^0.12.7",
     "re-resizable": "^6.9.11",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "react-error-boundary": "^5.0.0",
     "react-player": "^3.4.0",
     "react-router-dom": "^7.3.0",
@@ -230,9 +230,5 @@
         }
       }
     ]
-  },
-  "allowScripts": {
-    "electron": true,
-    "electron-winstaller": true
   }
 }
