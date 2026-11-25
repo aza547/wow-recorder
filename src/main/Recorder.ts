@@ -59,8 +59,8 @@ import Poller from 'utils/Poller';
 import AsyncQueue from 'utils/AsyncQueue';
 import assert from 'assert';
 import { isHighRes } from 'renderer/rendererutils';
+import { configSchema } from 'config/configSchema';
 
-const devMode = process.env.NODE_ENV === 'development';
 const moov = Buffer.from('moov');
 const moof = Buffer.from('moof');
 const mdat = Buffer.from('mdat');
@@ -150,6 +150,13 @@ export default class Recorder extends EventEmitter {
   private stopQueue = new WaitQueue<Signal>();
 
   /**
+   * WaitQueue object for storing signalling from OBS. We only care about
+   * converted signals here which indicate the buffer has been converted
+   * to a real recording on disk.
+   */
+  private convertQueue = new WaitQueue<Signal>();
+
+  /**
    * The state of the recorder, typically used to tell if OBS is recording
    * or not.
    */
@@ -235,6 +242,17 @@ export default class Recorder extends EventEmitter {
       this.instantReplayFile = this.currentFile;
       this.emit('state-change');
     }
+  }, 1000);
+
+  /**
+   * Poll the replay buffer length and size from OBS and send them to the
+   * frontend so the UI can show how much will be saved.
+   */
+  private replayBufferTimer = setInterval(() => {
+    const secs = this.getActiveReplayBufferLength();
+    send('updateReplayBufferSeconds', secs ?? 0);
+    const sizeMb = this.getActiveReplayBufferSizeMb();
+    send('updateReplayBufferSizeMb', sizeMb ?? 0);
   }, 1000);
 
   /**
@@ -594,8 +612,15 @@ export default class Recorder extends EventEmitter {
    * user to have setup their config for, which is why it's split out.
    */
   public async configureBase(config: BaseConfig, startup: boolean) {
-    const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
-      config;
+    const {
+      obsFPS,
+      obsRecEncoder,
+      obsQuality,
+      obsOutputResolution,
+      obsPath,
+      customReplayBuffer,
+      customReplayBufferLength,
+    } = config;
 
     if (this.obsState !== ERecordingState.None) {
       console.error('[Recorder] OBS must be offline to reconfigure base');
@@ -608,6 +633,17 @@ export default class Recorder extends EventEmitter {
 
     const canvas = noobs.GetPreviewInfo();
     noobs.ResetVideoContext(obsFPS, width, height);
+    noobs.SetFragmentation(true);
+
+    const replayBufferSeconds = customReplayBuffer
+      ? customReplayBufferLength
+      : configSchema.customReplayBufferLength.default;
+
+    // This is just stupidly large if the replay buffer is longer than the
+    // default as we always want the duration to be the limiting factor. But
+    // also it's been 1024MB for years so keep that if defaults not changed.
+    const replayBufferMaxSizeMb = replayBufferSeconds > 60 ? 1024 * 10 : 1024;
+    noobs.SetBuffering(true, replayBufferSeconds, replayBufferMaxSizeMb);
 
     const { canvasHeight, canvasWidth } = canvas;
     const changedResolution = canvasHeight !== height || canvasWidth !== width;
@@ -842,6 +878,7 @@ export default class Recorder extends EventEmitter {
         settings['window'] = src.device;
         settings['priority'] = 2; // Executable matching
         noobs.SetSourceSettings(name, settings);
+        noobs.SetSourceVolume(name, src.volume);
       } else if (src.type !== AudioSourceType.PROCESS) {
         const properties = noobs.GetSourceProperties(name);
         const available = properties.find((prop) => prop.name === 'device_id');
@@ -897,17 +934,7 @@ export default class Recorder extends EventEmitter {
       (src) => src.type === AudioSourceType.INPUT,
     );
 
-    if (mics.length !== 0 && config.pushToTalk) {
-      this.obsMicState = MicStatus.MUTED;
-      this.emit('state-change');
-    } else if (mics.length !== 0) {
-      this.obsMicState = MicStatus.LISTENING;
-      this.emit('state-change');
-    }
-
     if (config.pushToTalk) {
-      this.inputDevicesMuted = true;
-
       this.pushToTalkKeyListener = (e: UiohookKeyboardEvent) =>
         this.pushToTalkHandler(e, config);
 
@@ -919,6 +946,12 @@ export default class Recorder extends EventEmitter {
       uIOhook.on('mousedown', this.pushToTalkMouseListener);
       uIOhook.on('mouseup', this.pushToTalkMouseListener);
     }
+
+    if (mics.length !== 0 && config.pushToTalk) {
+      this.muteInputDevices();
+    } else if (mics.length !== 0) {
+      this.unmuteInputDevices();
+    }
   }
 
   /**
@@ -928,6 +961,7 @@ export default class Recorder extends EventEmitter {
   public removeAudioSources() {
     console.info('[Recorder] Remove all audio sources');
 
+    this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.NONE;
     this.emit('state-change');
 
@@ -938,7 +972,6 @@ export default class Recorder extends EventEmitter {
     });
 
     this.audioSources = [];
-    this.inputDevicesMuted = true;
   }
 
   /**
@@ -959,6 +992,7 @@ export default class Recorder extends EventEmitter {
   public shutdownOBS() {
     console.info('[Recorder] OBS shutting down');
     clearInterval(this.instantReplayTimer);
+    clearInterval(this.replayBufferTimer);
 
     if (!this.obsInitialized) {
       console.info('[Recorder] OBS not initialized so not attempting shutdown');
@@ -1086,6 +1120,9 @@ export default class Recorder extends EventEmitter {
 
     // The native code expects an integer.
     const rounded = Math.round(offset);
+
+    // Clear any stale converted signals so waitForConvert only sees ours.
+    this.convertQueue.empty();
     noobs.StartRecording(rounded);
   }
 
@@ -1196,13 +1233,9 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Initializing OBS');
     const cb = this.handleSignal.bind(this);
 
-    let logPath = devMode
-      ? path.resolve(__dirname, './logs')
-      : path.resolve(__dirname, '../../dist/main/logs');
-
-    let noobsPath = devMode
-      ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
-      : path.resolve(__dirname, '../../node_modules/noobs/dist');
+    // The main bundle is in release/app/dist/main in both dev and prod.
+    let logPath = path.resolve(__dirname, './logs');
+    let noobsPath = path.resolve(__dirname, '../../node_modules/noobs/dist');
 
     logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);
@@ -1210,8 +1243,6 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Noobs path:', noobsPath);
     console.info('[Recorder] Log path:', logPath);
     noobs.Init(noobsPath, logPath, cb);
-    noobs.SetBuffering(true);
-    noobs.SetFragmentation(true);
 
     const hwnd = getNativeWindowHandle();
     noobs.InitPreview(hwnd);
@@ -1272,6 +1303,9 @@ export default class Recorder extends EventEmitter {
       case EOBSOutputSignal.Converted:
         console.info('[Recorder] Converted buffer to disk:', signal.path);
         this.currentFile = signal.path ?? null;
+        this.convertQueue.push(signal);
+        send('updateReplayBufferSeconds', 0);
+        send('updateReplayBufferSizeMb', 0);
         break;
 
       default:
@@ -1940,5 +1974,58 @@ export default class Recorder extends EventEmitter {
     const last = this.lastFile;
     this.lastFile = null;
     return last;
+  }
+
+  /**
+   * Wait for OBS to signal that the buffer has been converted to a real
+   * recording. Resolves immediately if it already has been. Stopping before
+   * the conversion completes loses the recording, so call this before
+   * stopping if a stop may follow a start very quickly.
+   */
+  public async waitForConvert() {
+    if (this.currentFile) {
+      return;
+    }
+
+    await Promise.race([
+      this.convertQueue.shift(),
+      getPromiseBomb(30, 'Timed out waiting for convert'),
+    ]);
+  }
+
+  public getActiveReplayBufferLength() {
+    if (!this.obsInitialized) {
+      return null;
+    }
+
+    if (this.obsState !== ERecordingState.Recording) {
+      return null;
+    }
+
+    const secs = noobs.GetReplayBufferLengthSec();
+
+    if (secs < 1) {
+      return null;
+    }
+
+    return secs;
+  }
+
+  public getActiveReplayBufferSizeMb() {
+    if (!this.obsInitialized) {
+      return null;
+    }
+
+    if (this.obsState !== ERecordingState.Recording) {
+      return null;
+    }
+
+    const sizeMb = noobs.GetReplayBufferSizeMb();
+
+    if (sizeMb <= 0) {
+      return null;
+    }
+
+    return sizeMb;
   }
 }

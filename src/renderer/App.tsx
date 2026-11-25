@@ -58,12 +58,16 @@ const WarcraftRecorder = () => {
       era: { advanced: true, latestLogAgeMs: -1 },
       retailPtr: { advanced: true, latestLogAgeMs: -1 },
       classicPtr: { advanced: true, latestLogAgeMs: -1 },
+      forever: { advanced: true, latestLogAgeMs: -1 },
     });
   const [previewEnabled, setPreviewEnabled] = useState(true);
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW,
   );
+
+  const [replayBufferSeconds, setReplayBufferSeconds] = useState(0);
+  const [replayBufferSizeMb, setReplayBufferSizeMb] = useState(0);
 
   const [activityStatus, setActivityStatus] = useState<ActivityStatus | null>(
     null,
@@ -183,6 +187,14 @@ const WarcraftRecorder = () => {
     if (status === RecStatus.InvalidConfig || status === RecStatus.FatalError) {
       setError(err as string);
     }
+  };
+
+  const updateReplayBufferSeconds = (value: unknown) => {
+    setReplayBufferSeconds(typeof value === 'number' ? value : 0);
+  };
+
+  const updateReplayBufferSizeMb = (value: unknown) => {
+    setReplayBufferSizeMb(typeof value === 'number' ? value : 0);
   };
 
   const updateActivityStatus = (status: unknown) => {
@@ -442,6 +454,8 @@ const WarcraftRecorder = () => {
 
   useEffect(() => {
     ipc.on('updateRecStatus', updateRecStatus);
+    ipc.on('updateReplayBufferSeconds', updateReplayBufferSeconds);
+    ipc.on('updateReplayBufferSizeMb', updateReplayBufferSizeMb);
     ipc.on('updateActivityStatus', updateActivityStatus);
     ipc.on('updateSaveStatus', updateSaveStatus);
     ipc.on('updateMicStatus', updateMicStatus);
@@ -462,6 +476,8 @@ const WarcraftRecorder = () => {
 
     return () => {
       ipc.removeAllListeners('updateRecStatus');
+      ipc.removeAllListeners('updateReplayBufferSeconds');
+      ipc.removeAllListeners('updateReplayBufferSizeMb');
       ipc.removeAllListeners('updateActivityStatus');
       ipc.removeAllListeners('updateSaveStatus');
       ipc.removeAllListeners('updateMicStatus');
@@ -501,6 +517,7 @@ const WarcraftRecorder = () => {
             <div className="flex flex-row items-center h-full w-full font-sans">
               <SideMenu
                 recorderStatus={recorderStatus}
+                replayBufferSeconds={replayBufferSeconds}
                 videoCounters={videoCounters}
                 appState={appState}
                 setAppState={setAppState}
@@ -520,6 +537,8 @@ const WarcraftRecorder = () => {
               />
               <Layout
                 recorderStatus={recorderStatus}
+                replayBufferSeconds={replayBufferSeconds}
+                replayBufferSizeMb={replayBufferSizeMb}
                 videoState={videoState}
                 setVideoState={setVideoState}
                 appState={appState}
@@ -533,6 +552,7 @@ const WarcraftRecorder = () => {
                 setPreviewEnabled={setPreviewEnabled}
                 instantReplayState={instantReplayState}
                 setInstantReplayState={setInstantReplayState}
+                activityStatus={activityStatus}
               />
             </div>
           </TooltipProvider>

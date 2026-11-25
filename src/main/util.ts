@@ -1,4 +1,4 @@
-import { URL } from 'url';
+import { URL, pathToFileURL } from 'url';
 import path from 'path';
 import fs, {
   createReadStream,
@@ -14,7 +14,11 @@ import {
   UiohookMouseEvent,
 } from 'uiohook-napi';
 import checkDiskSpace from 'check-disk-space';
-import { PTTEventType, PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
+import {
+  PTTEventType,
+  PTTKeyPressEvent,
+  UiohookModifierKeyMap,
+} from '../types/KeyTypesUIOHook';
 import {
   Metadata,
   FileInfo,
@@ -30,6 +34,7 @@ import {
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
+import { ConfigurationSchema } from 'config/configSchema';
 import { AxiosError } from 'axios';
 import { send } from './main';
 import { Readable } from 'stream';
@@ -55,23 +60,17 @@ const fixPathWhenPackaged = (p: string) => {
   return p.replace('app.asar', 'app.asar.unpacked');
 };
 
-const getResolvedHtmlPath = () => {
-  if (process.env.NODE_ENV === 'development') {
-    const port = process.env.PORT || 1212;
-
-    return (htmlFileName: string) => {
-      const url = new URL(`http://localhost:${port}`);
-      url.pathname = htmlFileName;
-      return url.href;
-    };
+/**
+ * Resolve a renderer HTML file. In development, electron-vite serves the
+ * renderer and provides its URL via ELECTRON_RENDERER_URL.
+ */
+export const resolveHtmlPath = (htmlFileName: string) => {
+  if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
+    return new URL(htmlFileName, `${process.env.ELECTRON_RENDERER_URL}/`).href;
   }
 
-  return (htmlFileName: string) => {
-    return `file://${path.resolve(__dirname, '../renderer/', htmlFileName)}`;
-  };
+  return pathToFileURL(path.join(__dirname, '../renderer', htmlFileName)).href;
 };
-
-export const resolveHtmlPath = getResolvedHtmlPath();
 
 /**
  * Return information about a file needed for various parts of the application
@@ -382,7 +381,7 @@ const deferredPromiseHelper = <T>() => {
 const getAssetPath = (...paths: string[]): string => {
   const RESOURCES_PATH = app.isPackaged
     ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
+    : path.join(app.getAppPath(), 'assets');
 
   return path.join(RESOURCES_PATH, ...paths);
 };
@@ -485,7 +484,14 @@ const isPushToTalkHotkey = (
   return buttonMatch && modifierMatch;
 };
 
-const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
+/**
+ * Check if a key event matches a hotkey stored in config.
+ */
+const isConfiguredHotKey = (
+  event: UiohookKeyboardEvent,
+  keyField: keyof ConfigurationSchema,
+  modifiersField: keyof ConfigurationSchema,
+) => {
   const { keycode, altKey, ctrlKey, shiftKey, metaKey, type } = event;
   const cfg = ConfigService.getInstance();
 
@@ -494,26 +500,22 @@ const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
     return false;
   }
 
-  const manualRecordHotKey = cfg.get<number>('manualRecordHotKey');
-  const manualRecordHotKeyModifiers = cfg.get<string>(
-    'manualRecordHotKeyModifiers',
-  );
+  const hotKey = cfg.get<number>(keyField);
+  const hotKeyModifiers = cfg.get<string>(modifiersField);
 
-  const buttonMatch = keycode > 0 && keycode === manualRecordHotKey;
+  const buttonMatch = keycode > 0 && keycode === hotKey;
 
   // Deliberately permissive here, we check all the modifiers we have in
   // config are met but we don't enforce the inverse, i.e. we'll accept
   // an additional modifier present (so CTRL + SHIFT + E will trigger
   // a CTRL + E hotkey).
-  const modifierMatch = manualRecordHotKeyModifiers
-    .split(',')
-    .reduce((acc, mod) => {
-      if (mod === 'alt') return acc && altKey;
-      if (mod === 'ctrl') return acc && ctrlKey;
-      if (mod === 'shift') return acc && shiftKey;
-      if (mod === 'win') return acc && metaKey;
-      return acc; // Ignore unknown modifiers
-    }, true);
+  const modifierMatch = hotKeyModifiers.split(',').reduce((acc, mod) => {
+    if (mod === 'alt') return acc && altKey;
+    if (mod === 'ctrl') return acc && ctrlKey;
+    if (mod === 'shift') return acc && shiftKey;
+    if (mod === 'win') return acc && metaKey;
+    return acc; // Ignore unknown modifiers
+  }, true);
 
   return buttonMatch && modifierMatch;
 };
@@ -554,7 +556,7 @@ const convertUioHookEvent = (
   if (event.type === EventType.EVENT_KEY_PRESSED) {
     return convertUioHookKeyPressEvent(
       event as UiohookKeyboardEvent,
-      PTTEventType.EVENT_MOUSE_PRESSED,
+      PTTEventType.EVENT_KEY_PRESSED,
     );
   }
 
@@ -590,11 +592,39 @@ const convertUioHookEvent = (
   };
 };
 
+const isModifierKey = (keycode: number) =>
+  Object.values(UiohookModifierKeyMap).includes(keycode);
+
 const nextKeyPressPromise = (): Promise<PTTKeyPressEvent> => {
   return new Promise((resolve) => {
-    uIOhook.once('keyup', (event) => {
-      resolve(convertUioHookEvent(event));
-    });
+    const cleanup = () => {
+      uIOhook.off('keydown', onKeyDown);
+      uIOhook.off('keyup', onKeyUp);
+    };
+
+    const onKeyDown = (event: UiohookKeyboardEvent) => {
+      // Resolve on the first non-modifier key down, it carries the state of
+      // any held modifiers. Waiting for a key up instead breaks if the user
+      // releases the modifier before the key. See #918.
+      if (isModifierKey(event.keycode)) {
+        return;
+      }
+
+      cleanup();
+      const converted = convertUioHookEvent(event);
+      resolve(converted);
+    };
+
+    // A naked modifier key is only bound once released without any other
+    // key having been pressed.
+    const onKeyUp = (event: UiohookKeyboardEvent) => {
+      cleanup();
+      const converted = convertUioHookEvent(event);
+      resolve(converted);
+    };
+
+    uIOhook.on('keydown', onKeyDown);
+    uIOhook.on('keyup', onKeyUp);
   });
 };
 
@@ -932,8 +962,15 @@ const takeOwnershipStorageDir = async (dir: string) => {
   const helptext =
     'If you are setting up Warcraft Recorder for the first time, this folder should be empty.';
 
-  const content =
-    'This folder is managed by Warcraft Recorder, files in it may be automatically created, modified or deleted.';
+  const content = `
+This folder is managed by Warcraft Recorder, files in it may be automatically 
+created, modified or deleted. You should not manually modify or delete files in
+this folder.
+
+If you want to modify files outwith the Warcraft Recorder program, copy the
+video files to another folder and operate on them there to avoid unexpected
+side effects.
+    `;
 
   const files = await fs.promises.readdir(dir);
 
@@ -1351,7 +1388,7 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
-  isManualRecordHotKey,
+  isConfiguredHotKey,
   delayedDeleteVideo,
   logAxiosError,
   handleSafeVodRequest,

@@ -39,9 +39,8 @@ const isDebug = devMode || process.env.DEBUG_PROD === 'true';
 // allows us to avoid including a static ffmpeg.exe which is an extra 60MB.
 const ffmpegPathRel = 'node_modules/noobs/dist/bin/ffmpeg.exe';
 
-let ffmpegPathAbs = devMode
-  ? path.resolve(__dirname, '../../release/app/', ffmpegPathRel)
-  : path.resolve(__dirname, '../../', ffmpegPathRel);
+// The main bundle is in release/app/dist/main in both dev and prod.
+let ffmpegPathAbs = path.resolve(__dirname, '../../', ffmpegPathRel);
 
 ffmpegPathAbs = fixPathWhenPackaged(ffmpegPathAbs);
 ffmpeg.setFfmpegPath(ffmpegPathAbs);
@@ -646,9 +645,13 @@ export default class VideoProcessQueue {
     // Update the frontend with the new usage.
     const usage = await sizeMonitor.usage();
 
+    const limit = cfg.get<boolean>('storageLimit')
+      ? cfg.get<number>('maxStorage') * 1024 ** 3
+      : 0; // Historically we used 0 to indicate no limit.
+
     const status: DiskStatus = {
       usage,
-      limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
+      limit,
     };
 
     send('updateDiskStatus', status);
@@ -670,9 +673,15 @@ export default class VideoProcessQueue {
     sizeMonitor.run();
     const usage = await sizeMonitor.usage();
 
+    const cfg = ConfigService.getInstance();
+
+    const limit = cfg.get<boolean>('storageLimit')
+      ? cfg.get<number>('maxStorage') * 1024 ** 3
+      : 0; // Historically we used 0 to indicate no limit.
+
     const status: DiskStatus = {
       usage,
-      limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
+      limit,
     };
 
     send('updateDiskStatus', status);
