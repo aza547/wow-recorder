@@ -111,6 +111,7 @@ const ENGLISH: Translations = {
   [Phrase.SeparateBufferFolderLabel]: 'Separate Temporary Folder',
   [Phrase.BufferFolderLabel]: 'Temporary Folder',
   [Phrase.MaxDiskStorageLabel]: 'Max Disk Storage (GB)',
+  [Phrase.RunDiskSizeMonitorButtonLabel]: 'Run now',
   [Phrase.WindowsSettingsLabel]: 'Windows Settings',
   [Phrase.RunOnStartupLabel]: 'Run on Startup',
   [Phrase.StartMinimizedLabel]: 'Start Minimized',

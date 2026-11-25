@@ -111,6 +111,7 @@ enum Phrase {
   SeparateBufferFolderLabel,
   BufferFolderLabel,
   MaxDiskStorageLabel,
+  RunDiskSizeMonitorButtonLabel,
   WindowsSettingsLabel,
   RunOnStartupLabel,
   StartMinimizedLabel,

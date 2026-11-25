@@ -109,6 +109,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.SeparateBufferFolderLabel]: '独立的临时文件夹',
   [Phrase.BufferFolderLabel]: '临时文件夹',
   [Phrase.MaxDiskStorageLabel]: '磁盘存储上限 (GB)',
+  [Phrase.RunDiskSizeMonitorButtonLabel]: '立即运行',
   [Phrase.WindowsSettingsLabel]: '应用 设置',
   [Phrase.RunOnStartupLabel]: '开机自动启动',
   [Phrase.StartMinimizedLabel]: '启动时最小化',
