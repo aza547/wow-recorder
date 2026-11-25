@@ -629,6 +629,8 @@ enum Phrase {
   ShortcutShowShortcuts,
   ShortcutsBasic,
   ShortcutsAdvanced,
+  UploadFailedTitle,
+  UploadFailedText,
 }
 
 enum Language {

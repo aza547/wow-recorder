@@ -631,6 +631,8 @@ const ENGLISH: Translations = {
   [Phrase.ShortcutShowShortcuts]: 'Show keyboard shortcuts',
   [Phrase.ShortcutsBasic]: 'Basic',
   [Phrase.ShortcutsAdvanced]: 'Advanced',
+  [Phrase.UploadFailedTitle]: 'Cloud upload failed',
+  [Phrase.UploadFailedText]: 'You can retry using Upload to cloud. See logs for details.',
 };
 
 export default ENGLISH;

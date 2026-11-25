@@ -632,6 +632,8 @@ const GERMAN: Translations = {
   [Phrase.ShortcutShowShortcuts]: 'Tastenkürzel anzeigen',
   [Phrase.ShortcutsBasic]: 'Grundlegend',
   [Phrase.ShortcutsAdvanced]: 'Erweitert',
+  [Phrase.UploadFailedTitle]: 'Cloud-Upload fehlgeschlagen',
+  [Phrase.UploadFailedText]: 'Mit „In die Cloud hochladen“ kannst du es erneut versuchen. Weitere Details findest du in den Logs.',
 };
 
 export default GERMAN;

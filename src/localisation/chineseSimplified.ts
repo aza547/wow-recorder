@@ -632,6 +632,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ShortcutShowShortcuts]: '显示键盘快捷键',
   [Phrase.ShortcutsBasic]: '基础',
   [Phrase.ShortcutsAdvanced]: '高级',
+  [Phrase.UploadFailedTitle]: '云端上传失败',
+  [Phrase.UploadFailedText]: '可以点击“上传到云端”重试。详情请查看日志。',
 };
 
 export default CHINESE_SIMPLIFIED;
