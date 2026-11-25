@@ -6,7 +6,7 @@ import {
   buildClipMetadata,
   checkAdvancedCombatLogging,
   getOBSFormattedDate,
-  isManualRecordHotKey,
+  isConfiguredHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
   pushActivityStatus,
@@ -34,6 +34,7 @@ import {
   RendererVideo,
   KillVideoSegment,
   CombatLogPathStatus,
+  Flavour,
 } from './types';
 import {
   getObsVideoConfig,
@@ -52,6 +53,8 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
+import ForeverLogHandler from 'parsing/ForeverLogHandler';
+import { log } from 'console';
 
 /**
  * Manager class.
@@ -72,6 +75,7 @@ export default class Manager {
   private classicLogHandler: ClassicLogHandler | undefined;
   private classicPtrLogHandler: ClassicLogHandler | undefined;
   private eraLogHandler: EraLogHandler | undefined;
+  private foreverLogHandler: ForeverLogHandler | undefined;
 
   /**
    * If the config is valid or not.
@@ -101,7 +105,7 @@ export default class Manager {
    * It's confusing if you try to change the hotkey to something similar and
    * it starts a recording mid changing it, so set this to true while doing so.
    */
-  private manualHotKeyDisabled = false;
+  private hotKeysDisabled = false;
 
   /**
    * File watchers for Config.wtf files, used to detect changes to
@@ -118,6 +122,7 @@ export default class Manager {
     era: { advanced: true, latestLogAgeMs: -1 },
     retailPtr: { advanced: true, latestLogAgeMs: -1 },
     classicPtr: { advanced: true, latestLogAgeMs: -1 },
+    forever: { advanced: true, latestLogAgeMs: -1 },
   };
 
   /**
@@ -314,6 +319,22 @@ export default class Manager {
     }
   }
 
+  private getManualRecordFlavour(): Flavour | null {
+    const flavour = this.poller.getFlavor();
+
+    if (!flavour) {
+      console.warn('[Manager] WoW not running for manual recording');
+      return null;
+    }
+
+    if (this.recorder.obsState !== ERecordingState.Recording) {
+      console.warn('[Manager] Recorder not ready for manual recording');
+      return null;
+    }
+
+    return flavour;
+  }
+
   public async refreshCombatLoggingStatus() {
     const recordRetail = this.cfg.get<boolean>('recordRetail');
     const retailLogPath = this.cfg.get<string>('retailLogPath');
@@ -329,6 +350,9 @@ export default class Manager {
 
     const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
     const classicPtrLogPath = this.cfg.get<string>('classicPtrLogPath');
+
+    const recordForever = this.cfg.get<boolean>('recordForever');
+    const foreverLogPath = this.cfg.get<string>('foreverLogPath');
 
     const retail: CombatLogPathStatus = {
       latestLogAgeMs: recordRetail
@@ -371,12 +395,21 @@ export default class Manager {
         (await checkAdvancedCombatLogging(classicPtrLogPath)),
     };
 
+    const forever: CombatLogPathStatus = {
+      latestLogAgeMs: recordForever
+        ? await getMostRecentCombatLogModifiedTime(foreverLogPath)
+        : -1,
+      advanced:
+        !recordForever || (await checkAdvancedCombatLogging(foreverLogPath)),
+    };
+
     this.combatLoggingStatus = {
       retail,
       classic,
       era,
       retailPtr,
       classicPtr,
+      forever,
     };
 
     console.info(
@@ -455,6 +488,19 @@ export default class Manager {
         this.combatLoggingStatus.classicPtr.advanced = enabled;
         this.pushCombatLoggingStatus();
       }
+    } else if (key === 'forever') {
+      const recordForever = this.cfg.get<boolean>('recordForever');
+      const foreverLogPath = this.cfg.get<string>('foreverLogPath');
+
+      const enabled = recordForever
+        ? await checkAdvancedCombatLogging(foreverLogPath)
+        : false;
+
+      if (this.combatLoggingStatus.forever.advanced !== enabled) {
+        console.info('[Manager] Advanced logging status changed', key, enabled);
+        this.combatLoggingStatus.forever.advanced = enabled;
+        this.pushCombatLoggingStatus();
+      }
     } else {
       console.error('[Manager] Invalid combat logging status key', key);
       throw new Error('Invalid combat logging status key');
@@ -482,6 +528,7 @@ export default class Manager {
     const recordEra = this.cfg.get<boolean>('recordEra');
     const recordRetailPtr = this.cfg.get<boolean>('recordRetailPtr');
     const recordClassicPtr = this.cfg.get<boolean>('recordClassicPtr');
+    const recordForever = this.cfg.get<boolean>('recordForever');
 
     if (recordRetail) {
       const logPath = this.cfg.get<string>('retailLogPath');
@@ -542,6 +589,20 @@ export default class Manager {
     if (recordClassicPtr) {
       const logPath = this.cfg.get<string>('classicPtrLogPath');
       const key: keyof CombatLoggingStatus = 'classicPtr';
+
+      const watcher = startWatchingConfigWtf(logPath, () => {
+        this.checkAdvancedCombatLoggingForGameType(key);
+      });
+
+      if (watcher) {
+        console.info('[Manager] Watching Config.wtf for', key, logPath);
+        this.configWtfWatchers.push(watcher);
+      }
+    }
+
+    if (recordForever) {
+      const logPath = this.cfg.get<string>('foreverLogPath');
+      const key: keyof CombatLoggingStatus = 'forever';
 
       const watcher = startWatchingConfigWtf(logPath, () => {
         this.checkAdvancedCombatLoggingForGameType(key);
@@ -648,6 +709,7 @@ export default class Manager {
         this.classicLogHandler,
         this.classicPtrLogHandler,
         this.eraLogHandler,
+        this.foreverLogHandler,
       ];
 
       logHandlers
@@ -659,29 +721,40 @@ export default class Manager {
       this.classicLogHandler = undefined;
       this.classicPtrLogHandler = undefined;
       this.eraLogHandler = undefined;
+      this.foreverLogHandler = undefined;
     }
 
     if (config.recordRetail) {
+      console.info('[Manager] Creating retail log handler');
       this.retailLogHandler = new RetailLogHandler(config.retailLogPath);
     }
 
     if (config.recordClassic) {
+      console.info('[Manager] Creating classic log handler');
       this.classicLogHandler = new ClassicLogHandler(config.classicLogPath);
     }
 
     if (config.recordClassicPtr) {
+      console.info('[Manager] Creating classic ptr log handler');
       this.classicPtrLogHandler = new ClassicLogHandler(
         config.classicPtrLogPath,
       );
     }
 
     if (config.recordEra) {
+      console.info('[Manager] Creating era log handler');
       this.eraLogHandler = new EraLogHandler(config.eraLogPath);
     }
 
     if (config.recordRetailPtr) {
+      console.info('[Manager] Creating retail ptr log handler');
       this.retailPtrLogHandler = new RetailLogHandler(config.retailPtrLogPath);
       this.retailPtrLogHandler.setIsPtr();
+    }
+
+    if (config.recordForever) {
+      console.info('[Manager] Creating forever log handler');
+      this.foreverLogHandler = new ForeverLogHandler(config.foreverLogPath);
     }
   }
 
@@ -829,22 +902,44 @@ export default class Manager {
     // Listens for a manual recording being started via the button. The
     // hotkey listener is handled separately.
     ipcMain.on('toggleManualRecording', async () => {
-      if (!this.cfg.get('manualRecord')) {
-        // Manual recording is not enabled.
+      const manualRecordEnabled = this.cfg.get('manualRecord');
+
+      if (!manualRecordEnabled) {
+        console.info('[Manager] Manual recording is not enabled');
         return;
       }
 
-      if (!this.poller.isWowRunning()) {
-        console.warn('[Manager] WoW not running when manual hotkey pressed');
+      const flavour = this.getManualRecordFlavour();
+
+      if (flavour) {
+        LogHandler.handleManualRecordingHotKey(flavour);
+      }
+    });
+
+    // Listens for the save buffer button. Saves the replay buffer to disk.
+    // This doesn't require manual recording to be enabled.
+    ipcMain.on('saveReplayBuffer', async () => {
+      const flavour = this.getManualRecordFlavour();
+
+      if (flavour) {
+        LogHandler.saveReplayBuffer(flavour);
+      }
+    });
+
+    // Listens for the start manual recording from the replay buffer button.
+    ipcMain.on('startManualFromReplayBuffer', async () => {
+      const manualRecordEnabled = this.cfg.get('manualRecord');
+
+      if (!manualRecordEnabled) {
+        console.info('[Manager] Manual recording is not enabled');
         return;
       }
 
-      if (this.recorder.obsState !== ERecordingState.Recording) {
-        console.warn('[Manager] Recorder not ready when manual hotkey pressed');
-        return;
-      }
+      const flavour = this.getManualRecordFlavour();
 
-      LogHandler.handleManualRecordingHotKey();
+      if (flavour) {
+        LogHandler.startManualFromReplayBuffer(flavour);
+      }
     });
 
     // Handles a click of the force stop button.
@@ -868,67 +963,104 @@ export default class Manager {
      * specific to Push to Talk, it's just like that for historical reasons.
      */
     ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
-      this.manualHotKeyDisabled = true;
+      this.hotKeysDisabled = true;
 
       const event = await Promise.race([
         nextKeyPressPromise(),
         nextMousePressPromise(),
       ]);
 
-      this.manualHotKeyDisabled = false;
+      this.hotKeysDisabled = false;
       return event;
     });
-
-    ipcMain.on(
-      'refreshCombatLogStatus',
-      async (): Promise<PTTKeyPressEvent> => {
-        this.manualHotKeyDisabled = true;
-
-        const event = await Promise.race([
-          nextKeyPressPromise(),
-          nextMousePressPromise(),
-        ]);
-
-        this.manualHotKeyDisabled = false;
-        return event;
-      },
-    );
 
     ipcMain.on('refreshCombatLogStatus', () => {
       this.refreshCombatLoggingStatus();
     });
 
-    /**
-     * Manually start/stop recording. Being careful with the logs here as
-     * some of this is very spammy as it fires on every key press.
-     */
+    ipcMain.on('refreshDiskStatus', async () => {
+      await DiskClient.getInstance().refreshStatus();
+    });
+
     uIOhook.on('keydown', (event: UiohookKeyboardEvent) => {
-      if (this.manualHotKeyDisabled) {
-        // This user is updating their settings. Don't do anything.
+      if (this.hotKeysDisabled) {
+        console.info(
+          '[Manager] Hotkey suppressed as user is editing their settings',
+          { event },
+        );
+
         return;
       }
 
-      if (!this.cfg.get('manualRecord')) {
-        // Manual recording is not enabled.
+      const isManualRecordHotKey = isConfiguredHotKey(
+        event,
+        'manualRecordHotKey',
+        'manualRecordHotKeyModifiers',
+      );
+
+      if (isManualRecordHotKey) {
+        const manualEnabled = this.cfg.get<boolean>('manualRecord');
+        const flavour = this.getManualRecordFlavour();
+
+        if (!manualEnabled || !flavour) {
+          console.info(
+            '[Manager] Manual record hotkey pressed but conditions not met.',
+            { manualEnabled, flavour },
+          );
+
+          return;
+        }
+
+        console.info('[Manager] Manual record hotkey pressed');
+        LogHandler.handleManualRecordingHotKey(flavour);
         return;
       }
 
-      if (!isManualRecordHotKey(event)) {
-        // It's not the manual record hotkey.
+      const isStartFromReplayBufferHotKey = isConfiguredHotKey(
+        event,
+        'startFromReplayBufferHotKey',
+        'startFromReplayBufferHotKeyModifiers',
+      );
+
+      if (isStartFromReplayBufferHotKey) {
+        const manualEnabled = this.cfg.get<boolean>('manualRecord');
+        const flavour = this.getManualRecordFlavour();
+
+        if (!manualEnabled || !flavour) {
+          console.info(
+            '[Manager] Start from replay buffer hotkey pressed but conditions not met.',
+            { manualEnabled, flavour },
+          );
+
+          return;
+        }
+
+        console.info('[Manager] Start from replay buffer hotkey pressed');
+        LogHandler.startManualFromReplayBuffer(flavour);
         return;
       }
 
-      if (!this.poller.isWowRunning()) {
-        console.warn('[Manager] WoW not running when manual hotkey pressed');
+      const isSaveReplayBufferHotKey = isConfiguredHotKey(
+        event,
+        'saveReplayBufferHotKey',
+        'saveReplayBufferHotKeyModifiers',
+      );
+
+      if (isSaveReplayBufferHotKey) {
+        const flavour = this.getManualRecordFlavour();
+
+        if (!flavour) {
+          console.info(
+            '[Manager] Save replay buffer hotkey pressed but but conditions not met',
+            { flavour },
+          );
+          return;
+        }
+
+        console.info('[Manager] Save replay buffer hotkey pressed');
+        LogHandler.saveReplayBuffer(flavour);
         return;
       }
-
-      if (this.recorder.obsState !== ERecordingState.Recording) {
-        console.warn('[Manager] Recorder not ready when manual hotkey pressed');
-        return;
-      }
-
-      LogHandler.handleManualRecordingHotKey();
     });
 
     // If Windows is going to sleep, we don't want to confuse OBS. It would be

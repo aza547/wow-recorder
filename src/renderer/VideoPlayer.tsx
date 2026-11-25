@@ -14,6 +14,7 @@ import {
   RefObject,
   useCallback,
   useEffect,
+  useEffectEvent,
   useImperativeHandle,
   useLayoutEffect,
   useRef,
@@ -60,6 +61,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import Separator from './components/Separator/Separator';
+import ShortcutLegendDialog from './ShortcutLegendDialog';
 import { toast } from './components/Toast/useToast';
 import { Phrase } from 'localisation/phrases';
 import { VideoCategory } from 'types/VideoCategory';
@@ -76,7 +78,7 @@ interface IProps {
 }
 
 const ipc = window.electron.ipcRenderer;
-const playbackRates = [2, 1, 0.25, 0.5];
+const playbackRates = [0.25, 0.5, 1, 2];
 const style = { backgroundColor: 'black' };
 
 const sliderBaseSx = {
@@ -217,7 +219,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
 
   const cloudVideo = nameMatches.find((v) => v.cloud);
   const diskVideo = nameMatches.find((v) => !v.cloud);
-  const clippable = !multiPlayerMode;
+  const clippable =
+    !multiPlayerMode && !instantReplay && !clipMode && !isClip(videos[0]);
 
   const srcs = instantReplay
     ? [instantReplay.path]
@@ -235,6 +238,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
 
   const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
+  const [shortcutDialogOpen, setShortcutDialogOpen] = useState(false);
   const [, setDrawingElements] = useState<readonly ExcalidrawElement[]>([]);
 
   /**
@@ -596,13 +600,21 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Handle the user clicking on the rate button by going to the next rate
    * option.
    */
-  const handleRateChange = () => {
+  const handleRateChange = (forward = true) => {
     const index = playbackRates.indexOf(playbackRate);
 
-    if (index === playbackRates.length - 1) {
-      setPlaybackRate(playbackRates[0]);
+    if (forward) {
+      if (index === playbackRates.length - 1) {
+        setPlaybackRate(playbackRates[0]);
+      } else {
+        setPlaybackRate(playbackRates[index + 1]);
+      }
     } else {
-      setPlaybackRate(playbackRates[index + 1]);
+      if (index === 0) {
+        setPlaybackRate(playbackRates[playbackRates.length - 1]);
+      } else {
+        setPlaybackRate(playbackRates[index - 1]);
+      }
     }
   };
 
@@ -911,7 +923,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         <Button
           variant="ghost"
           size="xs"
-          onClick={handleRateChange}
+          onClick={() => handleRateChange(true)}
           className="whitespace-nowrap text-foreground-lighter text-[11px] font-semibold font-mono"
         >
           {playbackRateText}
@@ -1112,8 +1124,11 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   /**
    * Open the folder containing the video.
    */
-  const openLocation = (event: React.SyntheticEvent) => {
-    event.stopPropagation();
+  const openLocation = (event: React.SyntheticEvent | null) => {
+    if (event) {
+      event.stopPropagation();
+    }
+
     if (!diskVideo) return;
 
     window.electron.ipcRenderer.sendMessage('videoButtonDisk', [
@@ -1156,9 +1171,14 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   /**
    * Get a shareable URL for the video.
    */
-  const getShareableLink = async (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    event.preventDefault();
+  const getShareableLink = async (
+    event: React.MouseEvent<HTMLElement> | null,
+  ) => {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+
     if (!cloudVideo) return;
 
     try {
@@ -1221,10 +1241,12 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Returns the playback rate button for the video controls.
    */
   const renderClipButton = () => {
-    const color = clippable ? 'white' : 'rgba(239, 239, 240, 0.25)';
-    const tooltip = clippable
-      ? getLocalePhrase(language, Phrase.ClipTooltip)
-      : getLocalePhrase(language, Phrase.ClipUnavailableTooltip);
+    if (!clippable) {
+      return null;
+    }
+
+    const color = 'white';
+    const tooltip = getLocalePhrase(language, Phrase.ClipTooltip);
 
     return (
       <Tooltip content={tooltip}>
@@ -1233,8 +1255,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
             variant="ghost"
             size="xs"
             onClick={() => {
-              setClipStartValue(Math.max(0, progress - 15));
-              setClipStopValue(Math.min(duration, progress + 15));
+              setClipStartValue(Math.max(0, progress - 7));
+              setClipStopValue(Math.min(duration, progress + 5));
               setClipMode(true);
             }}
           >
@@ -1396,13 +1418,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
           </>
         )}
         {renderDrawingButton()}
-        {!instantReplay &&
-          !clipMode &&
-          !isClip(videos[0]) &&
-          renderClipButton()}
-        {!multiPlayerMode && !clipMode && (
-          <Separator className="mx-2" orientation="vertical" />
-        )}
+        {renderClipButton()}
+        {!clipMode && <Separator className="mx-2" orientation="vertical" />}
         {!clipMode && renderPlaybackRateButton()}
         {!clipMode && renderFullscreenButton()}
         {clipMode && renderClipFinishedButton()}
@@ -1416,8 +1433,32 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * callback to the player / controls box, but the player seems to swallow
    * such events, so instead we do this.
    */
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'k' || e.key === ' ') {
+  const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
+    if (e.key === '?') {
+      const target = e.target as HTMLElement | null;
+
+      const typing =
+        target?.isContentEditable ||
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement;
+
+      // The dialog portals to document.body, which isn't visible while the
+      // player is fullscreen, so don't open it then.
+      if (!typing && !screenfull.isFullscreen) {
+        e.preventDefault();
+        setShortcutDialogOpen((prev) => !prev);
+      }
+
+      return;
+    }
+
+    // Don't drive the player from behind the shortcut legend. The dialog
+    // handles Escape itself to close.
+    if (shortcutDialogOpen) {
+      return;
+    }
+
+    if (e.code === 'KeyK' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
 
@@ -1432,13 +1473,13 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       return;
     }
 
-    if (e.key === 'j' || e.key === 'ArrowLeft') {
+    if (e.code === 'KeyJ' || e.key === 'ArrowLeft') {
       const current = player1.current.currentTime;
       seekAllPlayers(current - 5);
       setProgress(current - 5);
     }
 
-    if (e.key === 'l' || e.key === 'ArrowRight') {
+    if (e.code === 'KeyL' || e.key === 'ArrowRight') {
       const current = player1.current.currentTime;
       seekAllPlayers(current + 5);
       setProgress(current + 5);
@@ -1457,7 +1498,67 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       seekAllPlayers(current - frame);
       setProgress(current - frame);
     }
-  };
+
+    if (e.code === 'KeyF') {
+      toggleFullscreen();
+    }
+
+    if (e.code === 'KeyM') {
+      setMuted((prev) => !prev);
+    }
+
+    if (e.key === 'Home') {
+      seekAllPlayers(0);
+      setProgress(0);
+    }
+
+    if (e.key === 'End') {
+      const duration = player1.current.duration;
+      seekAllPlayers(duration);
+      setProgress(duration);
+    }
+
+    if (e.key === '>') {
+      handleRateChange(true);
+    }
+
+    if (e.key === '<') {
+      handleRateChange(false);
+    }
+
+    // Table navigation uses these. Maybe could make it focus-aware?
+    // if (e.key === 'ArrowUp') {
+    //   setVolume((prev) => Math.min(prev + 0.1, 1));
+    // }
+
+    // if (e.key === 'ArrowDown') {
+    //   setVolume((prev) => Math.max(prev - 0.1, 0));
+    // }
+
+    if (e.key === 'x' && e.altKey && !clipMode && clippable) {
+      setClipMode(true);
+    }
+
+    if (e.key === 'a' && e.altKey) {
+      openLocation(null);
+    }
+
+    if (e.key === 's' && e.altKey) {
+      getShareableLink(null);
+    }
+
+    if (e.key === 'd' && e.altKey) {
+      setIsDrawingEnabled(true);
+    }
+
+    if (e.key === 'Escape') {
+      setClipMode(false);
+
+      // Drawing mode controls swallow this so can't actually be used to
+      // exit drawing mode.
+      setIsDrawingEnabled(false);
+    }
+  });
 
   // Listener for keydown events when the player is open.
   useEffect(() => {
@@ -1551,6 +1652,11 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       </div>
 
       {renderControls()}
+      <ShortcutLegendDialog
+        open={shortcutDialogOpen}
+        onOpenChange={setShortcutDialogOpen}
+        language={language}
+      />
     </div>
   );
 });

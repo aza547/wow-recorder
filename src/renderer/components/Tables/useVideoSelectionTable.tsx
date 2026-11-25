@@ -118,10 +118,12 @@ const useVideoSelectionTable = (
     pageSize: 100,
   });
 
-  useEffect(() => {
+  const [previousLockFilter, setPreviousLockFilter] = useState(lockFilter);
+  if (previousLockFilter !== lockFilter) {
+    setPreviousLockFilter(lockFilter);
     setRowSelection({});
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [lockFilter]);
+  }
 
   // Tanstack table relies on stable references, so while we have the React
   // compiler enabled we still need useMemo here or weird stuff will happen.
