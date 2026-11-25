@@ -45,7 +45,7 @@ export default class Poller extends EventEmitter {
    */
   private binary = app.isPackaged
     ? path.join(process.resourcesPath, 'binaries', 'rust-ps.exe')
-    : path.join(__dirname, '../../binaries', 'rust-ps.exe');
+    : path.join(app.getAppPath(), 'binaries', 'rust-ps.exe');
 
   /**
    * Create or get the singleton.

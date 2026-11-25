@@ -39,9 +39,8 @@ const isDebug = devMode || process.env.DEBUG_PROD === 'true';
 // allows us to avoid including a static ffmpeg.exe which is an extra 60MB.
 const ffmpegPathRel = 'node_modules/noobs/dist/bin/ffmpeg.exe';
 
-let ffmpegPathAbs = devMode
-  ? path.resolve(__dirname, '../../release/app/', ffmpegPathRel)
-  : path.resolve(__dirname, '../../', ffmpegPathRel);
+// The main bundle is in release/app/dist/main in both dev and prod.
+let ffmpegPathAbs = path.resolve(__dirname, '../../', ffmpegPathRel);
 
 ffmpegPathAbs = fixPathWhenPackaged(ffmpegPathAbs);
 ffmpeg.setFfmpegPath(ffmpegPathAbs);
