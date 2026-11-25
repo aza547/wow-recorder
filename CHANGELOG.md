@@ -8,7 +8,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - [Issue 808](https://github.com/aza547/wow-recorder/issues/808) - Add clickable viewpoint and timestamp links to video chat messages.
+- [Issue 780](https://github.com/aza547/wow-recorder/issues/780) - Added more hotkeys to the video player. 
+- [Issue 780](https://github.com/aza547/wow-recorder/issues/780) - Added a shortcut legend for the video player that can be opened with "?".
+
 ### Fixed
+- [Issue 923](https://github.com/aza547/wow-recorder/issues/923) - Respect combat log timezone offsets so daylight saving changes do not break recordings or their timelines.
+
+## [7.16.0] - 2026-11-20
+### Changed
+- Migrate the build tooling from webpack to electron-vite.
+
+### Added
+- Forever raid support.
+
+### Fixed
+- Bump the Electron version to `45.2.3`, and related packages.
+- Fix side menu width so that it doesn't shrink when the window is small.
+
+## [7.15.0] - 2026-11-06
+### Changed
+- Add a "Replay Buffer" settings category to reduce settings clutter.
+- [Issue 933](https://github.com/aza547/wow-recorder/issues/933) - Remove pulsing animation from side menu buttons.
+
+### Added
+- [Issue 931](https://github.com/aza547/wow-recorder/issues/931) - Support both "Save Buffer Immediately" and "Save Buffer and Continue Recording" modes.
+- [Issue 930](https://github.com/aza547/wow-recorder/issues/930) - Add hotkeys for save buffer feature.
+- [Issue 927](https://github.com/aza547/wow-recorder/issues/927) - Expose replay buffer MB in the settings.
+
+### Fixed
+- [Issue 934](https://github.com/aza547/wow-recorder/issues/934) - Fix recording durations displaying 60 seconds instead of rolling over to the next minute.
+- [Issue 929](https://github.com/aza547/wow-recorder/issues/929) - Fix a broken tooltip on the "Save Buffer" button.
+
+
+## [7.14.0] - 2026-11-04
+### Changed
+- Clip range now defaults to -7s and +5s instead of ±15s.
+- Add a "Limit Disk Storage" switch to avoid the unintutive behaviour of setting 0.
+- Log path settings are now neater and hide less common game modes.
+
+### Added
+- Add basic forever support for raids and manual recordings.
+- Add the "Save Buffer" function. Enabling Shadowplay-like function.
+- Add the ability to set a custom replay buffer duration up to 20 mins (default is 60s).
+
+### Fixed
+- Fix a bug where manual recordings were always classified as retail, they will be categorized by the running WoW client.
+- Made the behaviour of the max storage number field more user friendly.
+
+## [7.13.4] - 2026-10-22
+### Fixed
+- Fix an issue where volume was not correctly applied to app sources on launch of the program.
+- Fix an issue where PTT induced mute was not correctly applied to microphones on launch of the program.
+- [Issue 917](https://github.com/aza547/wow-recorder/issues/917) - Fix an issue where the audio source volume slider was not correctly draggable.
+- [Issue 918](https://github.com/aza547/wow-recorder/issues/918) - Improve the user experience slightly when binding a hotkey.
+- Handle partial line reads of the combat log, which can happen on some (typically Linux) filesystems.
+- Improve disk size monitor open file handles, particularly for users with many videos.
+
+## [7.13.3] - 2026-10-15
+### Fixed
+- Include Kith'ix in the current raid tier for recording and automatic uploads.
 - [Issue 910](https://github.com/aza547/wow-recorder/issues/910) - Prevent rapid playback controls from causing a repeating play/pause cycle.
 - [Issue 863](https://github.com/aza547/wow-recorder/issues/863) - Preserve the last valid overrun setting when its input is cleared.
 - Add Nymrissa "World LFR" difficulty.

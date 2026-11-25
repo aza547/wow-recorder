@@ -132,10 +132,6 @@ const VideoChat = (props: IProps) => {
 
   const mentionMenuOpen = filteredMentionSuggestions.length > 0;
 
-  useEffect(() => {
-    setSelectedMentionIndex(0);
-  }, [mentionSearch?.query]);
-
   const addChatMessage = (message: unknown) => {
     let parsed: TChatMessageWithId;
 
@@ -226,7 +222,9 @@ const VideoChat = (props: IProps) => {
 
   const updateMentionSearch = (input: HTMLTextAreaElement) => {
     // Mention search only applies to the token immediately before the caret.
-    setMentionSearch(getMentionSearch(input.value, input.selectionStart));
+    const nextSearch = getMentionSearch(input.value, input.selectionStart);
+    if (nextSearch?.query !== mentionSearch?.query) setSelectedMentionIndex(0);
+    setMentionSearch(nextSearch);
   };
 
   const insertMention = (

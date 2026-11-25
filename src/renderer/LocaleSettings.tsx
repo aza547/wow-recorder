@@ -103,8 +103,8 @@ const WindowsSettings = (props: IProps) => {
 
   const getLangaugeSelect = () => {
     return (
-      <div className="flex flex-col y-2 gap-y-4">
-        <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+      <div className="flex flex-row items-center gap-x-10">
+        <div className="flex flex-col w-60">
           <Label className="flex items-center">
             {getLocalePhrase(appState.language, Phrase.LanguageLabel)}
             <Tooltip
