@@ -10,7 +10,6 @@ import {
   nextKeyPressPromise,
   nextMousePressPromise,
   pushActivityStatus,
-  resetInstantReplayState,
   refreshInstantReplayState,
   rendererVideoToMetadata,
   resetActivityStatus,
@@ -312,11 +311,7 @@ export default class Manager {
     this.refreshMicStatus(this.recorder.obsMicState);
     this.redrawPreview();
 
-    if (LogHandler.activity) {
-      refreshInstantReplayState(LogHandler.activity);
-    } else if (!inOverrun) {
-      resetInstantReplayState();
-    }
+    refreshInstantReplayState(LogHandler.activity);
   }
 
   private getManualRecordFlavour(): Flavour | null {

@@ -195,9 +195,9 @@ export default class Recorder extends EventEmitter {
 
   /**
    * The fragmented MP4 is valid to play when the moov atom appears. This is
-   * only set once we've seen that. This is exposed publicly.
+   * only set once we've seen that.
    */
-  public instantReplayFile: string | null = null;
+  private instantReplayFile: string | null = null;
 
   /**
    * If conditions are right, look for the appropriate boxes in the fragmented
@@ -1076,6 +1076,33 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
+   * Get the current instant replay file.
+   */
+  public getInstantReplayFile() {
+    return this.instantReplayFile;
+  }
+
+  /**
+   * Clear the instant replay for the given file. It might still be in use by
+   * the open instant replay.
+   */
+  public clearInstantReplay(file: string) {
+    const matches = this.instantReplayFile == file;
+
+    if (matches) {
+      console.info('[Recorder] Clear instant replay for', file);
+      this.instantReplayFile = null;
+      this.emit('state-change');
+    } else {
+      console.info(
+        '[Recorder] Not clearing instant replay',
+        file,
+        this.instantReplayFile,
+      );
+    }
+  }
+
+  /**
    * Start OBS, no-op if already started.
    */
   private async startObsBuffer() {
@@ -1286,7 +1313,6 @@ export default class Recorder extends EventEmitter {
         this.startQueue.push(signal);
         this.obsState = ERecordingState.Recording;
         this.currentFile = null;
-        this.instantReplayFile = null;
         this.emit('state-change');
         console.info('[Recorder] State is now:', this.obsState);
         break;
@@ -1295,7 +1321,6 @@ export default class Recorder extends EventEmitter {
         this.stopQueue.push(signal);
         this.obsState = ERecordingState.None;
         this.currentFile = null;
-        this.instantReplayFile = null;
         this.emit('state-change');
         console.info('[Recorder] State is now:', this.obsState);
         break;
